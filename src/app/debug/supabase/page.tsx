@@ -1,159 +1,142 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-
-export const dynamic = "force-dynamic";
-
-type SupportedLanguagePreview = {
-  id?: string | number;
-  code?: string | null;
-  name?: string | null;
-  native_name?: string | null;
-  is_active?: boolean | null;
-};
-
-function getFriendlyErrorMessage(message: string) {
-  const lowerMessage = message.toLowerCase();
-
-  if (lowerMessage.includes("failed to fetch")) {
-    return "Supabase 서버에 연결하지 못했습니다. 프로젝트 URL이 맞는지, 네트워크 연결이 가능한지 확인해 주세요.";
-  }
-
-  if (lowerMessage.includes("permission denied") || lowerMessage.includes("rls")) {
-    return "테이블 접근 권한이 막혀 있습니다. Supabase의 RLS 정책에서 익명 사용자가 supported_languages를 읽을 수 있는지 확인해 주세요.";
-  }
-
-  if (lowerMessage.includes("does not exist")) {
-    return "supported_languages 테이블을 찾지 못했습니다. SQL migration이 Supabase에 적용되었는지 확인해 주세요.";
-  }
-
-  if (lowerMessage.includes("invalid api key") || lowerMessage.includes("jwt")) {
-    return "Supabase anon key가 올바르지 않은 것 같습니다. Vercel 환경변수 값을 다시 확인해 주세요.";
-  }
-
-  return `Supabase 요청 중 오류가 발생했습니다: ${message}`;
-}
+import { createClient } from '@supabase/supabase-js'
 
 export default async function SupabaseDebugPage() {
-  const hasUrl = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
-  const hasAnonKey = Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  let rows: SupportedLanguagePreview[] = [];
-  let errorMessage: string | null = null;
+  const hasUrl = Boolean(supabaseUrl)
+  const hasAnonKey = Boolean(supabaseAnonKey)
+
+  let dbStatus = 'not_tested'
+  let errorMessage = ''
+  let languages: Array<{
+    id?: string
+    code?: string
+    name?: string
+    native_name?: string
+  }> = []
 
   if (hasUrl && hasAnonKey) {
-    const supabase = await createSupabaseServerClient();
-    const { data, error } = await supabase
-      .from("supported_languages")
-      .select("*")
-      .limit(5);
+    try {
+      const supabase = createClient(supabaseUrl!, supabaseAnonKey!)
 
-    if (error) {
-      errorMessage = getFriendlyErrorMessage(error.message);
-    } else {
-      rows = (data ?? []) as SupportedLanguagePreview[];
+      const { data, error } = await supabase
+        .from('supported_languages')
+        .select('id, code, name, native_name')
+        .limit(5)
+
+      if (error) {
+        dbStatus = 'failed'
+        errorMessage = error.message
+      } else {
+        dbStatus = 'success'
+        languages = data ?? []
+      }
+    } catch (error) {
+      dbStatus = 'failed'
+      errorMessage =
+        error instanceof Error
+          ? error.message
+          : '알 수 없는 오류가 발생했습니다.'
     }
-  } else {
-    errorMessage =
-      "Supabase 환경변수가 아직 연결되지 않았습니다. NEXT_PUBLIC_SUPABASE_URL과 NEXT_PUBLIC_SUPABASE_ANON_KEY를 확인해 주세요.";
   }
 
-  const isConnected = hasUrl && hasAnonKey && !errorMessage;
+  const isEnvConnected = hasUrl && hasAnonKey
+  const isDbConnected = dbStatus === 'success'
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
-      <section className="mx-auto max-w-3xl">
-        <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-          Debug
-        </p>
-        <h1 className="mt-3 text-3xl font-semibold">Supabase 연결 확인</h1>
-        <p className="mt-4 leading-7 text-slate-600">
-          이 페이지는 실제 Supabase client를 만들고 supported_languages
-          테이블에서 최대 5개 행을 조회합니다. URL 전체와 key 값은 화면에
-          표시하지 않습니다.
-        </p>
+    <main style={{ padding: 24, fontFamily: 'Arial, sans-serif' }}>
+      <h1>Supabase 연결 확인</h1>
 
-        <div className="mt-8 border-y border-slate-200 py-6">
-          <h2 className="text-lg font-semibold">환경변수 상태</h2>
-          <ul className="mt-4 space-y-2 text-slate-700">
-            <li>
-              NEXT_PUBLIC_SUPABASE_URL:{" "}
-              <strong>{hasUrl ? "설정됨" : "없음"}</strong>
-            </li>
-            <li>
-              NEXT_PUBLIC_SUPABASE_ANON_KEY:{" "}
-              <strong>{hasAnonKey ? "설정됨" : "없음"}</strong>
-            </li>
-          </ul>
-        </div>
+      <p>
+        이 페이지는 Supabase 환경변수와 실제 데이터베이스 연결 상태를
+        확인하는 테스트 페이지입니다.
+      </p>
 
-        <div className="mt-6">
-          {isConnected ? (
-            <div className="rounded-md border border-emerald-200 bg-emerald-50 p-5">
-              <h2 className="text-lg font-semibold text-emerald-800">
-                Supabase DB 연결 성공
-              </h2>
-              <p className="mt-2 text-emerald-700">
-                supported_languages 테이블 조회가 정상적으로 완료되었습니다.
-              </p>
-            </div>
+      <hr style={{ margin: '24px 0' }} />
+
+      <h2>1. 환경변수 상태</h2>
+
+      <ul>
+        <li>
+          NEXT_PUBLIC_SUPABASE_URL:{' '}
+          <strong>{hasUrl ? '연결됨' : '없음'}</strong>
+        </li>
+        <li>
+          NEXT_PUBLIC_SUPABASE_ANON_KEY:{' '}
+          <strong>{hasAnonKey ? '연결됨' : '없음'}</strong>
+        </li>
+      </ul>
+
+      {isEnvConnected ? (
+        <p style={{ color: 'green', fontWeight: 'bold' }}>
+          Supabase 환경변수 연결됨
+        </p>
+      ) : (
+        <p style={{ color: 'red', fontWeight: 'bold' }}>
+          Supabase 환경변수 연결 실패
+        </p>
+      )}
+
+      <hr style={{ margin: '24px 0' }} />
+
+      <h2>2. 데이터베이스 연결 상태</h2>
+
+      {!isEnvConnected && (
+        <p style={{ color: 'red', fontWeight: 'bold' }}>
+          환경변수가 없어서 DB 연결 테스트를 진행할 수 없습니다.
+        </p>
+      )}
+
+      {isEnvConnected && isDbConnected && (
+        <div>
+          <p style={{ color: 'green', fontWeight: 'bold' }}>
+            Supabase DB 연결 성공
+          </p>
+
+          <p>
+            supported_languages 테이블에서 최대 5개 데이터를 정상적으로
+            조회했습니다.
+          </p>
+
+          <h3>조회 결과</h3>
+
+          {languages.length > 0 ? (
+            <ul>
+              {languages.map((language) => (
+                <li key={language.id ?? language.code}>
+                  {language.code} / {language.name} / {language.native_name}
+                </li>
+              ))}
+            </ul>
           ) : (
-            <div className="rounded-md border border-red-200 bg-red-50 p-5">
-              <h2 className="text-lg font-semibold text-red-800">
-                Supabase DB 연결 실패
-              </h2>
-              <p className="mt-2 text-red-700">{errorMessage}</p>
-            </div>
+            <p>
+              테이블 연결은 성공했지만 아직 표시할 언어 데이터가 없습니다.
+            </p>
           )}
         </div>
+      )}
 
-        {isConnected && (
-          <div className="mt-8">
-            <h2 className="text-lg font-semibold">
-              supported_languages 조회 결과
-            </h2>
-            {rows.length > 0 ? (
-              <div className="mt-4 overflow-x-auto rounded-md border border-slate-200 bg-white">
-                <table className="w-full border-collapse text-left text-sm">
-                  <thead className="bg-slate-100 text-slate-700">
-                    <tr>
-                      <th className="px-4 py-3">Code</th>
-                      <th className="px-4 py-3">Name</th>
-                      <th className="px-4 py-3">Native name</th>
-                      <th className="px-4 py-3">Active</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row, index) => (
-                      <tr
-                        className="border-t border-slate-200"
-                        key={`${row.id ?? row.code ?? "language"}-${index}`}
-                      >
-                        <td className="px-4 py-3">{row.code ?? "-"}</td>
-                        <td className="px-4 py-3">{row.name ?? "-"}</td>
-                        <td className="px-4 py-3">
-                          {row.native_name ?? "-"}
-                        </td>
-                        <td className="px-4 py-3">
-                          {row.is_active === null ||
-                          row.is_active === undefined
-                            ? "-"
-                            : row.is_active
-                              ? "yes"
-                              : "no"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="mt-3 text-slate-600">
-                연결은 성공했지만 supported_languages 테이블에 표시할 행이
-                없습니다.
-              </p>
-            )}
-          </div>
-        )}
-      </section>
+      {isEnvConnected && dbStatus === 'failed' && (
+        <div>
+          <p style={{ color: 'red', fontWeight: 'bold' }}>
+            Supabase DB 연결 실패
+          </p>
+
+          <p>아래 오류 메시지를 확인해 주세요.</p>
+
+          <pre
+            style={{
+              padding: 16,
+              backgroundColor: '#f5f5f5',
+              borderRadius: 8,
+              whiteSpace: 'pre-wrap',
+            }}
+          >
+            {errorMessage}
+          </pre>
+        </div>
+      )}
     </main>
-  );
+  )
 }
