@@ -1,0 +1,67 @@
+-- =============================================================================
+-- Migration: 0012_add_profile_self_updated_audit_action.sql
+-- Project:   GOThriveCoaching
+-- Purpose:   Add 'profile_self_updated' to audit_action_enum so that
+--            PATCH /api/me can write a correctly categorised audit log entry.
+--
+-- Background:
+--   audit_action_enum was created in 0001_create_enums.sql.
+--   The existing value 'profile_updated_by_admin' covers admin-initiated
+--   profile changes (super_admin or scoped admin editing another user's record).
+--   PATCH /api/me is a self-service operation — the authenticated user updates
+--   their own safe fields (display_name, phone, preferred_language, timezone).
+--   These are categorically different actions and must never share the same
+--   audit action value. Mixing them would corrupt compliance reports and make
+--   it impossible to distinguish self-service edits from administrative ones.
+--
+-- Why a separate migration (not added to 0001):
+--   Adding a value to a PostgreSQL enum is irreversible without recreating
+--   the type. Keeping enum additions in their own numbered migration makes
+--   the addition auditable, rollback-safe at the planning level, and clearly
+--   linked to the feature that required it.
+--
+-- Deployment order requirement:
+--   This migration MUST be applied before any deployment of PATCH /api/me
+--   that writes audit log entries. If the route handler attempts to INSERT
+--   an audit_logs row with action = 'profile_self_updated' before this
+--   migration is applied, the INSERT will fail with a PostgreSQL enum cast
+--   error. Apply this migration first, then deploy the route.
+--
+-- No ALTER TABLE required:
+--   audit_logs.action is already typed as audit_action_enum NOT NULL
+--   (defined in 0007_create_audit_logs.sql). Adding a value to the enum
+--   automatically makes it valid for that column. No schema change to
+--   audit_logs or any other table is needed.
+--
+-- Idempotency:
+--   IF NOT EXISTS makes this statement safe to re-run. PostgreSQL will
+--   silently skip the addition if 'profile_self_updated' already exists,
+--   making this migration safe in environments where it may be applied more
+--   than once (e.g. CI pipelines that reset and re-apply all migrations).
+--
+-- Dependencies:
+--   0001_create_enums.sql       → audit_action_enum must exist
+--   0007_create_audit_logs.sql  → audit_logs.action references this enum
+-- =============================================================================
+
+
+ALTER TYPE audit_action_enum ADD VALUE IF NOT EXISTS 'profile_self_updated';
+
+
+-- =============================================================================
+-- End of 0012_add_profile_self_updated_audit_action.sql
+--
+-- Effect:
+--   audit_action_enum gains one new value: 'profile_self_updated'
+--
+-- Distinction from existing values:
+--   'profile_self_updated'      → user updated their own profile via PATCH /api/me
+--   'profile_updated_by_admin'  → admin updated another user's profile
+--
+-- No tables created or altered.
+-- No API routes created.
+--
+-- Next step:
+--   Once this migration is applied, PATCH /api/me may write audit log entries
+--   using action = 'profile_self_updated'.
+-- =============================================================================
