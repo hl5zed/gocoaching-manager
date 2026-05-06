@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 export const dynamic = "force-dynamic";
 
@@ -19,16 +20,20 @@ type TranslationNamespace = {
   name: string;
 };
 
+type TranslationKeyRow = {
+  id: string;
+  key: string;
+};
+
 type TranslationValueRow = {
+  translation_key_id: string;
   value: string;
-  translation_keys:
-    | {
-        key: string;
-      }
-    | {
-        key: string;
-      }[]
-    | null;
+};
+
+type TranslationLookupResult = {
+  translations: Record<string, string>;
+  keyCount: number;
+  valueCount: number;
 };
 
 function notFoundResponse() {
@@ -47,21 +52,11 @@ function notFoundResponse() {
   );
 }
 
-function getTranslationKey(row: TranslationValueRow) {
-  if (Array.isArray(row.translation_keys)) {
-    return row.translation_keys[0]?.key ?? null;
-  }
-
-  return row.translation_keys?.key ?? null;
-}
-
 async function getActiveLanguageCodes(
-  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  supabase: any,
   requestedLanguage: string,
 ) {
-  const languageCodes = Array.from(
-    new Set([requestedLanguage, "en", "ko"]),
-  );
+  const languageCodes = Array.from(new Set([requestedLanguage, "en", "ko"]));
 
   const { data, error } = await supabase
     .from("supported_languages")
@@ -79,41 +74,69 @@ async function getActiveLanguageCodes(
 }
 
 async function getTranslationsForLanguage(
-  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  supabase: any,
   namespaceId: string,
   languageCode: string,
-) {
+): Promise<TranslationLookupResult> {
+  const translationKeysTable = supabase.from("translation_keys") as any;
   const translationValuesTable = supabase.from("translation_values") as any;
 
+  const { data: keys, error: keysError } = await translationKeysTable
+    .select("id, key")
+    .eq("namespace_id", namespaceId)
+    .eq("is_active", true);
+
+  if (keysError) {
+    throw keysError;
+  }
+
+  const keyRows = (keys ?? []) as TranslationKeyRow[];
+
+  if (keyRows.length === 0) {
+    return {
+      translations: {},
+      keyCount: 0,
+      valueCount: 0,
+    };
+  }
+
+  const keyById = new Map(keyRows.map((row) => [row.id, row.key]));
+
   const { data, error } = await translationValuesTable
-    .select(
-      "value, translation_keys!inner(key, namespace_id, is_active)",
+    .select("translation_key_id, value")
+    .in(
+      "translation_key_id",
+      keyRows.map((row) => row.id),
     )
     .eq("language_code", languageCode)
-    .eq("review_status", "approved")
-    .eq("translation_keys.namespace_id", namespaceId)
-    .eq("translation_keys.is_active", true);
+    .eq("review_status", "approved");
 
   if (error) {
     throw error;
   }
 
+  const valueRows = (data ?? []) as TranslationValueRow[];
   const translations: Record<string, string> = {};
 
-  for (const row of (data ?? []) as TranslationValueRow[]) {
-    const key = getTranslationKey(row);
+  for (const row of valueRows) {
+    const key = keyById.get(row.translation_key_id);
 
     if (key) {
       translations[key] = row.value;
     }
   }
 
-  return translations;
+  return {
+    translations,
+    keyCount: keyRows.length,
+    valueCount: valueRows.length,
+  };
 }
 
 export async function GET(_request: Request, context: RouteContext) {
   const { lang, namespace } = await context.params;
-  const supabase = await createSupabaseServerClient();
+  const { client: serviceClient } = createSupabaseServiceClient();
+  const supabase = serviceClient ?? (await createSupabaseServerClient());
 
   const activeLanguageCodes = await getActiveLanguageCodes(supabase, lang);
 
@@ -139,21 +162,24 @@ export async function GET(_request: Request, context: RouteContext) {
       activeLanguageCodes.has(languageCode),
   );
 
-  let resolvedLanguage =
-    fallbackLanguages[fallbackLanguages.length - 1] ?? lang;
+  let resolvedLanguage = fallbackLanguages[fallbackLanguages.length - 1] ?? lang;
   let data: Record<string, string> = {};
+  let resolvedKeyCount = 0;
+  let resolvedValueCount = 0;
 
   for (const languageCode of fallbackLanguages) {
-    const translations = await getTranslationsForLanguage(
+    const lookup = await getTranslationsForLanguage(
       supabase,
       resolvedNamespace.id,
       languageCode,
     );
 
     resolvedLanguage = languageCode;
-    data = translations;
+    data = lookup.translations;
+    resolvedKeyCount = lookup.keyCount;
+    resolvedValueCount = lookup.valueCount;
 
-    if (Object.keys(translations).length > 0) {
+    if (Object.keys(lookup.translations).length > 0) {
       break;
     }
   }
@@ -166,6 +192,9 @@ export async function GET(_request: Request, context: RouteContext) {
         requested_language: lang,
         resolved_language: resolvedLanguage,
         namespace: resolvedNamespace.name,
+        read_client: serviceClient ? "service_role" : "server_session",
+        key_count: resolvedKeyCount,
+        value_count: resolvedValueCount,
       },
     },
     {

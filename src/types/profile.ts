@@ -1,24 +1,32 @@
-export type SafeProfile = {
-  id: string;
-  full_name: string | null;
-  display_name: string | null;
-  email: string | null;
-  phone: string | null;
-  primary_role: string | null;
-  growth_level_id: string | null;
-  generation_number: number | null;
-  status: string;
-  preferred_language: string | null;
-  timezone: string | null;
-  country_id: string | null;
-  region_id: string | null;
-  organization_id: string | null;
-  church_id: string | null;
-  group_id: string | null;
-  cohort_id: string | null;
-  created_at: string;
-  updated_at: string;
-};
+import type {
+  ProfileRow,
+  ProfileStatus,
+  ScopeType,
+  UserRole,
+} from "@/types/database";
+
+export type SafeProfile = Pick<
+  ProfileRow,
+  | "id"
+  | "full_name"
+  | "display_name"
+  | "email"
+  | "phone"
+  | "primary_role"
+  | "growth_level_id"
+  | "generation_number"
+  | "status"
+  | "preferred_language"
+  | "timezone"
+  | "country_id"
+  | "region_id"
+  | "organization_id"
+  | "church_id"
+  | "group_id"
+  | "cohort_id"
+  | "created_at"
+  | "updated_at"
+>;
 
 export type SelfUpdatePayload = {
   display_name?: string | null;
@@ -29,8 +37,8 @@ export type SelfUpdatePayload = {
 
 export type ActiveRoleSlim = {
   id: string;
-  role: string;
-  scope_type: string;
+  role: UserRole;
+  scope_type: ScopeType;
   scope_id: string | null;
   granted_at: string;
   expires_at: string | null;
@@ -41,13 +49,10 @@ export type MeResponse = {
   roles: ActiveRoleSlim[];
 };
 
-export const PROFILE_STATUS = {
+export const PROFILE_STATUS: Record<Uppercase<ProfileStatus>, ProfileStatus> = {
   ACTIVE: "active",
   INACTIVE: "inactive",
   SUSPENDED: "suspended",
   ARCHIVED: "archived",
   ANONYMIZED: "anonymized",
-} as const;
-
-export type ProfileStatus =
-  (typeof PROFILE_STATUS)[keyof typeof PROFILE_STATUS];
+};

@@ -1,0 +1,267 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import {
+  getCoachWeeklyLogDetail,
+  type CoachWeeklyLogDetail,
+} from "@/lib/api/coach/weekly-log-detail";
+
+export const dynamic = "force-dynamic";
+
+type CoachWeeklyLogDetailPageProps = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  draft: "임시 저장",
+  submitted: "제출됨",
+  archived: "보관됨",
+};
+
+const RELATIONSHIP_TYPE_LABEL: Record<string, string> = {
+  individual_coaching: "개인 코칭",
+  group_coaching: "그룹 코칭",
+  leadership_coaching: "리더십 코칭",
+  pastoral_coaching: "목회 코칭",
+  missionary_coaching: "선교사 코칭",
+};
+
+const SCOPE_TYPE_LABEL: Record<string, string> = {
+  global: "전체",
+  country: "국가",
+  region: "지역",
+  organization: "조직",
+  church: "교회",
+  group: "그룹",
+  cohort: "코호트",
+  coach: "코치",
+};
+
+function formatDate(value: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(date);
+}
+
+function formatScope(scopeType: string | null, scopeId: string | null) {
+  if (!scopeType) {
+    return "-";
+  }
+
+  if (scopeType === "global") {
+    return "전체";
+  }
+
+  const scopeLabel = SCOPE_TYPE_LABEL[scopeType] ?? scopeType;
+
+  if (!scopeId) {
+    return scopeLabel;
+  }
+
+  if (scopeId.length <= 12) {
+    return `${scopeLabel}: ${scopeId}`;
+  }
+
+  return `${scopeLabel}: ${scopeId.slice(0, 8)}...${scopeId.slice(-4)}`;
+}
+
+function relationshipTypeLabel(value: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  return RELATIONSHIP_TYPE_LABEL[value] ?? value;
+}
+
+function statusLabel(value: string) {
+  return STATUS_LABEL[value] ?? value;
+}
+
+function renderContent(log: CoachWeeklyLogDetail) {
+  const coacheeName =
+    log.coachee_display_name ?? log.coachee_full_name ?? log.coachee_email ?? "-";
+
+  return (
+    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+      <div className="mx-auto max-w-5xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+          <Link href="/coach/weekly-logs" className="font-medium text-blue-600 hover:underline">
+            ← 주간 기록 목록
+          </Link>
+          <Link href="/dashboard" className="font-medium text-blue-600 hover:underline">
+            대시보드
+          </Link>
+        </div>
+
+        <h1 className="mt-6 text-2xl font-semibold">주간 기록 상세</h1>
+
+        <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
+          <h2 className="text-lg font-semibold">기본 정보</h2>
+          <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <dt className="text-sm font-medium text-slate-500">코치이</dt>
+              <dd className="mt-1 text-slate-950">{coacheeName}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-slate-500">주간 기간</dt>
+              <dd className="mt-1 text-slate-950">
+                {formatDate(log.week_start)} ~ {formatDate(log.week_end)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-slate-500">상태</dt>
+              <dd className="mt-1 text-slate-950">{statusLabel(log.status)}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-slate-500">관계 유형</dt>
+              <dd className="mt-1 text-slate-950">
+                {relationshipTypeLabel(log.relationship_type)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-slate-500">제출일</dt>
+              <dd className="mt-1 text-slate-950">{formatDate(log.submitted_at)}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-slate-500">수정일</dt>
+              <dd className="mt-1 text-slate-950">{formatDate(log.updated_at)}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-slate-500">범위</dt>
+              <dd className="mt-1 text-slate-950">
+                {formatScope(log.scope_type, log.scope_id)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-slate-500">버전</dt>
+              <dd className="mt-1 text-slate-950">{log.version}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
+          <h2 className="text-lg font-semibold">주간 기록 내용</h2>
+          <dl className="mt-4 grid gap-5">
+            <div>
+              <dt className="text-sm font-medium text-slate-500">감사 제목</dt>
+              <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+                {log.gratitude ?? "없음"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-slate-500">기도 제목</dt>
+              <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+                {log.prayer_request ?? "없음"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-slate-500">진행 상황</dt>
+              <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+                {log.progress_summary ?? "없음"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-slate-500">어려웠던 점</dt>
+              <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+                {log.difficulty ?? "없음"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-slate-500">코치에게 남긴 말</dt>
+              <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+                {log.message_to_coach ?? "없음"}
+              </dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+export default async function CoachWeeklyLogDetailPage({
+  params,
+}: CoachWeeklyLogDetailPageProps) {
+  const { id } = await params;
+  const result = await getCoachWeeklyLogDetail(id);
+
+  if (result.error?.code === "UNAUTHORIZED") {
+    redirect(`/login?redirectTo=/coach/weekly-logs/${id}`);
+  }
+
+  if (result.error?.code === "PROFILE_NOT_FOUND") {
+    return (
+      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+        <div className="mx-auto max-w-5xl">
+          <p className="rounded-md border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800">
+            아직 프로필이 생성되지 않았습니다.
+          </p>
+          <Link
+            href="/profile"
+            className="mt-4 inline-block text-sm font-medium text-blue-600 hover:underline"
+          >
+            프로필로 이동
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (
+    result.error?.code === "NOT_FOUND" ||
+    result.error?.code === "ACCESS_DENIED"
+  ) {
+    return (
+      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+        <div className="mx-auto max-w-5xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+            <Link href="/coach/weekly-logs" className="font-medium text-blue-600 hover:underline">
+              ← 주간 기록 목록
+            </Link>
+            <Link href="/dashboard" className="font-medium text-blue-600 hover:underline">
+              대시보드
+            </Link>
+          </div>
+          <p className="mt-6 rounded-md border border-slate-200 bg-white px-4 py-6 text-slate-700">
+            해당 주간 기록을 찾을 수 없습니다.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (result.error) {
+    return (
+      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+        <div className="mx-auto max-w-5xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+            <Link href="/coach/weekly-logs" className="font-medium text-blue-600 hover:underline">
+              ← 주간 기록 목록
+            </Link>
+            <Link href="/dashboard" className="font-medium text-blue-600 hover:underline">
+              대시보드
+            </Link>
+          </div>
+          <p className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-6 text-red-700">
+            지금 주간 기록을 불러올 수 없습니다.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  return renderContent(result.data);
+}

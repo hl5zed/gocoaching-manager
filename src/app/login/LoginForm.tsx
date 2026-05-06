@@ -1,33 +1,115 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-function getFriendlyLoginError(message: string) {
+export type AuthLoginTranslations = {
+  login?: string;
+  email?: string;
+  password?: string;
+  login_description?: string;
+  login_success?: string;
+  login_required?: string;
+  loading?: string;
+  error?: string;
+};
+
+type LoginFormProps = {
+  translations: AuthLoginTranslations;
+};
+
+type I18nResponse =
+  | {
+      ok: true;
+      data: Record<string, string>;
+      meta: {
+        requested_language: string;
+        resolved_language: string;
+        namespace: string;
+      };
+    }
+  | {
+      ok: false;
+      error: {
+        code: string;
+        message: string;
+      };
+    };
+
+const supportedLoginLanguages = new Set(["ko", "en", "th"]);
+
+function normalizeLanguage(value: string | null) {
+  const language = value?.trim().toLowerCase() || "ko";
+  return supportedLoginLanguages.has(language) ? language : "ko";
+}
+
+function getFriendlyLoginError(message: string, fallbackMessage: string) {
   const lowerMessage = message.toLowerCase();
 
   if (lowerMessage.includes("invalid login credentials")) {
-    return "이메일 또는 비밀번호가 올바르지 않습니다. 다시 확인해 주세요.";
+    return fallbackMessage;
   }
 
   if (lowerMessage.includes("email not confirmed")) {
-    return "이메일 인증이 아직 완료되지 않았습니다. 가입할 때 받은 인증 메일을 확인해 주세요.";
+    return fallbackMessage;
   }
 
   if (lowerMessage.includes("failed to fetch")) {
-    return "Supabase 서버에 연결하지 못했습니다. 인터넷 연결과 Supabase 환경변수를 확인해 주세요.";
+    return fallbackMessage;
   }
 
-  return `로그인 중 오류가 발생했습니다: ${message}`;
+  return `${fallbackMessage}: ${message}`;
 }
 
-export function LoginForm() {
+export function LoginForm({ translations }: LoginFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [clientTranslations, setClientTranslations] =
+    useState<AuthLoginTranslations>(translations);
+
+const loginText = clientTranslations.login ?? "로그인";
+const emailText = clientTranslations.email ?? "이메일";
+const passwordText = clientTranslations.password ?? "비밀번호";
+const loginDescriptionText =
+  clientTranslations.login_description ??
+  "Supabase Auth에 등록된 이메일과 비밀번호로 로그인합니다.";
+const loadingText = clientTranslations.loading ?? "불러오는 중";
+const errorText = clientTranslations.error ?? "오류";
+
+  useEffect(() => {
+    const language = normalizeLanguage(searchParams.get("lang"));
+
+    async function loadClientTranslations() {
+      const response = await fetch(`/api/i18n/${language}/auth`, {
+        cache: "no-store",
+      });
+      const result = (await response.json()) as I18nResponse;
+
+      if (!response.ok || !result.ok) {
+        setClientTranslations(translations);
+        return;
+      }
+
+setClientTranslations({
+  ...translations,
+  login: result.data.login,
+  email: result.data.email,
+  password: result.data.password,
+  login_description: result.data.login_description,
+  login_success: result.data.login_success,
+  login_required: result.data.login_required,
+});
+    }
+
+    loadClientTranslations().catch(() => {
+      setClientTranslations(translations);
+    });
+  }, [searchParams, translations]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,22 +125,28 @@ export function LoginForm() {
     setIsSubmitting(false);
 
     if (error) {
-      setErrorMessage(getFriendlyLoginError(error.message));
+      setErrorMessage(getFriendlyLoginError(error.message, errorText));
       return;
     }
 
-    router.push("/dashboard");
-    router.refresh();
+    router.replace("/dashboard");
   }
 
   return (
-    <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+    <>
+ 	<h1 className="mt-6 text-3xl font-semibold">{loginText}</h1>
+	<p className="mt-4 leading-7 text-slate-600">
+  	{loginDescriptionText}
+	</p>
+
+      <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+
       <div>
         <label
           className="block text-sm font-medium text-slate-700"
           htmlFor="email"
         >
-          이메일
+          {emailText}
         </label>
         <input
           autoComplete="email"
@@ -76,7 +164,7 @@ export function LoginForm() {
           className="block text-sm font-medium text-slate-700"
           htmlFor="password"
         >
-          비밀번호
+          {passwordText}
         </label>
         <input
           autoComplete="current-password"
@@ -100,8 +188,9 @@ export function LoginForm() {
         disabled={isSubmitting}
         type="submit"
       >
-        {isSubmitting ? "로그인 중..." : "로그인"}
+        {isSubmitting ? `${loadingText}...` : loginText}
       </button>
-    </form>
+      </form>
+    </>
   );
 }

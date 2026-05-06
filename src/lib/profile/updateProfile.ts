@@ -32,7 +32,6 @@ export type UpdateProfileErrorCode =
 export type UpdateProfileError = {
   code: UpdateProfileErrorCode;
   message: string;
-  detail?: string;
   fields?: string[];
 };
 
@@ -183,127 +182,141 @@ export async function updateProfile(body: unknown): Promise<UpdateProfileResult>
     };
   }
 
-  const supabase = await createSupabaseServerClient();
+  try {
+    const supabase = await createSupabaseServerClient();
 
-  if (payload.preferred_language) {
-    const { data: language, error: languageError } = await supabase
-      .from("supported_languages")
-      .select("code")
-      .eq("code", payload.preferred_language)
-      .eq("is_active", true)
+    if (
+      typeof payload.preferred_language === "string" &&
+      payload.preferred_language.trim().length > 0
+    ) {
+      const normalizedLanguage = payload.preferred_language.trim();
+      payload.preferred_language = normalizedLanguage;
+
+      const { data: language, error: languageError } = await supabase
+        .from("supported_languages")
+        .select("code")
+        .eq("code", normalizedLanguage)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (languageError || !language) {
+        return {
+          profile: null,
+          user: session.user,
+          error: {
+            code: "INVALID_LANGUAGE",
+            message: "지원하지 않는 언어입니다.",
+          },
+        };
+      }
+    }
+
+    const { data: oldProfile, error: profileError } = await supabase
+      .from("profiles")
+      .select(safeProfileSelectFields)
+      .eq("auth_user_id", session.user.id)
+      .neq("status", "anonymized")
+      .is("deleted_at", null)
       .maybeSingle();
 
-    if (languageError || !language) {
+    if (profileError) {
       return {
         profile: null,
         user: session.user,
         error: {
-          code: "INVALID_LANGUAGE",
-          message: "지원하지 않는 언어입니다.",
+          code: "PROFILE_QUERY_FAILED",
+          message: "프로필을 조회하는 중 오류가 발생했습니다.",
         },
       };
     }
-  }
 
-  const { data: oldProfile, error: profileError } = await supabase
-    .from("profiles")
-    .select(safeProfileSelectFields)
-    .eq("auth_user_id", session.user.id)
-    .neq("status", "anonymized")
-    .is("deleted_at", null)
-    .maybeSingle();
+    if (!oldProfile) {
+      return {
+        profile: null,
+        user: session.user,
+        error: {
+          code: "PROFILE_NOT_FOUND",
+          message:
+            "수정할 수 있는 프로필을 찾지 못했습니다. 프로필이 없거나 비활성 상태일 수 있습니다.",
+        },
+      };
+    }
 
-  if (profileError) {
+    const oldSafeProfile = oldProfile as SafeProfile;
+    const profilesTable = supabase.from("profiles") as any;
+
+    const { data: updatedProfile, error: updateError } = await profilesTable
+      .update(payload)
+      .eq("auth_user_id", session.user.id)
+      .neq("status", "anonymized")
+      .is("deleted_at", null)
+      .select(safeProfileSelectFields)
+      .maybeSingle();
+
+    if (updateError || !updatedProfile) {
+      return {
+        profile: null,
+        user: session.user,
+        error: {
+          code: "PROFILE_UPDATE_FAILED",
+          message: "프로필을 수정하는 중 오류가 발생했습니다.",
+        },
+      };
+    }
+
+    const newSafeProfile = updatedProfile as SafeProfile;
+    const { client: serviceClient, error: serviceClientError } =
+      createSupabaseServiceClient();
+
+    if (!serviceClient) {
+      return {
+        profile: null,
+        user: session.user,
+        error: {
+          code: "AUDIT_LOG_FAILED",
+          message:
+            serviceClientError ??
+            "감사 로그 기록에 필요한 서버 설정이 준비되지 않았습니다.",
+        },
+      };
+    }
+
+    const auditLogsTable = serviceClient.from("audit_logs") as any;
+
+    const { error: auditError } = await auditLogsTable.insert({
+      actor_id: newSafeProfile.id,
+      action: "profile_self_updated",
+      table_name: "profiles",
+      record_id: newSafeProfile.id,
+      old_values: getAuditValues(oldSafeProfile),
+      new_values: getAuditValues(newSafeProfile),
+      reason: "User updated own safe profile fields.",
+    });
+
+    if (auditError) {
+      return {
+        profile: null,
+        user: session.user,
+        error: {
+          code: "AUDIT_LOG_FAILED",
+          message: "감사 로그 기록 중 오류가 발생했습니다.",
+        },
+      };
+    }
+
+    return {
+      profile: newSafeProfile,
+      user: session.user,
+      error: null,
+    };
+  } catch {
     return {
       profile: null,
       user: session.user,
       error: {
         code: "PROFILE_QUERY_FAILED",
-        message: "프로필을 조회하는 중 오류가 발생했습니다.",
-        detail: profileError.message,
+        message: "프로필을 처리하는 중 오류가 발생했습니다.",
       },
     };
   }
-
-  if (!oldProfile) {
-    return {
-      profile: null,
-      user: session.user,
-      error: {
-        code: "PROFILE_NOT_FOUND",
-        message:
-          "수정할 수 있는 프로필을 찾지 못했습니다. 프로필이 없거나 비활성 상태일 수 있습니다.",
-      },
-    };
-  }
-
-  const oldSafeProfile = oldProfile as SafeProfile;
-  const profilesTable = supabase.from("profiles") as any;
-
-  const { data: updatedProfile, error: updateError } = await profilesTable
-    .update(payload)
-    .eq("auth_user_id", session.user.id)
-    .neq("status", "anonymized")
-    .is("deleted_at", null)
-    .select(safeProfileSelectFields)
-    .maybeSingle();
-
-  if (updateError || !updatedProfile) {
-    return {
-      profile: null,
-      user: session.user,
-      error: {
-        code: "PROFILE_UPDATE_FAILED",
-        message: "프로필을 수정하는 중 오류가 발생했습니다.",
-        detail: updateError?.message,
-      },
-    };
-  }
-
-  const newSafeProfile = updatedProfile as SafeProfile;
-  const { client: serviceClient, error: serviceClientError } =
-    createSupabaseServiceClient();
-
-  if (!serviceClient) {
-    return {
-      profile: null,
-      user: session.user,
-      error: {
-        code: "AUDIT_LOG_FAILED",
-        message:
-          serviceClientError ??
-          "audit log 기록에 필요한 서버 환경변수가 없습니다.",
-      },
-    };
-  }
-
-  const auditLogsTable = serviceClient.from("audit_logs") as any;
-
-  const { error: auditError } = await auditLogsTable.insert({
-    actor_id: newSafeProfile.id,
-    action: "profile_self_updated",
-    table_name: "profiles",
-    record_id: newSafeProfile.id,
-    old_values: getAuditValues(oldSafeProfile),
-    new_values: getAuditValues(newSafeProfile),
-    reason: "User updated own safe profile fields.",
-  });
-
-  if (auditError) {
-    return {
-      profile: null,
-      user: session.user,
-      error: {
-        code: "AUDIT_LOG_FAILED",
-        message: "audit log 기록 중 오류가 발생했습니다.",
-        detail: auditError.message,
-      },
-    };
-  }
-
-  return {
-    profile: newSafeProfile,
-    user: session.user,
-    error: null,
-  };
 }

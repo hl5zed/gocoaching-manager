@@ -33,15 +33,30 @@ export async function GET() {
   const result = await getProfile();
 
   if (result.error) {
-    return NextResponse.json(result.error, {
-      status: getStatusFromErrorCode(result.error.code),
-      headers: noStoreHeaders,
-    });
+    return NextResponse.json(
+      {
+        ok: false,
+        error: {
+          code: result.error.code,
+          message: result.error.message,
+        },
+      },
+      {
+        status: getStatusFromErrorCode(result.error.code),
+        headers: noStoreHeaders,
+      },
+    );
   }
 
-  return NextResponse.json(result.data, {
-    headers: noStoreHeaders,
-  });
+  return NextResponse.json(
+    {
+      ok: true,
+      data: result.data,
+    },
+    {
+      headers: noStoreHeaders,
+    },
+  );
 }
 
 export async function PATCH(request: Request) {
