@@ -18,7 +18,7 @@ const RELATIONSHIP_TYPE_LABEL: Record<string, string> = {
   group_coaching: "그룹 코칭",
   leadership_coaching: "리더십 코칭",
   pastoral_coaching: "목회 코칭",
-  missionary_coaching: "선교 코칭",
+  missionary_coaching: "선교사 코칭",
 };
 
 function statusLabel(value: string) {
@@ -68,7 +68,7 @@ export default async function CoachWeeklyLogsPage() {
             href="/profile"
             className="mt-4 inline-block text-sm font-medium text-blue-600 hover:underline"
           >
-            프로필 페이지로 이동
+            프로필 보기
           </Link>
         </div>
       </main>
@@ -97,7 +97,7 @@ export default async function CoachWeeklyLogsPage() {
 
         <h1 className="mt-6 text-2xl font-semibold">주간 기록</h1>
         <p className="mt-2 text-sm text-slate-600">
-          담당 코치이들이 제출한 주간 기록을 확인합니다.
+          담당 코치이가 제출한 주간 기록을 확인합니다.
         </p>
 
         {logs.length === 0 ? (
@@ -133,7 +133,14 @@ export default async function CoachWeeklyLogsPage() {
                     </td>
                     <td className="px-4 py-3">{formatDate(entry.submitted_at)}</td>
                     <td className="px-4 py-3">{formatDate(entry.updated_at)}</td>
-                    <td className="px-4 py-3 text-slate-400">상세 보기 준비 중</td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/coach/weekly-logs/${entry.id}`}
+                        className="font-medium text-blue-600 hover:underline"
+                      >
+                        상세 보기
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>

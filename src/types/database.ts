@@ -36,6 +36,30 @@ export type ProfileStatus = (typeof PROFILE_STATUSES)[number];
 export const GO_STATUSES = ["active", "paused", "completed", "archived"] as const;
 export type GoalStatus = (typeof GO_STATUSES)[number];
 
+export const GOAL_PRIORITIES = ["low", "normal", "high"] as const;
+export type GoalPriority = (typeof GOAL_PRIORITIES)[number];
+
+export const MOKSILGI_STATUSES = ["draft", "active", "archived"] as const;
+export type MoksilgiStatus = (typeof MOKSILGI_STATUSES)[number];
+
+export const MOKSILGI_AREA_KEYS = [
+  "spiritual",
+  "intellectual",
+  "physical",
+  "social",
+  "other",
+] as const;
+export type MoksilgiAreaKey = (typeof MOKSILGI_AREA_KEYS)[number];
+
+export const MOKSILGI_MEASUREMENT_TYPES = [
+  "daily_check",
+  "weekly_count",
+  "monthly_number",
+  "monthly_comment",
+] as const;
+export type MoksilgiMeasurementType =
+  (typeof MOKSILGI_MEASUREMENT_TYPES)[number];
+
 export const COACHING_RELATIONSHIP_STATUSES = [
   "active",
   "paused",
@@ -124,9 +148,7 @@ export type SyncStatus = (typeof SYNC_STATUSES)[number];
 
 export const COACH_FEEDBACK_STATUSES = [
   "draft",
-  "sent",
-  "read",
-  "responded",
+  "published",
   "archived",
 ] as const;
 export type CoachFeedbackStatus = (typeof COACH_FEEDBACK_STATUSES)[number];
@@ -288,12 +310,18 @@ type TablesMap = {
     {
       id: string;
       profile_id: string;
+      relationship_id: string | null;
       title: string;
       description: string | null;
-      status: GoalStatus;
+      category: string | null;
       target_value: number | null;
+      current_value: number | null;
       unit: string | null;
+      status: GoalStatus;
+      priority: GoalPriority;
+      start_date: string | null;
       due_date: string | null;
+      completed_at: string | null;
       created_at: string;
       updated_at: string;
       deleted_at: string | null;
@@ -301,12 +329,101 @@ type TablesMap = {
     {
       id?: string;
       profile_id: string;
+      relationship_id?: string | null;
       title: string;
       description?: string | null;
-      status?: GoalStatus;
+      category?: string | null;
       target_value?: number | null;
+      current_value?: number | null;
       unit?: string | null;
+      status?: GoalStatus;
+      priority?: GoalPriority;
+      start_date?: string | null;
       due_date?: string | null;
+      completed_at?: string | null;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    },
+    {
+      id?: string;
+      profile_id?: string;
+      relationship_id?: string | null;
+      title?: string;
+      description?: string | null;
+      category?: string | null;
+      target_value?: number | null;
+      current_value?: number | null;
+      unit?: string | null;
+      status?: GoalStatus;
+      priority?: GoalPriority;
+      start_date?: string | null;
+      due_date?: string | null;
+      completed_at?: string | null;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    }
+  >;
+  moksilgi_plans: TableDefinition<
+    {
+      id: string;
+      profile_id: string;
+      title: string;
+      subtitle: string;
+      period_start: string | null;
+      period_end: string | null;
+      written_at: string | null;
+      author_name: string | null;
+      region_name: string | null;
+      team_name: string | null;
+      regional_leader_name: string | null;
+      coach_name: string | null;
+      role_label: string | null;
+      generation_label: string | null;
+      mission_statement: string | null;
+      mission_bible_verse: string | null;
+      mission_description: string | null;
+      vision_year: number | null;
+      vision_statement: string | null;
+      vision_metrics: string | null;
+      vision_target: string | null;
+      vision_description: string | null;
+      core_values_json: Json;
+      main_goal: string | null;
+      main_goal_description: string | null;
+      status: MoksilgiStatus;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+    },
+    {
+      id?: string;
+      profile_id: string;
+      title?: string;
+      subtitle?: string;
+      period_start?: string | null;
+      period_end?: string | null;
+      written_at?: string | null;
+      author_name?: string | null;
+      region_name?: string | null;
+      team_name?: string | null;
+      regional_leader_name?: string | null;
+      coach_name?: string | null;
+      role_label?: string | null;
+      generation_label?: string | null;
+      mission_statement?: string | null;
+      mission_bible_verse?: string | null;
+      mission_description?: string | null;
+      vision_year?: number | null;
+      vision_statement?: string | null;
+      vision_metrics?: string | null;
+      vision_target?: string | null;
+      vision_description?: string | null;
+      core_values_json?: Json;
+      main_goal?: string | null;
+      main_goal_description?: string | null;
+      status?: MoksilgiStatus;
       created_at?: string;
       updated_at?: string;
       deleted_at?: string | null;
@@ -315,11 +432,223 @@ type TablesMap = {
       id?: string;
       profile_id?: string;
       title?: string;
+      subtitle?: string;
+      period_start?: string | null;
+      period_end?: string | null;
+      written_at?: string | null;
+      author_name?: string | null;
+      region_name?: string | null;
+      team_name?: string | null;
+      regional_leader_name?: string | null;
+      coach_name?: string | null;
+      role_label?: string | null;
+      generation_label?: string | null;
+      mission_statement?: string | null;
+      mission_bible_verse?: string | null;
+      mission_description?: string | null;
+      vision_year?: number | null;
+      vision_statement?: string | null;
+      vision_metrics?: string | null;
+      vision_target?: string | null;
+      vision_description?: string | null;
+      core_values_json?: Json;
+      main_goal?: string | null;
+      main_goal_description?: string | null;
+      status?: MoksilgiStatus;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    }
+  >;
+  moksilgi_goal_areas: TableDefinition<
+    {
+      id: string;
+      plan_id: string;
+      area_key: MoksilgiAreaKey;
+      area_title: string;
+      area_subtitle: string | null;
+      sort_order: number;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+    },
+    {
+      id?: string;
+      plan_id: string;
+      area_key: MoksilgiAreaKey;
+      area_title: string;
+      area_subtitle?: string | null;
+      sort_order?: number;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    },
+    {
+      id?: string;
+      plan_id?: string;
+      area_key?: MoksilgiAreaKey;
+      area_title?: string;
+      area_subtitle?: string | null;
+      sort_order?: number;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    }
+  >;
+  moksilgi_detail_goals: TableDefinition<
+    {
+      id: string;
+      plan_id: string;
+      area_id: string;
+      title: string;
+      description: string | null;
+      annual_target: number | null;
+      monthly_target: number | null;
+      unit: string | null;
+      measurement_type: MoksilgiMeasurementType;
+      strategies_json: Json;
+      sort_order: number;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+    },
+    {
+      id?: string;
+      plan_id: string;
+      area_id: string;
+      title: string;
       description?: string | null;
-      status?: GoalStatus;
-      target_value?: number | null;
+      annual_target?: number | null;
+      monthly_target?: number | null;
       unit?: string | null;
-      due_date?: string | null;
+      measurement_type?: MoksilgiMeasurementType;
+      strategies_json?: Json;
+      sort_order?: number;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    },
+    {
+      id?: string;
+      plan_id?: string;
+      area_id?: string;
+      title?: string;
+      description?: string | null;
+      annual_target?: number | null;
+      monthly_target?: number | null;
+      unit?: string | null;
+      measurement_type?: MoksilgiMeasurementType;
+      strategies_json?: Json;
+      sort_order?: number;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    }
+  >;
+  moksilgi_monthly_records: TableDefinition<
+    {
+      id: string;
+      plan_id: string;
+      area_id: string;
+      detail_goal_id: string;
+      profile_id: string;
+      year: number;
+      month: number;
+      target_value: number | null;
+      actual_value: number | null;
+      achievement_rate: number;
+      daily_checks_json: Json;
+      weekly_counts_json: Json;
+      comment: string | null;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+    },
+    {
+      id?: string;
+      plan_id: string;
+      area_id: string;
+      detail_goal_id: string;
+      profile_id: string;
+      year: number;
+      month: number;
+      target_value?: number | null;
+      actual_value?: number | null;
+      achievement_rate?: number;
+      daily_checks_json?: Json;
+      weekly_counts_json?: Json;
+      comment?: string | null;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    },
+    {
+      id?: string;
+      plan_id?: string;
+      area_id?: string;
+      detail_goal_id?: string;
+      profile_id?: string;
+      year?: number;
+      month?: number;
+      target_value?: number | null;
+      actual_value?: number | null;
+      achievement_rate?: number;
+      daily_checks_json?: Json;
+      weekly_counts_json?: Json;
+      comment?: string | null;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    }
+  >;
+  moksilgi_monthly_summaries: TableDefinition<
+    {
+      id: string;
+      plan_id: string;
+      profile_id: string;
+      year: number;
+      month: number;
+      spiritual_rate: number;
+      intellectual_rate: number;
+      physical_rate: number;
+      social_rate: number;
+      other_rate: number;
+      total_rate: number;
+      average_rate: number;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+    },
+    {
+      id?: string;
+      plan_id: string;
+      profile_id: string;
+      year: number;
+      month: number;
+      spiritual_rate?: number;
+      intellectual_rate?: number;
+      physical_rate?: number;
+      social_rate?: number;
+      other_rate?: number;
+      total_rate?: number;
+      average_rate?: number;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    },
+    {
+      id?: string;
+      plan_id?: string;
+      profile_id?: string;
+      year?: number;
+      month?: number;
+      spiritual_rate?: number;
+      intellectual_rate?: number;
+      physical_rate?: number;
+      social_rate?: number;
+      other_rate?: number;
+      total_rate?: number;
+      average_rate?: number;
       created_at?: string;
       updated_at?: string;
       deleted_at?: string | null;
@@ -501,33 +830,45 @@ type TablesMap = {
   coach_feedback: TableDefinition<
     {
       id: string;
-      coach_id: string;
-      coachee_id: string;
-      weekly_log_id: string | null;
+      weekly_log_id: string;
+      relationship_id: string;
+      coach_profile_id: string;
+      coachee_profile_id: string;
+      feedback_text: string;
+      encouragement: string | null;
+      next_step: string | null;
       status: CoachFeedbackStatus;
-      content: string | null;
+      version: number;
       created_at: string;
       updated_at: string;
       deleted_at: string | null;
     },
     {
       id?: string;
-      coach_id: string;
-      coachee_id: string;
-      weekly_log_id?: string | null;
+      weekly_log_id: string;
+      relationship_id: string;
+      coach_profile_id: string;
+      coachee_profile_id: string;
+      feedback_text: string;
+      encouragement?: string | null;
+      next_step?: string | null;
       status?: CoachFeedbackStatus;
-      content?: string | null;
+      version?: number;
       created_at?: string;
       updated_at?: string;
       deleted_at?: string | null;
     },
     {
       id?: string;
-      coach_id?: string;
-      coachee_id?: string;
-      weekly_log_id?: string | null;
+      weekly_log_id?: string;
+      relationship_id?: string;
+      coach_profile_id?: string;
+      coachee_profile_id?: string;
+      feedback_text?: string;
+      encouragement?: string | null;
+      next_step?: string | null;
       status?: CoachFeedbackStatus;
-      content?: string | null;
+      version?: number;
       created_at?: string;
       updated_at?: string;
       deleted_at?: string | null;

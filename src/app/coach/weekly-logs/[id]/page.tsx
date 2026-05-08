@@ -90,6 +90,34 @@ function statusLabel(value: string) {
   return STATUS_LABEL[value] ?? value;
 }
 
+function emptyText(value: string | null) {
+  return value && value.trim().length > 0 ? value : "없음";
+}
+
+function TopLinks({ id }: { id: string }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+      <Link
+        href="/coach/weekly-logs"
+        className="font-medium text-blue-600 hover:underline"
+      >
+        ← 주간 기록 목록
+      </Link>
+      <div className="flex flex-wrap gap-4">
+        <Link
+          href={`/coach/weekly-logs/${id}/feedback`}
+          className="font-medium text-blue-600 hover:underline"
+        >
+          피드백 작성
+        </Link>
+        <Link href="/dashboard" className="font-medium text-blue-600 hover:underline">
+          대시보드
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function renderContent(log: CoachWeeklyLogDetail) {
   const coacheeName =
     log.coachee_display_name ?? log.coachee_full_name ?? log.coachee_email ?? "-";
@@ -97,14 +125,7 @@ function renderContent(log: CoachWeeklyLogDetail) {
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
       <div className="mx-auto max-w-5xl">
-        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-          <Link href="/coach/weekly-logs" className="font-medium text-blue-600 hover:underline">
-            ← 주간 기록 목록
-          </Link>
-          <Link href="/dashboard" className="font-medium text-blue-600 hover:underline">
-            대시보드
-          </Link>
-        </div>
+        <TopLinks id={log.id} />
 
         <h1 className="mt-6 text-2xl font-semibold">주간 기록 상세</h1>
 
@@ -158,35 +179,101 @@ function renderContent(log: CoachWeeklyLogDetail) {
             <div>
               <dt className="text-sm font-medium text-slate-500">감사 제목</dt>
               <dd className="mt-1 whitespace-pre-wrap text-slate-950">
-                {log.gratitude ?? "없음"}
+                {emptyText(log.gratitude)}
               </dd>
             </div>
             <div>
               <dt className="text-sm font-medium text-slate-500">기도 제목</dt>
               <dd className="mt-1 whitespace-pre-wrap text-slate-950">
-                {log.prayer_request ?? "없음"}
+                {emptyText(log.prayer_request)}
               </dd>
             </div>
             <div>
               <dt className="text-sm font-medium text-slate-500">진행 상황</dt>
               <dd className="mt-1 whitespace-pre-wrap text-slate-950">
-                {log.progress_summary ?? "없음"}
+                {emptyText(log.progress_summary)}
               </dd>
             </div>
             <div>
               <dt className="text-sm font-medium text-slate-500">어려웠던 점</dt>
               <dd className="mt-1 whitespace-pre-wrap text-slate-950">
-                {log.difficulty ?? "없음"}
+                {emptyText(log.difficulty)}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-slate-500">코치에게 남긴 말</dt>
+              <dt className="text-sm font-medium text-slate-500">
+                코치에게 남긴 말
+              </dt>
               <dd className="mt-1 whitespace-pre-wrap text-slate-950">
-                {log.message_to_coach ?? "없음"}
+                {emptyText(log.message_to_coach)}
               </dd>
             </div>
           </dl>
         </section>
+      </div>
+    </main>
+  );
+}
+
+function renderProfileMissing() {
+  return (
+    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+      <div className="mx-auto max-w-5xl">
+        <p className="rounded-md border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800">
+          아직 프로필이 생성되지 않았습니다.
+        </p>
+        <Link
+          href="/profile"
+          className="mt-4 inline-block text-sm font-medium text-blue-600 hover:underline"
+        >
+          프로필 보기
+        </Link>
+      </div>
+    </main>
+  );
+}
+
+function renderNotFound() {
+  return (
+    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+      <div className="mx-auto max-w-5xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+          <Link
+            href="/coach/weekly-logs"
+            className="font-medium text-blue-600 hover:underline"
+          >
+            ← 주간 기록 목록
+          </Link>
+          <Link href="/dashboard" className="font-medium text-blue-600 hover:underline">
+            대시보드
+          </Link>
+        </div>
+        <p className="mt-6 rounded-md border border-slate-200 bg-white px-4 py-6 text-slate-700">
+          해당 주간 기록을 찾을 수 없습니다.
+        </p>
+      </div>
+    </main>
+  );
+}
+
+function renderLoadError() {
+  return (
+    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+      <div className="mx-auto max-w-5xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+          <Link
+            href="/coach/weekly-logs"
+            className="font-medium text-blue-600 hover:underline"
+          >
+            ← 주간 기록 목록
+          </Link>
+          <Link href="/dashboard" className="font-medium text-blue-600 hover:underline">
+            대시보드
+          </Link>
+        </div>
+        <p className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-6 text-red-700">
+          지금 주간 기록을 불러올 수 없습니다.
+        </p>
       </div>
     </main>
   );
@@ -203,64 +290,18 @@ export default async function CoachWeeklyLogDetailPage({
   }
 
   if (result.error?.code === "PROFILE_NOT_FOUND") {
-    return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
-        <div className="mx-auto max-w-5xl">
-          <p className="rounded-md border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800">
-            아직 프로필이 생성되지 않았습니다.
-          </p>
-          <Link
-            href="/profile"
-            className="mt-4 inline-block text-sm font-medium text-blue-600 hover:underline"
-          >
-            프로필로 이동
-          </Link>
-        </div>
-      </main>
-    );
+    return renderProfileMissing();
   }
 
   if (
     result.error?.code === "NOT_FOUND" ||
     result.error?.code === "ACCESS_DENIED"
   ) {
-    return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
-        <div className="mx-auto max-w-5xl">
-          <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-            <Link href="/coach/weekly-logs" className="font-medium text-blue-600 hover:underline">
-              ← 주간 기록 목록
-            </Link>
-            <Link href="/dashboard" className="font-medium text-blue-600 hover:underline">
-              대시보드
-            </Link>
-          </div>
-          <p className="mt-6 rounded-md border border-slate-200 bg-white px-4 py-6 text-slate-700">
-            해당 주간 기록을 찾을 수 없습니다.
-          </p>
-        </div>
-      </main>
-    );
+    return renderNotFound();
   }
 
   if (result.error) {
-    return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
-        <div className="mx-auto max-w-5xl">
-          <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-            <Link href="/coach/weekly-logs" className="font-medium text-blue-600 hover:underline">
-              ← 주간 기록 목록
-            </Link>
-            <Link href="/dashboard" className="font-medium text-blue-600 hover:underline">
-              대시보드
-            </Link>
-          </div>
-          <p className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-6 text-red-700">
-            지금 주간 기록을 불러올 수 없습니다.
-          </p>
-        </div>
-      </main>
-    );
+    return renderLoadError();
   }
 
   return renderContent(result.data);

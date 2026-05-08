@@ -91,6 +91,32 @@
 ### 주간 기록 흐름
 - weekly_logs table
 - weekly log creation
+- coach weekly logs list page
+- /coach/weekly-logs
+- coach home to weekly logs navigation
+- 코치용 주간 기록 목록 조회
+- 코치 홈 → 주간 기록 보기 연결
+- coach feedback writing for weekly logs
+- /coach/weekly-logs/[id]/feedback
+- coach feedback draft save
+- coach feedback publish
+- 코치 주간 기록 피드백 작성 기능
+- 코치 피드백 임시 저장
+- 코치 피드백 게시
+- coachee feedback read-only view
+- /my-coaching/feedback
+- coachee received feedback view
+- 코치이 받은 피드백 보기 기능
+- 코치이 피드백 읽기 전용 페이지
+- coachee goals management v1
+- /my-coaching/goals
+- coachee goal create
+- coachee goal list
+- coachee goal status update
+- 코치이 목표 관리 1차 기능
+- 코치이 목표 작성
+- 코치이 목표 목록
+- 코치이 목표 상태 변경
 
 ### UI/라벨 구조
 - Korean-first UI

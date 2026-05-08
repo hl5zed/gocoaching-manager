@@ -1,6 +1,8 @@
 import { getSession } from "@/lib/auth/getSession";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import type { WeeklyLogRow } from "@/types/database";
+import type { ActiveRoleSlim } from "@/types/profile";
 
 const COACH_LEVEL_ROLES = new Set([
   "coach",
@@ -11,9 +13,9 @@ const COACH_LEVEL_ROLES = new Set([
   "super_admin",
 ]);
 
-type ActiveRoleRow = {
-  role: string;
-};
+type ServiceSupabaseClient = NonNullable<
+  ReturnType<typeof createSupabaseServiceClient>["client"]
+>;
 
 type ProfileIdRow = {
   id: string;
@@ -32,6 +34,25 @@ type CoacheeProfileRow = {
   full_name: string | null;
   email: string | null;
 };
+
+type SafeWeeklyLogRow = Pick<
+  WeeklyLogRow,
+  | "id"
+  | "relationship_id"
+  | "coachee_profile_id"
+  | "week_start"
+  | "week_end"
+  | "gratitude"
+  | "prayer_request"
+  | "progress_summary"
+  | "difficulty"
+  | "message_to_coach"
+  | "status"
+  | "version"
+  | "submitted_at"
+  | "created_at"
+  | "updated_at"
+>;
 
 export type CoachWeeklyLogDetail = {
   id: string;
@@ -78,6 +99,31 @@ export type GetCoachWeeklyLogDetailResult =
       };
     };
 
+function getServiceClientResult():
+  | { ok: true; serviceClient: ServiceSupabaseClient }
+  | {
+      ok: false;
+      error: {
+        code: GetCoachWeeklyLogDetailErrorCode;
+        message: string;
+      };
+    } {
+  const { client, error } = createSupabaseServiceClient();
+
+  if (!client) {
+    console.error("[COACH_WEEKLY_LOG_DETAIL_SERVICE_CLIENT_UNAVAILABLE]", error);
+    return {
+      ok: false,
+      error: {
+        code: "LOG_QUERY_FAILED",
+        message: "주간 기록을 불러올 수 없습니다.",
+      },
+    };
+  }
+
+  return { ok: true, serviceClient: client };
+}
+
 export async function getCoachWeeklyLogDetail(
   logId: string,
 ): Promise<GetCoachWeeklyLogDetailResult> {
@@ -105,7 +151,7 @@ export async function getCoachWeeklyLogDetail(
       data: null,
       error: {
         code: "PROFILE_QUERY_FAILED",
-        message: "프로필을 조회하는 중 오류가 발생했습니다.",
+        message: "프로필을 불러올 수 없습니다.",
       },
     };
   }
@@ -123,8 +169,9 @@ export async function getCoachWeeklyLogDetail(
   const profileId = (profile as ProfileIdRow).id;
   const { data: roles, error: rolesError } = await supabase
     .from("user_roles")
-    .select("role")
+    .select("id, role, scope_type, scope_id, granted_at, expires_at")
     .eq("profile_id", profileId)
+    .eq("status", "active")
     .eq("is_active", true)
     .is("deleted_at", null);
 
@@ -133,12 +180,12 @@ export async function getCoachWeeklyLogDetail(
       data: null,
       error: {
         code: "ROLES_QUERY_FAILED",
-        message: "역할 정보를 조회하는 중 오류가 발생했습니다.",
+        message: "역할 정보를 불러올 수 없습니다.",
       },
     };
   }
 
-  const hasCoachAccess = ((roles ?? []) as ActiveRoleRow[]).some((role) =>
+  const hasCoachAccess = ((roles ?? []) as ActiveRoleSlim[]).some((role) =>
     COACH_LEVEL_ROLES.has(role.role),
   );
 
@@ -152,42 +199,19 @@ export async function getCoachWeeklyLogDetail(
     };
   }
 
-  const { data: relationships, error: relationshipsError } = await supabase
-    .from("coaching_relationships")
-    .select("id, relationship_type, status, scope_type, scope_id")
-    .eq("coach_profile_id", profileId)
-    .is("deleted_at", null);
+  const serviceClientResult = getServiceClientResult();
 
-  if (relationshipsError) {
-    return {
-      data: null,
-      error: {
-        code: "RELATIONSHIPS_QUERY_FAILED",
-        message: "코칭 관계를 조회하는 중 오류가 발생했습니다.",
-      },
-    };
+  if (!serviceClientResult.ok) {
+    return { data: null, error: serviceClientResult.error };
   }
 
-  const relationshipRows = (relationships ?? []) as RelationshipRow[];
-  const relationshipIds = relationshipRows.map((relationship) => relationship.id);
-
-  if (relationshipIds.length === 0) {
-    return {
-      data: null,
-      error: {
-        code: "NOT_FOUND",
-        message: "해당 주간 기록을 찾을 수 없습니다.",
-      },
-    };
-  }
-
-  const { data: weeklyLog, error: weeklyLogError } = await supabase
+  const { serviceClient } = serviceClientResult;
+  const { data: weeklyLog, error: weeklyLogError } = await serviceClient
     .from("weekly_logs")
     .select(
       "id, relationship_id, coachee_profile_id, week_start, week_end, gratitude, prayer_request, progress_summary, difficulty, message_to_coach, status, version, submitted_at, created_at, updated_at",
     )
     .eq("id", logId)
-    .in("relationship_id", relationshipIds)
     .is("deleted_at", null)
     .maybeSingle();
 
@@ -196,7 +220,7 @@ export async function getCoachWeeklyLogDetail(
       data: null,
       error: {
         code: "LOG_QUERY_FAILED",
-        message: "주간 기록을 조회하는 중 오류가 발생했습니다.",
+        message: "주간 기록을 불러올 수 없습니다.",
       },
     };
   }
@@ -211,30 +235,37 @@ export async function getCoachWeeklyLogDetail(
     };
   }
 
-  const weeklyLogRow = weeklyLog as Pick<
-    WeeklyLogRow,
-    | "id"
-    | "relationship_id"
-    | "coachee_profile_id"
-    | "week_start"
-    | "week_end"
-    | "gratitude"
-    | "prayer_request"
-    | "progress_summary"
-    | "difficulty"
-    | "message_to_coach"
-    | "status"
-    | "version"
-    | "submitted_at"
-    | "created_at"
-    | "updated_at"
-  >;
+  const weeklyLogRow = weeklyLog as SafeWeeklyLogRow;
+  const { data: relationship, error: relationshipsError } = await serviceClient
+    .from("coaching_relationships")
+    .select("id, relationship_type, status, scope_type, scope_id")
+    .eq("id", weeklyLogRow.relationship_id)
+    .eq("coach_profile_id", profileId)
+    .is("deleted_at", null)
+    .maybeSingle();
 
-  const relationship = relationshipRows.find(
-    (row) => row.id === weeklyLogRow.relationship_id,
-  );
+  if (relationshipsError) {
+    return {
+      data: null,
+      error: {
+        code: "RELATIONSHIPS_QUERY_FAILED",
+        message: "코칭 관계를 불러올 수 없습니다.",
+      },
+    };
+  }
 
-  const { data: coacheeProfile, error: coacheeProfileError } = await supabase
+  if (!relationship) {
+    return {
+      data: null,
+      error: {
+        code: "NOT_FOUND",
+        message: "해당 주간 기록을 찾을 수 없습니다.",
+      },
+    };
+  }
+
+  const relationshipRow = relationship as RelationshipRow;
+  const { data: coacheeProfile, error: coacheeProfileError } = await serviceClient
     .from("profiles")
     .select("display_name, full_name, email")
     .eq("id", weeklyLogRow.coachee_profile_id)
@@ -246,7 +277,7 @@ export async function getCoachWeeklyLogDetail(
       data: null,
       error: {
         code: "LOG_QUERY_FAILED",
-        message: "주간 기록을 조회하는 중 오류가 발생했습니다.",
+        message: "주간 기록을 불러올 수 없습니다.",
       },
     };
   }
@@ -273,10 +304,10 @@ export async function getCoachWeeklyLogDetail(
       coachee_display_name: coachee?.display_name ?? null,
       coachee_full_name: coachee?.full_name ?? null,
       coachee_email: coachee?.email ?? null,
-      relationship_type: relationship?.relationship_type ?? null,
-      relationship_status: relationship?.status ?? null,
-      scope_type: relationship?.scope_type ?? null,
-      scope_id: relationship?.scope_id ?? null,
+      relationship_type: relationshipRow.relationship_type,
+      relationship_status: relationshipRow.status,
+      scope_type: relationshipRow.scope_type,
+      scope_id: relationshipRow.scope_id,
     },
     error: null,
   };

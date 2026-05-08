@@ -1,46 +1,8 @@
 import { getSession } from "@/lib/auth/getSession";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import type { GoalPriority, GoalStatus, Tables } from "@/types/database";
 import type { ActiveRoleSlim } from "@/types/profile";
-
-export type CoachWeeklyLogEntry = {
-  id: string;
-  relationship_id: string;
-  coachee_profile_id: string;
-  week_start: string;
-  week_end: string;
-  status: string;
-  version: number;
-  submitted_at: string | null;
-  created_at: string;
-  updated_at: string;
-  coachee_display_name: string | null;
-  coachee_full_name: string | null;
-  coachee_email: string | null;
-  relationship_type: string | null;
-  relationship_status: string | null;
-  scope_type: string | null;
-  scope_id: string | null;
-};
-
-export type GetCoachWeeklyLogsErrorCode =
-  | "UNAUTHORIZED"
-  | "PROFILE_NOT_FOUND"
-  | "PROFILE_QUERY_FAILED"
-  | "ROLES_QUERY_FAILED"
-  | "ACCESS_DENIED"
-  | "RELATIONSHIPS_QUERY_FAILED"
-  | "LOGS_QUERY_FAILED"
-  | "COACHEE_PROFILES_QUERY_FAILED";
-
-export type GetCoachWeeklyLogsError = {
-  code: GetCoachWeeklyLogsErrorCode;
-  message: string;
-};
-
-export type GetCoachWeeklyLogsResult =
-  | { data: CoachWeeklyLogEntry[]; error: null }
-  | { data: null; error: GetCoachWeeklyLogsError };
 
 const COACH_LEVEL_ROLES = new Set([
   "coach",
@@ -58,23 +20,6 @@ type ServiceSupabaseClient = NonNullable<
 type RelationshipRow = {
   id: string;
   coachee_profile_id: string;
-  relationship_type: string | null;
-  status: string | null;
-  scope_type: string | null;
-  scope_id: string | null;
-};
-
-type WeeklyLogRow = {
-  id: string;
-  relationship_id: string;
-  coachee_profile_id: string;
-  week_start: string;
-  week_end: string;
-  status: string;
-  version: number;
-  submitted_at: string | null;
-  created_at: string;
-  updated_at: string;
 };
 
 type CoacheeProfileRow = {
@@ -84,18 +29,84 @@ type CoacheeProfileRow = {
   email: string | null;
 };
 
+export type CoachGoalItem = Pick<
+  Tables<"goals">,
+  | "id"
+  | "profile_id"
+  | "relationship_id"
+  | "title"
+  | "description"
+  | "category"
+  | "target_value"
+  | "current_value"
+  | "unit"
+  | "status"
+  | "priority"
+  | "start_date"
+  | "due_date"
+  | "completed_at"
+  | "created_at"
+  | "updated_at"
+> & {
+  coachee_display_name: string | null;
+  coachee_full_name: string | null;
+  coachee_email: string | null;
+};
+
+export type GetCoachGoalsErrorCode =
+  | "UNAUTHORIZED"
+  | "PROFILE_NOT_FOUND"
+  | "PROFILE_QUERY_FAILED"
+  | "ROLES_QUERY_FAILED"
+  | "ACCESS_DENIED"
+  | "RELATIONSHIPS_QUERY_FAILED"
+  | "GOALS_QUERY_FAILED"
+  | "COACHEE_PROFILES_QUERY_FAILED";
+
+export type GetCoachGoalsResult =
+  | { data: CoachGoalItem[]; error: null }
+  | {
+      data: null;
+      error: { code: GetCoachGoalsErrorCode; message: string };
+    };
+
+type GoalRow = {
+  id: string;
+  profile_id: string;
+  relationship_id: string | null;
+  title: string;
+  description: string | null;
+  category: string | null;
+  target_value: number | null;
+  current_value: number | null;
+  unit: string | null;
+  status: GoalStatus;
+  priority: GoalPriority;
+  start_date: string | null;
+  due_date: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 function getServiceClientResult():
   | { ok: true; serviceClient: ServiceSupabaseClient }
-  | { ok: false; error: GetCoachWeeklyLogsError } {
+  | {
+      ok: false;
+      error: {
+        code: "RELATIONSHIPS_QUERY_FAILED";
+        message: string;
+      };
+    } {
   const { client, error } = createSupabaseServiceClient();
 
   if (!client) {
-    console.error("[COACH_WEEKLY_LOGS_SERVICE_CLIENT_UNAVAILABLE]", error);
+    console.error("[COACH_GOALS_SERVICE_CLIENT_UNAVAILABLE]", error);
     return {
       ok: false,
       error: {
-        code: "LOGS_QUERY_FAILED",
-        message: "주간 기록을 조회하는 중 오류가 발생했습니다.",
+        code: "RELATIONSHIPS_QUERY_FAILED",
+        message: "코칭 관계를 조회하는 중 오류가 발생했습니다.",
       },
     };
   }
@@ -103,7 +114,7 @@ function getServiceClientResult():
   return { ok: true, serviceClient: client };
 }
 
-export async function getCoachWeeklyLogs(): Promise<GetCoachWeeklyLogsResult> {
+export async function getCoachGoals(): Promise<GetCoachGoalsResult> {
   const session = await getSession();
 
   if (!session.user) {
@@ -118,6 +129,8 @@ export async function getCoachWeeklyLogs(): Promise<GetCoachWeeklyLogsResult> {
     .from("profiles")
     .select("id")
     .eq("auth_user_id", session.user.id)
+    .is("deleted_at", null)
+    .neq("status", "anonymized")
     .maybeSingle();
 
   if (profileError) {
@@ -179,15 +192,13 @@ export async function getCoachWeeklyLogs(): Promise<GetCoachWeeklyLogsResult> {
   }
 
   const { serviceClient } = serviceClientResult;
-  const { data: relationships, error: relationshipError } = await serviceClient
+  const { data: relationships, error: relationshipsError } = await serviceClient
     .from("coaching_relationships")
-    .select(
-      "id, coachee_profile_id, relationship_type, status, scope_type, scope_id",
-    )
+    .select("id, coachee_profile_id")
     .eq("coach_profile_id", profileId)
     .is("deleted_at", null);
 
-  if (relationshipError) {
+  if (relationshipsError) {
     return {
       data: null,
       error: {
@@ -197,40 +208,40 @@ export async function getCoachWeeklyLogs(): Promise<GetCoachWeeklyLogsResult> {
     };
   }
 
-  const rels = (relationships ?? []) as RelationshipRow[];
+  const relationshipRows = (relationships ?? []) as RelationshipRow[];
 
-  if (rels.length === 0) {
+  if (relationshipRows.length === 0) {
     return { data: [], error: null };
   }
 
-  const relationshipIds = rels.map((relationship) => relationship.id);
-  const { data: logs, error: logsError } = await serviceClient
-    .from("weekly_logs")
+  const coacheeIds = [
+    ...new Set(relationshipRows.map((relationship) => relationship.coachee_profile_id)),
+  ];
+  const { data: goals, error: goalsError } = await serviceClient
+    .from("goals")
     .select(
-      "id, relationship_id, coachee_profile_id, week_start, week_end, status, version, submitted_at, created_at, updated_at",
+      "id, profile_id, relationship_id, title, description, category, target_value, current_value, unit, status, priority, start_date, due_date, completed_at, created_at, updated_at",
     )
-    .in("relationship_id", relationshipIds)
+    .in("profile_id", coacheeIds)
     .is("deleted_at", null)
-    .order("submitted_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false });
+    .order("updated_at", { ascending: false });
 
-  if (logsError) {
+  if (goalsError) {
     return {
       data: null,
       error: {
-        code: "LOGS_QUERY_FAILED",
-        message: "주간 기록을 조회하는 중 오류가 발생했습니다.",
+        code: "GOALS_QUERY_FAILED",
+        message: "코치이 목표를 조회하는 중 오류가 발생했습니다.",
       },
     };
   }
 
-  const weeklyLogs = (logs ?? []) as WeeklyLogRow[];
+  const goalRows = (goals ?? []) as GoalRow[];
 
-  if (weeklyLogs.length === 0) {
+  if (goalRows.length === 0) {
     return { data: [], error: null };
   }
 
-  const coacheeIds = [...new Set(weeklyLogs.map((log) => log.coachee_profile_id))];
   const { data: coachees, error: coacheesError } = await serviceClient
     .from("profiles")
     .select("id, display_name, full_name, email")
@@ -250,33 +261,36 @@ export async function getCoachWeeklyLogs(): Promise<GetCoachWeeklyLogsResult> {
   const coacheeMap = new Map(
     ((coachees ?? []) as CoacheeProfileRow[]).map((coachee) => [coachee.id, coachee]),
   );
-  const relationshipMap = new Map(rels.map((relationship) => [relationship.id, relationship]));
+  const assignedCoacheeIds = new Set(coacheeIds);
 
   return {
-    data: weeklyLogs.map((log) => {
-      const relationship = relationshipMap.get(log.relationship_id);
-      const coachee = coacheeMap.get(log.coachee_profile_id);
+    data: goalRows
+      .filter((goal) => assignedCoacheeIds.has(goal.profile_id))
+      .map((goal) => {
+        const coachee = coacheeMap.get(goal.profile_id);
 
-      return {
-        id: log.id,
-        relationship_id: log.relationship_id,
-        coachee_profile_id: log.coachee_profile_id,
-        week_start: log.week_start,
-        week_end: log.week_end,
-        status: log.status,
-        version: log.version,
-        submitted_at: log.submitted_at,
-        created_at: log.created_at,
-        updated_at: log.updated_at,
-        coachee_display_name: coachee?.display_name ?? null,
-        coachee_full_name: coachee?.full_name ?? null,
-        coachee_email: coachee?.email ?? null,
-        relationship_type: relationship?.relationship_type ?? null,
-        relationship_status: relationship?.status ?? null,
-        scope_type: relationship?.scope_type ?? null,
-        scope_id: relationship?.scope_id ?? null,
-      };
-    }),
+        return {
+          id: goal.id,
+          profile_id: goal.profile_id,
+          relationship_id: goal.relationship_id,
+          title: goal.title,
+          description: goal.description,
+          category: goal.category,
+          target_value: goal.target_value,
+          current_value: goal.current_value,
+          unit: goal.unit,
+          status: goal.status,
+          priority: goal.priority,
+          start_date: goal.start_date,
+          due_date: goal.due_date,
+          completed_at: goal.completed_at,
+          created_at: goal.created_at,
+          updated_at: goal.updated_at,
+          coachee_display_name: coachee?.display_name ?? null,
+          coachee_full_name: coachee?.full_name ?? null,
+          coachee_email: coachee?.email ?? null,
+        };
+      }),
     error: null,
   };
 }
