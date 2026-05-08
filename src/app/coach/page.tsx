@@ -45,6 +45,16 @@ export default async function CoachPage() {
               담당 코치이들의 주간 기록을 확인합니다.
             </p>
           </Link>
+
+          <Link
+            href="/coach/moksilgi"
+            className="rounded-md border border-slate-200 bg-white px-5 py-4 transition hover:border-blue-300 hover:shadow-sm"
+          >
+            <h2 className="text-lg font-semibold">코치이 목실기 보기</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              담당 코치이들의 목실기와 성취 요약을 확인합니다.
+            </p>
+          </Link>
         </div>
       </div>
     </main>

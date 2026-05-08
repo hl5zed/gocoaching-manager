@@ -125,6 +125,12 @@
 - 목실기 개인 성취표
 - 목실기 연간 요약표
 - 목실기 누적 성취율
+- coach moksilgi read-only detail
+- /coach/moksilgi/[planId]
+- coach assigned coachee moksilgi detail
+- coach moksilgi yearly summary detail
+- 코치용 목실기 상세 보기
+- 담당 코치이 목실기 상세 조회
 
 ### UI/라벨 구조
 - Korean-first UI
