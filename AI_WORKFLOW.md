@@ -131,6 +131,13 @@
 - coach moksilgi yearly summary detail
 - 코치용 목실기 상세 보기
 - 담당 코치이 목실기 상세 조회
+- coach-maker moksilgi progress dashboard
+- /coach-maker/moksilgi-progress
+- moksilgi team progress table
+- moksilgi 12-month team achievement view
+- moksilgi up-to-current achievement summary
+- 코치메이커 전체 목실기 성취 현황
+- 목실기 지역/팀 성취 현황표
 
 ### UI/라벨 구조
 - Korean-first UI
