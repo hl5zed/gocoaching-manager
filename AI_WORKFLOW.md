@@ -117,6 +117,14 @@
 - 코치이 목표 작성
 - 코치이 목표 목록
 - 코치이 목표 상태 변경
+- moksilgi personal achievement summary
+- /my-coaching/moksilgi/summary
+- moksilgi yearly summary table
+- moksilgi cumulative achievement row
+- moksilgi total achievement rate
+- 목실기 개인 성취표
+- 목실기 연간 요약표
+- 목실기 누적 성취율
 
 ### UI/라벨 구조
 - Korean-first UI
