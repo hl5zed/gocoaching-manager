@@ -21,11 +21,32 @@ type ServiceSupabaseClient = NonNullable<
   ReturnType<typeof createSupabaseServiceClient>["client"]
 >;
 type ProfileIdRow = { id: string };
-type RelationshipRow = { coachee_profile_id: string };
+type RelationshipRow = {
+  id: string;
+  coach_profile_id: string;
+  coachee_profile_id: string;
+  status: string;
+};
 type ProfileRow = Pick<
   Tables<"profiles">,
-  "id" | "display_name" | "full_name" | "email"
+  | "id"
+  | "display_name"
+  | "full_name"
+  | "email"
+  | "country_id"
+  | "region_id"
+  | "organization_id"
+  | "church_id"
+  | "group_id"
+  | "ministry_position"
+  | "generation_number"
+  | "primary_role"
 >;
+type CountryRow = Pick<Tables<"countries">, "id" | "name" | "code">;
+type RegionRow = Pick<Tables<"regions">, "id" | "name">;
+type OrganizationRow = Pick<Tables<"organizations">, "id" | "name">;
+type ChurchRow = Pick<Tables<"churches">, "id" | "name">;
+type GroupRow = Pick<Tables<"groups">, "id" | "name">;
 type PlanRow = Pick<
   Tables<"moksilgi_plans">,
   | "id"
@@ -60,9 +81,22 @@ export type CoachMakerMoksilgiProgressRow = {
   full_name: string | null;
   email: string | null;
   author_name: string | null;
+  country_id: string | null;
+  country_name: string | null;
+  country_code: string | null;
+  region_id: string | null;
   role_label: string | null;
   generation_label: string | null;
+  generation_number: number | null;
   region_name: string | null;
+  organization_id: string | null;
+  organization_name: string | null;
+  church_id: string | null;
+  church_name: string | null;
+  group_id: string | null;
+  group_name: string | null;
+  ministry_position: string | null;
+  primary_role: UserRole | null;
   team_name: string | null;
   month_1_rate: number;
   month_2_rate: number;
@@ -77,6 +111,40 @@ export type CoachMakerMoksilgiProgressRow = {
   month_11_rate: number;
   month_12_rate: number;
   cumulative_rate: number;
+};
+
+export type CoachMakerMoksilgiRelationshipProgressRow = {
+  relationship_id: string;
+  coach_profile_id: string;
+  coachee_profile_id: string;
+  coach_display_name: string | null;
+  coach_full_name: string | null;
+  coach_email: string | null;
+  coachee_display_name: string | null;
+  coachee_full_name: string | null;
+  coachee_email: string | null;
+  coachee_country_name: string | null;
+  coachee_country_code: string | null;
+  coachee_region_name: string | null;
+  coachee_organization_name: string | null;
+  coachee_church_name: string | null;
+  coachee_group_name: string | null;
+  coachee_ministry_position: string | null;
+  coachee_generation_number: number | null;
+  coachee_primary_role: UserRole | null;
+  relationship_status: string;
+  month_1_rate: number | null;
+  month_2_rate: number | null;
+  month_3_rate: number | null;
+  month_4_rate: number | null;
+  month_5_rate: number | null;
+  month_6_rate: number | null;
+  month_7_rate: number | null;
+  month_8_rate: number | null;
+  month_9_rate: number | null;
+  month_10_rate: number | null;
+  month_11_rate: number | null;
+  month_12_rate: number | null;
 };
 
 export type CoachMakerMoksilgiProgressAverageRow = {
@@ -110,6 +178,7 @@ export type GetCoachMakerMoksilgiProgressResult =
   | {
       data: {
         rows: CoachMakerMoksilgiProgressRow[];
+        relationshipRows: CoachMakerMoksilgiRelationshipProgressRow[];
         averageRow: CoachMakerMoksilgiProgressAverageRow;
         upToCurrentRate: number;
         year: number;
@@ -161,6 +230,14 @@ function safeText(value: string | null | undefined) {
 
 function safeNumber(value: number | null | undefined) {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function uniqueNonNull(values: Array<string | null | undefined>) {
+  return [...new Set(values.filter((value): value is string => Boolean(value)))];
+}
+
+function mapById<TRow extends { id: string }>(rows: TRow[]) {
+  return new Map(rows.map((row) => [row.id, row]));
 }
 
 function average(values: number[]) {
@@ -267,6 +344,13 @@ function applyFilters(
 function buildRow(
   plan: PlanRow,
   profile: ProfileRow | undefined,
+  lookups: {
+    churches: Map<string, ChurchRow>;
+    countries: Map<string, CountryRow>;
+    groups: Map<string, GroupRow>;
+    organizations: Map<string, OrganizationRow>;
+    regions: Map<string, RegionRow>;
+  },
   summaries: SummaryRow[],
   index: number,
 ) {
@@ -283,9 +367,36 @@ function buildRow(
     full_name: profile?.full_name ?? null,
     email: profile?.email ?? null,
     author_name: plan.author_name,
+    country_id: profile?.country_id ?? null,
+    country_name: profile?.country_id
+      ? lookups.countries.get(profile.country_id)?.name ?? null
+      : null,
+    country_code: profile?.country_id
+      ? lookups.countries.get(profile.country_id)?.code ?? null
+      : null,
+    region_id: profile?.region_id ?? null,
     role_label: plan.role_label,
-    generation_label: plan.generation_label,
-    region_name: plan.region_name,
+    generation_label: profile?.generation_number
+      ? `${profile.generation_number}세대`
+      : plan.generation_label,
+    generation_number: profile?.generation_number ?? null,
+    region_name: profile?.region_id
+      ? lookups.regions.get(profile.region_id)?.name ?? plan.region_name
+      : plan.region_name,
+    organization_id: profile?.organization_id ?? null,
+    organization_name: profile?.organization_id
+      ? lookups.organizations.get(profile.organization_id)?.name ?? null
+      : null,
+    church_id: profile?.church_id ?? null,
+    church_name: profile?.church_id
+      ? lookups.churches.get(profile.church_id)?.name ?? null
+      : null,
+    group_id: profile?.group_id ?? null,
+    group_name: profile?.group_id
+      ? lookups.groups.get(profile.group_id)?.name ?? plan.team_name
+      : plan.team_name,
+    ministry_position: profile?.ministry_position ?? null,
+    primary_role: profile?.primary_role ?? null,
     team_name: plan.team_name,
     month_1_rate: monthRates[0],
     month_2_rate: monthRates[1],
@@ -301,6 +412,69 @@ function buildRow(
     month_12_rate: monthRates[11],
     cumulative_rate: average(monthRates),
   } satisfies CoachMakerMoksilgiProgressRow;
+}
+
+function buildRelationshipProgressRows({
+  profilesById,
+  relationships,
+  rowsByProfileId,
+  summariesByPlanId,
+}: {
+  profilesById: Map<string, ProfileRow>;
+  relationships: RelationshipRow[];
+  rowsByProfileId: Map<string, CoachMakerMoksilgiProgressRow>;
+  summariesByPlanId: Map<string, SummaryRow[]>;
+}) {
+  return relationships.map((relationship) => {
+    const coacheeProgress = rowsByProfileId.get(relationship.coachee_profile_id);
+    const summaries = coacheeProgress
+      ? summariesByPlanId.get(coacheeProgress.plan_id) ?? []
+      : [];
+    const monthRates = Array.from({ length: 12 }, (_, index) => {
+      const month = index + 1;
+      const summary = summaries.find((item) => item.month === month);
+      return typeof summary?.average_rate === "number" &&
+        Number.isFinite(summary.average_rate)
+        ? summary.average_rate
+        : null;
+    });
+    const coach = profilesById.get(relationship.coach_profile_id);
+    const coachee = profilesById.get(relationship.coachee_profile_id);
+
+    return {
+      relationship_id: relationship.id,
+      coach_profile_id: relationship.coach_profile_id,
+      coachee_profile_id: relationship.coachee_profile_id,
+      coach_display_name: coach?.display_name ?? null,
+      coach_full_name: coach?.full_name ?? null,
+      coach_email: coach?.email ?? null,
+      coachee_display_name: coachee?.display_name ?? null,
+      coachee_full_name: coachee?.full_name ?? null,
+      coachee_email: coachee?.email ?? null,
+      coachee_country_name: coacheeProgress?.country_name ?? null,
+      coachee_country_code: coacheeProgress?.country_code ?? null,
+      coachee_region_name: coacheeProgress?.region_name ?? null,
+      coachee_organization_name: coacheeProgress?.organization_name ?? null,
+      coachee_church_name: coacheeProgress?.church_name ?? null,
+      coachee_group_name: coacheeProgress?.group_name ?? null,
+      coachee_ministry_position: coacheeProgress?.ministry_position ?? null,
+      coachee_generation_number: coacheeProgress?.generation_number ?? null,
+      coachee_primary_role: coacheeProgress?.primary_role ?? null,
+      relationship_status: relationship.status,
+      month_1_rate: monthRates[0],
+      month_2_rate: monthRates[1],
+      month_3_rate: monthRates[2],
+      month_4_rate: monthRates[3],
+      month_5_rate: monthRates[4],
+      month_6_rate: monthRates[5],
+      month_7_rate: monthRates[6],
+      month_8_rate: monthRates[7],
+      month_9_rate: monthRates[8],
+      month_10_rate: monthRates[9],
+      month_11_rate: monthRates[10],
+      month_12_rate: monthRates[11],
+    } satisfies CoachMakerMoksilgiRelationshipProgressRow;
+  });
 }
 
 export async function getCoachMakerMoksilgiProgress(
@@ -322,7 +496,7 @@ export async function getCoachMakerMoksilgiProgress(
     .select("id")
     .eq("auth_user_id", session.user.id)
     .is("deleted_at", null)
-    .neq("status", "anonymized")
+    .eq("status", "active")
     .maybeSingle();
 
   if (profileError) {
@@ -387,12 +561,14 @@ export async function getCoachMakerMoksilgiProgress(
   const { serviceClient } = serviceClientResult;
   const hasBroadAccess = roleValues.some((role) => BROAD_ACCESS_ROLES.has(role));
   let accessibleProfileIds: string[] | null = null;
+  let activeRelationships: RelationshipRow[] = [];
 
   if (!hasBroadAccess) {
     const { data: relationships, error: relationshipsError } = await serviceClient
       .from("coaching_relationships")
-      .select("coachee_profile_id")
+      .select("id, coach_profile_id, coachee_profile_id, status")
       .eq("coach_profile_id", profileId)
+      .eq("status", "active")
       .is("deleted_at", null);
 
     if (relationshipsError) {
@@ -405,9 +581,10 @@ export async function getCoachMakerMoksilgiProgress(
       };
     }
 
+    activeRelationships = (relationships ?? []) as RelationshipRow[];
     accessibleProfileIds = [
       ...new Set(
-        ((relationships ?? []) as RelationshipRow[]).map(
+        activeRelationships.map(
           (relationship) => relationship.coachee_profile_id,
         ),
       ),
@@ -418,6 +595,7 @@ export async function getCoachMakerMoksilgiProgress(
       return {
         data: {
           rows: [],
+          relationshipRows: [],
           averageRow,
           upToCurrentRate: 0,
           year: selectedYear,
@@ -426,6 +604,24 @@ export async function getCoachMakerMoksilgiProgress(
         error: null,
       };
     }
+  } else {
+    const { data: relationships, error: relationshipsError } = await serviceClient
+      .from("coaching_relationships")
+      .select("id, coach_profile_id, coachee_profile_id, status")
+      .eq("status", "active")
+      .is("deleted_at", null);
+
+    if (relationshipsError) {
+      return {
+        data: null,
+        error: {
+          code: "RELATIONSHIPS_QUERY_FAILED",
+          message: "코칭 관계를 조회하는 중 오류가 발생했습니다.",
+        },
+      };
+    }
+
+    activeRelationships = (relationships ?? []) as RelationshipRow[];
   }
 
   let plansQuery = serviceClient
@@ -454,34 +650,34 @@ export async function getCoachMakerMoksilgiProgress(
 
   const planRows = (plans ?? []) as PlanRow[];
 
-  if (planRows.length === 0) {
-    const averageRow = emptyAverageRow();
-    return {
-      data: {
-        rows: [],
-        averageRow,
-        upToCurrentRate: 0,
-        year: selectedYear,
-        scopeMode: hasBroadAccess ? "all" : "direct_coaching_relationships",
-      },
-      error: null,
-    };
-  }
-
   const planIds = planRows.map((plan) => plan.id);
-  const profileIds = [...new Set(planRows.map((plan) => plan.profile_id))];
+  const profileIds = [
+    ...new Set([
+      ...planRows.map((plan) => plan.profile_id),
+      ...activeRelationships.flatMap((relationship) => [
+        relationship.coach_profile_id,
+        relationship.coachee_profile_id,
+      ]),
+    ]),
+  ];
   const [profilesResult, summariesResult] = await Promise.all([
-    serviceClient
-      .from("profiles")
-      .select("id, display_name, full_name, email")
-      .in("id", profileIds)
-      .is("deleted_at", null),
-    serviceClient
-      .from("moksilgi_monthly_summaries")
-      .select("plan_id, month, average_rate")
-      .in("plan_id", planIds)
-      .eq("year", selectedYear)
-      .is("deleted_at", null),
+    profileIds.length > 0
+      ? serviceClient
+          .from("profiles")
+          .select(
+            "id, display_name, full_name, email, country_id, region_id, organization_id, church_id, group_id, ministry_position, generation_number, primary_role",
+          )
+          .in("id", profileIds)
+          .is("deleted_at", null)
+      : Promise.resolve({ data: [], error: null }),
+    planIds.length > 0
+      ? serviceClient
+          .from("moksilgi_monthly_summaries")
+          .select("plan_id, month, average_rate")
+          .in("plan_id", planIds)
+          .eq("year", selectedYear)
+          .is("deleted_at", null)
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   if (profilesResult.error) {
@@ -504,12 +700,70 @@ export async function getCoachMakerMoksilgiProgress(
     };
   }
 
-  const profileById = new Map(
-    ((profilesResult.data ?? []) as ProfileRow[]).map((profile) => [
-      profile.id,
-      profile,
-    ]),
+  const profileRows = (profilesResult.data ?? []) as ProfileRow[];
+  const countryIds = uniqueNonNull(profileRows.map((profile) => profile.country_id));
+  const regionIds = uniqueNonNull(profileRows.map((profile) => profile.region_id));
+  const organizationIds = uniqueNonNull(
+    profileRows.map((profile) => profile.organization_id),
   );
+  const churchIds = uniqueNonNull(profileRows.map((profile) => profile.church_id));
+  const groupIds = uniqueNonNull(profileRows.map((profile) => profile.group_id));
+  const [
+    countriesResult,
+    regionsResult,
+    organizationsResult,
+    churchesResult,
+    groupsResult,
+  ] = await Promise.all([
+    countryIds.length > 0
+      ? serviceClient
+          .from("countries")
+          .select("id, name, code")
+          .in("id", countryIds)
+      : Promise.resolve({ data: [], error: null }),
+    regionIds.length > 0
+      ? serviceClient.from("regions").select("id, name").in("id", regionIds)
+      : Promise.resolve({ data: [], error: null }),
+    organizationIds.length > 0
+      ? serviceClient
+          .from("organizations")
+          .select("id, name")
+          .in("id", organizationIds)
+          .is("deleted_at", null)
+      : Promise.resolve({ data: [], error: null }),
+    churchIds.length > 0
+      ? serviceClient.from("churches").select("id, name").in("id", churchIds)
+      : Promise.resolve({ data: [], error: null }),
+    groupIds.length > 0
+      ? serviceClient.from("groups").select("id, name").in("id", groupIds)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  const lookupError =
+    countriesResult.error ??
+    regionsResult.error ??
+    organizationsResult.error ??
+    churchesResult.error ??
+    groupsResult.error;
+
+  if (lookupError) {
+    return {
+      data: null,
+      error: {
+        code: "PROFILES_QUERY_FAILED",
+        message: "소속 정보를 조회하는 중 오류가 발생했습니다.",
+      },
+    };
+  }
+
+  const profileById = mapById(profileRows);
+  const lookups = {
+    churches: mapById((churchesResult.data ?? []) as ChurchRow[]),
+    countries: mapById((countriesResult.data ?? []) as CountryRow[]),
+    groups: mapById((groupsResult.data ?? []) as GroupRow[]),
+    organizations: mapById((organizationsResult.data ?? []) as OrganizationRow[]),
+    regions: mapById((regionsResult.data ?? []) as RegionRow[]),
+  };
   const summariesByPlanId = new Map<string, SummaryRow[]>();
 
   for (const summary of (summariesResult.data ?? []) as SummaryRow[]) {
@@ -523,6 +777,7 @@ export async function getCoachMakerMoksilgiProgress(
       buildRow(
         plan,
         profileById.get(plan.profile_id),
+        lookups,
         summariesByPlanId.get(plan.id) ?? [],
         index + 1,
       ),
@@ -530,10 +785,18 @@ export async function getCoachMakerMoksilgiProgress(
     { ...filters, year: selectedYear },
   );
   const averageRow = calculateAverageRow(rows);
+  const rowsByProfileId = new Map(rows.map((row) => [row.profile_id, row]));
+  const relationshipRows = buildRelationshipProgressRows({
+    profilesById: profileById,
+    relationships: activeRelationships,
+    rowsByProfileId,
+    summariesByPlanId,
+  });
 
   return {
     data: {
       rows,
+      relationshipRows,
       averageRow,
       upToCurrentRate: calculateUpToCurrentRate(averageRow, selectedYear),
       year: selectedYear,

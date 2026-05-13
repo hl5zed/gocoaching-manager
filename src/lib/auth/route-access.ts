@@ -9,6 +9,14 @@ export const COACH_ROUTE_ROLES: UserRole[] = [
   "super_admin",
 ];
 
+export const COACH_MAKER_ROUTE_ROLES: UserRole[] = [
+  "coach_maker",
+  "church_admin",
+  "organization_admin",
+  "country_admin",
+  "super_admin",
+];
+
 export const ADMIN_ROUTE_ROLES: UserRole[] = [
   "church_admin",
   "organization_admin",
@@ -36,6 +44,8 @@ export function isProtectedPageRoute(pathname: string) {
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/coach/") ||
     pathname === "/coach" ||
+    pathname.startsWith("/coach-maker/") ||
+    pathname === "/coach-maker" ||
     pathname.startsWith("/admin/") ||
     pathname === "/admin" ||
     pathname.startsWith("/super-admin/") ||
@@ -54,6 +64,10 @@ export function getAllowedRolesForPath(pathname: string): UserRole[] | null {
 
   if (pathname.startsWith("/coach/") || pathname === "/coach") {
     return COACH_ROUTE_ROLES;
+  }
+
+  if (pathname.startsWith("/coach-maker/") || pathname === "/coach-maker") {
+    return COACH_MAKER_ROUTE_ROLES;
   }
 
   return null;

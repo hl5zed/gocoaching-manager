@@ -7,15 +7,14 @@ import type { User } from "@/types/auth";
 const allowedProfileFields = [
   "display_name",
   "phone",
-  "preferred_language",
-  "timezone",
+  "ministry_position",
 ] as const;
 
 type AllowedProfileField = (typeof allowedProfileFields)[number];
 
 type AuditProfileValues = Pick<
   SafeProfile,
-  "display_name" | "phone" | "preferred_language" | "timezone"
+  "display_name" | "phone" | "ministry_position"
 >;
 
 export type UpdateProfileErrorCode =
@@ -63,6 +62,7 @@ const safeProfileSelectFields = [
   "region_id",
   "organization_id",
   "church_id",
+  "ministry_position",
   "group_id",
   "cohort_id",
   "created_at",
@@ -79,6 +79,17 @@ function isAllowedProfileField(field: string): field is AllowedProfileField {
 
 function validateUpdateValue(field: string, value: unknown) {
   if (value === null || typeof value === "string") {
+    if (
+      field === "ministry_position" &&
+      typeof value === "string" &&
+      value.trim().length > 100
+    ) {
+      return {
+        code: "INVALID_PROFILE_FIELD_VALUE" as const,
+        message: "소속 직분은 100자 이하로 입력해 주세요.",
+      };
+    }
+
     return null;
   }
 
@@ -120,7 +131,13 @@ function buildUpdatePayload(body: Record<string, unknown>) {
       };
     }
 
-    payload[field] = body[field] as string | null;
+    const value = body[field];
+    payload[field] =
+      typeof value === "string"
+        ? value.trim().length > 0
+          ? value.trim()
+          : null
+        : null;
   }
 
   return { payload, error: null };
@@ -130,8 +147,7 @@ function getAuditValues(profile: SafeProfile): AuditProfileValues {
   return {
     display_name: profile.display_name,
     phone: profile.phone,
-    preferred_language: profile.preferred_language,
-    timezone: profile.timezone,
+    ministry_position: profile.ministry_position,
   };
 }
 
@@ -170,46 +186,20 @@ export async function updateProfile(body: unknown): Promise<UpdateProfileResult>
     };
   }
 
-  if (Object.keys(payload).length === 0) {
+    if (Object.keys(payload).length === 0) {
     return {
       profile: null,
       user: session.user,
       error: {
         code: "INVALID_BODY",
         message:
-          "수정할 필드가 없습니다. display_name, phone, preferred_language, timezone 중 하나를 보내 주세요.",
+          "수정할 필드가 없습니다. display_name, phone, ministry_position 중 하나를 보내 주세요.",
       },
     };
   }
 
   try {
     const supabase = await createSupabaseServerClient();
-
-    if (
-      typeof payload.preferred_language === "string" &&
-      payload.preferred_language.trim().length > 0
-    ) {
-      const normalizedLanguage = payload.preferred_language.trim();
-      payload.preferred_language = normalizedLanguage;
-
-      const { data: language, error: languageError } = await supabase
-        .from("supported_languages")
-        .select("code")
-        .eq("code", normalizedLanguage)
-        .eq("is_active", true)
-        .maybeSingle();
-
-      if (languageError || !language) {
-        return {
-          profile: null,
-          user: session.user,
-          error: {
-            code: "INVALID_LANGUAGE",
-            message: "지원하지 않는 언어입니다.",
-          },
-        };
-      }
-    }
 
     const { data: oldProfile, error: profileError } = await supabase
       .from("profiles")

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   getAdminUsers,
   normalizeAdminUserRole,
@@ -7,22 +8,33 @@ import {
   normalizeAdminUserStatus,
   type AdminUserSummary,
 } from "@/lib/api/admin/users";
-import { PROFILE_STATUSES, USER_ROLES } from "@/types/database";
+import { PROFILE_STATUSES, SCOPE_TYPES, USER_ROLES } from "@/types/database";
 import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
+import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
+import { requireAdminProfile } from "@/lib/auth/require-admin-profile";
+import { I18nText } from "@/lib/i18n/I18nProvider";
+import { AdminUsersClientFilters } from "./AdminUsersClientFilters";
+import { AdminUserDetailDrawer } from "./AdminUserDetailDrawer";
+import { AdminUserDirectCreatePanel } from "./AdminUserDirectCreatePanel";
+import { AdminUserRoleSummaryCards } from "./AdminUserRoleSummaryCards";
+import { LoginGuideCopyButton } from "./LoginGuideCopyButton";
 
 export const dynamic = "force-dynamic";
 
 type SearchParams = Record<string, string | string[] | undefined>;
-
+const MANAGEABLE_USER_ROLES = USER_ROLES.filter(
+  (userRole) => userRole !== "super_admin",
+);
 function formatDateTime(value: string | null) {
   if (!value) {
-    return "-";
+    return "미지정";
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return value;
+    return "미지정";
   }
 
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -43,6 +55,12 @@ function formatDateTime(value: string | null) {
   )}`;
 }
 
+function formatDate(value: string | null) {
+  const formatted = formatDateTime(value);
+
+  return formatted === "미지정" ? formatted : formatted.slice(0, 10);
+}
+
 function formatName(user: AdminUserSummary) {
   const candidates = [user.display_name, user.full_name, user.email];
 
@@ -56,12 +74,52 @@ function formatName(user: AdminUserSummary) {
 }
 
 function formatEmail(value: string | null) {
-  return value && value.trim().length > 0 ? value : "-";
+  return value && value.trim().length > 0 ? value : "이메일 없음";
+}
+
+function displayProfileValue(value: string | null) {
+  return value && value.trim().length > 0 ? value : "미지정";
+}
+
+function shortenId(value: string) {
+  if (value.length <= 12) {
+    return value;
+  }
+
+  return `${value.slice(0, 8)}...${value.slice(-4)}`;
+}
+
+function formatLookupValue(name: string | null, id: string | null) {
+  if (name && name.trim().length > 0) {
+    return name;
+  }
+
+  if (id && id.trim().length > 0) {
+    return `ID: ${shortenId(id)}`;
+  }
+
+  return "미지정";
+}
+
+function formatCountryValue(user: AdminUserSummary) {
+  if (user.country_name && user.country_name.trim().length > 0) {
+    return user.country_code && user.country_code.trim().length > 0
+      ? `${user.country_name} (${user.country_code})`
+      : user.country_name;
+  }
+
+  return formatLookupValue(null, user.country_id);
+}
+
+function formatGeneration(value: number | null) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? `${value}세대`
+    : "미지정";
 }
 
 function formatScopeSummary(roles: AdminUserSummary["roles"]) {
   if (roles.length === 0) {
-    return "—";
+    return "미등록";
   }
 
   return roles
@@ -69,37 +127,704 @@ function formatScopeSummary(roles: AdminUserSummary["roles"]) {
     .join(", ");
 }
 
-function getPageHref({
+function getRepresentativeRole(user: AdminUserSummary) {
+  return user.roles.find(isActiveRole) ?? user.roles[0] ?? null;
+}
+
+function getRowSearchText(user: AdminUserSummary) {
+  return [
+    user.display_name,
+    user.full_name,
+    user.email,
+    user.phone,
+    user.country_id,
+    user.country_code,
+    user.country_name,
+    user.region_id,
+    user.region_name,
+    user.organization_id,
+    user.organization_name,
+    user.church_id,
+    user.church_name,
+    user.group_id,
+    user.group_name,
+    user.ministry_position,
+    formatGeneration(user.generation_number),
+    user.primary_role,
+    user.primary_role ? getRoleLabel(user.primary_role) : null,
+    formatScopeSummary(user.roles),
+    user.roles.map((roleItem) => roleItem.role).join(" "),
+    user.roles.map((roleItem) => getRoleLabel(roleItem.role)).join(" "),
+    user.roles
+      .map((roleItem) =>
+        roleItem.status === "active" && roleItem.is_active
+          ? "역할 상태 활성 active"
+          : "역할 상태 비활성 inactive",
+      )
+      .join(" "),
+  ]
+    .filter((value): value is string => Boolean(value))
+    .join(" ");
+}
+
+function formatProfileAffiliationSummary(user: AdminUserSummary) {
+  const parts = [
+    `국가 ${formatCountryValue(user)}`,
+    `지역/도시 ${formatLookupValue(user.region_name, user.region_id)}`,
+    `기관 및 단체 ${formatLookupValue(user.organization_name, user.organization_id)}`,
+    `교회 ${formatLookupValue(user.church_name, user.church_id)}`,
+    `그룹/팀/목장 ${formatLookupValue(user.group_name, user.group_id)}`,
+    `직분 ${displayProfileValue(user.ministry_position)}`,
+    `세대 ${formatGeneration(user.generation_number)}`,
+  ];
+
+  return parts.join(" · ");
+}
+
+function getRowRoleValues(user: AdminUserSummary) {
+  return user.roles.map((roleItem) => roleItem.role).join(",");
+}
+
+function getRoleActiveLabel(roleItem: AdminUserSummary["roles"][number]) {
+  return roleItem.status === "active" && roleItem.is_active ? "활성" : "비활성";
+}
+
+function isActiveRole(roleItem: AdminUserSummary["roles"][number]) {
+  return roleItem.status === "active" && roleItem.is_active;
+}
+
+function getUserStatusBadgeClass(status: AdminUserSummary["status"]) {
+  if (status === "active") {
+    return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  }
+
+  if (status === "inactive") {
+    return "border-slate-200 bg-slate-100 text-slate-700";
+  }
+
+  if (status === "suspended") {
+    return "border-amber-200 bg-amber-50 text-amber-700";
+  }
+
+  if (status === "archived") {
+    return "border-violet-200 bg-violet-50 text-violet-700";
+  }
+
+  return "border-rose-200 bg-rose-50 text-rose-700";
+}
+
+function RoleBadgeList({ roles }: { roles: AdminUserSummary["roles"] }) {
+  if (roles.length === 0) {
+    return (
+      <span className="inline-flex w-fit rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+        <I18nText k="members.notSpecified" fallback="미지정" />
+      </span>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {roles.map((roleItem) => (
+        <span
+          className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
+          key={roleItem.id}
+          title={`역할 상태: ${getRoleActiveLabel(roleItem)}`}
+        >
+          <I18nText
+            k={`roles.${roleItem.role}`}
+            fallback={getRoleLabel(roleItem.role)}
+          />
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function getEmptyUsersMessage({
   q,
   role,
   status,
-  page,
 }: {
   q: string;
   role: string;
   status: string;
-  page: number;
 }) {
-  const params = new URLSearchParams();
-
-  if (q.length > 0) {
-    params.set("q", q);
-  }
-
   if (role !== "all") {
-    params.set("role", role);
+    return "선택한 역할에 해당하는 회원이 없습니다.";
   }
 
-  if (status !== "all") {
-    params.set("status", status);
+  if (q.length > 0 || status !== "all") {
+    return "검색 조건에 맞는 회원이 없습니다.";
   }
 
-  if (page > 1) {
-    params.set("page", String(page));
+  return "등록된 회원이 없습니다.";
+}
+
+type FieldBadgeTone = "edit" | "new" | "auto" | "admin";
+
+function FieldBadge({
+  children,
+  tone,
+}: {
+  children: string;
+  tone: FieldBadgeTone;
+}) {
+  const toneClass: Record<FieldBadgeTone, string> = {
+    edit: "border-sky-200 bg-sky-50 text-sky-700",
+    new: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    auto: "border-slate-200 bg-slate-100 text-slate-600",
+    admin: "border-amber-200 bg-amber-50 text-amber-700",
+  };
+  const labelKey: Record<string, string> = {
+    "관리자 설정": "adminUsers.badgeAdmin",
+    "수정": "adminUsers.badgeEdit",
+    "신규": "adminUsers.badgeNew",
+    "자동": "adminUsers.badgeAuto",
+  };
+
+  return (
+    <span
+      className={`ml-2 inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${toneClass[tone]}`}
+    >
+      {labelKey[children] ? (
+        <I18nText k={labelKey[children]} fallback={children} />
+      ) : (
+        children
+      )}
+    </span>
+  );
+}
+
+function DetailValue({
+  label,
+  value,
+  badge,
+  tone = "edit",
+}: {
+  label: string;
+  value: string;
+  badge?: string;
+  tone?: FieldBadgeTone;
+}) {
+  const labelKey: Record<string, string> = {
+    "가입일": "members.createdOn",
+    "대표 시스템 역할": "members.primarySystemRole",
+    "소속 교회": "members.church",
+    "소속 국가": "members.country",
+    "소속 기관 및 단체": "members.organizationName",
+    "소속 직분": "members.ministryPosition",
+    "세대": "members.generation",
+    "역할 권한 범위": "members.roleScopePermission",
+    "이름": "members.fullName",
+    "이메일": "members.email",
+    "전화번호": "members.phone",
+    "최근 수정일": "members.updatedAt",
+    "표시 이름": "members.displayName",
+    "회원 상태": "members.memberStatus",
+  };
+
+  return (
+    <div>
+      <dt className="text-sm font-medium text-slate-500">
+        {labelKey[label] ? <I18nText k={labelKey[label]} fallback={label} /> : label}
+        {badge ? <FieldBadge tone={tone}>{badge}</FieldBadge> : null}
+      </dt>
+      <dd className="mt-1 break-words text-slate-950">{value}</dd>
+    </div>
+  );
+}
+
+function RoleChangeForm({
+  representativeRole,
+  user,
+}: {
+  representativeRole: AdminUserSummary["roles"][number] | null;
+  user: AdminUserSummary;
+}) {
+  if (!representativeRole || representativeRole.role === "super_admin") {
+    return (
+      <p className="text-xs text-slate-500">
+        <I18nText
+          k="adminUsers.protectedRoleNotice"
+          fallback="super_admin 역할은 이 화면에서 변경할 수 없습니다."
+        />
+      </p>
+    );
   }
 
-  const query = params.toString();
-  return query.length > 0 ? `/admin/users?${query}` : "/admin/users";
+  const existingOtherRoles = new Set(
+    user.roles
+      .filter((roleItem) => roleItem.id !== representativeRole.id && isActiveRole(roleItem))
+      .map((roleItem) => roleItem.role),
+  );
+  const roleOptions = MANAGEABLE_USER_ROLES.filter(
+    (userRole) => userRole === representativeRole.role || !existingOtherRoles.has(userRole),
+  );
+
+  return (
+    <form
+      action="/api/admin/users"
+      className="flex flex-wrap items-center gap-2"
+      method="post"
+    >
+      <input name="intent" type="hidden" value="update_role" />
+      <input name="profile_id" type="hidden" value={user.id} />
+      <input name="role_id" type="hidden" value={representativeRole.id} />
+      <select
+        className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
+        defaultValue={representativeRole.role}
+        name="role"
+      >
+        {roleOptions.map((userRole) => (
+          <option key={userRole} value={userRole}>
+            {getRoleLabel(userRole)}
+          </option>
+        ))}
+      </select>
+      <button
+        className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700"
+        type="submit"
+      >
+        <I18nText k="adminUsers.roleChange" fallback="역할 변경" />
+      </button>
+    </form>
+  );
+}
+
+function RoleAddForm({ user }: { user: AdminUserSummary }) {
+  const hasProtectedRole = user.roles.some((roleItem) => roleItem.role === "super_admin");
+  const existingRoles = new Set(user.roles.map((roleItem) => roleItem.role));
+  const roleOptions = MANAGEABLE_USER_ROLES.filter(
+    (userRole) => !existingRoles.has(userRole),
+  );
+
+  if (hasProtectedRole) {
+    return null;
+  }
+
+  if (roleOptions.length === 0) {
+    return (
+      <p className="text-xs text-slate-500">
+        <I18nText
+          k="adminUsers.noAdditionalRoles"
+          fallback="추가로 부여할 수 있는 역할이 없습니다."
+        />
+      </p>
+    );
+  }
+
+  return (
+    <form
+      action="/api/admin/users"
+      className="grid gap-2 rounded-md border border-dashed border-slate-200 bg-white p-3"
+      method="post"
+    >
+      <input name="intent" type="hidden" value="add_role" />
+      <input name="profile_id" type="hidden" value={user.id} />
+      <div className="flex flex-wrap items-center gap-2">
+        <select
+          className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
+          defaultValue={roleOptions.includes("coach") ? "coach" : roleOptions[0] ?? "coachee"}
+          name="role"
+        >
+          {roleOptions.map((userRole) => (
+            <option key={userRole} value={userRole}>
+              {getRoleLabel(userRole)}
+            </option>
+          ))}
+        </select>
+        <select
+          className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
+          defaultValue="global"
+          name="scope_type"
+        >
+          {SCOPE_TYPES.map((scopeType) => (
+            <option key={scopeType} value={scopeType}>
+              {formatScope(scopeType, null)}
+            </option>
+          ))}
+        </select>
+        <input
+          className="min-w-[150px] rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
+          name="scope_id"
+          placeholder="global이면 비움"
+          type="text"
+        />
+        <button
+          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700"
+          type="submit"
+        >
+          <I18nText k="adminUsers.addRole" fallback="역할 추가" />
+        </button>
+      </div>
+      <p className="text-xs text-slate-500">
+        <I18nText
+          k="adminUsers.multiRoleNotice"
+          fallback="한 회원에게 coach와 coach_maker 역할을 함께 부여할 수 있습니다."
+        />
+      </p>
+    </form>
+  );
+}
+
+function RoleStatusToggleForm({
+  roleItem,
+  user,
+}: {
+  roleItem: AdminUserSummary["roles"][number];
+  user: AdminUserSummary;
+}) {
+  if (roleItem.role === "super_admin") {
+    return (
+      <span className="text-xs text-slate-500">
+        <I18nText k="members.protectedSuperAdmin" fallback="super_admin 보호" />
+      </span>
+    );
+  }
+
+  const isActive = isActiveRole(roleItem);
+  const targetStatus = isActive ? "inactive" : "active";
+
+  return (
+    <form action="/api/admin/users" method="post">
+      <input name="intent" type="hidden" value="update_role_status" />
+      <input name="profile_id" type="hidden" value={user.id} />
+      <input name="role_id" type="hidden" value={roleItem.id} />
+      <input name="target_role_status" type="hidden" value={targetStatus} />
+      <ConfirmSubmitButton
+        className={`rounded-md border px-2.5 py-1.5 text-xs font-medium ${
+          isActive
+            ? "border-amber-300 text-amber-700"
+            : "border-emerald-300 text-emerald-700"
+        }`}
+        confirmDescription={`${formatEmail(user.email)} 회원의 ${getRoleLabel(
+          roleItem.role,
+        )} 시스템 역할만 ${
+          isActive ? "비활성화" : "활성화"
+        }합니다. 전체 계정 상태는 변경하지 않습니다.`}
+        confirmTitle={
+          isActive
+            ? "시스템 역할을 비활성화하시겠습니까?"
+            : "시스템 역할을 활성화하시겠습니까?"
+        }
+        type="submit"
+      >
+        {isActive ? (
+          <I18nText k="members.disable" fallback="비활성화" />
+        ) : (
+          <I18nText k="members.reactivate" fallback="재활성화" />
+        )}
+      </ConfirmSubmitButton>
+    </form>
+  );
+}
+
+function StatusChangeForm({
+  representativeRole,
+  user,
+}: {
+  representativeRole: AdminUserSummary["roles"][number] | null;
+  user: AdminUserSummary;
+}) {
+  if (representativeRole?.role === "super_admin") {
+    return (
+      <span className="text-xs text-slate-500">
+        <I18nText k="members.protectedSuperAdmin" fallback="super_admin 보호" />
+      </span>
+    );
+  }
+
+  if (user.status !== "active" && user.status !== "inactive") {
+    return (
+      <span className="text-xs text-slate-500">
+        <I18nText k="members.needsReview" fallback="확인 필요" />
+      </span>
+    );
+  }
+
+  return (
+    <form action="/api/admin/users" method="post">
+      <input name="intent" type="hidden" value="update_status" />
+      <input name="profile_id" type="hidden" value={user.id} />
+      <input
+        name="target_status"
+        type="hidden"
+        value={user.status === "active" ? "inactive" : "active"}
+      />
+      <ConfirmSubmitButton
+        className={`rounded-md border px-3 py-2 text-sm font-medium ${
+          user.status === "active"
+            ? "border-amber-300 text-amber-700"
+            : "border-emerald-300 text-emerald-700"
+        }`}
+        confirmDescription={
+          user.status === "active"
+            ? `${user.email} 계정을 비활성화합니다. 기존 로그인과 접근에 영향을 줄 수 있습니다.`
+            : `${user.email} 계정을 다시 활성화합니다.`
+        }
+        confirmTitle={
+          user.status === "active"
+            ? "회원을 비활성화하시겠습니까?"
+            : "회원을 재활성화하시겠습니까?"
+        }
+        type="submit"
+      >
+        {user.status === "active" ? (
+          <I18nText k="members.disable" fallback="비활성화" />
+        ) : (
+          <I18nText k="members.reactivate" fallback="재활성화" />
+        )}
+      </ConfirmSubmitButton>
+    </form>
+  );
+}
+
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}
+
+function getCreateUserMessage({
+  created,
+  createdEmail,
+  error,
+  errorStage,
+}: {
+  created: string;
+  createdEmail: string;
+  error: string;
+  errorStage: string;
+}) {
+  if (created === "1") {
+    return {
+      tone: "success" as const,
+      message: `${createdEmail || "사용자"} 계정이 생성되었습니다. 임시 비밀번호를 사용자에게 직접 전달하세요. 사용자에게 첫 로그인 후 비밀번호 변경을 안내하세요.`,
+    };
+  }
+
+  if (!error) {
+    return null;
+  }
+
+  const stageLabel: Record<string, string> = {
+    auth: "인증 사용자 생성",
+    validation: "입력값 확인",
+    profile: "프로필 연결",
+    role: "역할 부여",
+    service: "관리자 서비스 준비",
+  };
+  const errorLabel: Record<string, string> = {
+    invalid_body: "요청 본문을 읽을 수 없습니다. 다시 시도해 주세요.",
+    invalid_intent: "요청한 회원 관리 작업을 확인할 수 없습니다. 화면을 새로고침한 뒤 다시 시도해 주세요.",
+    invalid_name: "이름을 입력해 주세요. 이름은 120자 이하로 입력해야 합니다.",
+    invalid_email: "이메일 형식을 확인해 주세요.",
+    invalid_role: "역할 값이 올바르지 않습니다.",
+    invalid_scope: "권한 범위 유형이 올바르지 않습니다.",
+    invalid_scope_id: "권한 범위 ID 형식이 올바르지 않습니다.",
+    missing_scope_id:
+      "범위 유형이 organization/church/group 등 global이 아닌 경우 범위 ID가 필요합니다.",
+    invalid_password: "임시 비밀번호는 8자 이상 72자 이하로 입력해 주세요.",
+    invalid_phone: "전화번호는 40자 이하로 입력해 주세요.",
+    registered_profile: "이미 등록된 회원입니다. 로그인 또는 비밀번호 재설정을 진행하세요.",
+    auth_without_profile:
+      "해당 이메일은 Supabase Auth에는 이미 존재하지만, 앱 프로필 연결 상태를 확인해야 합니다. 테스트 계정이면 Supabase Authentication에서 삭제 후 다시 등록하세요.",
+    auth_lookup_failed:
+      "기존 Auth 사용자 여부를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+    auth_create_failed: "인증 사용자 생성에 실패했습니다.",
+    profile_create_failed: "프로필 생성에 실패했습니다.",
+    role_create_failed: "역할 부여에 실패했습니다.",
+    super_admin_protected: "super_admin 역할은 이 화면에서 생성할 수 없습니다.",
+    invalid_affiliation:
+      "소속 국가, 소속 기관 및 단체, 소속 교회, 소속 직분 값을 확인해 주세요.",
+    invalid_country: "소속 국가 값이 올바르지 않습니다.",
+    country_not_found: "선택한 국가가 존재하지 않습니다.",
+    country_inactive: "선택한 국가는 현재 사용할 수 없습니다.",
+    country_lookup_failed:
+      "선택한 국가를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+    invalid_organization: "소속 기관 및 단체 ID 형식이 올바르지 않습니다.",
+    invalid_region: "지역/도시 값이 올바르지 않습니다.",
+    region_lookup_failed: "선택한 지역/도시를 확인하지 못했습니다.",
+    region_not_found: "선택한 지역/도시를 찾을 수 없습니다.",
+    organization_lookup_failed:
+      "선택한 소속 기관 및 단체를 확인하지 못했습니다.",
+    organization_not_found: "선택한 소속 기관 및 단체를 찾을 수 없습니다.",
+    invalid_church: "소속 교회 ID 형식이 올바르지 않습니다.",
+    church_lookup_failed: "선택한 소속 교회를 확인하지 못했습니다.",
+    church_not_found: "선택한 소속 교회를 찾을 수 없습니다.",
+    invalid_group: "그룹/팀/목장 값이 올바르지 않습니다.",
+    group_lookup_failed: "선택한 그룹/팀/목장을 확인하지 못했습니다.",
+    group_not_found: "선택한 그룹/팀/목장을 찾을 수 없습니다.",
+    invalid_ministry_position: "소속 직분은 100자 이하로 입력해 주세요.",
+    invalid_generation: "세대 값은 1 이상의 숫자여야 합니다.",
+  };
+
+  return {
+    tone: "error" as const,
+    message: `${stageLabel[errorStage] ?? "직접 회원 등록"} 단계에서 실패했습니다. ${errorLabel[error] ?? "입력값 또는 기존 계정 여부를 확인해 주세요."}`,
+  };
+}
+
+function getRoleChangeMessage({
+  added,
+  statusUpdated,
+  updated,
+  error,
+}: {
+  added: string;
+  statusUpdated: string;
+  updated: string;
+  error: string;
+}) {
+  if (added === "1") {
+    return {
+      tone: "success" as const,
+      message: "역할이 추가되었습니다.",
+    };
+  }
+
+  if (updated === "1") {
+    return {
+      tone: "success" as const,
+      message: "역할이 변경되었습니다.",
+    };
+  }
+
+  if (statusUpdated === "active") {
+    return {
+      tone: "success" as const,
+      message: "시스템 역할이 활성화되었습니다.",
+    };
+  }
+
+  if (statusUpdated === "inactive") {
+    return {
+      tone: "success" as const,
+      message: "시스템 역할이 비활성화되었습니다.",
+    };
+  }
+
+  if (!error) {
+    return null;
+  }
+
+  const errorLabel: Record<string, string> = {
+    duplicate_role:
+      "이미 부여된 역할입니다. 비활성 역할은 역할 상태에서 다시 활성화해 주세요.",
+    invalid_role: "허용되지 않은 역할입니다.",
+    invalid_scope: "권한 범위 유형이 올바르지 않습니다.",
+    invalid_scope_id: "권한 범위 ID 형식이 올바르지 않습니다.",
+    invalid_status: "허용되지 않은 역할 상태입니다.",
+    member_not_found: "회원을 찾을 수 없습니다.",
+    missing_scope_id: "global이 아닌 권한 범위에는 범위 ID가 필요합니다.",
+    profile_lookup_failed: "프로필 테이블 조회에 실패했습니다.",
+    role_add_failed: "역할 추가에 실패했습니다.",
+    role_lookup_failed: "역할 정보를 조회할 수 없습니다.",
+    role_not_found: "변경할 역할을 찾을 수 없습니다.",
+    role_status_update_failed: "역할 상태 변경에 실패했습니다.",
+    role_update_failed: "역할 변경에 실패했습니다.",
+    self_role_change: "자기 자신의 역할은 변경할 수 없습니다.",
+    super_admin_protected: "super_admin 역할은 이 화면에서 변경할 수 없습니다.",
+  };
+
+  return {
+    tone: "error" as const,
+    message: errorLabel[error] ?? "역할 변경 중 오류가 발생했습니다.",
+  };
+}
+
+function getStatusChangeMessage({
+  updated,
+  error,
+}: {
+  updated: string;
+  error: string;
+}) {
+  if (updated === "inactive") {
+    return {
+      tone: "success" as const,
+      message: "회원이 비활성화되었습니다.",
+    };
+  }
+
+  if (updated === "active") {
+    return {
+      tone: "success" as const,
+      message: "회원이 재활성화되었습니다.",
+    };
+  }
+
+  if (!error) {
+    return null;
+  }
+
+  const errorLabel: Record<string, string> = {
+    disable_failed: "비활성화 처리에 실패했습니다.",
+    invalid_status: "허용되지 않은 상태값입니다.",
+    member_not_found: "회원을 찾을 수 없습니다.",
+    profile_lookup_failed: "프로필 테이블 조회에 실패했습니다.",
+    reactivate_failed: "재활성화 처리에 실패했습니다.",
+    role_lookup_failed: "역할 정보를 조회할 수 없습니다.",
+    self_disable: "현재 로그인한 본인 계정은 비활성화할 수 없습니다.",
+    super_admin_protected: "super_admin 계정은 이 화면에서 비활성화할 수 없습니다.",
+  };
+
+  return {
+    tone: "error" as const,
+    message: errorLabel[error] ?? "회원 상태 변경 중 오류가 발생했습니다.",
+  };
+}
+
+function getProfileUpdateMessage({
+  updated,
+  error,
+}: {
+  updated: string;
+  error: string;
+}) {
+  if (updated === "1") {
+    return {
+      tone: "success" as const,
+      message: "회원 정보가 수정되었습니다.",
+    };
+  }
+
+  if (!error) {
+    return null;
+  }
+
+  const errorLabel: Record<string, string> = {
+    country_inactive: "선택한 국가는 현재 사용할 수 없습니다.",
+    country_lookup_failed: "선택한 국가를 확인하지 못했습니다.",
+    country_not_found: "선택한 국가를 찾을 수 없습니다.",
+    invalid_church: "소속 교회 ID 형식이 올바르지 않습니다.",
+    invalid_country: "국가 값이 올바르지 않습니다.",
+    invalid_display_name: "표시 이름은 120자 이하로 입력해 주세요.",
+    invalid_generation: "세대 값은 1 이상의 숫자여야 합니다.",
+    invalid_ministry_position: "소속 직분은 100자 이하로 입력해 주세요.",
+    invalid_name: "이름을 입력해 주세요. 이름은 120자 이하로 입력해야 합니다.",
+    invalid_organization: "소속 기관 및 단체 ID 형식이 올바르지 않습니다.",
+    invalid_region: "지역/도시 값이 올바르지 않습니다.",
+    region_lookup_failed: "선택한 지역/도시를 확인하지 못했습니다.",
+    region_not_found: "선택한 지역/도시를 찾을 수 없습니다.",
+    church_lookup_failed: "선택한 소속 교회를 확인하지 못했습니다.",
+    church_not_found: "선택한 소속 교회를 찾을 수 없습니다.",
+    invalid_group: "그룹/팀/목장 값이 올바르지 않습니다.",
+    group_lookup_failed: "선택한 그룹/팀/목장을 확인하지 못했습니다.",
+    group_not_found: "선택한 그룹/팀/목장을 찾을 수 없습니다.",
+    organization_lookup_failed:
+      "선택한 소속 기관 및 단체를 확인하지 못했습니다.",
+    organization_not_found: "선택한 소속 기관 및 단체를 찾을 수 없습니다.",
+    invalid_phone: "전화번호는 40자 이하로 입력해 주세요.",
+    invalid_status: "허용되지 않은 회원 상태입니다.",
+    member_not_found: "회원을 찾을 수 없습니다.",
+    permission_denied: "회원 정보 수정은 super_admin만 가능합니다.",
+    profile_lookup_failed: "프로필 조회에 실패했습니다.",
+    update_failed: "회원 정보 수정에 실패했습니다.",
+  };
+
+  return {
+    tone: "error" as const,
+    message: errorLabel[error] ?? "회원 정보 수정 중 오류가 발생했습니다.",
+  };
 }
 
 export default async function AdminUsersPage({
@@ -107,6 +832,16 @@ export default async function AdminUsersPage({
 }: {
   searchParams?: Promise<SearchParams> | SearchParams;
 }) {
+  const admin = await requireAdminProfile();
+
+  if (!admin.ok) {
+    if (admin.status === 401) {
+      redirect("/login?redirectTo=%2Fadmin%2Fusers");
+    }
+
+    redirect("/unauthorized");
+  }
+
   const resolvedSearchParams = searchParams
     ? await Promise.resolve(searchParams)
     : {};
@@ -114,103 +849,140 @@ export default async function AdminUsersPage({
   const role = normalizeAdminUserRole(resolvedSearchParams.role);
   const status = normalizeAdminUserStatus(resolvedSearchParams.status);
   const page = normalizeAdminUsersPage(resolvedSearchParams.page);
-  const { users, error, hasNext } = await getAdminUsers({
+  const createUserMessage = getCreateUserMessage({
+    created: firstParam(resolvedSearchParams.created),
+    createdEmail: firstParam(resolvedSearchParams.created_email),
+    error: firstParam(resolvedSearchParams.create_error),
+    errorStage: firstParam(resolvedSearchParams.create_error_stage),
+  });
+  const roleChangeMessage = getRoleChangeMessage({
+    added: firstParam(resolvedSearchParams.role_added),
+    statusUpdated: firstParam(resolvedSearchParams.role_status_updated),
+    updated: firstParam(resolvedSearchParams.role_updated),
+    error: firstParam(resolvedSearchParams.role_error),
+  });
+  const statusChangeMessage = getStatusChangeMessage({
+    updated: firstParam(resolvedSearchParams.status_updated),
+    error: firstParam(resolvedSearchParams.status_error),
+  });
+  const profileUpdateMessage = getProfileUpdateMessage({
+    updated: firstParam(resolvedSearchParams.profile_updated),
+    error: firstParam(resolvedSearchParams.profile_error),
+  });
+  const adminUsersResult = await getAdminUsers({
+    authorizedAdmin: admin,
     q,
     role,
     status,
     page,
     limit: 50,
   });
+  const { users, error } = adminUsersResult;
 
+  const getUserCountryLabel = (user: AdminUserSummary) => formatCountryValue(user);
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
       <section className="mx-auto w-full max-w-7xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-              관리자
+              <I18nText k="members.admin" fallback="관리자" />
             </p>
-            <h1 className="mt-3 text-3xl font-semibold">사용자 및 역할</h1>
+            <h1 className="mt-3 text-3xl font-semibold">
+              <I18nText k="members.usersAndRoles" fallback="사용자 및 역할" />
+            </h1>
             <p className="mt-4 max-w-3xl leading-7 text-slate-600">
-              프로필과 활성 역할을 읽기 전용으로 조회할 수 있습니다.
+              <I18nText
+                k="members.pageDescription"
+                fallback="프로필과 활성 역할을 조회하고, 필요한 경우 관리자가 직접 회원을 등록할 수 있습니다."
+              />
             </p>
             <p className="mt-2 text-sm text-slate-500">
-              새 회원은 초대를 보내는 방식으로 추가합니다.
+              <I18nText
+                k="members.invitationNotice"
+                fallback="기존 이메일 초대 방식은 그대로 유지됩니다. 직접 등록 시 임시 비밀번호는 별도로 전달해야 합니다."
+              />
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <PageNavigationButtons className="justify-start sm:justify-end" />
             <Link
               className="inline-flex rounded-md border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700"
               href="/admin/coaching-relationships/new"
             >
-              코칭 관계 생성
+              <I18nText k="members.createRelationship" fallback="코칭 관계 생성" />
             </Link>
             <Link
               className="inline-flex rounded-md bg-slate-950 px-4 py-2.5 text-sm font-medium text-white"
               href="/admin/invitations/new"
             >
-              회원 추가
+              <I18nText k="members.addMember" fallback="회원 추가" />
             </Link>
           </div>
         </div>
 
-        <form
-          className="mt-6 rounded-md border border-slate-200 bg-white p-4"
-          method="get"
-        >
-          <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
-            <label className="grid gap-2">
-              <span className="text-sm font-medium text-slate-700">검색</span>
-              <input
-                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
-                defaultValue={q}
-                name="q"
-                placeholder="이름 또는 이메일"
-                type="text"
-              />
-            </label>
-
-            <label className="grid gap-2">
-              <span className="text-sm font-medium text-slate-700">역할</span>
-              <select
-                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
-                defaultValue={role}
-                name="role"
-              >
-                <option value="all">전체</option>
-                {USER_ROLES.map((userRole) => (
-                  <option key={userRole} value={userRole}>
-                    {getRoleLabel(userRole)}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="grid gap-2">
-              <span className="text-sm font-medium text-slate-700">상태</span>
-              <select
-                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
-                defaultValue={status}
-                name="status"
-              >
-                <option value="all">전체</option>
-                {PROFILE_STATUSES.map((profileStatus) => (
-                  <option key={profileStatus} value={profileStatus}>
-                    {getStatusLabel(profileStatus)}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <button
-              className="rounded-md bg-slate-950 px-4 py-2 font-medium text-white"
-              type="submit"
-            >
-              필터
-            </button>
+        {createUserMessage ? (
+          <div
+            className={`mt-6 rounded-md border p-4 ${
+              createUserMessage.tone === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                : "border-red-200 bg-red-50 text-red-800"
+            }`}
+          >
+            {createUserMessage.message}
           </div>
-        </form>
+        ) : null}
+
+        {roleChangeMessage ? (
+          <div
+            className={`mt-6 rounded-md border p-4 ${
+              roleChangeMessage.tone === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                : "border-red-200 bg-red-50 text-red-800"
+            }`}
+          >
+            {roleChangeMessage.message}
+          </div>
+        ) : null}
+
+        {statusChangeMessage ? (
+          <div
+            className={`mt-6 rounded-md border p-4 ${
+              statusChangeMessage.tone === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                : "border-red-200 bg-red-50 text-red-800"
+            }`}
+          >
+            {statusChangeMessage.message}
+          </div>
+        ) : null}
+
+        {profileUpdateMessage ? (
+          <div
+            className={`mt-6 rounded-md border p-4 ${
+              profileUpdateMessage.tone === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                : "border-red-200 bg-red-50 text-red-800"
+            }`}
+          >
+            {profileUpdateMessage.message}
+          </div>
+        ) : null}
+
+        <AdminUserDirectCreatePanel />
+
+        {!error ? (
+          <section className="mt-6">
+            <div>
+              <h2 className="text-lg font-semibold">역할별 회원 요약</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                회원 목록은 먼저 표시하고, 역할별 요약은 별도로 불러옵니다.
+              </p>
+            </div>
+            <AdminUserRoleSummaryCards />
+          </section>
+        ) : null}
 
         {error && (
           <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
@@ -220,108 +992,205 @@ export default async function AdminUsersPage({
 
         {!error && users.length === 0 && (
           <div className="mt-6 rounded-md border border-slate-200 bg-white p-6 text-slate-600">
-            사용자가 없습니다.
+            {getEmptyUsersMessage({ q, role, status })}
           </div>
         )}
 
         {!error && users.length > 0 && (
-          <>
-            <div className="mt-6 overflow-x-auto rounded-md border border-slate-200 bg-white">
-              <table className="w-full min-w-[960px] border-collapse text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 text-slate-500">
-                    <th className="px-4 py-3 font-medium">이름</th>
-                    <th className="px-4 py-3 font-medium">이메일</th>
-                    <th className="px-4 py-3 font-medium">상태</th>
-                    <th className="px-4 py-3 font-medium">역할</th>
-                    <th className="px-4 py-3 font-medium">범위</th>
-                    <th className="px-4 py-3 font-medium">생성일</th>
+          <AdminUsersClientFilters
+            roleOptions={USER_ROLES.map((userRole) => ({
+              value: userRole,
+              label: getRoleLabel(userRole),
+            }))}
+            statusOptions={PROFILE_STATUSES.map((profileStatus) => ({
+              value: profileStatus,
+              label: getStatusLabel(profileStatus),
+            }))}
+            totalCount={users.length}
+          >
+            <div className="mt-6">
+              <h2 className="text-lg font-semibold">
+                <I18nText k="members.title" fallback="회원목록" />
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                <I18nText
+                  k="members.currentListDescription"
+                  fallback="검색, 필터, 정렬, 페이지네이션을 사용해 현재 목록을 확인합니다."
+                />
+              </p>
+            </div>
+            <div className="mt-6 rounded-lg border border-slate-200 bg-white p-3 lg:p-0">
+              <table className="block w-full table-auto border-collapse text-left text-sm lg:table">
+                <thead className="hidden lg:table-header-group">
+                  <tr className="border-b border-slate-200 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
+                    <th className="w-[22%] px-3 py-3 font-medium">
+                      <button
+                        className="font-medium"
+                        data-admin-user-sort="name"
+                        data-sort-label="이름"
+                        type="button"
+                      >
+                        <I18nText k="members.memberInfo" fallback="회원 정보" />
+                      </button>
+                    </th>
+                    <th className="w-[9%] px-3 py-3 font-medium">
+                      <button
+                        className="font-medium"
+                        data-admin-user-sort="status"
+                        data-sort-label="상태"
+                        type="button"
+                      >
+                        <I18nText k="members.status" fallback="상태" />
+                      </button>
+                    </th>
+                    <th className="w-[20%] px-3 py-3 font-medium">
+                      <button
+                        className="font-medium"
+                        data-admin-user-sort="role"
+                        data-sort-label="역할"
+                        type="button"
+                      >
+                        <I18nText k="members.roleScope" fallback="역할/범위" />
+                      </button>
+                    </th>
+                    <th className="w-[22%] px-3 py-3 font-medium">
+                      <I18nText k="members.organization" fallback="소속 정보" />
+                    </th>
+                    <th className="w-[12%] px-3 py-3 font-medium">
+                      <button
+                        className="font-medium"
+                        data-admin-user-sort="created_at"
+                        data-sort-label="생성일"
+                        type="button"
+                      >
+                        <I18nText k="members.recordInfo" fallback="기록 정보" />
+                      </button>
+                    </th>
+                    <th className="w-[8%] px-3 py-3 font-medium">
+                      <I18nText k="members.loginGuide" fallback="로그인 안내" />
+                    </th>
+                    <th className="w-[12%] px-3 py-3 text-right font-medium">
+                      <I18nText k="members.actions" fallback="관리" />
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="block space-y-4 lg:table-row-group lg:space-y-0">
                   {users.map((user) => (
                     <tr
-                      className="border-b border-slate-100 text-slate-800"
+                      className="block rounded-lg border border-slate-200 bg-white p-4 text-slate-800 shadow-sm transition lg:table-row lg:border-0 lg:border-b lg:border-slate-100 lg:p-0 lg:shadow-none lg:hover:bg-slate-50/70"
+                      data-admin-user-row
+                      data-created-at={user.created_at}
+                      data-email={user.email ?? ""}
+                      data-name={formatName(user)}
+                      data-primary-role={getRepresentativeRole(user)?.role ?? ""}
+                      data-roles={getRowRoleValues(user)}
+                      data-search={getRowSearchText(user)}
+                      data-scope={`${formatScopeSummary(user.roles)} ${formatProfileAffiliationSummary(user)}`}
+                      data-status={user.status}
                       key={user.id}
                     >
-                      <td className="px-4 py-3">{formatName(user)}</td>
-                      <td className="px-4 py-3">{formatEmail(user.email)}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${
-                            user.status === "active"
-                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                              : user.status === "inactive"
-                                ? "border-slate-200 bg-slate-100 text-slate-700"
-                                : user.status === "suspended"
-                                  ? "border-amber-200 bg-amber-50 text-amber-700"
-                                  : user.status === "archived"
-                                    ? "border-violet-200 bg-violet-50 text-violet-700"
-                                    : "border-rose-200 bg-rose-50 text-rose-700"
-                          }`}
-                        >
-                          {getStatusLabel(user.status)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        {user.roles.length === 0 ? (
-                          <span className="text-slate-500">활성 역할 없음</span>
-                        ) : (
-                          <div className="flex flex-wrap gap-2">
-                            {user.roles.map((roleItem) => (
+                      {(() => {
+                        const representativeRole = getRepresentativeRole(user);
+
+                        return (
+                          <>
+                            <td className="block border-b border-slate-100 pb-3 lg:table-cell lg:border-b-0 lg:px-3 lg:py-3">
+                              <div className="flex items-start justify-between gap-3 lg:block">
+                                <div className="min-w-0">
+                                  <p className="break-words text-base font-semibold text-slate-950 lg:text-sm">
+                                    {formatName(user)}
+                                  </p>
+                                  <p className="mt-1 break-all text-sm text-slate-500 lg:max-w-[220px] lg:truncate">
+                                    {formatEmail(user.email)}
+                                  </p>
+                                </div>
+                                <span
+                                  className={`inline-flex shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium lg:hidden ${getUserStatusBadgeClass(
+                                    user.status,
+                                  )}`}
+                                >
+                                  {getStatusLabel(user.status)}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="hidden lg:table-cell lg:px-3 lg:py-3">
                               <span
-                                className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
-                                key={roleItem.id}
+                                className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${getUserStatusBadgeClass(
+                                  user.status,
+                                )}`}
                               >
-                                {getRoleLabel(roleItem.role)}
+                                {getStatusLabel(user.status)}
                               </span>
-                            ))}
-                          </div>
-                        )}
+                            </td>
+                            <td className="block border-b border-slate-100 py-3 lg:table-cell lg:border-b-0 lg:max-w-[240px] lg:px-3 lg:py-3">
+                              <span className="mb-1 block text-xs font-semibold text-slate-500 lg:hidden">
+                                <I18nText k="members.roleScope" fallback="역할/범위" />
+                              </span>
+                              <RoleBadgeList roles={user.roles} />
+                              <p className="mt-2 break-words text-xs leading-5 text-slate-500">
+                                {formatScopeSummary(user.roles)}
+                              </p>
+                            </td>
+                            <td className="block border-b border-slate-100 py-3 lg:table-cell lg:border-b-0 lg:max-w-[260px] lg:px-3 lg:py-3">
+                              <span className="mb-1 block text-xs font-semibold text-slate-500 lg:hidden">
+                                <I18nText k="members.organization" fallback="소속 정보" />
+                              </span>
+                              <p className="break-words text-sm leading-5 text-slate-700 lg:text-xs">
+                                {formatProfileAffiliationSummary(user)}
+                              </p>
+                            </td>
+                            <td className="block border-b border-slate-100 py-3 lg:table-cell lg:border-b-0 lg:px-3 lg:py-3">
+                              <span className="mb-1 block text-xs font-semibold text-slate-500 lg:hidden">
+                                <I18nText k="members.recordInfo" fallback="기록 정보" />
+                              </span>
+                              <div className="grid grid-cols-2 gap-3 text-xs text-slate-500 lg:block lg:space-y-1">
+                                <p>
+                                  <span className="font-medium text-slate-600">
+                                    <I18nText k="members.createdShort" fallback="생성" />
+                                  </span>{" "}
+                                  <span className="whitespace-nowrap">
+                                    {formatDate(user.created_at)}
+                                  </span>
+                                </p>
+                                <p>
+                                  <span className="font-medium text-slate-600">
+                                    <I18nText k="members.updatedShort" fallback="수정" />
+                                  </span>{" "}
+                                  <span className="whitespace-nowrap">
+                                    {formatDate(user.updated_at)}
+                                  </span>
+                                </p>
+                              </div>
+                            </td>
+                            <td className="block border-b border-slate-100 py-3 lg:table-cell lg:border-b-0 lg:px-3 lg:py-3">
+                              <span className="mb-1 block text-xs font-semibold text-slate-500 lg:hidden">
+                                <I18nText k="members.loginGuide" fallback="로그인 안내" />
+                              </span>
+                              <div className="flex flex-wrap gap-2 lg:block">
+                                <LoginGuideCopyButton email={user.email} />
+                              </div>
+                            </td>
+                            <td className="block pt-3 lg:table-cell lg:px-3 lg:py-3 lg:text-right">
+                              <span className="mb-1 block text-xs font-semibold text-slate-500 lg:hidden">
+                                <I18nText k="members.actions" fallback="관리" />
+                              </span>
+                              <div className="flex flex-wrap gap-2 lg:justify-end">
+                                <StatusChangeForm
+                                  representativeRole={representativeRole}
+                                  user={user}
+                                />
+                                <AdminUserDetailDrawer user={user} />
+                              </div>
                       </td>
-                      <td className="px-4 py-3">
-                        {formatScopeSummary(user.roles)}
-                      </td>
-                      <td className="px-4 py-3">
-                        {formatDateTime(user.created_at)}
-                      </td>
+                          </>
+                        );
+                      })()}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-
-            <div className="mt-4 flex items-center justify-between gap-4 rounded-md border border-slate-200 bg-white px-4 py-3">
-              <p className="text-sm text-slate-600">{page}페이지</p>
-              <div className="flex items-center gap-2">
-                {page > 1 ? (
-                  <Link
-                    className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
-                    href={getPageHref({ q, role, status, page: page - 1 })}
-                  >
-                    이전
-                  </Link>
-                ) : (
-                  <span className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-400">
-                    이전
-                  </span>
-                )}
-
-                {hasNext ? (
-                  <Link
-                    className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
-                    href={getPageHref({ q, role, status, page: page + 1 })}
-                  >
-                    다음
-                  </Link>
-                ) : (
-                  <span className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-400">
-                    다음
-                  </span>
-                )}
-              </div>
-            </div>
-          </>
+          </AdminUsersClientFilters>
         )}
       </section>
     </main>

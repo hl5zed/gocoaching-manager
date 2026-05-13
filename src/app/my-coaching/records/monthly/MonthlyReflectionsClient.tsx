@@ -1,0 +1,1046 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { isValidNumberInRange } from "@/lib/validation/common";
+
+type MonthlyReflectionStatus = "draft" | "submitted" | "reviewed";
+type MonthlyReflectionVisibility = "private" | "coach";
+type MonthlySortKey = "year_month" | "created_at" | "updated_at" | "status";
+type SortDirection = "asc" | "desc";
+type StatusFilter = "all" | MonthlyReflectionStatus;
+type VisibilityFilter = "all" | MonthlyReflectionVisibility;
+
+type MonthlyReflection = {
+  id: string;
+  year: number;
+  month: number;
+  summary: string | null;
+  growth_points: string | null;
+  difficulty: string | null;
+  next_month_plan: string | null;
+  visibility: MonthlyReflectionVisibility;
+  shared_with_coach: boolean;
+  status: MonthlyReflectionStatus;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type FormState = {
+  year: string;
+  month: string;
+  summary: string;
+  growth_points: string;
+  difficulty: string;
+  next_month_plan: string;
+  visibility: MonthlyReflectionVisibility;
+  shared_with_coach: boolean;
+  status: MonthlyReflectionStatus;
+};
+
+const currentDate = new Date();
+const initialFormState: FormState = {
+  year: String(currentDate.getFullYear()),
+  month: String(currentDate.getMonth() + 1),
+  summary: "",
+  growth_points: "",
+  difficulty: "",
+  next_month_plan: "",
+  visibility: "private",
+  shared_with_coach: false,
+  status: "draft",
+};
+
+const emptyFormState: FormState = {
+  ...initialFormState,
+  year: "",
+  month: "",
+};
+
+const statusLabels: Record<MonthlyReflectionStatus, string> = {
+  draft: "임시저장",
+  submitted: "제출",
+  reviewed: "검토완료",
+};
+
+const visibilityLabels: Record<MonthlyReflectionVisibility, string> = {
+  private: "나만 보기",
+  coach: "코치에게 공유",
+};
+
+const monthOptions = Array.from({ length: 12 }, (_, index) => index + 1);
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function displayText(value: string | null) {
+  return value && value.trim().length > 0 ? value : "-";
+}
+
+function normalizeSearch(value: string | null) {
+  return (value ?? "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function getDateTimeValue(value: string | null) {
+  if (!value) {
+    return 0;
+  }
+
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function getStatusLabel(status: string) {
+  return status in statusLabels
+    ? statusLabels[status as MonthlyReflectionStatus]
+    : "확인 필요";
+}
+
+function getVisibilityLabel(visibility: string) {
+  return visibility in visibilityLabels
+    ? visibilityLabels[visibility as MonthlyReflectionVisibility]
+    : "미지정";
+}
+
+function toNullableText(value: string) {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function getErrorMessage(payload: unknown, fallback: string) {
+  if (
+    typeof payload === "object" &&
+    payload !== null &&
+    "message" in payload &&
+    typeof payload.message === "string"
+  ) {
+    return payload.message;
+  }
+
+  return fallback;
+}
+
+function getDeleteErrorMessage(status: number, payload: unknown) {
+  if (status === 401) {
+    return "로그인이 필요합니다.";
+  }
+
+  if (status === 403) {
+    return "이 월간 회고에 접근할 권한이 없습니다.";
+  }
+
+  if (status === 404) {
+    return "월간 회고를 찾을 수 없습니다.";
+  }
+
+  if (status === 500) {
+    return "월간 회고 처리에 실패했습니다.";
+  }
+
+  return getErrorMessage(payload, "월간 회고 처리에 실패했습니다.");
+}
+
+function toFormState(record: MonthlyReflection): FormState {
+  return {
+    year: String(record.year),
+    month: String(record.month),
+    summary: record.summary ?? "",
+    growth_points: record.growth_points ?? "",
+    difficulty: record.difficulty ?? "",
+    next_month_plan: record.next_month_plan ?? "",
+    visibility: record.visibility,
+    shared_with_coach: record.shared_with_coach,
+    status: record.status,
+  };
+}
+
+function isValidYear(value: string) {
+  const year = Number(value);
+  return Number.isInteger(year) && year >= 2000 && year <= 2100;
+}
+
+function isValidMonth(value: string) {
+  const month = Number(value);
+  return Number.isInteger(month) && month >= 1 && month <= 12;
+}
+
+function getSafeVisibility(value: string): MonthlyReflectionVisibility {
+  return value === "coach" ? "coach" : "private";
+}
+
+function getSafeStatus(value: string): MonthlyReflectionStatus {
+  if (value === "submitted" || value === "reviewed") {
+    return value;
+  }
+
+  return "draft";
+}
+
+export function MonthlyReflectionsClient() {
+  const [records, setRecords] = useState<MonthlyReflection[]>([]);
+  const [form, setForm] = useState<FormState>(initialFormState);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [filterYear, setFilterYear] = useState("");
+  const [filterMonth, setFilterMonth] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [visibilityFilter, setVisibilityFilter] =
+    useState<VisibilityFilter>("all");
+  const [sortKey, setSortKey] = useState<MonthlySortKey>("year_month");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+  const editingRecord = useMemo(
+    () => records.find((record) => record.id === editingId) ?? null,
+    [editingId, records],
+  );
+
+  const visibleRecords = useMemo(() => {
+    const normalizedQuery = normalizeSearch(searchQuery);
+
+    const filteredRecords = records.filter((record) => {
+      const matchesSearch =
+        normalizedQuery.length === 0 ||
+        [
+          record.summary,
+          record.growth_points,
+          record.difficulty,
+          record.next_month_plan,
+        ].some((value) => normalizeSearch(value).includes(normalizedQuery));
+      const matchesStatus =
+        statusFilter === "all" || record.status === statusFilter;
+      const matchesVisibility =
+        visibilityFilter === "all" || record.visibility === visibilityFilter;
+
+      return matchesSearch && matchesStatus && matchesVisibility;
+    });
+
+    return [...filteredRecords].sort((first, second) => {
+      let comparison = 0;
+
+      if (sortKey === "year_month") {
+        comparison =
+          first.year * 100 + first.month - (second.year * 100 + second.month);
+      } else if (sortKey === "status") {
+        comparison = getStatusLabel(first.status).localeCompare(
+          getStatusLabel(second.status),
+          "ko-KR",
+        );
+      } else {
+        comparison =
+          getDateTimeValue(first[sortKey]) - getDateTimeValue(second[sortKey]);
+      }
+
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [records, searchQuery, sortDirection, sortKey, statusFilter, visibilityFilter]);
+
+  async function loadRecords(filters?: { year: string; month: string }) {
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    const searchParams = new URLSearchParams();
+    const nextFilterYear = filters?.year ?? filterYear;
+    const nextFilterMonth = filters?.month ?? filterMonth;
+
+    if (nextFilterYear) {
+      searchParams.set("year", nextFilterYear);
+    }
+
+    if (nextFilterMonth) {
+      searchParams.set("month", nextFilterMonth);
+    }
+
+    try {
+      const query = searchParams.toString();
+      const response = await fetch(
+        `/api/my-coaching/records/monthly${query ? `?${query}` : ""}`,
+        {
+          cache: "no-store",
+        },
+      );
+      const payload: unknown = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          getErrorMessage(payload, "월간 회고 목록을 불러오지 못했습니다."),
+        );
+      }
+
+      const nextRecords =
+        typeof payload === "object" &&
+        payload !== null &&
+        "records" in payload &&
+        Array.isArray(payload.records)
+          ? (payload.records as MonthlyReflection[])
+          : [];
+      setRecords(nextRecords);
+      setErrorMessage(null);
+      return true;
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "월간 회고 목록을 불러오지 못했습니다.",
+      );
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadRecords();
+  }, []);
+
+  function resetForm() {
+    setForm(initialFormState);
+    setEditingId(null);
+  }
+
+  function resetFormAfterSave() {
+    setForm(emptyFormState);
+    setEditingId(null);
+  }
+
+  function resetFilters() {
+    setFilterYear("");
+    setFilterMonth("");
+    setSearchQuery("");
+    setStatusFilter("all");
+    setVisibilityFilter("all");
+    setSortKey("year_month");
+    setSortDirection("desc");
+    void loadRecords({ year: "", month: "" });
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage(null);
+    setErrorMessage(null);
+
+    const yearNumber = Number(form.year);
+    const monthNumber = Number(form.month);
+    const safeVisibility = getSafeVisibility(form.visibility);
+    const safeStatus = getSafeStatus(form.status);
+
+    if (
+      !form.year ||
+      !Number.isInteger(yearNumber) ||
+      !isValidNumberInRange(yearNumber, 2000, 2100) ||
+      !isValidYear(form.year)
+    ) {
+      setErrorMessage("연도를 선택해 주세요.");
+      return;
+    }
+
+    if (
+      !form.month ||
+      !Number.isInteger(monthNumber) ||
+      !isValidNumberInRange(monthNumber, 1, 12) ||
+      !isValidMonth(form.month)
+    ) {
+      setErrorMessage("월을 선택해 주세요.");
+      return;
+    }
+
+    const duplicateRecord = records.find(
+      (record) =>
+        record.year === yearNumber &&
+        record.month === monthNumber &&
+        record.id !== editingId,
+    );
+
+    if (duplicateRecord) {
+      setErrorMessage(
+        "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
+      );
+      return;
+    }
+
+    setIsSaving(true);
+
+    const payload = {
+      year: yearNumber,
+      month: monthNumber,
+      summary: toNullableText(form.summary),
+      growth_points: toNullableText(form.growth_points),
+      difficulty: toNullableText(form.difficulty),
+      next_month_plan: toNullableText(form.next_month_plan),
+      visibility: safeVisibility,
+      shared_with_coach: safeVisibility === "coach",
+      status: safeStatus,
+    };
+
+    try {
+      const url = editingId
+        ? `/api/my-coaching/records/monthly/${editingId}`
+        : "/api/my-coaching/records/monthly";
+      const response = await fetch(url, {
+        method: editingId ? "PATCH" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const responsePayload: unknown = await response.json();
+
+      if (!response.ok) {
+        const serverMessage = getErrorMessage(
+          responsePayload,
+          editingId
+            ? "월간 회고 수정에 실패했습니다."
+            : "월간 회고 저장에 실패했습니다.",
+        );
+
+        throw new Error(
+          response.status === 409
+            ? "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요."
+            : serverMessage,
+        );
+      }
+
+      const successMessage = editingId
+        ? "월간 회고가 수정되었습니다."
+        : "월간 회고가 저장되었습니다.";
+      resetFormAfterSave();
+      const loaded = await loadRecords();
+
+      if (loaded) {
+        setErrorMessage(null);
+        setMessage(successMessage);
+      }
+    } catch (error) {
+      setMessage(null);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : editingId
+            ? "월간 회고 수정에 실패했습니다."
+            : "월간 회고 저장에 실패했습니다.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  function startEdit(record: MonthlyReflection) {
+    setEditingId(record.id);
+    setForm(toFormState(record));
+    setMessage(null);
+    setErrorMessage(null);
+  }
+
+  async function removeRecord(record: MonthlyReflection) {
+    setMessage(null);
+    setErrorMessage(null);
+
+    if (!record.id || record.id.trim().length === 0) {
+      setErrorMessage("월간 회고를 찾을 수 없습니다.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `월간 회고를 삭제하시겠습니까?\n\n대상: ${record.year}년 ${record.month}월\n이 작업은 되돌릴 수 없습니다.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingId(record.id);
+
+    try {
+      const response = await fetch(
+        `/api/my-coaching/records/monthly/${record.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+      const payload: unknown = await response.json();
+
+      if (!response.ok) {
+        throw new Error(getDeleteErrorMessage(response.status, payload));
+      }
+
+      if (editingId === record.id) {
+        resetForm();
+      }
+
+      setRecords((currentRecords) =>
+        currentRecords.filter((currentRecord) => currentRecord.id !== record.id),
+      );
+      setErrorMessage(null);
+      setMessage("월간 회고가 목록에서 제거되었습니다.");
+      void loadRecords();
+    } catch (error) {
+      setMessage(null);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "월간 회고 처리에 실패했습니다.",
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  return (
+    <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <section className="rounded-md border border-slate-200 bg-white p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">
+              {editingRecord ? "월간 회고 수정" : "월간 회고 작성"}
+            </h2>
+            <p className="mt-2 text-sm text-slate-600">
+              한 달의 성장과 다음 달 계획을 정리해 주세요.
+            </p>
+          </div>
+          {editingRecord ? (
+            <button
+              className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+              onClick={resetForm}
+              type="button"
+            >
+              수정 취소
+            </button>
+          ) : null}
+        </div>
+
+        {message ? (
+          <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+            {message}
+          </div>
+        ) : null}
+        {errorMessage ? (
+          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            {errorMessage}
+          </div>
+        ) : null}
+
+        <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label
+                className="text-sm font-medium text-slate-700"
+                htmlFor="year"
+              >
+                연도
+              </label>
+              <input
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                id="year"
+                max="2100"
+                min="2000"
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    year: event.target.value,
+                  }))
+                }
+                type="number"
+                value={form.year}
+              />
+            </div>
+            <div>
+              <label
+                className="text-sm font-medium text-slate-700"
+                htmlFor="month"
+              >
+                월
+              </label>
+              <select
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                id="month"
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    month: event.target.value,
+                  }))
+                }
+                value={form.month}
+              >
+                <option value="">월 선택</option>
+                {monthOptions.map((month) => (
+                  <option key={month} value={month}>
+                    {month}월
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label
+              className="text-sm font-medium text-slate-700"
+              htmlFor="summary"
+            >
+              한 달 요약
+            </label>
+            <textarea
+              className="mt-1 min-h-28 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              id="summary"
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  summary: event.target.value,
+                }))
+              }
+              value={form.summary}
+            />
+          </div>
+
+          <div>
+            <label
+              className="text-sm font-medium text-slate-700"
+              htmlFor="growth_points"
+            >
+              성장한 점
+            </label>
+            <textarea
+              className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              id="growth_points"
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  growth_points: event.target.value,
+                }))
+              }
+              value={form.growth_points}
+            />
+          </div>
+
+          <div>
+            <label
+              className="text-sm font-medium text-slate-700"
+              htmlFor="difficulty"
+            >
+              어려웠던 점
+            </label>
+            <textarea
+              className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              id="difficulty"
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  difficulty: event.target.value,
+                }))
+              }
+              value={form.difficulty}
+            />
+          </div>
+
+          <div>
+            <label
+              className="text-sm font-medium text-slate-700"
+              htmlFor="next_month_plan"
+            >
+              다음 달 계획
+            </label>
+            <textarea
+              className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              id="next_month_plan"
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  next_month_plan: event.target.value,
+                }))
+              }
+              value={form.next_month_plan}
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label
+                className="text-sm font-medium text-slate-700"
+                htmlFor="visibility"
+              >
+                공유 옵션
+              </label>
+              <select
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                id="visibility"
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    visibility:
+                      event.target.value as MonthlyReflectionVisibility,
+                    shared_with_coach: event.target.value === "coach",
+                  }))
+                }
+                value={form.visibility}
+              >
+                <option value="private">나만 보기</option>
+                <option value="coach">코치에게 공유</option>
+              </select>
+            </div>
+
+            <div>
+              <label
+                className="text-sm font-medium text-slate-700"
+                htmlFor="status"
+              >
+                상태
+              </label>
+              <select
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                id="status"
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    status: event.target.value as MonthlyReflectionStatus,
+                  }))
+                }
+                value={form.status}
+              >
+                <option value="draft">임시저장</option>
+                <option value="submitted">제출</option>
+                <option disabled value="reviewed">
+                  검토완료
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <input
+              checked={form.shared_with_coach}
+              className="h-4 w-4 rounded border-slate-300"
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  shared_with_coach: event.target.checked,
+                  visibility: event.target.checked ? "coach" : current.visibility,
+                }))
+              }
+              type="checkbox"
+            />
+            코치에게 공유
+          </label>
+
+          <button
+            className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+            disabled={isSaving}
+            type="submit"
+          >
+            {isSaving
+              ? "저장 중..."
+              : editingRecord
+                ? "월간 회고 수정"
+                : "월간 회고 저장"}
+          </button>
+        </form>
+      </section>
+
+      <section className="rounded-md border border-slate-200 bg-white p-6">
+        <div>
+          <h2 className="text-lg font-semibold">나의 월간 회고 목록</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            최신 연도와 월 순서로 표시됩니다.
+          </p>
+        </div>
+
+        <div className="mt-4 grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label
+                className="text-sm font-medium text-slate-700"
+                htmlFor="monthly-search"
+              >
+                검색
+              </label>
+              <input
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                id="monthly-search"
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="한 달 요약, 성장한 점, 어려웠던 점, 다음 달 계획 검색"
+                type="search"
+                value={searchQuery}
+              />
+            </div>
+            <div className="flex items-end">
+              <p className="text-sm text-slate-600">
+                월간 회고: 전체 {records.length}개 중 {visibleRecords.length}개
+                표시
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+            <label
+              className="text-sm font-medium text-slate-700"
+              htmlFor="filter-year"
+            >
+              연도 필터
+            </label>
+            <input
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              id="filter-year"
+              max="2100"
+              min="2000"
+              onChange={(event) => setFilterYear(event.target.value)}
+              placeholder="예: 2026"
+              type="number"
+              value={filterYear}
+            />
+          </div>
+            <div>
+            <label
+              className="text-sm font-medium text-slate-700"
+              htmlFor="filter-month"
+            >
+              월 필터
+            </label>
+            <select
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              id="filter-month"
+              onChange={(event) => setFilterMonth(event.target.value)}
+              value={filterMonth}
+            >
+              <option value="">전체</option>
+              {monthOptions.map((month) => (
+                <option key={month} value={month}>
+                  {month}월
+                </option>
+              ))}
+            </select>
+          </div>
+            <div>
+              <label
+                className="text-sm font-medium text-slate-700"
+                htmlFor="monthly-status-filter"
+              >
+                상태
+              </label>
+              <select
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                id="monthly-status-filter"
+                onChange={(event) =>
+                  setStatusFilter(event.target.value as StatusFilter)
+                }
+                value={statusFilter}
+              >
+                <option value="all">전체</option>
+                <option value="draft">임시저장</option>
+                <option value="submitted">제출</option>
+                <option value="reviewed">검토완료</option>
+              </select>
+            </div>
+            <div>
+              <label
+                className="text-sm font-medium text-slate-700"
+                htmlFor="monthly-visibility-filter"
+              >
+                공유
+              </label>
+              <select
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                id="monthly-visibility-filter"
+                onChange={(event) =>
+                  setVisibilityFilter(event.target.value as VisibilityFilter)
+                }
+                value={visibilityFilter}
+              >
+                <option value="all">전체</option>
+                <option value="private">나만 보기</option>
+                <option value="coach">코치에게 공유</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+            <div>
+              <label
+                className="text-sm font-medium text-slate-700"
+                htmlFor="monthly-sort-key"
+              >
+                정렬 기준
+              </label>
+              <select
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                id="monthly-sort-key"
+                onChange={(event) =>
+                  setSortKey(event.target.value as MonthlySortKey)
+                }
+                value={sortKey}
+              >
+                <option value="year_month">연도/월</option>
+                <option value="created_at">작성일</option>
+                <option value="updated_at">수정일</option>
+                <option value="status">상태</option>
+              </select>
+            </div>
+            <div>
+              <label
+                className="text-sm font-medium text-slate-700"
+                htmlFor="monthly-sort-direction"
+              >
+                정렬 방향
+              </label>
+              <select
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                id="monthly-sort-direction"
+                onChange={(event) =>
+                  setSortDirection(event.target.value as SortDirection)
+                }
+                value={sortDirection}
+              >
+                <option value="desc">내림차순</option>
+                <option value="asc">오름차순</option>
+              </select>
+            </div>
+            <div className="flex items-end gap-2">
+            <button
+              className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white"
+              onClick={() => void loadRecords()}
+              type="button"
+            >
+              필터 적용
+            </button>
+            <button
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700"
+              onClick={resetFilters}
+              type="button"
+            >
+              초기화
+            </button>
+            </div>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            월간 회고를 불러오는 중입니다.
+          </div>
+        ) : records.length === 0 ? (
+          <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            아직 작성한 월간 회고가 없습니다.
+          </div>
+        ) : visibleRecords.length === 0 ? (
+          <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            선택한 조건에 해당하는 월간 회고가 없습니다.
+          </div>
+        ) : (
+          <div className="mt-5 space-y-4">
+            {visibleRecords.map((record) => (
+              <article
+                className="rounded-md border border-slate-200 bg-slate-50 p-4"
+                key={record.id}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">
+                      {record.year}년 {record.month}월
+                    </p>
+                    <h3 className="mt-1 font-semibold text-slate-950">
+                      월간 회고
+                    </h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 font-medium text-sky-800">
+                      {getVisibilityLabel(record.visibility)}
+                    </span>
+                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-medium text-emerald-800">
+                      {getStatusLabel(record.status)}
+                    </span>
+                  </div>
+                </div>
+
+                <dl className="mt-4 grid gap-4 text-sm">
+                  <div>
+                    <dt className="font-medium text-slate-500">한 달 요약</dt>
+                    <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                      {displayText(record.summary)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-slate-500">성장한 점</dt>
+                    <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                      {displayText(record.growth_points)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-slate-500">어려웠던 점</dt>
+                    <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                      {displayText(record.difficulty)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-slate-500">다음 달 계획</dt>
+                    <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                      {displayText(record.next_month_plan)}
+                    </dd>
+                  </div>
+                </dl>
+
+                <dl className="mt-4 grid gap-3 border-t border-slate-200 pt-4 text-xs text-slate-600 sm:grid-cols-2">
+                  <div>
+                    <dt className="font-medium">작성일</dt>
+                    <dd className="mt-1">{formatDateTime(record.created_at)}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium">수정일</dt>
+                    <dd className="mt-1">{formatDateTime(record.updated_at)}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium">제출일</dt>
+                    <dd className="mt-1">
+                      {formatDateTime(record.submitted_at)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium">검토일</dt>
+                    <dd className="mt-1">{formatDateTime(record.reviewed_at)}</dd>
+                  </div>
+                </dl>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700"
+                    onClick={() => startEdit(record)}
+                    type="button"
+                  >
+                    수정
+                  </button>
+                  <button
+                    className="rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700"
+                    disabled={deletingId === record.id}
+                    onClick={() => void removeRecord(record)}
+                    type="button"
+                  >
+                    {deletingId === record.id ? "삭제 중..." : "목록에서 제거"}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}

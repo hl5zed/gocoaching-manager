@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/auth/getSession";
+import type { GetSessionResult } from "@/types/auth";
 import type { ProfileRow, ScopeType, UserRole } from "@/types/database";
 
 export type DashboardRole = {
@@ -38,8 +39,10 @@ type RoleRecord = {
   status: "active";
 };
 
-export async function getDashboardMe(): Promise<DashboardMeResult> {
-  const session = await getSession();
+export async function getDashboardMe(
+  existingSession?: GetSessionResult,
+): Promise<DashboardMeResult> {
+  const session = existingSession ?? (await getSession());
 
   if (!session.user) {
     return {

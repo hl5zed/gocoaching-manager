@@ -10,6 +10,13 @@ import {
   type UserRole,
 } from "@/types/database";
 import { getRoleLabel, getScopeTypeLabel } from "@/lib/ui/labels";
+import {
+  isNonEmptyString,
+  isValidEmail,
+  isValidNumberInRange,
+  isValidUuid,
+  normalizeText,
+} from "@/lib/validation/common";
 
 type CreateInvitationSuccess = {
   invitation_id: string;
@@ -63,6 +70,38 @@ export function AdminInvitationCreateForm() {
   }, [scopeId, scopeType]);
 
   async function handleSubmit() {
+    const normalizedEmail = normalizeText(email).toLowerCase();
+    const expiresInDaysNumber = Number(expiresInDays);
+
+    if (!isValidEmail(normalizedEmail)) {
+      setSuccess(null);
+      setError({
+        code: "INVALID_EMAIL",
+        message: isNonEmptyString(normalizedEmail)
+          ? "올바른 이메일 형식이 아닙니다."
+          : "이메일을 입력해 주세요.",
+      });
+      return;
+    }
+
+    if (scopeType !== "global" && !isValidUuid(scopeId)) {
+      setSuccess(null);
+      setError({
+        code: "INVALID_SCOPE_ID",
+        message: "범위 ID는 올바른 UUID여야 합니다.",
+      });
+      return;
+    }
+
+    if (!isValidNumberInRange(expiresInDaysNumber, 1, 30)) {
+      setSuccess(null);
+      setError({
+        code: "INVALID_EXPIRES_IN_DAYS",
+        message: "만료 기간은 1일부터 30일 사이로 선택해 주세요.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     setSuccess(null);
     setError(null);
@@ -75,11 +114,11 @@ export function AdminInvitationCreateForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email,
+          email: normalizedEmail,
           invited_role: invitedRole,
           scope_type: scopeType,
           scope_id: normalizedScopeId,
-          expires_in_days: Number(expiresInDays),
+          expires_in_days: expiresInDaysNumber,
           send_email: sendEmailNow,
         }),
       });

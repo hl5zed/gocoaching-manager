@@ -1,6 +1,8 @@
 import { createHash } from "crypto";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { getActiveGlobalGenerationOptions } from "@/lib/api/admin/generations";
 import type { ScopeType, UserRole } from "@/types/database";
+import { formatScope, getRoleLabel } from "@/lib/ui/labels";
 import { AcceptInvitationButton } from "./AcceptInvitationButton";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +18,18 @@ type InvitationPreview = {
   invited_role: UserRole;
   scope_type: ScopeType;
   expires_at: string;
+};
+
+type CountryOption = {
+  code: string;
+  id: string;
+  name: string;
+};
+
+type GenerationOption = {
+  id: string;
+  generation_number: number;
+  label: string;
 };
 
 type InvitationLookupResult =
@@ -42,6 +56,35 @@ function normalizeToken(value: string | string[] | undefined) {
 
 function hashToken(rawToken: string) {
   return createHash("sha256").update(rawToken).digest("hex");
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "미지정";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "미지정";
+  }
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Bangkok",
+  }).formatToParts(date);
+
+  const get = (type: string) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get(
+    "minute",
+  )}`;
 }
 
 async function lookupInvitation(
@@ -91,72 +134,88 @@ async function lookupInvitation(
   };
 }
 
+async function loadCountries(): Promise<CountryOption[]> {
+  const { client: serviceClient } = createSupabaseServiceClient();
+
+  if (!serviceClient) {
+    return [];
+  }
+
+  const { data, error } = await serviceClient
+    .from("countries")
+    .select("id, name, code")
+    .eq("is_active", true)
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("[INVITATION_COUNTRIES_LOOKUP_FAILED]", error.message);
+    return [];
+  }
+
+  return (data ?? []) as CountryOption[];
+}
+
+async function loadGenerationOptions(): Promise<GenerationOption[]> {
+  const generations = await getActiveGlobalGenerationOptions();
+
+  if (generations.length > 0) {
+    return generations.map((generation) => ({
+      id: generation.id,
+      generation_number: generation.generation_number,
+      label: generation.label,
+    }));
+  }
+
+  return [1, 2, 3, 4, 5].map((generation) => ({
+    id: `fallback-${generation}`,
+    generation_number: generation,
+    label: `${generation}세대`,
+  }));
+}
+
 export default async function AcceptInvitationPage({
   searchParams,
 }: AcceptInvitationPageProps) {
   const params = await searchParams;
   const token = normalizeToken(params.token);
-  const result = await lookupInvitation(token);
+  const [result, countries, generationOptions] = await Promise.all([
+    lookupInvitation(token),
+    loadCountries(),
+    loadGenerationOptions(),
+  ]);
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
-      <section className="mx-auto w-full max-w-2xl">
+      <section className="mx-auto w-full max-w-3xl">
         <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
           Invitation
         </p>
         <h1 className="mt-3 text-3xl font-semibold">초대 확인</h1>
         <p className="mt-4 leading-7 text-slate-600">
-          초대 링크의 토큰을 안전하게 확인합니다. raw token은 DB에 저장하지
-          않고, 화면에도 길게 표시하지 않습니다.
+          초대 정보를 확인하고, 필요한 프로필 정보를 입력한 뒤 현재 로그인한
+          계정으로 초대를 수락합니다.
         </p>
 
         <div className="mt-8 rounded-md border border-slate-200 bg-white p-6">
           {result.status === "valid" ? (
-            <div className="space-y-5">
+            <div className="space-y-6">
               <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-900">
                 <p className="font-semibold">{result.message}</p>
                 <p className="mt-1 text-sm">
-                  아래 버튼을 누르면 이 초대를 현재 로그인한 계정으로
-                  수락합니다.
+                  초대 이메일과 시스템 역할은 초대 정보에서 자동으로 적용됩니다.
                 </p>
               </div>
 
-              <dl className="grid gap-4">
-                <div>
-                  <dt className="text-sm font-medium text-slate-500">
-                    invited_email
-                  </dt>
-                  <dd className="mt-1 text-slate-950">
-                    {result.invitation.invited_email}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-slate-500">
-                    invited_role
-                  </dt>
-                  <dd className="mt-1 text-slate-950">
-                    {result.invitation.invited_role}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-slate-500">
-                    scope_type
-                  </dt>
-                  <dd className="mt-1 text-slate-950">
-                    {result.invitation.scope_type}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-slate-500">
-                    expires_at
-                  </dt>
-                  <dd className="mt-1 text-slate-950">
-                    {result.invitation.expires_at}
-                  </dd>
-                </div>
-              </dl>
-
-              <AcceptInvitationButton token={token} />
+              <AcceptInvitationButton
+                countries={countries}
+                expiresAtLabel={formatDateTime(result.invitation.expires_at)}
+                generationOptions={generationOptions}
+                invitedEmail={result.invitation.invited_email}
+                invitedRoleLabel={getRoleLabel(result.invitation.invited_role)}
+                scopeLabel={formatScope(result.invitation.scope_type, null)}
+                scopeType={result.invitation.scope_type}
+                token={token}
+              />
             </div>
           ) : (
             <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-800">

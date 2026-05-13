@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PrintPageButton } from "@/components/print/PrintPageButton";
 import {
   getMyMoksilgi,
   saveMyMoksilgiDetailGoal,
@@ -329,10 +330,16 @@ export default async function MyMoksilgiPage({
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const saved = normalizeMessage(resolvedSearchParams.saved);
   const error = normalizeMessage(resolvedSearchParams.error);
+  const printYear = new Date().getFullYear();
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="print-root min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
       <section className="mx-auto w-full max-w-6xl">
+        <div className="print-report-title print-only">
+          <h1>내 목실기 보고서</h1>
+          <p>출력 연도: {printYear}년</p>
+          <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
+        </div>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
@@ -347,6 +354,10 @@ export default async function MyMoksilgiPage({
             </p>
           </div>
           <div className="flex flex-col items-start gap-2 text-sm">
+            <PrintPageButton
+              fileName={`moksilgi-my-record-${printYear}`}
+              label="내 목실기 출력"
+            />
             <Link className="font-medium text-slate-700 underline" href="/my-coaching">
               내 코칭 공간으로 돌아가기
             </Link>

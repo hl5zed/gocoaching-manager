@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PrintPageButton } from "@/components/print/PrintPageButton";
 import {
   getCoachMoksilgi,
   type CoachMoksilgiItem,
@@ -59,7 +60,7 @@ function coacheeName(item: CoachMoksilgiItem) {
 
 function YearSelector({ year }: { year: number }) {
   return (
-    <form className="mt-5 flex flex-wrap items-end gap-3" method="get">
+    <form className="print-hidden mt-5 flex flex-wrap items-end gap-3" method="get">
       <label className="block">
         <span className="text-sm font-medium text-slate-700">연도</span>
         <input
@@ -279,10 +280,15 @@ export default async function CoachMoksilgiPage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="print-root min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
       <div className="mx-auto max-w-5xl">
         <Nav />
 
+        <div className="print-report-title print-only">
+          <h1>코치이 목실기 목록 보고서</h1>
+          <p>출력 연도: {year}년</p>
+          <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
+        </div>
         <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold">담당 코치이 목실기</h1>
@@ -292,6 +298,10 @@ export default async function CoachMoksilgiPage({
             </p>
             <YearSelector year={year} />
           </div>
+          <PrintPageButton
+            fileName={`moksilgi-coach-list-${year}`}
+            label="코치이 목실기 목록 출력"
+          />
         </div>
 
         {result.data.length === 0 ? (

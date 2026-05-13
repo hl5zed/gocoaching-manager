@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
 import { getSession } from "@/lib/auth/getSession";
 import { getMyProfile } from "@/lib/api/profile/me";
 import { updateMyProfile } from "@/lib/api/profile/update-me";
+import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +14,54 @@ function normalizeMessage(value: string | string[] | undefined) {
   }
 
   return value ?? "";
+}
+
+function displayValue(value: string | null) {
+  return value && value.trim().length > 0 ? value : "미지정";
+}
+
+function formatCountry(
+  name: string | null,
+  code: string | null,
+  id: string | null,
+) {
+  if (name && name.trim().length > 0) {
+    return code && code.trim().length > 0 ? `${name} (${code})` : name;
+  }
+
+  return id ? `ID: ${id.slice(0, 8)}...` : "미지정";
+}
+
+function formatLookupValue(name: string | null, id: string | null) {
+  if (name && name.trim().length > 0) {
+    return name;
+  }
+
+  return id ? `ID: ${id.slice(0, 8)}...` : "미지정";
+}
+
+function formatGeneration(value: number | null) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0
+    ? `${value}세대`
+    : "미지정";
+}
+
+function ReadOnlyItem({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: ReactNode;
+  note?: string;
+}) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <dt className="text-sm font-medium text-slate-500">{label}</dt>
+      <dd className="mt-1 break-words text-slate-950">{value}</dd>
+      {note && <p className="mt-2 text-xs text-slate-500">{note}</p>}
+    </div>
+  );
 }
 
 export default async function EditProfilePage({
@@ -38,8 +88,9 @@ export default async function EditProfilePage({
     "use server";
 
     const updateResult = await updateMyProfile({
-      full_name: formData.get("full_name"),
       display_name: formData.get("display_name"),
+      phone: formData.get("phone"),
+      ministry_position: formData.get("ministry_position"),
     });
 
     if (!updateResult.ok) {
@@ -58,7 +109,8 @@ export default async function EditProfilePage({
         </p>
         <h1 className="mt-3 text-3xl font-semibold">프로필 수정</h1>
         <p className="mt-4 leading-7 text-slate-600">
-          내 계정의 이름 정보를 수정할 수 있습니다.
+          표시 이름, 전화번호, 소속 직분만 직접 수정할 수 있습니다.
+          소속/역할/세대 정보 변경은 관리자에게 요청해 주세요.
         </p>
 
         <div className="mt-6">
@@ -98,39 +150,167 @@ export default async function EditProfilePage({
             )}
 
             <form action={saveProfile} className="space-y-5">
-              <div>
-                <label
-                  className="block text-sm font-medium text-slate-700"
-                  htmlFor="display_name"
-                >
-                  표시 이름
-                </label>
-                <input
-                  className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
-                  defaultValue={result.data.profile.display_name ?? ""}
-                  id="display_name"
-                  maxLength={120}
-                  name="display_name"
-                  type="text"
-                />
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                이메일, 시스템 역할, 소속 국가, 소속 기관 및 단체, 소속
+                교회, 세대, 회원 상태는 직접 수정할 수 없습니다. 변경이
+                필요하면 관리자에게 요청해 주세요.
               </div>
 
-              <div>
-                <label
-                  className="block text-sm font-medium text-slate-700"
-                  htmlFor="full_name"
-                >
-                  전체 이름
-                </label>
-                <input
-                  className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
-                  defaultValue={result.data.profile.full_name ?? ""}
-                  id="full_name"
-                  maxLength={120}
-                  name="full_name"
-                  type="text"
-                />
-              </div>
+              <section className="space-y-4">
+                <h2 className="text-lg font-semibold">기본 정보</h2>
+                <dl className="grid gap-4 sm:grid-cols-2">
+                  <ReadOnlyItem
+                    label="이름"
+                    value={displayValue(result.data.profile.full_name)}
+                  />
+                  <ReadOnlyItem
+                    label="이메일"
+                    note="이 항목은 관리자 승인 후 변경됩니다."
+                    value={displayValue(result.data.profile.email)}
+                  />
+                </dl>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label
+                      className="block text-sm font-medium text-slate-700"
+                      htmlFor="display_name"
+                    >
+                      표시 이름
+                    </label>
+                    <input
+                      className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                      defaultValue={result.data.profile.display_name ?? ""}
+                      id="display_name"
+                      maxLength={120}
+                      name="display_name"
+                      type="text"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      className="block text-sm font-medium text-slate-700"
+                      htmlFor="phone"
+                    >
+                      전화번호
+                    </label>
+                    <input
+                      className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                      defaultValue={result.data.profile.phone ?? ""}
+                      id="phone"
+                      maxLength={50}
+                      name="phone"
+                      type="tel"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              <section className="space-y-4 border-t border-slate-200 pt-5">
+                <h2 className="text-lg font-semibold">소속 정보</h2>
+                <dl className="grid gap-4 sm:grid-cols-2">
+                  <ReadOnlyItem
+                    label="소속 기관 및 단체"
+                    note="소속/역할/세대 정보 변경은 관리자에게 요청해 주세요."
+                    value={formatLookupValue(
+                      result.data.profile.organization_name,
+                      result.data.profile.organization_id,
+                    )}
+                  />
+                  <ReadOnlyItem
+                    label="소속 국가"
+                    note="소속/역할/세대 정보 변경은 관리자에게 요청해 주세요."
+                    value={formatCountry(
+                      result.data.profile.country_name,
+                      result.data.profile.country_code,
+                      result.data.profile.country_id,
+                    )}
+                  />
+                  <ReadOnlyItem
+                    label="소속 교회"
+                    note="소속/역할/세대 정보 변경은 관리자에게 요청해 주세요."
+                    value={formatLookupValue(
+                      result.data.profile.church_name,
+                      result.data.profile.church_id,
+                    )}
+                  />
+                </dl>
+
+                <div>
+                  <label
+                    className="block text-sm font-medium text-slate-700"
+                    htmlFor="ministry_position"
+                  >
+                    소속 직분
+                  </label>
+                  <input
+                    className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                    defaultValue={result.data.profile.ministry_position ?? ""}
+                    id="ministry_position"
+                    maxLength={100}
+                    name="ministry_position"
+                    placeholder="예: 목회자, 선교사, 장로, 집사"
+                    type="text"
+                  />
+                </div>
+              </section>
+
+              <section className="space-y-4 border-t border-slate-200 pt-5">
+                <h2 className="text-lg font-semibold">역할 및 세대</h2>
+                <dl className="grid gap-4 sm:grid-cols-2">
+                  <ReadOnlyItem
+                    label="대표 시스템 역할"
+                    note="시스템 역할 변경은 관리자에게 요청해 주세요."
+                    value={
+                      result.data.profile.primary_role
+                        ? getRoleLabel(result.data.profile.primary_role)
+                        : "미지정"
+                    }
+                  />
+                  <ReadOnlyItem
+                    label="세대"
+                    note="세대 정보 변경은 관리자에게 요청해 주세요."
+                    value={formatGeneration(
+                      result.data.profile.generation_number,
+                    )}
+                  />
+                </dl>
+
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <h3 className="text-sm font-medium text-slate-500">
+                    활성 시스템 역할
+                  </h3>
+                  {result.data.roles.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {result.data.roles.map((role) => (
+                        <span
+                          className="inline-flex rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700"
+                          key={`${role.role}-${role.scope_type}-${role.scope_id ?? "global"}`}
+                          title={formatScope(role.scope_type, role.scope_id)}
+                        >
+                          {getRoleLabel(role.role)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-sm text-slate-600">
+                      활성 역할이 없습니다.
+                    </p>
+                  )}
+                </div>
+              </section>
+
+              <section className="space-y-4 border-t border-slate-200 pt-5">
+                <h2 className="text-lg font-semibold">시스템 자동 기록</h2>
+                <dl className="grid gap-4 sm:grid-cols-2">
+                  <ReadOnlyItem
+                    label="회원 상태"
+                    note="회원 상태 변경은 관리자에게 요청해 주세요."
+                    value={getStatusLabel(result.data.profile.status)}
+                  />
+                </dl>
+              </section>
 
               <div className="flex flex-wrap items-center gap-3">
                 <button

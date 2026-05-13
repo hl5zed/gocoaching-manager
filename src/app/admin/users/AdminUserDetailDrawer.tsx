@@ -1,0 +1,762 @@
+"use client";
+
+import { useState } from "react";
+import type { SyntheticEvent } from "react";
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
+import { I18nText } from "@/lib/i18n/I18nProvider";
+import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
+import type { AdminCountrySummary } from "@/lib/api/admin/countries";
+import type {
+  AdminLookupSummary,
+  AdminOrganizationSummary,
+  AdminUserSummary,
+} from "@/lib/api/admin/users";
+import { PROFILE_STATUSES, SCOPE_TYPES, USER_ROLES } from "@/types/database";
+import type { UserRole } from "@/types/database";
+import { AdminUserAffiliationFields } from "./AdminUserAffiliationFields";
+import { LoginGuideCopyButton } from "./LoginGuideCopyButton";
+
+type GenerationOption = {
+  generation_number: number;
+  label: string;
+};
+
+type DetailPayload = {
+  user: AdminUserSummary;
+  options: {
+    countries: AdminCountrySummary[];
+    regions: AdminLookupSummary[];
+    organizations: AdminOrganizationSummary[];
+    churches: AdminLookupSummary[];
+    groups: AdminLookupSummary[];
+    generations: GenerationOption[];
+  };
+  optionErrors?: {
+    countries?: string | null;
+    regions?: string | null;
+    organizations?: string | null;
+    churches?: string | null;
+    groups?: string | null;
+  };
+};
+
+const MANAGEABLE_USER_ROLES = USER_ROLES.filter(
+  (userRole) => userRole !== "super_admin",
+);
+const MINISTRY_POSITION_OPTIONS = [
+  "목사",
+  "선교사",
+  "전도사",
+  "장로",
+  "권사",
+  "집사",
+  "목자",
+  "순장",
+  "교사",
+  "리더",
+  "성도",
+  "기타",
+];
+const FALLBACK_GENERATION_OPTIONS = Array.from({ length: 10 }, (_, index) => ({
+  generation_number: index + 1,
+  label: `${index + 1}세대`,
+}));
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "미지정";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "미지정";
+  }
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Bangkok",
+  }).formatToParts(date);
+  const get = (type: string) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get(
+    "minute",
+  )}`;
+}
+
+function formatEmail(value: string | null) {
+  return value && value.trim().length > 0 ? value : "이메일 없음";
+}
+
+function displayProfileValue(value: string | null) {
+  return value && value.trim().length > 0 ? value : "미지정";
+}
+
+function shortenId(value: string) {
+  return value.length <= 12 ? value : `${value.slice(0, 8)}...${value.slice(-4)}`;
+}
+
+function formatLookupValue(name: string | null, id: string | null) {
+  if (name && name.trim().length > 0) {
+    return name;
+  }
+
+  if (id && id.trim().length > 0) {
+    return `ID: ${shortenId(id)}`;
+  }
+
+  return "미지정";
+}
+
+function formatCountryValue(user: AdminUserSummary) {
+  if (user.country_name && user.country_name.trim().length > 0) {
+    return user.country_code && user.country_code.trim().length > 0
+      ? `${user.country_name} (${user.country_code})`
+      : user.country_name;
+  }
+
+  return formatLookupValue(null, user.country_id);
+}
+
+function formatGeneration(value: number | null) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? `${value}세대`
+    : "미지정";
+}
+
+function isActiveRole(roleItem: AdminUserSummary["roles"][number]) {
+  return roleItem.status === "active" && roleItem.is_active;
+}
+
+function getRepresentativeRole(user: AdminUserSummary) {
+  return user.roles.find(isActiveRole) ?? user.roles[0] ?? null;
+}
+
+function getRoleActiveLabel(roleItem: AdminUserSummary["roles"][number]) {
+  return isActiveRole(roleItem) ? "활성" : "비활성";
+}
+
+function formatScopeSummary(roles: AdminUserSummary["roles"]) {
+  if (roles.length === 0) {
+    return "미등록";
+  }
+
+  return roles
+    .map((roleItem) => formatScope(roleItem.scope_type, roleItem.scope_id))
+    .join(", ");
+}
+
+function getMinistryPositionOptions(currentValue?: string | null) {
+  const trimmedValue = currentValue?.trim();
+
+  if (trimmedValue && !MINISTRY_POSITION_OPTIONS.includes(trimmedValue)) {
+    return [...MINISTRY_POSITION_OPTIONS, trimmedValue];
+  }
+
+  return MINISTRY_POSITION_OPTIONS;
+}
+
+function getGenerationSelectOptions(
+  generationOptions: GenerationOption[] = [],
+  currentValue?: number | null,
+) {
+  const safeGenerationOptions = Array.isArray(generationOptions)
+    ? generationOptions
+    : [];
+  const baseOptions =
+    safeGenerationOptions.length > 0
+      ? safeGenerationOptions
+      : FALLBACK_GENERATION_OPTIONS;
+
+  if (
+    typeof currentValue === "number" &&
+    Number.isInteger(currentValue) &&
+    currentValue > 0 &&
+    !baseOptions.some((option) => option.generation_number === currentValue)
+  ) {
+    return [
+      ...baseOptions,
+      {
+        generation_number: currentValue,
+        label: `${currentValue}세대`,
+      },
+    ].sort((left, right) => left.generation_number - right.generation_number);
+  }
+
+  return baseOptions;
+}
+
+function DetailValue({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div>
+      <dt className="text-sm font-medium text-slate-500">{label}</dt>
+      <dd className="mt-1 break-words text-slate-950">{value}</dd>
+    </div>
+  );
+}
+
+function RoleChangeForm({ user }: { user: AdminUserSummary }) {
+  const representativeRole = getRepresentativeRole(user);
+
+  if (!representativeRole || representativeRole.role === "super_admin") {
+    return (
+      <p className="text-xs text-slate-500">
+        super_admin 역할은 이 화면에서 변경할 수 없습니다.
+      </p>
+    );
+  }
+
+  const existingOtherRoles = new Set(
+    user.roles
+      .filter((roleItem) => roleItem.id !== representativeRole.id && isActiveRole(roleItem))
+      .map((roleItem) => roleItem.role),
+  );
+  const roleOptions = MANAGEABLE_USER_ROLES.filter(
+    (userRole) => userRole === representativeRole.role || !existingOtherRoles.has(userRole),
+  );
+
+  return (
+    <form action="/api/admin/users" className="flex flex-wrap items-center gap-2" method="post">
+      <input name="intent" type="hidden" value="update_role" />
+      <input name="profile_id" type="hidden" value={user.id} />
+      <input name="role_id" type="hidden" value={representativeRole.id} />
+      <select
+        className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
+        defaultValue={representativeRole.role}
+        name="role"
+      >
+        {roleOptions.map((userRole) => (
+          <option key={userRole} value={userRole}>
+            {getRoleLabel(userRole)}
+          </option>
+        ))}
+      </select>
+      <button
+        className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700"
+        type="submit"
+      >
+        역할 변경
+      </button>
+    </form>
+  );
+}
+
+function RoleAddForm({ user }: { user: AdminUserSummary }) {
+  const hasProtectedRole = user.roles.some((roleItem) => roleItem.role === "super_admin");
+  const existingRoles = new Set(user.roles.map((roleItem) => roleItem.role));
+  const roleOptions = MANAGEABLE_USER_ROLES.filter(
+    (userRole) => !existingRoles.has(userRole),
+  );
+
+  if (hasProtectedRole) {
+    return null;
+  }
+
+  if (roleOptions.length === 0) {
+    return <p className="text-xs text-slate-500">추가로 부여할 수 있는 역할이 없습니다.</p>;
+  }
+
+  return (
+    <form
+      action="/api/admin/users"
+      className="grid gap-2 rounded-md border border-dashed border-slate-200 bg-white p-3"
+      method="post"
+    >
+      <input name="intent" type="hidden" value="add_role" />
+      <input name="profile_id" type="hidden" value={user.id} />
+      <div className="flex flex-wrap items-center gap-2">
+        <select
+          className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
+          defaultValue={roleOptions.includes("coach") ? "coach" : roleOptions[0] ?? "coachee"}
+          name="role"
+        >
+          {roleOptions.map((userRole) => (
+            <option key={userRole} value={userRole}>
+              {getRoleLabel(userRole)}
+            </option>
+          ))}
+        </select>
+        <select
+          className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
+          defaultValue="global"
+          name="scope_type"
+        >
+          {SCOPE_TYPES.map((scopeType) => (
+            <option key={scopeType} value={scopeType}>
+              {formatScope(scopeType, null)}
+            </option>
+          ))}
+        </select>
+        <input
+          className="min-w-[150px] rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
+          name="scope_id"
+          placeholder="global이면 비움"
+          type="text"
+        />
+        <button
+          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700"
+          type="submit"
+        >
+          역할 추가
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function RoleStatusToggleForm({
+  roleItem,
+  user,
+}: {
+  roleItem: AdminUserSummary["roles"][number];
+  user: AdminUserSummary;
+}) {
+  if (roleItem.role === "super_admin") {
+    return <span className="text-xs text-slate-500">super_admin 보호</span>;
+  }
+
+  const isActive = isActiveRole(roleItem);
+  const targetStatus = isActive ? "inactive" : "active";
+
+  return (
+    <form action="/api/admin/users" method="post">
+      <input name="intent" type="hidden" value="update_role_status" />
+      <input name="profile_id" type="hidden" value={user.id} />
+      <input name="role_id" type="hidden" value={roleItem.id} />
+      <input name="target_role_status" type="hidden" value={targetStatus} />
+      <ConfirmSubmitButton
+        className={`rounded-md border px-2.5 py-1.5 text-xs font-medium ${
+          isActive ? "border-amber-300 text-amber-700" : "border-emerald-300 text-emerald-700"
+        }`}
+        confirmDescription={`${formatEmail(user.email)} 회원의 ${getRoleLabel(
+          roleItem.role,
+        )} 시스템 역할만 ${isActive ? "비활성화" : "활성화"}합니다.`}
+        confirmTitle={
+          isActive
+            ? "시스템 역할을 비활성화하시겠습니까?"
+            : "시스템 역할을 활성화하시겠습니까?"
+        }
+        type="submit"
+      >
+        {isActive ? "비활성화" : "재활성화"}
+      </ConfirmSubmitButton>
+    </form>
+  );
+}
+
+function StatusChangeForm({ user }: { user: AdminUserSummary }) {
+  const representativeRole = getRepresentativeRole(user);
+
+  if (representativeRole?.role === "super_admin") {
+    return <span className="text-xs text-slate-500">super_admin 보호</span>;
+  }
+
+  if (user.status !== "active" && user.status !== "inactive") {
+    return <span className="text-xs text-slate-500">확인 필요</span>;
+  }
+
+  return (
+    <form action="/api/admin/users" method="post">
+      <input name="intent" type="hidden" value="update_status" />
+      <input name="profile_id" type="hidden" value={user.id} />
+      <input
+        name="target_status"
+        type="hidden"
+        value={user.status === "active" ? "inactive" : "active"}
+      />
+      <ConfirmSubmitButton
+        className={`rounded-md border px-3 py-2 text-sm font-medium ${
+          user.status === "active"
+            ? "border-amber-300 text-amber-700"
+            : "border-emerald-300 text-emerald-700"
+        }`}
+        confirmDescription={
+          user.status === "active"
+            ? `${user.email} 계정을 비활성화합니다.`
+            : `${user.email} 계정을 다시 활성화합니다.`
+        }
+        confirmTitle={
+          user.status === "active"
+            ? "회원을 비활성화하시겠습니까?"
+            : "회원을 재활성화하시겠습니까?"
+        }
+        type="submit"
+      >
+        {user.status === "active" ? "비활성화" : "재활성화"}
+      </ConfirmSubmitButton>
+    </form>
+  );
+}
+
+function ProfileUpdateForm({ detail }: { detail: DetailPayload }) {
+  const { user, options, optionErrors } = detail;
+  const ministryPositionOptions = getMinistryPositionOptions(user.ministry_position);
+  const generationSelectOptions = getGenerationSelectOptions(
+    options.generations,
+    user.generation_number,
+  );
+
+  return (
+    <details className="rounded-md border border-slate-200 bg-slate-50">
+      <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <div>
+          <h4 className="text-sm font-semibold text-slate-900">회원 정보 수정</h4>
+          <p className="mt-1 text-xs text-slate-500">
+            이메일과 시스템 역할은 별도 관리 기능에서 변경합니다.
+          </p>
+        </div>
+        <span className="rounded-md bg-slate-950 px-3 py-2 text-xs font-semibold text-white">
+          수정 열기
+        </span>
+      </summary>
+      <form
+        action="/api/admin/users"
+        className="grid gap-4 border-t border-slate-200 p-4"
+        method="post"
+      >
+        <input name="intent" type="hidden" value="update_profile" />
+        <input name="profile_id" type="hidden" value={user.id} />
+        <fieldset className="grid gap-3 rounded-md border border-slate-200 bg-white p-4">
+          <legend className="px-1 text-sm font-semibold text-slate-800">기본 정보</legend>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1 text-sm">
+              <span className="font-medium text-slate-700">이름</span>
+              <input
+                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                defaultValue={user.full_name ?? ""}
+                maxLength={120}
+                name="full_name"
+                required
+                type="text"
+              />
+            </label>
+            <label className="grid gap-1 text-sm">
+              <span className="font-medium text-slate-700">표시 이름</span>
+              <input
+                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                defaultValue={user.display_name ?? ""}
+                maxLength={120}
+                name="display_name"
+                type="text"
+              />
+            </label>
+            <label className="grid gap-1 text-sm">
+              <span className="font-medium text-slate-700">전화번호</span>
+              <input
+                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                defaultValue={user.phone ?? ""}
+                maxLength={40}
+                name="phone"
+                type="text"
+              />
+            </label>
+            <div className="grid gap-1 text-sm">
+              <span className="font-medium text-slate-700">이메일</span>
+              <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600">
+                {formatEmail(user.email)}
+              </p>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset className="grid gap-3 rounded-md border border-slate-200 bg-white p-4">
+          <legend className="px-1 text-sm font-semibold text-slate-800">소속 정보</legend>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <AdminUserAffiliationFields
+              churchOptions={options.churches}
+              countryOptions={options.countries}
+              errors={{
+                churches: optionErrors?.churches,
+                countries: optionErrors?.countries,
+                groups: optionErrors?.groups,
+                organizations: optionErrors?.organizations,
+                regions: optionErrors?.regions,
+              }}
+              groupOptions={options.groups}
+              initialValues={{
+                church_id: user.church_id,
+                country_id: user.country_id,
+                group_id: user.group_id,
+                organization_id: user.organization_id,
+                region_id: user.region_id,
+              }}
+              organizationOptions={options.organizations}
+              regionOptions={options.regions}
+            />
+            <label className="grid gap-1 text-sm">
+              <span className="font-medium text-slate-700">소속 직분</span>
+              <select
+                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                defaultValue={user.ministry_position ?? ""}
+                name="ministry_position"
+              >
+                <option value="">미지정</option>
+                {ministryPositionOptions.map((position) => (
+                  <option key={position} value={position}>
+                    {position}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset className="grid gap-3 rounded-md border border-slate-200 bg-white p-4">
+          <legend className="px-1 text-sm font-semibold text-slate-800">역할 및 세대</legend>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1 text-sm">
+              <span className="font-medium text-slate-700">세대</span>
+              <select
+                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                defaultValue={user.generation_number ?? ""}
+                name="generation_number"
+              >
+                <option value="">미지정</option>
+                {generationSelectOptions.map((generation) => (
+                  <option
+                    key={generation.generation_number}
+                    value={generation.generation_number}
+                  >
+                    {generation.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-1 text-sm">
+              <span className="font-medium text-slate-700">회원 상태</span>
+              <select
+                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                defaultValue={user.status}
+                name="status"
+              >
+                {PROFILE_STATUSES.map((profileStatus) => (
+                  <option key={profileStatus} value={profileStatus}>
+                    {getStatusLabel(profileStatus)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </fieldset>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white"
+            type="submit"
+          >
+            회원 정보 저장
+          </button>
+          <button
+            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            type="reset"
+          >
+            수정 취소
+          </button>
+        </div>
+      </form>
+    </details>
+  );
+}
+
+function MemberDetailContent({ detail }: { detail: DetailPayload }) {
+  const { user } = detail;
+
+  return (
+    <>
+      <section className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-4">
+        <h3 className="text-base font-semibold">회원가입 입력 정보</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          현재 선택한 회원의 기본 정보, 소속 정보, 세대와 시스템 자동 기록입니다.
+        </p>
+      </section>
+      <section className="mt-6 rounded-md border border-slate-200 p-4">
+        <h3 className="text-base font-semibold">기본 정보</h3>
+        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+          <DetailValue label="이름" value={displayProfileValue(user.full_name)} />
+          <DetailValue label="표시 이름" value={displayProfileValue(user.display_name)} />
+          <DetailValue label="이메일" value={formatEmail(user.email)} />
+          <DetailValue label="전화번호" value={displayProfileValue(user.phone)} />
+        </dl>
+      </section>
+      <section className="mt-4 rounded-md border border-slate-200 p-4">
+        <h3 className="text-base font-semibold">소속 정보</h3>
+        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+          <DetailValue label="소속 국가" value={formatCountryValue(user)} />
+          <DetailValue label="지역/도시" value={formatLookupValue(user.region_name, user.region_id)} />
+          <DetailValue
+            label="소속 기관/교회"
+            value={formatLookupValue(user.organization_name, user.organization_id)}
+          />
+          <DetailValue label="세부 교회" value={formatLookupValue(user.church_name, user.church_id)} />
+          <DetailValue label="그룹/팀/목장" value={formatLookupValue(user.group_name, user.group_id)} />
+          <DetailValue label="소속 직분" value={displayProfileValue(user.ministry_position)} />
+        </dl>
+      </section>
+      <section className="mt-4 rounded-md border border-slate-200 p-4">
+        <h3 className="text-base font-semibold">역할 및 세대</h3>
+        <dl className="mt-4 grid gap-4">
+          <DetailValue
+            label="대표 시스템 역할"
+            value={user.primary_role ? getRoleLabel(user.primary_role) : "미지정"}
+          />
+          <div>
+            <dt className="text-sm font-medium text-slate-500">시스템 역할</dt>
+            <dd className="mt-2 flex flex-wrap gap-2">
+              {user.roles.length === 0 ? (
+                <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                  미지정
+                </span>
+              ) : (
+                user.roles.map((roleItem) => (
+                  <span
+                    className="inline-flex flex-col rounded-md border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
+                    key={roleItem.id}
+                  >
+                    <span>{getRoleLabel(roleItem.role)}</span>
+                    <span className="mt-0.5 text-[11px] font-normal text-slate-500">
+                      역할 상태: {getRoleActiveLabel(roleItem)}
+                    </span>
+                  </span>
+                ))
+              )}
+            </dd>
+          </div>
+          <DetailValue label="역할 권한 범위" value={formatScopeSummary(user.roles)} />
+          <DetailValue label="세대" value={formatGeneration(user.generation_number)} />
+        </dl>
+      </section>
+      <section className="mt-4 rounded-md border border-slate-200 p-4">
+        <h3 className="text-base font-semibold">시스템 자동 기록</h3>
+        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+          <DetailValue label="회원 상태" value={getStatusLabel(user.status)} />
+          <DetailValue label="가입일" value={formatDateTime(user.created_at)} />
+          <DetailValue label="최근 수정일" value={formatDateTime(user.updated_at)} />
+        </dl>
+      </section>
+      <section className="mt-4 rounded-md border border-slate-200 p-4">
+        <h3 className="text-base font-semibold">빠른 작업</h3>
+        <div className="mt-4 grid gap-4">
+          <ProfileUpdateForm detail={detail} />
+          <LoginGuideCopyButton email={user.email} />
+          <RoleChangeForm user={user} />
+          <div className="grid gap-2 rounded-md border border-dashed border-slate-200 bg-white p-3">
+            <p className="text-xs font-semibold text-slate-700">시스템 역할 활성/비활성</p>
+            {user.roles.length === 0 ? (
+              <p className="text-xs text-slate-500">미지정</p>
+            ) : (
+              <div className="grid gap-2">
+                {user.roles.map((roleItem) => (
+                  <div
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-100 bg-slate-50 px-3 py-2"
+                    key={roleItem.id}
+                  >
+                    <div className="text-xs">
+                      <p className="font-semibold text-slate-800">
+                        {getRoleLabel(roleItem.role)}
+                      </p>
+                      <p className="mt-0.5 text-slate-500">
+                        역할 상태: {getRoleActiveLabel(roleItem)}
+                      </p>
+                    </div>
+                    <RoleStatusToggleForm roleItem={roleItem} user={user} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <RoleAddForm user={user} />
+          <StatusChangeForm user={user} />
+        </div>
+      </section>
+    </>
+  );
+}
+
+export function AdminUserDetailDrawer({ user }: { user: AdminUserSummary }) {
+  const [detail, setDetail] = useState<DetailPayload | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function handleToggle(event: SyntheticEvent<HTMLDetailsElement>) {
+    if (!event.currentTarget.open || detail || isLoading) {
+      return;
+    }
+
+    const controller = new AbortController();
+    setIsLoading(true);
+    setError(null);
+
+    void fetch(`/api/admin/users/${user.id}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error("detail request failed");
+        }
+
+        setDetail((await response.json()) as DetailPayload);
+      })
+      .catch((fetchError) => {
+        if ((fetchError as Error).name !== "AbortError") {
+          setError("회원 정보를 불러오지 못했습니다.");
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      });
+  }
+
+  return (
+    <details className="group" onToggle={handleToggle}>
+      <summary className="cursor-pointer list-none rounded-md border border-slate-300 px-3 py-2 text-center text-sm font-medium text-slate-700 group-open:fixed group-open:right-4 group-open:top-4 group-open:z-50 group-open:border-slate-700 group-open:bg-white group-open:shadow-lg">
+        <span className="group-open:hidden">
+          <I18nText k="common.view" fallback="상세보기" />
+        </span>
+        <span className="hidden group-open:inline">
+          <I18nText k="common.close" fallback="닫기" />
+        </span>
+      </summary>
+      <div className="fixed inset-x-0 bottom-0 top-0 z-40 w-full overflow-y-auto border-l border-slate-200 bg-white p-4 text-slate-950 shadow-xl sm:inset-x-auto sm:right-0 sm:max-w-xl sm:p-6 lg:max-w-2xl">
+        <div className="sticky top-0 z-10 -mx-4 -mt-4 flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:-mx-6 sm:-mt-6 sm:px-6">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+              회원 상세정보
+            </p>
+            <p className="mt-1 text-sm text-slate-600">
+              상세 정보와 수정 폼은 열 때마다 별도로 불러옵니다.
+            </p>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            회원 정보를 불러오는 중...
+          </div>
+        ) : null}
+
+        {error ? (
+          <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            {error}
+          </div>
+        ) : null}
+
+        {detail ? <MemberDetailContent detail={detail} /> : null}
+      </div>
+    </details>
+  );
+}

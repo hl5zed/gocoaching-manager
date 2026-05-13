@@ -9,7 +9,7 @@ import {
   isProtectedPageRoute,
   isPublicRoute,
 } from "@/lib/auth/route-access";
-import type { Database } from "@/types/database";
+import type { Database, ProfileStatus } from "@/types/database";
 
 const securityHeaders = {
   "X-Frame-Options": "DENY",
@@ -100,6 +100,42 @@ function getRoleErrorResponse(request: NextRequest) {
     : createUnauthorizedRedirect(request);
 }
 
+async function getCurrentProfileStatus(
+  supabase: SupabaseClient<Database>,
+  authUserId: string,
+) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("status")
+    .eq("auth_user_id", authUserId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error) {
+    return {
+      ok: false as const,
+      status: null,
+    };
+  }
+
+  const profile = data as { status: ProfileStatus } | null;
+
+  return {
+    ok: true as const,
+    status: profile?.status ?? null,
+  };
+}
+
+function getDisabledAccountResponse(request: NextRequest) {
+  return isApiRoute(request.nextUrl.pathname)
+    ? createApiError(
+        403,
+        "ACCOUNT_DISABLED",
+        "비활성화된 계정입니다. 관리자에게 문의하세요.",
+      )
+    : createUnauthorizedRedirect(request);
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -137,6 +173,20 @@ export async function middleware(request: NextRequest) {
     return isApiRoute(pathname)
       ? createApiError(401, "UNAUTHORIZED", "로그인이 필요합니다.")
       : createLoginRedirect(request);
+  }
+
+  const profileStatus = await getCurrentProfileStatus(supabase, user.id);
+
+  if (!profileStatus.ok) {
+    return getRoleErrorResponse(request);
+  }
+
+  if (
+    profileStatus.status !== null &&
+    profileStatus.status !== "active" &&
+    pathname !== "/dashboard"
+  ) {
+    return getDisabledAccountResponse(request);
   }
 
   const allowedRoles = getAllowedRolesForPath(pathname);

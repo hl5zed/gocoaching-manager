@@ -91,6 +91,28 @@ type WeeklyLogsTable = {
   update: (values: WeeklyLogUpdate) => WeeklyLogsUpdateChain;
 };
 
+type WeeklyLogsListQuery = PromiseLike<{
+  data: WeeklyLogRecord[] | null;
+  error: PostgrestErrorLike | null;
+}> & {
+  order: (
+    column: "week_start" | "created_at",
+    options: { ascending: boolean },
+  ) => WeeklyLogsListQuery;
+};
+
+type WeeklyLogsListSelectChain = {
+  eq: (
+    column: "relationship_id" | "coachee_profile_id",
+    value: string,
+  ) => WeeklyLogsListSelectChain;
+  is: (column: "deleted_at", value: null) => WeeklyLogsListQuery;
+};
+
+type WeeklyLogsListTable = {
+  select: (columns: string) => WeeklyLogsListSelectChain;
+};
+
 type WeeklyLogsUpdateChain = {
   eq: (
     column: "id" | "coachee_profile_id",
@@ -161,6 +183,7 @@ export type MyWeeklyLogPageDataResult =
           weekEnd: string;
         };
         weeklyLog: MyWeeklyLogEntry | null;
+        weeklyLogs: MyWeeklyLogEntry[];
       };
     }
   | {
@@ -188,8 +211,85 @@ export type SaveMyWeeklyLogResult =
       };
     };
 
+export type RemoveMyWeeklyLogResult =
+  | {
+      ok: true;
+    }
+  | {
+      ok: false;
+      error: {
+        status: 400 | 401 | 403 | 404 | 500;
+        code: string;
+        message: string;
+      };
+    };
+
+export type RecentMyWeeklyLogsResult =
+  | {
+      ok: true;
+      data: MyWeeklyLogEntry[];
+    }
+  | {
+      ok: false;
+      error: {
+        status: 401 | 404 | 500;
+        code: string;
+        message: string;
+      };
+    };
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+type WeeklyLogDeleteRow = {
+  id: string;
+  relationship_id: string;
+  coachee_profile_id: string;
+  deleted_at: string | null;
+};
+
+type WeeklyLogsSoftDeleteTable = {
+  select: (columns: "id, relationship_id, coachee_profile_id, deleted_at") => {
+    eq: (column: "id", value: string) => {
+      maybeSingle: () => Promise<{
+        data: WeeklyLogDeleteRow | null;
+        error: PostgrestErrorLike | null;
+      }>;
+    };
+  };
+  update: (values: { deleted_at: string; updated_at: string }) => {
+    eq: (column: "id", value: string) => {
+      eq: (column: "coachee_profile_id", value: string) => {
+        is: (column: "deleted_at", value: null) => Promise<{
+          error: PostgrestErrorLike | null;
+        }>;
+      };
+    };
+  };
+};
+
 function logServerError(code: string, message: string) {
   console.error(`[${code}] ${message}`);
+}
+
+function logWeeklyLogDeleteFailure(
+  reason: string,
+  metadata: {
+    currentProfileId?: string | null;
+    details?: string;
+    id?: string;
+    message?: string;
+    code?: string;
+  },
+) {
+  console.error("[MY_WEEKLY_LOG_DELETE_FAILED]", {
+    reason,
+    currentProfileIdExists: Boolean(metadata.currentProfileId),
+    details: metadata.details,
+    id: metadata.id,
+    message: metadata.message,
+    code: metadata.code,
+  });
 }
 
 function normalizeTextarea(value: unknown, fieldLabel: string) {
@@ -471,6 +571,18 @@ function createWeeklyLogsTable(
   return serviceClient.from("weekly_logs") as unknown as WeeklyLogsTable;
 }
 
+function createWeeklyLogsListTable(
+  serviceClient: NonNullable<ReturnType<typeof createSupabaseServiceClient>["client"]>,
+): WeeklyLogsListTable {
+  return serviceClient.from("weekly_logs") as unknown as WeeklyLogsListTable;
+}
+
+function createWeeklyLogsSoftDeleteTable(
+  serviceClient: NonNullable<ReturnType<typeof createSupabaseServiceClient>["client"]>,
+): WeeklyLogsSoftDeleteTable {
+  return serviceClient.from("weekly_logs") as unknown as WeeklyLogsSoftDeleteTable;
+}
+
 export async function getMyWeeklyLogPageData({
   relationshipId,
 }: {
@@ -495,6 +607,7 @@ export async function getMyWeeklyLogPageData({
         selectedRelationshipId: null,
         currentWeek,
         weeklyLog: null,
+        weeklyLogs: [],
       },
     };
   }
@@ -582,6 +695,7 @@ export async function getMyWeeklyLogPageData({
   }
 
   let weeklyLog: MyWeeklyLogEntry | null = null;
+  let weeklyLogs: MyWeeklyLogEntry[] = [];
 
   if (selectedRelationshipId) {
     const weeklyLogsTable = createWeeklyLogsTable(serviceClient);
@@ -610,6 +724,33 @@ export async function getMyWeeklyLogPageData({
     }
 
     weeklyLog = log ? mapWeeklyLog(log) : null;
+
+    const weeklyLogsListTable = createWeeklyLogsListTable(serviceClient);
+    const { data: logs, error: logsError } = await weeklyLogsListTable
+      .select(
+        "id, relationship_id, coachee_profile_id, week_start, week_end, gratitude, prayer_request, progress_summary, difficulty, message_to_coach, status, version, submitted_at, created_at, updated_at",
+      )
+      .eq("relationship_id", selectedRelationshipId)
+      .eq("coachee_profile_id", me.data.profile.id)
+      .is("deleted_at", null)
+      .order("week_start", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (logsError) {
+      logServerError(
+        "MY_WEEKLY_LOG_LIST_FAILED",
+        logsError.message ?? "Weekly log list lookup failed.",
+      );
+      return {
+        ok: false,
+        error: {
+          code: "MY_WEEKLY_LOG_FETCH_FAILED",
+          message: "지금 주간 기록을 불러올 수 없습니다.",
+        },
+      };
+    }
+
+    weeklyLogs = (logs ?? []).map(mapWeeklyLog);
   }
 
   return {
@@ -622,6 +763,7 @@ export async function getMyWeeklyLogPageData({
       selectedRelationshipId,
       currentWeek,
       weeklyLog,
+      weeklyLogs,
     },
   };
 }
@@ -886,5 +1028,261 @@ export async function saveMyWeeklyLog(input: {
       relationshipId: selectedRelationship.id,
       status: nextStatus,
     },
+  };
+}
+
+export async function removeMyWeeklyLog(input: {
+  weekly_log_id?: unknown;
+}): Promise<RemoveMyWeeklyLogResult> {
+  const me = await getCurrentProfileAndRoles();
+
+  if (!me.ok) {
+    return {
+      ok: false,
+      error: {
+        status: 401,
+        code: me.error.code,
+        message: me.error.message,
+      },
+    };
+  }
+
+  if (me.data.profile === null) {
+    return {
+      ok: false,
+      error: {
+        status: 404,
+        code: "PROFILE_NOT_FOUND",
+        message: "아직 프로필이 생성되지 않았습니다.",
+      },
+    };
+  }
+
+  const weeklyLogId =
+    typeof input.weekly_log_id === "string" ? input.weekly_log_id.trim() : "";
+
+  if (!weeklyLogId || !UUID_PATTERN.test(weeklyLogId)) {
+    return {
+      ok: false,
+      error: {
+        status: 400,
+        code: "INVALID_WEEKLY_LOG_ID",
+        message: "주간 기록 ID를 확인할 수 없습니다.",
+      },
+    };
+  }
+
+  const { client: serviceClient, error: serviceClientError } =
+    createSupabaseServiceClient();
+
+  if (!serviceClient) {
+    logWeeklyLogDeleteFailure("service client unavailable", {
+      id: weeklyLogId,
+      message: serviceClientError ?? undefined,
+    });
+    return {
+      ok: false,
+      error: {
+        status: 500,
+        code: "SERVICE_CLIENT_UNAVAILABLE",
+        message: "주간 기록 처리에 실패했습니다.",
+      },
+    };
+  }
+
+  const weeklyLogsTable = createWeeklyLogsSoftDeleteTable(serviceClient);
+  const { data: weeklyLog, error: lookupError } = await weeklyLogsTable
+    .select("id, relationship_id, coachee_profile_id, deleted_at")
+    .eq("id", weeklyLogId)
+    .maybeSingle();
+
+  if (lookupError) {
+    logWeeklyLogDeleteFailure("weekly log lookup failed", {
+      currentProfileId: me.data.profile.id,
+      id: weeklyLogId,
+      message: lookupError.message,
+      code: lookupError.code,
+      details: lookupError.details,
+    });
+    return {
+      ok: false,
+      error: {
+        status: 500,
+        code: "WEEKLY_LOG_LOOKUP_FAILED",
+        message: "주간 기록 처리에 실패했습니다.",
+      },
+    };
+  }
+
+  if (!weeklyLog || weeklyLog.deleted_at) {
+    return {
+      ok: false,
+      error: {
+        status: 404,
+        code: "WEEKLY_LOG_NOT_FOUND",
+        message: "주간 기록을 찾을 수 없습니다.",
+      },
+    };
+  }
+
+  if (weeklyLog.coachee_profile_id !== me.data.profile.id) {
+    return {
+      ok: false,
+      error: {
+        status: 403,
+        code: "WEEKLY_LOG_ACCESS_DENIED",
+        message: "이 주간 기록에 접근할 권한이 없습니다.",
+      },
+    };
+  }
+
+  const relationshipsResult = await getOwnRelationships(
+    serviceClient,
+    me.data.profile.id,
+  );
+
+  if (relationshipsResult.error) {
+    logWeeklyLogDeleteFailure("relationship validation failed", {
+      currentProfileId: me.data.profile.id,
+      id: weeklyLogId,
+      message: relationshipsResult.error.message,
+      code: relationshipsResult.error.code,
+      details: relationshipsResult.error.details,
+    });
+    return {
+      ok: false,
+      error: {
+        status: 500,
+        code: "RELATIONSHIP_VALIDATION_FAILED",
+        message: "주간 기록 처리에 실패했습니다.",
+      },
+    };
+  }
+
+  const hasOwnRelationship = relationshipsResult.relationships.some(
+    (relationship) => relationship.id === weeklyLog.relationship_id,
+  );
+
+  if (!hasOwnRelationship) {
+    return {
+      ok: false,
+      error: {
+        status: 403,
+        code: "WEEKLY_LOG_ACCESS_DENIED",
+        message: "이 주간 기록에 접근할 권한이 없습니다.",
+      },
+    };
+  }
+
+  const now = new Date().toISOString();
+  const { error: updateError } = await weeklyLogsTable
+    .update({
+      deleted_at: now,
+      updated_at: now,
+    })
+    .eq("id", weeklyLogId)
+    .eq("coachee_profile_id", me.data.profile.id)
+    .is("deleted_at", null);
+
+  if (updateError) {
+    logWeeklyLogDeleteFailure("weekly log soft delete failed", {
+      currentProfileId: me.data.profile.id,
+      id: weeklyLogId,
+      message: updateError.message,
+      code: updateError.code,
+      details: updateError.details,
+    });
+    return {
+      ok: false,
+      error: {
+        status: 500,
+        code: "WEEKLY_LOG_SOFT_DELETE_FAILED",
+        message: "주간 기록 처리에 실패했습니다.",
+      },
+    };
+  }
+
+  return {
+    ok: true,
+  };
+}
+
+export async function getRecentMyWeeklyLogs({
+  limit = 3,
+}: {
+  limit?: number | null;
+} = {}): Promise<RecentMyWeeklyLogsResult> {
+  const me = await getCurrentProfileAndRoles();
+
+  if (!me.ok) {
+    return {
+      ok: false,
+      error: {
+        status: 401,
+        code: me.error.code,
+        message: me.error.message,
+      },
+    };
+  }
+
+  if (me.data.profile === null) {
+    return {
+      ok: false,
+      error: {
+        status: 404,
+        code: "PROFILE_NOT_FOUND",
+        message: "아직 프로필이 생성되지 않았습니다.",
+      },
+    };
+  }
+
+  const { client: serviceClient, error: serviceClientError } =
+    createSupabaseServiceClient();
+
+  if (!serviceClient) {
+    logServerError(
+      "SERVICE_CLIENT_UNAVAILABLE",
+      serviceClientError ?? "Weekly log service client is unavailable.",
+    );
+    return {
+      ok: false,
+      error: {
+        status: 500,
+        code: "SERVICE_CLIENT_UNAVAILABLE",
+        message: "지금 주간 기록을 불러올 수 없습니다.",
+      },
+    };
+  }
+
+  const weeklyLogsListTable = createWeeklyLogsListTable(serviceClient);
+  const { data, error } = await weeklyLogsListTable
+    .select(
+      "id, relationship_id, coachee_profile_id, week_start, week_end, gratitude, prayer_request, progress_summary, difficulty, message_to_coach, status, version, submitted_at, created_at, updated_at",
+    )
+    .eq("coachee_profile_id", me.data.profile.id)
+    .is("deleted_at", null)
+    .order("week_start", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    logServerError(
+      "MY_WEEKLY_LOG_RECENT_LIST_FAILED",
+      error.message ?? "Recent weekly log lookup failed.",
+    );
+    return {
+      ok: false,
+      error: {
+        status: 500,
+        code: "MY_WEEKLY_LOG_FETCH_FAILED",
+        message: "지금 주간 기록을 불러올 수 없습니다.",
+      },
+    };
+  }
+
+  return {
+    ok: true,
+    data: (limit === null ? (data ?? []) : (data ?? []).slice(0, limit)).map(
+      mapWeeklyLog,
+    ),
   };
 }

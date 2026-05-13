@@ -127,9 +127,9 @@ export default async function MyCoachingPage() {
             </Link>
             <Link
               className="font-medium text-slate-700 underline"
-              href="/my-coaching/weekly-log"
+              href="/my-coaching/records"
             >
-              주간 기록 작성
+              나의 기록
             </Link>
             <Link
               className="font-medium text-slate-700 underline"
@@ -273,25 +273,77 @@ export default async function MyCoachingPage() {
             </section>
 
             <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-              <h2 className="text-lg font-semibold">다음 단계</h2>
+              <h2 className="text-lg font-semibold">나의 목실기</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                목실기 목표 작성, 월별 점검, 연간 성취표를 한곳에서
+                확인합니다.
+              </p>
               <div className="mt-4 grid gap-4 md:grid-cols-3">
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                  <p className="font-medium text-slate-950">주간 기록</p>
-                  <Link
-                    className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
-                    href="/my-coaching/weekly-log"
-                  >
-                    주간 기록 작성
-                  </Link>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                  <p className="font-medium text-slate-950">목표</p>
-                  <p className="mt-2 text-sm text-slate-600">준비 중</p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                  <p className="font-medium text-slate-950">코치 피드백</p>
-                  <p className="mt-2 text-sm text-slate-600">준비 중</p>
-                </div>
+                <Link
+                  className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
+                  href="/my-coaching/moksilgi"
+                >
+                  <p className="font-medium text-slate-950">목실기 작성하기</p>
+                  <p className="mt-2 text-sm text-slate-600">
+                    나의 목실기 목표와 세부 내용을 작성합니다.
+                  </p>
+                </Link>
+                <Link
+                  className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
+                  href="/my-coaching/moksilgi/monthly"
+                >
+                  <p className="font-medium text-slate-950">월별 목실기 점검</p>
+                  <p className="mt-2 text-sm text-slate-600">
+                    월별 실행 기록과 달성률을 점검합니다.
+                  </p>
+                </Link>
+                <Link
+                  className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
+                  href="/my-coaching/moksilgi/summary"
+                >
+                  <p className="font-medium text-slate-950">나의 성취표 보기</p>
+                  <p className="mt-2 text-sm text-slate-600">
+                    연간 목실기 성취 현황을 확인합니다.
+                  </p>
+                </Link>
+              </div>
+            </section>
+
+            <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
+              <h2 className="text-lg font-semibold">나의 기록</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                하루, 주간, 월간 단위로 나의 코칭 여정과 실천 내용을
+                기록합니다.
+              </p>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <Link
+                  className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
+                  href="/my-coaching/records"
+                >
+                  <p className="font-medium text-slate-950">기록 선택하기</p>
+                  <p className="mt-2 text-sm text-slate-600">
+                    하루 기록, 주간 기록, 월간 기록 중 필요한 기록 방식을
+                    선택합니다.
+                  </p>
+                </Link>
+              </div>
+            </section>
+
+            <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
+              <h2 className="text-lg font-semibold">코치 피드백</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                코치가 남긴 피드백을 확인하고 다음 실행을 준비합니다.
+              </p>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <Link
+                  className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
+                  href="/my-coaching/feedback"
+                >
+                  <p className="font-medium text-slate-950">피드백 보기</p>
+                  <p className="mt-2 text-sm text-slate-600">
+                    공개된 코치 피드백을 확인합니다.
+                  </p>
+                </Link>
               </div>
             </section>
 

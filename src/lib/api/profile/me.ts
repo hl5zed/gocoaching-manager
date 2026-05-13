@@ -15,8 +15,26 @@ export type MyProfileData = {
   profile:
     | Pick<
         ProfileRow,
-        "id" | "email" | "full_name" | "display_name" | "status" | "created_at"
-      >
+        | "id"
+        | "email"
+        | "full_name"
+        | "display_name"
+        | "phone"
+        | "primary_role"
+        | "country_id"
+        | "organization_id"
+        | "church_id"
+        | "ministry_position"
+        | "generation_number"
+        | "status"
+        | "created_at"
+        | "updated_at"
+      > & {
+        church_name: string | null;
+        country_code: string | null;
+        country_name: string | null;
+        organization_name: string | null;
+      }
     | null;
   roles: MyProfileRole[];
 };
@@ -36,8 +54,30 @@ export type MyProfileResult =
 
 type ProfileRecord = Pick<
   ProfileRow,
-  "id" | "email" | "full_name" | "display_name" | "status" | "created_at"
+  | "id"
+  | "email"
+  | "full_name"
+  | "display_name"
+  | "phone"
+  | "primary_role"
+  | "country_id"
+  | "organization_id"
+  | "church_id"
+  | "ministry_position"
+  | "generation_number"
+  | "status"
+  | "created_at"
+  | "updated_at"
 >;
+
+type CountryLookup = {
+  code: string | null;
+  name: string | null;
+};
+
+type NameLookup = {
+  name: string | null;
+};
 
 type RoleRecord = {
   role: UserRole;
@@ -64,7 +104,9 @@ export async function getMyProfile(): Promise<MyProfileResult> {
     const supabase = await createSupabaseServerClient();
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id, email, full_name, display_name, status, created_at")
+      .select(
+        "id, email, full_name, display_name, phone, primary_role, country_id, organization_id, church_id, ministry_position, generation_number, status, created_at, updated_at",
+      )
       .eq("auth_user_id", session.user.id)
       .is("deleted_at", null)
       .neq("status", "anonymized")
@@ -92,6 +134,34 @@ export async function getMyProfile(): Promise<MyProfileResult> {
     }
 
     const profileRecord = profile as ProfileRecord;
+    const [countryResult, organizationResult, churchResult] = await Promise.all([
+      profileRecord.country_id
+        ? supabase
+            .from("countries")
+            .select("name, code")
+            .eq("id", profileRecord.country_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      profileRecord.organization_id
+        ? supabase
+            .from("organizations")
+            .select("name")
+            .eq("id", profileRecord.organization_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      profileRecord.church_id
+        ? supabase
+            .from("churches")
+            .select("name")
+            .eq("id", profileRecord.church_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+    ]);
+
+    const country = countryResult.data as CountryLookup | null;
+    const organization = organizationResult.data as NameLookup | null;
+    const church = churchResult.data as NameLookup | null;
+
     const { data: roles, error: rolesError } = await supabase
       .from("user_roles")
       .select("role, scope_type, scope_id, status, granted_at")
@@ -115,7 +185,13 @@ export async function getMyProfile(): Promise<MyProfileResult> {
       ok: true,
       data: {
         authEmail: session.user.email,
-        profile: profileRecord,
+        profile: {
+          ...profileRecord,
+          church_name: church?.name ?? null,
+          country_code: country?.code ?? null,
+          country_name: country?.name ?? null,
+          organization_name: organization?.name ?? null,
+        },
         roles: ((roles ?? []) as RoleRecord[]).map((role) => ({
           role: role.role,
           scope_type: role.scope_type,

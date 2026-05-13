@@ -9,6 +9,13 @@ import {
   type ScopeType,
   type UserRole,
 } from "@/types/database";
+import {
+  isNonEmptyString,
+  isValidEmail,
+  isValidNumberInRange,
+  isValidUuid,
+  normalizeText,
+} from "@/lib/validation/common";
 
 const roleOptions = USER_ROLES;
 
@@ -180,6 +187,40 @@ export function AdminInvitationsClient({
   }
 
   async function handleSubmit() {
+    const normalizedEmail = normalizeText(invitedEmail).toLowerCase();
+    const normalizedScopeId =
+      scopeType === "global" ? null : normalizeText(scopeId);
+    const expiresInDaysNumber = Number(expiresInDays);
+
+    if (!isValidEmail(normalizedEmail)) {
+      setSuccess(null);
+      setError({
+        code: "INVALID_EMAIL",
+        message: isNonEmptyString(normalizedEmail)
+          ? "올바른 이메일 형식이 아닙니다."
+          : "이메일을 입력해 주세요.",
+      });
+      return;
+    }
+
+    if (scopeType !== "global" && !isValidUuid(normalizedScopeId)) {
+      setSuccess(null);
+      setError({
+        code: "INVALID_SCOPE_ID",
+        message: "범위 ID는 올바른 UUID여야 합니다.",
+      });
+      return;
+    }
+
+    if (!isValidNumberInRange(expiresInDaysNumber, 1, 30)) {
+      setSuccess(null);
+      setError({
+        code: "INVALID_EXPIRES_IN_DAYS",
+        message: "만료 기간은 1일부터 30일 사이로 입력해 주세요.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     setSuccess(null);
     setError(null);
@@ -195,11 +236,11 @@ export function AdminInvitationsClient({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          invited_email: invitedEmail,
+          invited_email: normalizedEmail,
           invited_role: invitedRole,
           scope_type: scopeType,
-          scope_id: scopeType === "global" ? null : scopeId.trim(),
-          expires_in_days: Number(expiresInDays),
+          scope_id: normalizedScopeId,
+          expires_in_days: expiresInDaysNumber,
         }),
       });
 
@@ -240,6 +281,19 @@ export function AdminInvitationsClient({
   }
 
   async function handleRevoke(invitationId: string) {
+    const invitation = recentInvitations.find(
+      (recentInvitation) => recentInvitation.id === invitationId,
+    );
+    const confirmed = window.confirm(
+      `초대를 취소하시겠습니까?\n\n대상: ${
+        invitation?.invited_email ?? invitationId
+      }\n이 작업은 되돌릴 수 없습니다.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
     setRevokingId(invitationId);
     setRevokeError(null);
     setRevokeSuccessMessage("");
@@ -273,7 +327,7 @@ export function AdminInvitationsClient({
     }
 
     const confirmed = window.confirm(
-      "대기 중인 초대를 모두 취소하시겠습니까?",
+      `대기 중인 초대를 모두 취소하시겠습니까?\n\n대상: ${visiblePendingInvitations.length}건\n이 작업은 되돌릴 수 없습니다.`,
     );
 
     if (!confirmed) {

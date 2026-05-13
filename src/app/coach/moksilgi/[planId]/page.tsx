@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PrintPageButton } from "@/components/print/PrintPageButton";
 import {
   getCoachMoksilgiDetail,
   type CoachMoksilgiDetail,
@@ -145,7 +146,7 @@ function PageNav({ planId, year }: { planId: string; year: number }) {
 
 function YearSelector({ planId, year }: { planId: string; year: number }) {
   return (
-    <form className="mt-5 flex flex-wrap items-end gap-3" method="get">
+    <form className="print-hidden mt-5 flex flex-wrap items-end gap-3" method="get">
       <label className="block">
         <span className="text-sm font-medium text-slate-700">연도</span>
         <input
@@ -458,10 +459,16 @@ export default async function CoachMoksilgiDetailPage({
   const coreValues = coreValuesFromJson(plan.core_values_json);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="print-root min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
       <div className="mx-auto max-w-6xl">
         <PageNav planId={planId} year={year} />
 
+        <div className="print-report-title print-only">
+          <h1>코치이 목실기 상세 보고서</h1>
+          <p>코치이: {coacheeName(data)}</p>
+          <p>출력 연도: {year}년</p>
+          <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
+        </div>
         <header className="mt-6">
           <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
             코치용 목실기 상세 보기
@@ -471,7 +478,13 @@ export default async function CoachMoksilgiDetailPage({
           <p className="mt-3 max-w-3xl text-slate-600">
             담당 코치이가 작성한 목실기와 연간 성취 요약을 확인합니다.
           </p>
-          <YearSelector planId={planId} year={year} />
+          <div className="flex flex-wrap items-end gap-3">
+            <YearSelector planId={planId} year={year} />
+            <PrintPageButton
+              fileName={`moksilgi-coachee-detail-${year}-${planId.slice(0, 8)}`}
+              label="코치이 목실기 상세 출력"
+            />
+          </div>
         </header>
 
         <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">

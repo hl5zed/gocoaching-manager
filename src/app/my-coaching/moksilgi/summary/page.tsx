@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PrintPageButton } from "@/components/print/PrintPageButton";
 import {
   getMyMoksilgiSummary,
   type MoksilgiPersonalSummaryRow,
@@ -27,7 +28,7 @@ function formatPercent(value: number | null | undefined) {
 
 function YearSelector({ year }: { year: number }) {
   return (
-    <form className="mt-5 flex flex-wrap items-end gap-3" method="get">
+    <form className="print-hidden mt-5 flex flex-wrap items-end gap-3" method="get">
       <label className="block">
         <span className="text-sm font-medium text-slate-700">연도</span>
         <input
@@ -160,8 +161,13 @@ export default async function MoksilgiSummaryPage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="print-root min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
       <section className="mx-auto w-full max-w-6xl">
+        <div className="print-report-title print-only">
+          <h1>내 목실기 연간 성취 보고서</h1>
+          <p>출력 연도: {year}년</p>
+          <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
+        </div>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
@@ -177,6 +183,10 @@ export default async function MoksilgiSummaryPage({
             <YearSelector year={year} />
           </div>
           <div className="flex flex-col items-start gap-2 text-sm">
+            <PrintPageButton
+              fileName={`moksilgi-my-summary-${year}`}
+              label="목실기 성취표 출력"
+            />
             <Link className="font-medium text-slate-700 underline" href="/my-coaching/moksilgi">
               목실기 작성으로 돌아가기
             </Link>

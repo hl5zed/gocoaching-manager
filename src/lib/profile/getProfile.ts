@@ -42,6 +42,7 @@ const profileSelectFields = [
   "region_id",
   "organization_id",
   "church_id",
+  "ministry_position",
   "group_id",
   "cohort_id",
   "created_at",

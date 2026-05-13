@@ -113,6 +113,17 @@ export type InvitationStatus = (typeof INVITATION_STATUSES)[number];
 export const WEEKLY_LOG_STATUSES = ["draft", "submitted", "archived"] as const;
 export type WeeklyLogStatus = (typeof WEEKLY_LOG_STATUSES)[number];
 
+export const PERSONAL_RECORD_VISIBILITIES = ["private", "coach"] as const;
+export type PersonalRecordVisibility =
+  (typeof PERSONAL_RECORD_VISIBILITIES)[number];
+
+export const PERSONAL_RECORD_STATUSES = [
+  "draft",
+  "submitted",
+  "reviewed",
+] as const;
+export type PersonalRecordStatus = (typeof PERSONAL_RECORD_STATUSES)[number];
+
 export const NOTIFICATION_TYPES = [
   "weekly_log_reminder",
   "feedback_received",
@@ -199,6 +210,16 @@ export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 export const USER_ROLE_STATUSES = ["active", "inactive", "revoked"] as const;
 export type UserRoleStatus = (typeof USER_ROLE_STATUSES)[number];
 
+export const ORGANIZATION_TYPES = [
+  "denomination",
+  "mission_body",
+  "church_network",
+  "local_ministry",
+  "nonprofit",
+  "other",
+] as const;
+export type OrganizationType = (typeof ORGANIZATION_TYPES)[number];
+
 export const TRANSLATION_REVIEW_STATUSES = [
   "draft",
   "approved",
@@ -229,6 +250,7 @@ type TablesMap = {
       region_id: string | null;
       organization_id: string | null;
       church_id: string | null;
+      ministry_position: string | null;
       group_id: string | null;
       cohort_id: string | null;
       primary_role: UserRole | null;
@@ -258,6 +280,7 @@ type TablesMap = {
       region_id?: string | null;
       organization_id?: string | null;
       church_id?: string | null;
+      ministry_position?: string | null;
       group_id?: string | null;
       cohort_id?: string | null;
       primary_role?: UserRole | null;
@@ -287,6 +310,7 @@ type TablesMap = {
       region_id?: string | null;
       organization_id?: string | null;
       church_id?: string | null;
+      ministry_position?: string | null;
       group_id?: string | null;
       cohort_id?: string | null;
       primary_role?: UserRole | null;
@@ -304,6 +328,41 @@ type TablesMap = {
       created_at?: string;
       updated_at?: string;
       deleted_at?: string | null;
+    }
+  >;
+  profile_generation_history: TableDefinition<
+    {
+      id: string;
+      profile_id: string;
+      old_generation_number: number | null;
+      new_generation_number: number | null;
+      changed_by_auth_user_id: string | null;
+      changed_by_profile_id: string | null;
+      change_source: string;
+      reason: string | null;
+      created_at: string;
+    },
+    {
+      id?: string;
+      profile_id: string;
+      old_generation_number?: number | null;
+      new_generation_number?: number | null;
+      changed_by_auth_user_id?: string | null;
+      changed_by_profile_id?: string | null;
+      change_source?: string;
+      reason?: string | null;
+      created_at?: string;
+    },
+    {
+      id?: string;
+      profile_id?: string;
+      old_generation_number?: number | null;
+      new_generation_number?: number | null;
+      changed_by_auth_user_id?: string | null;
+      changed_by_profile_id?: string | null;
+      change_source?: string;
+      reason?: string | null;
+      created_at?: string;
     }
   >;
   goals: TableDefinition<
@@ -649,6 +708,118 @@ type TablesMap = {
       other_rate?: number;
       total_rate?: number;
       average_rate?: number;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    }
+  >;
+  daily_records: TableDefinition<
+    {
+      id: string;
+      profile_id: string;
+      relationship_id: string | null;
+      record_date: string;
+      title: string | null;
+      reflection: string | null;
+      practice: string | null;
+      prayer_request: string | null;
+      visibility: PersonalRecordVisibility;
+      shared_with_coach: boolean;
+      status: PersonalRecordStatus;
+      submitted_at: string | null;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+    },
+    {
+      id?: string;
+      profile_id: string;
+      relationship_id?: string | null;
+      record_date: string;
+      title?: string | null;
+      reflection?: string | null;
+      practice?: string | null;
+      prayer_request?: string | null;
+      visibility?: PersonalRecordVisibility;
+      shared_with_coach?: boolean;
+      status?: PersonalRecordStatus;
+      submitted_at?: string | null;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    },
+    {
+      id?: string;
+      profile_id?: string;
+      relationship_id?: string | null;
+      record_date?: string;
+      title?: string | null;
+      reflection?: string | null;
+      practice?: string | null;
+      prayer_request?: string | null;
+      visibility?: PersonalRecordVisibility;
+      shared_with_coach?: boolean;
+      status?: PersonalRecordStatus;
+      submitted_at?: string | null;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    }
+  >;
+  monthly_reflections: TableDefinition<
+    {
+      id: string;
+      profile_id: string;
+      relationship_id: string | null;
+      year: number;
+      month: number;
+      summary: string | null;
+      growth_points: string | null;
+      difficulty: string | null;
+      next_month_plan: string | null;
+      visibility: PersonalRecordVisibility;
+      shared_with_coach: boolean;
+      status: PersonalRecordStatus;
+      submitted_at: string | null;
+      reviewed_at: string | null;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+    },
+    {
+      id?: string;
+      profile_id: string;
+      relationship_id?: string | null;
+      year: number;
+      month: number;
+      summary?: string | null;
+      growth_points?: string | null;
+      difficulty?: string | null;
+      next_month_plan?: string | null;
+      visibility?: PersonalRecordVisibility;
+      shared_with_coach?: boolean;
+      status?: PersonalRecordStatus;
+      submitted_at?: string | null;
+      reviewed_at?: string | null;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    },
+    {
+      id?: string;
+      profile_id?: string;
+      relationship_id?: string | null;
+      year?: number;
+      month?: number;
+      summary?: string | null;
+      growth_points?: string | null;
+      difficulty?: string | null;
+      next_month_plan?: string | null;
+      visibility?: PersonalRecordVisibility;
+      shared_with_coach?: boolean;
+      status?: PersonalRecordStatus;
+      submitted_at?: string | null;
+      reviewed_at?: string | null;
       created_at?: string;
       updated_at?: string;
       deleted_at?: string | null;
@@ -1298,21 +1469,24 @@ type TablesMap = {
     {
       id: string;
       name: string;
-      iso_code: string | null;
+      code: string;
+      is_active: boolean;
       created_at: string;
       updated_at: string;
     },
     {
       id?: string;
       name: string;
-      iso_code?: string | null;
+      code: string;
+      is_active?: boolean;
       created_at?: string;
       updated_at?: string;
     },
     {
       id?: string;
       name?: string;
-      iso_code?: string | null;
+      code?: string;
+      is_active?: boolean;
       created_at?: string;
       updated_at?: string;
     }
@@ -1340,27 +1514,74 @@ type TablesMap = {
       updated_at?: string;
     }
   >;
+  generation_options: TableDefinition<
+    {
+      id: string;
+      generation_number: number;
+      label: string;
+      scope_type: string;
+      scope_id: string | null;
+      is_active: boolean;
+      sort_order: number;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+    },
+    {
+      id?: string;
+      generation_number: number;
+      label: string;
+      scope_type?: string;
+      scope_id?: string | null;
+      is_active?: boolean;
+      sort_order?: number;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    },
+    {
+      id?: string;
+      generation_number?: number;
+      label?: string;
+      scope_type?: string;
+      scope_id?: string | null;
+      is_active?: boolean;
+      sort_order?: number;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    }
+  >;
   organizations: TableDefinition<
     {
       id: string;
-      region_id: string | null;
+      country_id: string;
+      organization_type: OrganizationType;
       name: string;
+      is_active: boolean;
       created_at: string;
       updated_at: string;
+      deleted_at: string | null;
     },
     {
       id?: string;
-      region_id?: string | null;
+      country_id: string;
+      organization_type: OrganizationType;
       name: string;
+      is_active?: boolean;
       created_at?: string;
       updated_at?: string;
+      deleted_at?: string | null;
     },
     {
       id?: string;
-      region_id?: string | null;
+      country_id?: string;
+      organization_type?: OrganizationType;
       name?: string;
+      is_active?: boolean;
       created_at?: string;
       updated_at?: string;
+      deleted_at?: string | null;
     }
   >;
   churches: TableDefinition<
@@ -1450,6 +1671,7 @@ type PublicEnums = {
   promotion_request_status_enum: PromotionRequestStatus;
   audit_action_enum: AuditAction;
   user_role_status_enum: UserRoleStatus;
+  organization_type_enum: OrganizationType;
   translation_review_status_enum: TranslationReviewStatus;
   risk_level_enum: RiskLevel;
 };
@@ -1483,9 +1705,13 @@ export type UpdateDto<T extends keyof PublicTables> = PublicTables[T]["Update"];
 export type Enums<T extends keyof PublicEnumsMap> = PublicEnumsMap[T];
 
 export type ProfileRow = Tables<"profiles">;
+export type ProfileGenerationHistoryRow =
+  Tables<"profile_generation_history">;
 export type UserRoleRow = Tables<"user_roles">;
 export type InvitationRow = Tables<"invitations">;
 export type WeeklyLogRow = Tables<"weekly_logs">;
+export type DailyRecordRow = Tables<"daily_records">;
+export type MonthlyReflectionRow = Tables<"monthly_reflections">;
 export type AuditLogRow = Tables<"audit_logs">;
 export type SupportedLanguageRow = Tables<"supported_languages">;
 export type TranslationNamespaceRow = Tables<"translation_namespaces">;
@@ -1506,5 +1732,9 @@ export type AuditLogInsert = InsertDto<"audit_logs">;
 export type InvitationInsert = InsertDto<"invitations">;
 export type WeeklyLogInsert = InsertDto<"weekly_logs">;
 export type WeeklyLogUpdate = UpdateDto<"weekly_logs">;
+export type DailyRecordInsert = InsertDto<"daily_records">;
+export type DailyRecordUpdate = UpdateDto<"daily_records">;
+export type MonthlyReflectionInsert = InsertDto<"monthly_reflections">;
+export type MonthlyReflectionUpdate = UpdateDto<"monthly_reflections">;
 export type TranslationValueInsert = InsertDto<"translation_values">;
 export type TranslationValueUpdate = UpdateDto<"translation_values">;

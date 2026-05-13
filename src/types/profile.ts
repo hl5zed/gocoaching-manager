@@ -22,6 +22,7 @@ export type SafeProfile = Pick<
   | "region_id"
   | "organization_id"
   | "church_id"
+  | "ministry_position"
   | "group_id"
   | "cohort_id"
   | "created_at"
@@ -31,8 +32,7 @@ export type SafeProfile = Pick<
 export type SelfUpdatePayload = {
   display_name?: string | null;
   phone?: string | null;
-  preferred_language?: string | null;
-  timezone?: string | null;
+  ministry_position?: string | null;
 };
 
 export type ActiveRoleSlim = {

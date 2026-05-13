@@ -15,7 +15,7 @@ const roleLabels: Record<SupportedLocale, LabelMap> = {
     organization_admin: "기관 관리자",
     church_admin: "교회 관리자",
     group_leader: "그룹 리더",
-    coach_maker: "코치 메이커",
+    coach_maker: "코치메이커",
     coach: "코치",
     coachee: "코치이",
   },

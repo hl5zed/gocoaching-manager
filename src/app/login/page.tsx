@@ -1,35 +1,12 @@
-import { headers } from "next/headers";
 import { LoginForm, type AuthLoginTranslations } from "./LoginForm";
+import {
+  DEFAULT_LOCALE,
+  isActiveLocale,
+  type ActiveLocale,
+} from "@/lib/i18n/config";
+import { messages } from "@/lib/i18n/messages";
 
 export const dynamic = "force-dynamic";
-
-type I18nMeta = {
-  requested_language: string;
-  resolved_language: string;
-  namespace: string;
-  key_count?: number;
-  value_count?: number;
-};
-
-type I18nResponse =
-  | {
-      ok: true;
-      data: Record<string, string>;
-      meta: I18nMeta;
-    }
-  | {
-      ok: false;
-      error: {
-        code: string;
-        message: string;
-      };
-    };
-
-type I18nNamespaceResult = {
-  data: Record<string, string>;
-  meta: I18nMeta | null;
-  error: string | null;
-};
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -37,89 +14,30 @@ type LoginPageProps = {
   }>;
 };
 
-const supportedLoginLanguages = new Set(["ko", "en", "th"]);
-
-function normalizeLanguage(value: string | string[] | undefined) {
+function normalizeLanguage(value: string | string[] | undefined): ActiveLocale {
   const rawLanguage = Array.isArray(value) ? value[0] : value;
-  const language = rawLanguage?.trim().toLowerCase() ?? "ko";
-  return supportedLoginLanguages.has(language) ? language : "ko";
-}
-
-async function getOrigin() {
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("host");
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? "https";
-
-  return host ? `${protocol}://${host}` : "";
-}
-
-async function fetchI18nNamespace(
-  origin: string,
-  language: string,
-  namespace: string,
-): Promise<I18nNamespaceResult> {
-  if (!origin) {
-    return {
-      data: {},
-      meta: null,
-      error: "origin을 확인하지 못해서 i18n API를 호출하지 못했습니다.",
-    };
-  }
-
-  try {
-    const response = await fetch(
-      `${origin}/api/i18n/${encodeURIComponent(language)}/${encodeURIComponent(
-        namespace,
-      )}`,
-      { cache: "no-store" },
-    );
-    const result = (await response.json()) as I18nResponse;
-
-    if (!response.ok || !result.ok) {
-      return {
-        data: {},
-        meta: null,
-        error:
-          result.ok === false
-            ? result.error.message
-            : `${namespace} 번역 API 호출에 실패했습니다.`,
-      };
-    }
-
-    return {
-      data: result.data,
-      meta: result.meta,
-      error: null,
-    };
-  } catch (error) {
-    return {
-      data: {},
-      meta: null,
-      error:
-        error instanceof Error
-          ? error.message
-          : `${namespace} 번역 API 호출 중 오류가 발생했습니다.`,
-    };
-  }
+  const language = rawLanguage?.trim().toLowerCase();
+  return isActiveLocale(language) ? language : DEFAULT_LOCALE;
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const language = normalizeLanguage(params.lang);
-  const origin = await getOrigin();
-  const [commonI18n, authI18n] = await Promise.all([
-    fetchI18nNamespace(origin, language, "common"),
-    fetchI18nNamespace(origin, language, "auth"),
-  ]);
+  const dictionary = messages[language] ?? messages[DEFAULT_LOCALE];
+  const t = (key: string, fallback: string) => dictionary[key] ?? fallback;
 
   const authTranslations: AuthLoginTranslations = {
-    login: authI18n.data.login,
-    email: authI18n.data.email,
-    password: authI18n.data.password,
-    login_success: authI18n.data.login_success,
-    login_required: authI18n.data.login_required,
-    loading: commonI18n.data.loading,
-    error: commonI18n.data.error,
+    login: t("auth.login", "로그인"),
+    email: t("auth.email", "이메일"),
+    password: t("auth.password", "비밀번호"),
+    login_description: t(
+      "auth.loginDescription",
+      "Supabase Auth에 등록된 이메일과 비밀번호로 로그인합니다.",
+    ),
+    login_success: t("auth.loginSuccess", "로그인되었습니다."),
+    login_required: t("auth.loginRequired", "로그인이 필요합니다."),
+    loading: t("common.loading", "불러오는 중"),
+    error: t("common.error", "오류"),
   };
 
   return (

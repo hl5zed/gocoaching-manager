@@ -3,8 +3,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { ProfileUpdate } from "@/types/database";
 
 export type UpdateMyProfileInput = {
-  full_name?: unknown;
   display_name?: unknown;
+  phone?: unknown;
+  ministry_position?: unknown;
 };
 
 export type UpdateMyProfileResult =
@@ -17,14 +18,15 @@ export type UpdateMyProfileResult =
         code:
           | "UNAUTHORIZED"
           | "PROFILE_NOT_FOUND"
-          | "INVALID_FULL_NAME"
           | "INVALID_DISPLAY_NAME"
+          | "INVALID_PHONE"
+          | "INVALID_MINISTRY_POSITION"
           | "PROFILE_UPDATE_FAILED";
         message: string;
       };
     };
 
-type NormalizedNameField =
+type NormalizedTextField =
   | { ok: true; value: string | null }
   | { ok: false };
 
@@ -32,32 +34,32 @@ type ProfileIdRecord = {
   id: string;
 };
 
-function normalizeNameField(value: unknown) {
+function normalizeTextField(value: unknown, maxLength: number) {
   if (value === undefined || value === null) {
     return {
       ok: true as const,
       value: null,
-    } satisfies NormalizedNameField;
+    } satisfies NormalizedTextField;
   }
 
   if (typeof value !== "string") {
-    return { ok: false as const } satisfies NormalizedNameField;
+    return { ok: false as const } satisfies NormalizedTextField;
   }
 
   const trimmed = value.trim();
 
   if (trimmed.length === 0) {
-    return { ok: true as const, value: null } satisfies NormalizedNameField;
+    return { ok: true as const, value: null } satisfies NormalizedTextField;
   }
 
-  if (trimmed.length > 120) {
-    return { ok: false as const } satisfies NormalizedNameField;
+  if (trimmed.length > maxLength) {
+    return { ok: false as const } satisfies NormalizedTextField;
   }
 
   return {
     ok: true as const,
     value: trimmed,
-  } satisfies NormalizedNameField;
+  } satisfies NormalizedTextField;
 }
 
 export async function updateMyProfile(
@@ -75,25 +77,39 @@ export async function updateMyProfile(
     };
   }
 
-  const normalizedFullName = normalizeNameField(input.full_name);
-  const normalizedDisplayName = normalizeNameField(input.display_name);
-
-  if (!normalizedFullName.ok) {
-    return {
-      ok: false,
-      error: {
-        code: "INVALID_FULL_NAME",
-        message: "Full name must be 120 characters or fewer.",
-      },
-    };
-  }
+  const normalizedDisplayName = normalizeTextField(input.display_name, 120);
+  const normalizedPhone = normalizeTextField(input.phone, 50);
+  const normalizedMinistryPosition = normalizeTextField(
+    input.ministry_position,
+    100,
+  );
 
   if (!normalizedDisplayName.ok) {
     return {
       ok: false,
       error: {
         code: "INVALID_DISPLAY_NAME",
-        message: "Display name must be 120 characters or fewer.",
+        message: "표시 이름은 120자 이하로 입력해 주세요.",
+      },
+    };
+  }
+
+  if (!normalizedPhone.ok) {
+    return {
+      ok: false,
+      error: {
+        code: "INVALID_PHONE",
+        message: "전화번호는 50자 이하로 입력해 주세요.",
+      },
+    };
+  }
+
+  if (!normalizedMinistryPosition.ok) {
+    return {
+      ok: false,
+      error: {
+        code: "INVALID_MINISTRY_POSITION",
+        message: "소속 직분은 100자 이하로 입력해 주세요.",
       },
     };
   }
@@ -125,7 +141,10 @@ export async function updateMyProfile(
         };
       };
       update: (
-        values: Pick<ProfileUpdate, "full_name" | "display_name" | "updated_at">,
+        values: Pick<
+          ProfileUpdate,
+          "display_name" | "phone" | "ministry_position" | "updated_at"
+        >,
       ) => {
         eq: (
           column: "id",
@@ -180,10 +199,11 @@ export async function updateMyProfile(
 
     const payload: Pick<
       ProfileUpdate,
-      "full_name" | "display_name" | "updated_at"
+      "display_name" | "phone" | "ministry_position" | "updated_at"
     > = {
-      full_name: normalizedFullName.value,
       display_name: normalizedDisplayName.value,
+      phone: normalizedPhone.value,
+      ministry_position: normalizedMinistryPosition.value,
       updated_at: new Date().toISOString(),
     };
 

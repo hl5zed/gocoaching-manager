@@ -16,6 +16,7 @@ import {
   getRelationshipTypeLabel,
   getScopeTypeLabel,
 } from "@/lib/ui/labels";
+import { isValidDate, isValidUuid, normalizeText } from "@/lib/validation/common";
 
 export const dynamic = "force-dynamic";
 
@@ -71,13 +72,49 @@ export default async function NewAdminCoachingRelationshipPage({
   async function createRelationship(formData: FormData) {
     "use server";
 
+    const coachProfileId = normalizeText(formData.get("coach_profile_id"));
+    const coacheeProfileId = normalizeText(formData.get("coachee_profile_id"));
+    const scopeTypeValue = normalizeText(formData.get("scope_type"));
+    const scopeId = normalizeText(formData.get("scope_id"));
+    const startedAt = normalizeText(formData.get("started_at"));
+
+    if (!isValidUuid(coachProfileId)) {
+      redirect(
+        "/admin/coaching-relationships/new?error=%EC%BD%94%EC%B9%98%EB%A5%BC%20%EC%84%A0%ED%83%9D%ED%95%B4%20%EC%A3%BC%EC%84%B8%EC%9A%94.",
+      );
+    }
+
+    if (!isValidUuid(coacheeProfileId)) {
+      redirect(
+        "/admin/coaching-relationships/new?error=%EC%BD%94%EC%B9%98%EC%9D%B4%EB%A5%BC%20%EC%84%A0%ED%83%9D%ED%95%B4%20%EC%A3%BC%EC%84%B8%EC%9A%94.",
+      );
+    }
+
+    if (coachProfileId === coacheeProfileId) {
+      redirect(
+        "/admin/coaching-relationships/new?error=%EC%BD%94%EC%B9%98%EC%99%80%20%EC%BD%94%EC%B9%98%EC%9D%B4%EB%8A%94%20%EA%B0%99%EC%9D%84%20%EC%88%98%20%EC%97%86%EC%8A%B5%EB%8B%88%EB%8B%A4.",
+      );
+    }
+
+    if (scopeTypeValue !== "global" && scopeId && !isValidUuid(scopeId)) {
+      redirect(
+        "/admin/coaching-relationships/new?error=%EB%B2%94%EC%9C%84%20ID%EB%8A%94%20%EC%98%AC%EB%B0%94%EB%A5%B8%20UUID%EC%97%AC%EC%95%BC%20%ED%95%A9%EB%8B%88%EB%8B%A4.",
+      );
+    }
+
+    if (startedAt && !isValidDate(startedAt)) {
+      redirect(
+        "/admin/coaching-relationships/new?error=%EC%8B%9C%EC%9E%91%EC%9D%BC%20%ED%98%95%EC%8B%9D%EC%9D%B4%20%EC%98%AC%EB%B0%94%EB%A5%B4%EC%A7%80%20%EC%95%8A%EC%8A%B5%EB%8B%88%EB%8B%A4.",
+      );
+    }
+
     const createResult = await createAdminCoachingRelationship({
-      coach_profile_id: formData.get("coach_profile_id"),
-      coachee_profile_id: formData.get("coachee_profile_id"),
+      coach_profile_id: coachProfileId,
+      coachee_profile_id: coacheeProfileId,
       relationship_type: formData.get("relationship_type"),
-      scope_type: formData.get("scope_type"),
-      scope_id: formData.get("scope_id"),
-      started_at: formData.get("started_at"),
+      scope_type: scopeTypeValue,
+      scope_id: scopeId,
+      started_at: startedAt,
     });
 
     if (!createResult.ok) {
@@ -139,6 +176,7 @@ export default async function NewAdminCoachingRelationshipPage({
                   defaultValue=""
                   id="coach_profile_id"
                   name="coach_profile_id"
+                  required
                 >
                   <option value="">코치를 선택하세요</option>
                   {optionsResult.data.coaches.map((profile) => (
@@ -162,6 +200,7 @@ export default async function NewAdminCoachingRelationshipPage({
                   disabled={optionsResult.data.coachees.length === 0}
                   id="coachee_profile_id"
                   name="coachee_profile_id"
+                  required
                 >
                   <option value="">코치이를 선택하세요</option>
                   {optionsResult.data.coachees.map((profile) => (

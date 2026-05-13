@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth/getSession";
 import {
   getCurrentWeekRange,
   getMyWeeklyLogPageData,
+  removeMyWeeklyLog,
   saveMyWeeklyLog,
 } from "@/lib/api/my-coaching/weekly-log";
 import { formatScope, getRelationshipTypeLabel } from "@/lib/ui/labels";
@@ -53,6 +54,50 @@ function formatDateRange(range: { weekStart: string; weekEnd: string }) {
   });
 
   return `${formatter.format(start)} - ${formatter.format(end)}`;
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function getWeeklyLogStatusLabel(status: string) {
+  if (status === "draft") {
+    return "임시저장";
+  }
+
+  if (status === "submitted") {
+    return "제출완료";
+  }
+
+  return "확인 필요";
+}
+
+function getWeeklyLogStatusClass(status: string) {
+  if (status === "submitted") {
+    return "border-emerald-200 bg-emerald-50 text-emerald-800";
+  }
+
+  if (status === "draft") {
+    return "border-amber-200 bg-amber-50 text-amber-800";
+  }
+
+  return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
 export default async function MyWeeklyLogPage({
@@ -119,6 +164,34 @@ export default async function MyWeeklyLogPage({
     );
   }
 
+  async function removeWeeklyLog(formData: FormData) {
+    "use server";
+
+    const removeResult = await removeMyWeeklyLog({
+      weekly_log_id: formData.get("weekly_log_id"),
+    });
+    const relationshipId = formData.get("relationship_id");
+    const relationshipQuery =
+      typeof relationshipId === "string" && relationshipId.trim().length > 0
+        ? `?relationship=${encodeURIComponent(relationshipId)}`
+        : "";
+
+    if (!removeResult.ok) {
+      const nextError = encodeURIComponent(removeResult.error.message);
+      const separator = relationshipQuery ? "&" : "?";
+      redirect(
+        `/my-coaching/weekly-log${relationshipQuery}${separator}error=${nextError}`,
+      );
+    }
+
+    const separator = relationshipQuery ? "&" : "?";
+    redirect(
+      `/my-coaching/weekly-log${relationshipQuery}${separator}success=${encodeURIComponent(
+        "주간 기록이 목록에서 제거되었습니다.",
+      )}`,
+    );
+  }
+
   const currentWeek = result.ok ? result.data.currentWeek : getCurrentWeekRange();
 
   return (
@@ -131,10 +204,18 @@ export default async function MyWeeklyLogPage({
             </p>
             <h1 className="mt-3 text-3xl font-semibold">주간 기록</h1>
             <p className="mt-3 max-w-3xl text-slate-600">
-              이번 주 코칭 관계에 대한 기록을 작성합니다.
+              이번 주 코칭 관계에 대한 기록을 작성합니다. 현재는 주간 기록을
+              작성하는 공간이며, 하루 기록과 월간 기록은 단계적으로
+              확장됩니다.
             </p>
           </div>
           <div className="flex flex-col items-start gap-2 text-sm">
+            <Link
+              className="font-medium text-slate-700 underline"
+              href="/my-coaching/records"
+            >
+              기록 선택으로 돌아가기
+            </Link>
             <Link
               className="font-medium text-slate-700 underline"
               href="/my-coaching"
@@ -237,6 +318,12 @@ export default async function MyWeeklyLogPage({
                   )}
 
                   <h2 className="text-lg font-semibold">주간 돌아보기</h2>
+                  {result.data.weeklyLog ? (
+                    <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                      이번 주 기록이 있습니다. 아래 입력란에는 저장된 이번
+                      주 기록 내용이 채워져 있습니다.
+                    </div>
+                  ) : null}
                   <form action={saveWeeklyLog} className="mt-5 space-y-5">
                     {result.data.relationships.length > 1 && (
                       <div>
@@ -375,6 +462,142 @@ export default async function MyWeeklyLogPage({
                       </button>
                     </div>
                   </form>
+
+                  {result.data.weeklyLog ? (
+                    <form action={removeWeeklyLog} className="mt-4">
+                      <input
+                        name="weekly_log_id"
+                        type="hidden"
+                        value={result.data.weeklyLog.id}
+                      />
+                      <input
+                        name="relationship_id"
+                        type="hidden"
+                        value={result.data.selectedRelationshipId ?? ""}
+                      />
+                      <button
+                        className="rounded-md border border-red-200 bg-white px-5 py-2.5 font-medium text-red-700"
+                        type="submit"
+                      >
+                        목록에서 제거
+                      </button>
+                    </form>
+                  ) : null}
+                </section>
+
+                <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h2 className="text-lg font-semibold">나의 주간 기록</h2>
+                      <p className="mt-2 text-sm text-slate-600">
+                        현재 선택한 코칭 관계의 주간 기록을 최신순으로
+                        확인합니다.
+                      </p>
+                    </div>
+                    <p className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600">
+                      전체 {result.data.weeklyLogs.length}개
+                    </p>
+                  </div>
+
+                  {result.data.weeklyLogs.length === 0 ? (
+                    <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                      아직 작성한 주간 기록이 없습니다.
+                    </div>
+                  ) : (
+                    <div className="mt-5 space-y-4">
+                      {result.data.weeklyLogs.map((weeklyLog) => (
+                        <article
+                          className="rounded-md border border-slate-200 bg-slate-50 p-4"
+                          key={weeklyLog.id}
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-medium text-slate-500">
+                                주간 기간
+                              </p>
+                              <h3 className="mt-1 font-semibold text-slate-950">
+                                {formatDateRange({
+                                  weekStart: weeklyLog.weekStart,
+                                  weekEnd: weeklyLog.weekEnd,
+                                })}
+                              </h3>
+                            </div>
+                            <span
+                              className={`rounded-full border px-3 py-1 text-xs font-medium ${getWeeklyLogStatusClass(
+                                weeklyLog.status,
+                              )}`}
+                            >
+                              {getWeeklyLogStatusLabel(weeklyLog.status)}
+                            </span>
+                          </div>
+
+                          <dl className="mt-4 grid gap-4 text-sm">
+                            <div>
+                              <dt className="font-medium text-slate-500">
+                                감사 내용
+                              </dt>
+                              <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                                {displayValue(weeklyLog.gratitude)}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt className="font-medium text-slate-500">
+                                기도 제목
+                              </dt>
+                              <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                                {displayValue(weeklyLog.prayerRequest)}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt className="font-medium text-slate-500">
+                                진행 요약
+                              </dt>
+                              <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                                {displayValue(weeklyLog.progressSummary)}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt className="font-medium text-slate-500">
+                                어려웠던 점
+                              </dt>
+                              <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                                {displayValue(weeklyLog.difficulty)}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt className="font-medium text-slate-500">
+                                코치에게 남긴 메시지
+                              </dt>
+                              <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                                {displayValue(weeklyLog.messageToCoach)}
+                              </dd>
+                            </div>
+                          </dl>
+
+                          <dl className="mt-4 grid gap-3 border-t border-slate-200 pt-4 text-xs text-slate-600 sm:grid-cols-3">
+                            <div>
+                              <dt className="font-medium">제출일</dt>
+                              <dd className="mt-1">
+                                {formatDateTime(weeklyLog.submittedAt)}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt className="font-medium">작성일</dt>
+                              <dd className="mt-1">
+                                {formatDateTime(weeklyLog.createdAt)}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt className="font-medium">수정일</dt>
+                              <dd className="mt-1">
+                                {formatDateTime(weeklyLog.updatedAt)}
+                              </dd>
+                            </div>
+                          </dl>
+                        </article>
+                      ))}
+                    </div>
+                  )}
                 </section>
               </>
             )}

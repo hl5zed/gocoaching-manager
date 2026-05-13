@@ -17,6 +17,9 @@ const noStoreHeaders = {
 };
 
 type AcceptInvitationBody = {
+  country_id?: unknown;
+  generation_number?: unknown;
+  ministry_position?: unknown;
   token?: unknown;
 };
 
@@ -31,6 +34,23 @@ type RpcError = {
 type AcceptInvitationRpcResponse = {
   data: Json | null;
   error: RpcError | null;
+};
+
+type InvitationProfileUpdate = {
+  country_id: string | null;
+  generation_number: number | null;
+  ministry_position: string | null;
+};
+
+type ProfilesUpdateTable = {
+  update: (values: InvitationProfileUpdate) => {
+    eq: (column: "id", value: string) => {
+      is: (
+        column: "deleted_at",
+        value: null,
+      ) => Promise<{ error: { message?: string } | null }>;
+    };
+  };
 };
 
 function jsonError(status: number, code: string, message: string) {
@@ -59,6 +79,89 @@ function normalizeToken(value: unknown) {
 
 function normalizeEmail(value: unknown) {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function normalizeNullableText(value: unknown, maxLength: number) {
+  if (value === null || value === undefined) {
+    return {
+      ok: true as const,
+      value: null,
+    };
+  }
+
+  if (typeof value !== "string") {
+    return {
+      ok: false as const,
+      value: null,
+    };
+  }
+
+  const text = value.trim();
+
+  if (text.length === 0) {
+    return {
+      ok: true as const,
+      value: null,
+    };
+  }
+
+  if (text.length > maxLength) {
+    return {
+      ok: false as const,
+      value: null,
+    };
+  }
+
+  return {
+    ok: true as const,
+    value: text,
+  };
+}
+
+function normalizeUuid(value: unknown) {
+  const result = normalizeNullableText(value, 80);
+
+  if (!result.ok || result.value === null) {
+    return result;
+  }
+
+  const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  return uuidPattern.test(result.value)
+    ? result
+    : {
+        ok: false as const,
+        value: null,
+      };
+}
+
+function normalizeGenerationNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return {
+      ok: true as const,
+      value: null,
+    };
+  }
+
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number.parseInt(value.trim(), 10)
+        : Number.NaN;
+
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 99) {
+    return {
+      ok: false as const,
+      value: null,
+    };
+  }
+
+  return {
+    ok: true as const,
+    value: parsed,
+  };
 }
 
 function hashToken(rawToken: string) {
@@ -144,9 +247,24 @@ export async function POST(request: Request) {
   }
 
   const rawToken = normalizeToken(body.token);
+  const countryId = normalizeUuid(body.country_id);
+  const ministryPosition = normalizeNullableText(body.ministry_position, 80);
+  const generationNumber = normalizeGenerationNumber(body.generation_number);
 
   if (!rawToken) {
     return jsonError(400, "MISSING_TOKEN", "초대 토큰이 없습니다.");
+  }
+
+  if (!countryId.ok) {
+    return jsonError(400, "INVALID_COUNTRY", "소속 국가 값을 확인해 주세요.");
+  }
+
+  if (!ministryPosition.ok) {
+    return jsonError(400, "INVALID_MINISTRY_POSITION", "소속 직분 값을 확인해 주세요.");
+  }
+
+  if (!generationNumber.ok) {
+    return jsonError(400, "INVALID_GENERATION", "세대 값을 확인해 주세요.");
   }
 
   const session = await getSession();
@@ -220,6 +338,29 @@ export async function POST(request: Request) {
       500,
       "INVITATION_ACCEPT_FAILED",
       "초대 수락 중 오류가 발생했습니다.",
+    );
+  }
+
+  const profileUpdate: InvitationProfileUpdate = {
+    country_id: countryId.value,
+    ministry_position: ministryPosition.value,
+    generation_number: generationNumber.value,
+  };
+  const profilesTable = serviceClient.from("profiles") as unknown as ProfilesUpdateTable;
+  const { error: profileUpdateError } = await profilesTable
+    .update(profileUpdate)
+    .eq("id", acceptedInvitation.profile_id)
+    .is("deleted_at", null);
+
+  if (profileUpdateError) {
+    logServerError(
+      "INVITATION_PROFILE_UPDATE_FAILED",
+      profileUpdateError.message ?? "Failed to update invitation profile fields.",
+    );
+    return jsonError(
+      500,
+      "INVITATION_PROFILE_UPDATE_FAILED",
+      "초대 수락 후 프로필 정보를 저장하는 중 오류가 발생했습니다.",
     );
   }
 
