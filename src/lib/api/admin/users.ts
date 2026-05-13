@@ -131,6 +131,7 @@ export type AdminLookupSummary = {
   id: string;
   name: string;
   country_id?: string | null;
+  group_type?: string | null;
   organization_id?: string | null;
   church_id?: string | null;
 };
@@ -171,6 +172,7 @@ type LookupRow = {
   country_id?: string | null;
   organization_id?: string | null;
   church_id?: string | null;
+  group_type?: string | null;
   is_active?: boolean | null;
 };
 
@@ -251,7 +253,13 @@ async function loadLookupNames(
     return nameMap;
   }
 
-  const { data, error } = await client.from(table).select("id, name").in("id", ids);
+  let query = client.from(table).select("id, name").in("id", ids);
+
+  if (table === "groups") {
+    query = query.is("deleted_at", null);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error(`[ADMIN_USERS_${table.toUpperCase()}_LOOKUP] lookup failed`);
@@ -288,28 +296,43 @@ async function getAdminLookupOptions(
       ? "id, name, country_id"
       : table === "churches"
         ? "id, name, organization_id"
-        : "id, name, church_id";
+        : "id, name, church_id, group_type";
 
-  const { data, error } = await client
+  let query = client
     .from(table)
     .select(selectColumns)
     .order("name", { ascending: true });
 
+  if (table === "groups") {
+    query = query.is("deleted_at", null);
+  }
+
+  const { data, error } = await query;
+
   if (error) {
-    const { data: fallbackData, error: fallbackError } = await client
+    let fallbackQuery = client
       .from(table)
       .select("id, name")
       .order("name", { ascending: true });
 
+    if (table === "groups") {
+      fallbackQuery = fallbackQuery.is("deleted_at", null);
+    }
+
+    const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+
     if (!fallbackError) {
+      const fallbackItems = ((fallbackData ?? []) as LookupRow[]).map((item) => ({
+        id: item.id,
+        name: getLookupLabel(item),
+        church_id: null,
+        country_id: null,
+        group_type: null,
+        organization_id: null,
+      }));
+
       return {
-        items: ((fallbackData ?? []) as LookupRow[]).map((item) => ({
-          id: item.id,
-          name: getLookupLabel(item),
-          church_id: null,
-          country_id: null,
-          organization_id: null,
-        })),
+        items: table === "groups" ? dedupeGroupLookups(fallbackItems) : fallbackItems,
         error: null,
       };
     }
@@ -326,16 +349,41 @@ async function getAdminLookupOptions(
     };
   }
 
+  const items = ((data ?? []) as LookupRow[]).map((item) => ({
+    id: item.id,
+    name: getLookupLabel(item),
+    church_id: item.church_id ?? null,
+    country_id: item.country_id ?? null,
+    group_type: item.group_type ?? null,
+    organization_id: item.organization_id ?? null,
+  }));
+
   return {
-    items: ((data ?? []) as LookupRow[]).map((item) => ({
-      id: item.id,
-      name: getLookupLabel(item),
-      church_id: item.church_id ?? null,
-      country_id: item.country_id ?? null,
-      organization_id: item.organization_id ?? null,
-    })),
+    items: table === "groups" ? dedupeGroupLookups(items) : items,
     error: null,
   };
+}
+
+function dedupeGroupLookups(items: AdminLookupSummary[]) {
+  const seen = new Set<string>();
+  const deduped: AdminLookupSummary[] = [];
+
+  for (const item of items) {
+    const key = [
+      item.church_id ?? "",
+      item.group_type ?? "",
+      item.name.trim().toLowerCase(),
+    ].join("|");
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    deduped.push(item);
+  }
+
+  return deduped;
 }
 
 export async function getAdminRegions() {

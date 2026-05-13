@@ -35,6 +35,7 @@ export type AdminChurchSummary = {
 export type AdminGroupSummary = {
   id: string;
   church_id: string | null;
+  group_type: string | null;
   name: string;
   created_at: string;
   updated_at: string;
@@ -74,9 +75,11 @@ type ChurchRow = {
 type GroupRow = {
   id: string;
   church_id: string | null;
+  group_type?: string | null;
   name: string;
   created_at: string;
   updated_at: string;
+  deleted_at?: string | null;
 };
 
 function normalizeErrorMessage(errors: string[]) {
@@ -124,7 +127,8 @@ export async function getAdminAffiliations() {
       .order("name", { ascending: true }),
     client
       .from("groups")
-      .select("id, church_id, name, created_at, updated_at")
+      .select("id, church_id, group_type, name, created_at, updated_at, deleted_at")
+      .is("deleted_at", null)
       .order("name", { ascending: true }),
   ]);
 
@@ -193,6 +197,19 @@ export async function getAdminAffiliations() {
       is_active: organization.is_active !== false,
     }));
 
+  const groups = dedupeGroups(
+    ((groupsResult.data ?? []) as GroupRow[])
+      .filter((group) => group.deleted_at == null)
+      .map((group) => ({
+        id: group.id,
+        church_id: group.church_id ?? null,
+        group_type: group.group_type ?? null,
+        name: group.name,
+        created_at: group.created_at,
+        updated_at: group.updated_at,
+      })),
+  );
+
   return {
     churches: ((churchesResult.data ?? []) as ChurchRow[]).map((church) => ({
       id: church.id,
@@ -203,13 +220,7 @@ export async function getAdminAffiliations() {
     })),
     countries,
     error: normalizeErrorMessage(errors),
-    groups: ((groupsResult.data ?? []) as GroupRow[]).map((group) => ({
-      id: group.id,
-      church_id: group.church_id ?? null,
-      name: group.name,
-      created_at: group.created_at,
-      updated_at: group.updated_at,
-    })),
+    groups,
     organizations,
     regions: ((regionsResult.data ?? []) as RegionRow[]).map((region) => ({
       id: region.id,
@@ -219,4 +230,26 @@ export async function getAdminAffiliations() {
       updated_at: region.updated_at,
     })),
   };
+}
+
+function dedupeGroups(groups: AdminGroupSummary[]) {
+  const seen = new Set<string>();
+  const deduped: AdminGroupSummary[] = [];
+
+  for (const group of groups) {
+    const key = [
+      group.church_id ?? "",
+      group.group_type ?? "",
+      group.name.trim().toLowerCase(),
+    ].join("|");
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    deduped.push(group);
+  }
+
+  return deduped;
 }

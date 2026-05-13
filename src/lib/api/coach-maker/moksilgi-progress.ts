@@ -735,7 +735,11 @@ export async function getCoachMakerMoksilgiProgress(
       ? serviceClient.from("churches").select("id, name").in("id", churchIds)
       : Promise.resolve({ data: [], error: null }),
     groupIds.length > 0
-      ? serviceClient.from("groups").select("id, name").in("id", groupIds)
+      ? serviceClient
+          .from("groups")
+          .select("id, name")
+          .in("id", groupIds)
+          .is("deleted_at", null)
       : Promise.resolve({ data: [], error: null }),
   ]);
 

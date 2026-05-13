@@ -1,13 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  getAdminChurches,
-  getAdminGroups,
-  getAdminRegions,
-  getAdminUserDetail,
-  getAdminOrganizations,
-} from "@/lib/api/admin/users";
-import { getAdminCountries } from "@/lib/api/admin/countries";
-import { getActiveGlobalGenerationOptions } from "@/lib/api/admin/generations";
+import { getAdminUserDetail } from "@/lib/api/admin/users";
 import { requireAdminProfile } from "@/lib/auth/require-admin-profile";
 
 export const dynamic = "force-dynamic";
@@ -44,23 +36,7 @@ export async function GET(
     );
   }
 
-  const [
-    detailResult,
-    countriesResult,
-    regionsResult,
-    organizationsResult,
-    churchesResult,
-    groupsResult,
-    generationOptions,
-  ] = await Promise.all([
-    getAdminUserDetail(profileId),
-    getAdminCountries(),
-    getAdminRegions(),
-    getAdminOrganizations(),
-    getAdminChurches(),
-    getAdminGroups(),
-    getActiveGlobalGenerationOptions(),
-  ]);
+  const detailResult = await getAdminUserDetail(profileId);
 
   if (detailResult.error || !detailResult.user) {
     return NextResponse.json(
@@ -72,27 +48,6 @@ export async function GET(
   return NextResponse.json(
     {
       user: detailResult.user,
-      options: {
-        countries: countriesResult.countries.filter((country) => country.is_active),
-        regions: regionsResult.regions,
-        organizations: organizationsResult.organizations,
-        churches: churchesResult.churches,
-        groups: groupsResult.groups,
-        generations:
-          generationOptions.length > 0
-            ? generationOptions.map((generation) => ({
-                generation_number: generation.generation_number,
-                label: generation.label || `${generation.generation_number}세대`,
-              }))
-            : [],
-      },
-      optionErrors: {
-        countries: countriesResult.error,
-        regions: regionsResult.error,
-        organizations: organizationsResult.error,
-        churches: churchesResult.error,
-        groups: groupsResult.error,
-      },
     },
     { headers: NO_STORE_HEADERS },
   );

@@ -235,11 +235,22 @@ async function lookupExists(
   table: "churches" | "groups" | "regions",
   id: string,
 ) {
-  const { data, error } = await adminClient
+  let query = adminClient
     .from(table)
     .select("id")
     .eq("id", id)
     .maybeSingle();
+
+  if (table === "groups") {
+    query = adminClient
+      .from(table)
+      .select("id")
+      .eq("id", id)
+      .is("deleted_at", null)
+      .maybeSingle();
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error(`[ADMIN_USERS_${table.toUpperCase()}_LOOKUP_FAILED]`, error.message);

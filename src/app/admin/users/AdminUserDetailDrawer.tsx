@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { SyntheticEvent } from "react";
+import type { FormEvent, SyntheticEvent } from "react";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
@@ -23,6 +23,9 @@ type GenerationOption = {
 
 type DetailPayload = {
   user: AdminUserSummary;
+};
+
+type OptionsPayload = {
   options: {
     countries: AdminCountrySummary[];
     regions: AdminLookupSummary[];
@@ -400,16 +403,113 @@ function StatusChangeForm({ user }: { user: AdminUserSummary }) {
   );
 }
 
-function ProfileUpdateForm({ detail }: { detail: DetailPayload }) {
-  const { user, options, optionErrors } = detail;
+function ProfileUpdateForm({
+  onUserUpdated,
+  user,
+}: {
+  onUserUpdated: (user: AdminUserSummary) => void;
+  user: AdminUserSummary;
+}) {
+  const [optionsPayload, setOptionsPayload] = useState<OptionsPayload | null>(null);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+  const [optionsError, setOptionsError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  function handleOptionsToggle(event: SyntheticEvent<HTMLDetailsElement>) {
+    if (!event.currentTarget.open || optionsPayload || isLoadingOptions) {
+      return;
+    }
+
+    const controller = new AbortController();
+    setIsLoadingOptions(true);
+    setOptionsError(null);
+
+    void fetch("/api/admin/users/options", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error("options request failed");
+        }
+
+        setOptionsPayload((await response.json()) as OptionsPayload);
+      })
+      .catch((fetchError) => {
+        if ((fetchError as Error).name !== "AbortError") {
+          setOptionsError("소속 선택값을 불러오지 못했습니다.");
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoadingOptions(false);
+        }
+      });
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSaving(true);
+    setSaveMessage(null);
+    setSaveError(null);
+
+    try {
+      const formData = new FormData(event.currentTarget);
+      const body = Object.fromEntries(formData.entries());
+      const response = await fetch("/api/admin/users", {
+        body: JSON.stringify(body),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "PATCH",
+      });
+      const payload = (await response.json()) as {
+        ok?: boolean;
+        error?: string;
+        message?: string;
+      };
+
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error ?? "회원 정보 수정에 실패했습니다.");
+      }
+
+      const detailResponse = await fetch(`/api/admin/users/${user.id}`, {
+        cache: "no-store",
+      });
+
+      if (!detailResponse.ok) {
+        throw new Error("수정된 회원 정보를 다시 불러오지 못했습니다.");
+      }
+
+      const nextDetail = (await detailResponse.json()) as DetailPayload;
+      onUserUpdated(nextDetail.user);
+      setSaveMessage(payload.message ?? "회원 정보가 수정되었습니다.");
+    } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "회원 정보 수정 중 오류가 발생했습니다.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  const options = optionsPayload?.options;
+  const optionErrors = optionsPayload?.optionErrors;
   const ministryPositionOptions = getMinistryPositionOptions(user.ministry_position);
   const generationSelectOptions = getGenerationSelectOptions(
-    options.generations,
+    options?.generations,
     user.generation_number,
   );
 
   return (
-    <details className="rounded-md border border-slate-200 bg-slate-50">
+    <details
+      className="rounded-md border border-slate-200 bg-slate-50"
+      onToggle={handleOptionsToggle}
+    >
       <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 px-4 py-3">
         <div>
           <h4 className="text-sm font-semibold text-slate-900">회원 정보 수정</h4>
@@ -421,10 +521,30 @@ function ProfileUpdateForm({ detail }: { detail: DetailPayload }) {
           수정 열기
         </span>
       </summary>
+      {isLoadingOptions ? (
+        <div className="border-t border-slate-200 p-4 text-sm text-slate-600">
+          소속 선택값을 불러오는 중...
+        </div>
+      ) : null}
+      {optionsError ? (
+        <div className="border-t border-red-100 bg-red-50 p-4 text-sm text-red-800">
+          {optionsError}
+        </div>
+      ) : null}
+      {saveMessage ? (
+        <div className="border-t border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-800">
+          {saveMessage}
+        </div>
+      ) : null}
+      {saveError ? (
+        <div className="border-t border-red-100 bg-red-50 p-4 text-sm text-red-800">
+          {saveError}
+        </div>
+      ) : null}
+      {options ? (
       <form
-        action="/api/admin/users"
         className="grid gap-4 border-t border-slate-200 p-4"
-        method="post"
+        onSubmit={handleSubmit}
       >
         <input name="intent" type="hidden" value="update_profile" />
         <input name="profile_id" type="hidden" value={user.id} />
@@ -553,10 +673,11 @@ function ProfileUpdateForm({ detail }: { detail: DetailPayload }) {
 
         <div className="flex flex-wrap gap-2">
           <button
-            className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white"
+            className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isSaving}
             type="submit"
           >
-            회원 정보 저장
+            {isSaving ? "저장 중..." : "회원 정보 저장"}
           </button>
           <button
             className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
@@ -566,11 +687,18 @@ function ProfileUpdateForm({ detail }: { detail: DetailPayload }) {
           </button>
         </div>
       </form>
+      ) : null}
     </details>
   );
 }
 
-function MemberDetailContent({ detail }: { detail: DetailPayload }) {
+function MemberDetailContent({
+  detail,
+  onUserUpdated,
+}: {
+  detail: DetailPayload;
+  onUserUpdated: (user: AdminUserSummary) => void;
+}) {
   const { user } = detail;
 
   return (
@@ -648,7 +776,7 @@ function MemberDetailContent({ detail }: { detail: DetailPayload }) {
       <section className="mt-4 rounded-md border border-slate-200 p-4">
         <h3 className="text-base font-semibold">빠른 작업</h3>
         <div className="mt-4 grid gap-4">
-          <ProfileUpdateForm detail={detail} />
+          <ProfileUpdateForm onUserUpdated={onUserUpdated} user={user} />
           <LoginGuideCopyButton email={user.email} />
           <RoleChangeForm user={user} />
           <div className="grid gap-2 rounded-md border border-dashed border-slate-200 bg-white p-3">
@@ -755,7 +883,21 @@ export function AdminUserDetailDrawer({ user }: { user: AdminUserSummary }) {
           </div>
         ) : null}
 
-        {detail ? <MemberDetailContent detail={detail} /> : null}
+        {detail ? (
+          <MemberDetailContent
+            detail={detail}
+            onUserUpdated={(nextUser) =>
+              setDetail((current) =>
+                current
+                  ? {
+                      ...current,
+                      user: nextUser,
+                    }
+                  : { user: nextUser },
+              )
+            }
+          />
+        ) : null}
       </div>
     </details>
   );
