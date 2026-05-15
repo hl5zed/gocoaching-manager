@@ -1899,3 +1899,633 @@ Validation summary:
 - /admin/settings/affiliations manual save flow: regions/churches/groups implemented against existing tables
 - `npm run typecheck`: passed during stabilization work
 - `npm run build`: passed during stabilization work
+
+## LOCK - Admin Users Ministry Trust Theme Phase 1
+
+Completed date:
+- 2026-05-14
+
+Work:
+- /admin/users 회원관리 화면 Ministry Trust Theme 1차 적용
+- admin users Ministry Trust Theme phase 1
+- admin users common Card/ButtonLink/Badge tone
+- admin users common TextInput/SelectInput/Button/Card filters
+- admin users status and role Badge display
+- admin users affiliation Badge groups
+- admin users responsive min-w-0 break-words flex-wrap overflow-x-auto
+- login guide copy common Button style
+
+Modified files:
+- src/app/admin/users/page.tsx
+- src/app/admin/users/AdminUsersClientFilters.tsx
+- src/app/admin/users/LoginGuideCopyButton.tsx
+
+Summary:
+/admin/users 회원관리 화면에 Ministry Trust Theme 1차 공통 UI를 적용했다. 페이지 상단 제목/설명/주요 이동 버튼 영역은 공통 Card, ButtonLink, Badge 톤으로 정리했고, 검색/역할/상태/페이지 크기 필터에는 공통 TextInput, SelectInput, Button, Card를 적용했다. 회원 상태와 역할은 공통 Badge로 표시하며, 국가/지역/기관/교회/그룹/직분/세대 정보는 작은 Badge 묶음으로 표시해 다국어 환경에서도 스캔하기 쉽게 정리했다. 모바일/태블릿 대응을 위해 min-w-0, break-words, flex-wrap, overflow-x-auto를 보완했고, 로그인 안내 복사 버튼에도 공통 Button 스타일을 적용했다.
+
+Kept unchanged:
+- 기능 로직 변경 없음
+- API 변경 없음
+- DB schema 변경 없음
+- RLS 변경 없음
+- 권한 체크 변경 없음
+- 저장/수정 흐름 변경 없음
+
+Do not regress:
+- /admin/users member list
+- /admin/users search/filter/pagination
+- admin user detail drawer opening
+- role and status display
+- member profile edit and save flow
+- admin users auth guard and getAdminUsers authorizedAdmin double guard
+- admin user role summary lazy loading
+- admin user detail lazy loading
+- /api/admin/users/summary, /api/admin/users/[profileId], /api/admin/users/options protection
+- existing i18n translation key/fallback structure
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+
+## LOCK: Coach-maker Dashboard UX Simplification and Flow Stabilization
+
+완료일: 2026-05-15
+
+범위:
+- /coach-maker 메인 대시보드
+- src/app/coach-maker/page.tsx
+- src/app/coach-maker/ActionMemoDrafts.tsx
+
+완료 내용:
+- 코치메이커 대시보드를 작업 중심 구조로 재배치
+- 화면 순서를 핵심 요약 → 오늘/이번 주 처리 필요 → 빠른 점검 → 코치별 요약 → 목실기 요약 → 주요 기능 바로가기 → 관리 액션 메모 요약으로 정리
+- 상단 요약 카드 설명을 짧고 행동 중심으로 개선
+- 오늘/이번 주 처리 필요 버튼 문구를 미제출 확인, 피드백 확인, 목실기 현황 보기, 메모 처리로 정리
+- 코칭 진행 요약과 목실기 성취 요약 제목을 분리
+- 코치별 현황 표를 요약형으로 축소
+- 빠른 점검은 관심 필요 대상자 최대 5명 중심으로 단순화
+- 목실기 요약은 핵심 카드 4개 중심으로 축소
+- 주요 기능 바로가기를 카드형으로 정리
+- 관리 액션 메모 전체 기능은 접힘 영역 안에 유지
+- 메모 처리 버튼은 접힘 영역을 직접 펼치고 해당 영역으로 스크롤하도록 개선
+- 새 메모 작성 버튼은 접힘 영역을 펼친 뒤 작성폼으로 스크롤하도록 개선
+- 세대별 계층 계보도는 coach_maker 권한에서 잘못 이동하지 않도록 준비 중 / 관리자 권한 제공 상태로 표시
+- 출력 버튼은 기존 /coach-maker/report?year=... 경로 유지
+
+유지한 것:
+- 서버 데이터 조회 변경 없음
+- Supabase 호출 변경 없음
+- 권한 가드 변경 없음
+- API route 변경 없음
+- DB schema 변경 없음
+- migration 변경 없음
+- RLS policy 변경 없음
+- 인증/권한 로직 변경 없음
+- 목실기 계산 로직 변경 없음
+- 코칭 관계 집계 로직 변경 없음
+- 메모 작성/검색/필터/목록/CSV/상세 수정 기능 유지
+
+검증:
+- npm run typecheck 통과
+- npm run build 통과
+
+주의:
+이 LOCK 이후 /coach-maker 메인 대시보드는 작업 중심 구조를 기준으로 유지합니다.
+추가 기능은 메인 화면에 무리하게 펼치지 말고, 요약 카드·접힘 영역·하위 상세 페이지 방식으로 연결합니다.
+
+## LOCK - Admin Settings System Settings Phase 1 QA
+
+Completed date:
+- 2026-05-14
+
+Work:
+- /admin/settings 시스템 설정 1차 QA 및 active profile 권한 보완
+- admin settings system_settings phase 1 QA
+- active profile double guard for settings API/page
+- default locale/country/invitation expiration validation review
+
+Checked results:
+- system_settings seed는 `on conflict on constraint system_settings_scope_key_unique do nothing`으로 중복 실행 안전
+- `unique nulls not distinct (scope_type, scope_id, key)`로 `scope_id is null`인 global 설정 중복 방지
+- default_locale은 `ko/en`만 허용
+- `th`는 추가하지 않음
+- unknown field는 `PATCH /api/admin/settings`에서 400 반환
+- default_country_id는 null 또는 존재하는 active country만 허용
+- invitation_expires_in_days는 정수 1~30만 허용
+- /admin/invitations/new는 설정 조회 성공 시 기본 초대 만료일을 읽음
+- 설정 조회 실패 시 7일 fallback 유지
+
+Issue found:
+- RLS는 `profiles.status='active'`까지 요구하지만, API/page 서버 가드는 기존 super_admin 확인 뒤 profile active 상태를 다시 확인하지 않았음
+- service role 기반 저장 경로에서는 RLS를 우회하므로 설정 기능 안에서 active profile 확인이 필요했음
+
+Modified files:
+- src/app/api/admin/settings/route.ts
+- src/app/admin/settings/page.tsx
+
+Summary:
+시스템 설정 1차 저장 기능을 QA하고 권한 경계만 최소 보완했다. `GET/PATCH /api/admin/settings`는 super_admin role 확인 후 `profiles.status='active'`와 `deleted_at is null`을 추가 확인하도록 정리했다. `/admin/settings` 서버 페이지도 active profile이 아니면 설정 데이터 조회 전에 `/dashboard`로 redirect하도록 보완했다. 이메일 발신 설정, 시스템 공지 설정, 인쇄 기본 옵션, 조직별 기본 권한 설정은 계속 "준비 중" 상태로 유지했다.
+
+Kept unchanged:
+- 새 기능 추가 없음
+- DB schema 추가 변경 없음
+- migration 추가 변경 없음
+- 기존 RLS 정책 변경 없음
+- 기존 초대 생성 business logic 변경 없음
+- LanguageSwitcher 변경 없음
+- messages.ts 변경 없음
+- th 옵션 추가 없음
+- organization별 설정 구현 없음
+
+Do not regress:
+- system_settings global seed behavior
+- `system_settings_scope_key_unique` global uniqueness
+- default_locale ko/en-only validation
+- rejection of th and unknown PATCH fields
+- default_country_id null/existing-active-country validation
+- invitation_expires_in_days integer 1~30 validation
+- /admin/settings active super_admin-only access
+- /api/admin/settings active super_admin-only access
+- /admin/invitations/new settings-based invitation expiration default
+- invitation expiration fallback to 7 days when settings lookup fails
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+
+Notes:
+- DB에 `0034_create_system_settings.sql` migration 적용 후 실제 저장/새로고침 유지 여부는 Supabase에서 수동 확인 필요
+
+## LOCK - Dashboard My Home and Admin Center Role Split
+
+Completed date:
+- 2026-05-14
+
+Work:
+- /dashboard 나의 홈과 /admin 관리자 센터 역할 분리
+- dashboard as personal home
+- admin as admin center
+- shared navigation labels separated for my home and admin center
+
+Modified files:
+- src/app/dashboard/page.tsx
+- src/app/admin/page.tsx
+- src/components/navigation/PageNavigationButtons.tsx
+- src/lib/i18n/messages.ts
+
+Summary:
+/dashboard와 /admin의 목적이 비슷하게 보이지 않도록 UI 문구와 화면 구조를 분리했다. /dashboard는 모든 로그인 사용자의 개인 시작 화면으로 정리했고, 상단 성격 표시는 “개인 홈”, 제목은 “나의 홈”, 설명은 “내 역할에 맞는 코칭 기록, 목실기, 담당 현황으로 이동하는 개인 시작 화면입니다.”로 변경했다. /dashboard에서는 관리자 세부 기능 직접 노출을 줄이고, 관리자 권한이 있으면 “관리자 센터” 진입 카드만 보이도록 정리했다. /admin은 관리자 전용 운영 공간으로 정리했고, 상단 성격 표시는 “관리자 전용”, 제목은 “관리자 센터”, 설명은 “회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간입니다.”로 변경했다. /admin에는 회원 관리, 초대 관리, 역할 관리, 국가/지역/기관/교회/그룹 관리, 시스템 설정 메뉴를 관리자 전용 메뉴로 모았다. 공통 이동 버튼은 /dashboard 이동 문구를 “나의 홈”, /admin 이동 문구를 “관리자 센터”로 구분했다.
+
+Kept unchanged:
+- 로그인 흐름 변경 없음
+- 역할별 권한 체크 변경 없음
+- 관리자 접근 제한 변경 없음
+- 기존 링크 이동 변경 없음
+- 데이터 조회 변경 없음
+- API/Supabase 흐름 변경 없음
+- DB schema 변경 없음
+- migration 변경 없음
+- API route 변경 없음
+- RLS policy 변경 없음
+- middleware 인증 로직 변경 없음
+- 권한 판단 로직 변경 없음
+
+Do not regress:
+- /dashboard authenticated access flow
+- /dashboard role-based quick links
+- /dashboard admin center entry card for super_admin
+- /admin server-side admin guard
+- /admin member summary loading
+- /admin users and invitations navigation
+- /admin settings navigation
+- PageNavigationButtons back/forward behavior
+- PageNavigationButtons dashboardHref="/admin" label behavior
+- i18n key parity for ko/en
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+
+## LOCK - Ministry Trust Theme Phase 1 QA and Print CSS Stabilization
+
+Completed date:
+- 2026-05-14
+
+Work:
+- Ministry Trust Theme 1차 QA 및 /coach/moksilgi 인쇄 CSS 보완
+- Ministry Trust Theme phase 1 QA
+- coach moksilgi common Card/Button/ButtonLink/Badge/TextInput/ProgressBar tone
+- coach moksilgi A4 print CSS stabilization
+- common PrintPageButton Button tone cleanup
+
+Checked screens:
+- /admin/users
+- /coach-maker/moksilgi-progress
+- /coach
+- /my-coaching/records
+- /coach/moksilgi
+- /coach/moksilgi/[planId]
+
+Issues found:
+- /coach/moksilgi, /coach/moksilgi/[planId]에 raw 링크/버튼/카드 스타일 일부가 남아 있어 공통 UI 톤이 덜 맞았음
+- 공통 PrintPageButton이 Button을 사용하면서도 별도 raw Tailwind 버튼 스타일을 덧붙이고 있었음
+- 인쇄 CSS에서 본문 컨테이너 max-width, 카드 padding, 섹션 간격이 A4 출력에서 불필요한 여백을 만들 가능성이 있었음
+
+Modified files:
+- src/app/coach/moksilgi/page.tsx
+- src/app/coach/moksilgi/[planId]/page.tsx
+- src/components/print/PrintPageButton.tsx
+
+Summary:
+Ministry Trust Theme 1차 적용 화면들을 코드 기준으로 QA하고, 톤이 덜 맞던 /coach/moksilgi 목록/상세 화면을 최소 보완했다. /coach/moksilgi 목록/상세 화면에는 Card, Button, ButtonLink, Badge, TextInput, ProgressBar를 적용했고, 상단 제목/설명/버튼 영역은 Card 기반 구조로 정리했다. 상태값은 Badge로 표시하고 성취율은 ProgressBar로 표시했다. 긴 이름/이메일/설명 대응을 위해 min-w-0, break-words, flex-wrap, overflow-x-auto를 보완했다. PrintPageButton은 공통 Button 톤으로 정리했고, print 전용 CSS에서 A4 출력 시 max-width 해제, 카드 간격/패딩 축소, table width 안정화, print-color-adjust 적용, 버튼/내비게이션/액션 영역 print 숨김 유지를 적용했다.
+
+Kept unchanged:
+- DB schema 변경 없음
+- migration 변경 없음
+- API route 변경 없음
+- RLS 변경 없음
+- 인증/권한 로직 변경 없음
+- Supabase 조회 로직 변경 없음
+- 저장/수정 business logic 변경 없음
+- 기존 계산 로직 변경 없음
+
+Do not regress:
+- /admin/users Ministry Trust Theme phase 1 UI
+- /coach-maker/moksilgi-progress Ministry Trust Theme phase 1 UI
+- /coach Ministry Trust Theme phase 1 UI
+- /my-coaching/records Ministry Trust Theme phase 1 UI
+- /coach/moksilgi list data loading and print flow
+- /coach/moksilgi/[planId] detail data loading and print flow
+- PrintPageButton document.title PDF filename behavior
+- A4 portrait print layout with natural content flow
+- print-hidden/no-print hiding of buttons, navigation, filters, and action areas
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+
+Notes:
+- 브라우저 인쇄 미리보기는 자동 실행하지 않았으므로, 최종 배포 전 수동 QA에서 확인 필요
+
+## LOCK - My Coaching Records Ministry Trust Theme Phase 1
+
+Completed date:
+- 2026-05-14
+
+Work:
+- /my-coaching/records 나의 코칭 기록 화면 Ministry Trust Theme 1차 적용
+- my coaching records Ministry Trust Theme phase 1
+- my coaching records common Card/Badge/ButtonLink tone
+- my coaching records daily weekly monthly Card actions
+- my coaching records common TextInput/SelectInput/Button/FieldLabel filters
+- my coaching records status, visibility, and record type Badge display
+- my coaching records Card-based record list sections
+- my coaching records responsive min-w-0 break-words flex-wrap
+- my coaching records print Button style
+
+Modified files:
+- src/app/my-coaching/records/page.tsx
+- src/app/my-coaching/records/PrintRecordsButton.tsx
+
+Summary:
+/my-coaching/records 나의 코칭 기록 화면에 Ministry Trust Theme 1차 공통 UI를 적용했다. 페이지 상단 제목/설명/이동 버튼 영역은 공통 Card, Badge, ButtonLink 톤으로 정리했고, 하루기록/주간기록/월간기록 이동 영역은 Card 기반 액션으로 정리했다. 검색/필터 영역에는 공통 TextInput, SelectInput, Button, FieldLabel을 적용했으며, 기록 상태, 공개/공유 상태, 기록 유형은 공통 Badge로 표시했다. 기록 목록 섹션은 Card 기반으로 정리했고, min-w-0, break-words, flex-wrap 등 반응형 보완을 적용했다. 인쇄 버튼은 공통 Button 스타일로 통일했다.
+
+Kept unchanged:
+- 하루/주간/월간 기록 조회 변경 없음
+- 작성/수정/저장 흐름 변경 없음
+- API/Supabase 데이터 흐름 변경 없음
+- 인증/권한 로직 변경 없음
+- DB schema 변경 없음
+- migration 변경 없음
+- RLS 변경 없음
+- 기록 계산 및 business logic 변경 없음
+
+Do not regress:
+- /my-coaching/records overview page loading
+- daily, weekly, and monthly record previews
+- search/filter/sort flow
+- reset filter flow
+- print range selection and window.print flow
+- PDF default filename behavior
+- daily record create/edit/save flow
+- weekly record create/edit/save flow
+- monthly reflection create/edit/save flow
+- shared/private state display
+- existing API and Supabase data flow
+- existing auth and role-based access checks
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+
+## LOCK - Coach Dashboard Ministry Trust Theme Phase 1
+
+Completed date:
+- 2026-05-14
+
+Work:
+- /coach 코치 대시보드 Ministry Trust Theme 1차 적용
+- coach dashboard Ministry Trust Theme phase 1
+- coach dashboard common Card/Badge/ButtonLink tone
+- coach dashboard summary Card metrics
+- coach dashboard weekly submitted/missing ProgressBar metrics
+- coach dashboard weekly status and feedback Badge display
+- coach dashboard coachee table Card wrapper
+- coach dashboard responsive overflow-x-auto min-w break-words
+- coach dashboard action links as ButtonLink cards
+
+Modified files:
+- src/app/coach/page.tsx
+
+Summary:
+/coach 코치 대시보드 화면에 Ministry Trust Theme 1차 공통 UI를 적용했다. 페이지 상단 제목/설명/이동 버튼 영역은 공통 Card, Badge, ButtonLink 톤으로 정리했고, 담당 코치이 현황 요약은 공통 Card 기반 요약 카드로 변경했다. 이번 주 제출/미제출 지표에는 ProgressBar를 추가했으며, 최근 주간 기록 상태와 피드백 대기 상태는 공통 Badge로 표시했다. 담당 코치이 목록은 기존 table 구조를 유지하면서 Card 래핑, overflow-x-auto, min-w, break-words를 보완했고, 하단 주요 이동 링크는 공통 ButtonLink 카드형 액션으로 정리했다.
+
+Kept unchanged:
+- 데이터 조회 변경 없음
+- 권한 체크 변경 없음
+- API/Supabase 흐름 변경 없음
+- 기록 계산 로직 변경 없음
+- DB schema 변경 없음
+- RLS 변경 없음
+
+Do not regress:
+- /coach dashboard data loading
+- assigned coachee overview
+- weekly submitted/missing summary
+- shared daily/monthly record summary
+- feedback pending summary
+- assigned coachee list
+- latest weekly status display
+- feedback pending status display
+- links to /coach/relationships, /coach/weekly-logs, /coach/moksilgi
+- existing auth and role-based data exposure
+- existing API and Supabase data flow
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+
+## LOCK - System Announcements Migration Applied
+
+Completed date:
+- 2026-05-14
+
+Work:
+- system_announcements migration 적용 및 /admin/settings 시스템 공지 정상 작동 확인
+- system announcements DB migration applied
+- /admin/settings system announcement management verified
+- /dashboard active announcement inline Card verified
+
+Confirmed:
+- supabase/migrations/0035_create_system_announcements.sql을 Supabase DB에 적용
+- public.system_announcements 테이블 생성 확인
+- /admin/settings 시스템 공지 설정 섹션 정상 표시
+- 시스템 공지 생성 기능 정상 작동
+- /dashboard에서 active 공지 inline Card 표시 정상 작동
+- 테이블 없음 오류 “Could not find the table 'public.system_announcements' in the schema cache” 해결
+
+Kept unchanged:
+- 기존 system_settings 구조 변경 없음
+- 기본 언어/국가/초대 만료 기간 기능 유지
+- 초대 생성 기본값 연결 유지
+- 인증/권한 구조 변경 없음
+- 기존 RLS 불필요한 변경 없음
+
+Do not regress:
+- public.system_announcements table availability
+- /admin/settings system announcement create/edit/toggle/soft delete flow
+- /dashboard active announcement inline Card display
+- system_settings default locale/default country/invitation expiration settings
+- invitation expiration default connection
+- existing auth and role-based access checks
+- existing RLS behavior
+
+Notes:
+- 0035 migration은 Supabase SQL Editor에서 직접 적용함
+- 추후 Supabase CLI migration 관리 방식 정비 필요
+
+## LOCK - Admin Settings Print Options Phase 1
+
+Completed date:
+- 2026-05-14
+
+Work:
+- /admin/settings 인쇄 기본 옵션 1차 저장 기능 구현
+- system_settings print_options seed migration
+- print options validation
+- /admin/settings print options UI
+- PrintPageButton fallback-safe print options support
+
+Migration:
+- supabase/migrations/0036_add_print_options_to_system_settings.sql
+
+Modified files:
+- src/lib/print/print-options.ts
+- src/lib/api/admin/system-settings.ts
+- src/app/api/admin/settings/route.ts
+- src/app/admin/settings/page.tsx
+- src/app/admin/settings/SystemSettingsForm.tsx
+- src/components/print/PrintPageButton.tsx
+- supabase/migrations/0036_add_print_options_to_system_settings.sql
+
+print_options structure:
+```json
+{
+  "paper_size": "a4",
+  "orientation": "portrait",
+  "margin": "normal",
+  "show_logo": true,
+  "show_title": true,
+  "show_people_info": true,
+  "show_date": true,
+  "show_signature": false,
+  "show_page_numbers": false
+}
+```
+
+API validation:
+- paper_size는 a4만 허용
+- orientation은 portrait, landscape만 허용
+- margin은 compact, normal, wide만 허용
+- show_logo, show_title, show_people_info, show_date, show_signature, show_page_numbers는 boolean만 허용
+- 알 수 없는 print_options key는 400 반환
+- 기존 default_locale, default_country_id, invitation_expires_in_days 검증 유지
+
+/admin/settings UI:
+- “인쇄 기본 옵션” 준비 중 카드를 실제 설정 카드로 전환
+- 용지 크기 SelectInput 추가
+- 방향 SelectInput 추가
+- 여백 SelectInput 추가
+- 제목/작성자·대상자/날짜/로고/서명란/페이지 번호 체크박스 추가
+- 기존 기본 언어/국가/초대 만료 기간 저장 흐름과 함께 저장되도록 유지
+
+PrintPageButton:
+- PrintPageButton이 printOptions prop을 받을 수 있게 확장
+- normalizePrintOptions()로 fallback-safe 처리
+- 실제 CSS 반영은 orientation, margin만 제한 적용
+- compact/normal/wide를 각각 6mm/10mm/15mm로 매핑
+- 저장값이 없으면 기존과 동일하게 A4 portrait, 10mm fallback
+
+Applied vs stored:
+- 실제 적용 가능: orientation, margin
+- 저장 및 향후 문서별 연결용: show_logo, show_title, show_people_info, show_date, show_signature, show_page_numbers
+
+Kept unchanged:
+- 기존 system_settings 테이블 구조 변경 없음
+- system_announcements 변경 없음
+- 기본 언어/국가/초대 만료 기간 기능 유지
+- 시스템 공지 기능 변경 없음
+- RLS 변경 없음
+- 인증/권한 구조 변경 없음
+- 기존 인쇄 CSS 대규모 재작성 없음
+- 계보도/지도/records 전용 인쇄는 변경 없음
+
+Do not regress:
+- /admin/settings default locale/default country/invitation expiration settings
+- /admin/settings print_options save and reload persistence
+- PrintPageButton existing A4 portrait 10mm fallback
+- PrintPageButton document.title PDF filename behavior
+- coach moksilgi print flow
+- coach-maker moksilgi progress print flow
+- my-coaching moksilgi print flow
+- genealogy/map and records dedicated print CSS
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+
+Notes:
+- DB에는 supabase/migrations/0036_add_print_options_to_system_settings.sql migration 적용 필요
+- 적용 후 /admin/settings에서 인쇄 기본 옵션 저장/새로고침 유지 확인 필요
+- /coach/moksilgi/[planId] 등 PrintPageButton 기반 화면에서 margin/orientation 수동 확인 필요
+
+## LOCK - Prelaunch Admin Settings and Security Checklist
+
+Completed date:
+- 2026-05-14
+
+Work:
+- 정식 운영 전 관리자 설정/보안 점검표 작성
+- prelaunch admin settings checklist
+- prelaunch security checklist
+- system_settings/system_announcements/print_options operational checks
+- invitation default expiration operational checks
+
+Completed feature summary:
+- /dashboard는 모든 로그인 사용자의 “나의 홈” 역할로 정리됨
+- /admin은 관리자 전용 “관리자 센터” 역할로 정리됨
+- /admin/settings에서 기본 언어, 기본 국가, 초대 만료 기간 저장 기능 구현됨
+- system_settings에 default_locale, default_country_id, invitation_expires_in_days, print_options 저장 구조 준비됨
+- system_announcements에 시스템 공지 생성/수정/활성/비활성/soft delete 및 /dashboard 표시 기능 구현됨
+- print_options 저장/조회 및 PrintPageButton의 orientation, margin 제한 적용 구현됨
+- /admin/invitations/new는 초대 만료 기본값을 설정값에서 읽고 실패 시 7일 fallback 유지
+- 관리자 관련 주요 페이지 비로그인 HTML 노출 보안 가드 보완됨
+
+Prelaunch required checks:
+- super_admin 운영 이메일 존재 여부
+- profiles.status = active 확인
+- user_roles.role = super_admin, status = active, is_active = true 확인
+- /admin, /admin/users, /admin/settings 비로그인 접근 차단 확인
+- 일반 사용자 /admin/settings 접근 차단 확인
+- /dashboard 로그인 사용자 접근 확인
+- /admin/settings 저장 후 새로고침 유지 확인
+- /dashboard active 공지 표시 확인
+- inactive/미래 시작/만료 공지 숨김 확인
+- 초대 생성 후 /admin/invitations 목록 반영 확인
+- 초대 만료 기간 1~30일 검증 확인
+- 잘못된 /coach-maker/admin/invitations/new 링크 잔존 여부 검색
+
+Supabase DB/migration checks:
+- 0034_create_system_settings.sql 적용 여부
+- 0035_create_system_announcements.sql 적용 여부
+- 0036_add_print_options_to_system_settings.sql 적용 여부
+- public.system_settings 존재 확인
+- public.system_announcements 존재 확인
+- system_settings key 존재 확인:
+  - default_locale
+  - default_country_id
+  - invitation_expires_in_days
+  - print_options
+- system_announcements RLS enabled 확인
+- Supabase SQL Editor로 수동 적용한 migration과 git migration 파일 일치 여부 확인
+
+Auth/RLS checks:
+- system_settings는 active super_admin만 조회/수정 가능한지 확인
+- system_announcements는 active super_admin만 생성/수정/삭제 가능한지 확인
+- 일반 로그인 사용자는 audience='all' active 공지만 조회 가능한지 확인
+- 관리자 권한 사용자는 audience='admin' 공지도 조회 가능한지 확인
+- service role 기반 서버 API가 active profile 상태를 별도 확인하는지 확인
+- Supabase Advisor RLS Disabled 경고는 테이블별로 분류 후 정책 설계 필요
+- 무작정 RLS enable 금지
+
+Remaining risks:
+- SQL Editor로 적용한 migration과 로컬 migration 이력 불일치 가능성
+- Supabase Advisor RLS Disabled 경고 잔존 가능성
+- 테스트 데이터와 기준 데이터 혼합 가능성
+- service role 기반 admin API의 서버 권한 가드 누락 위험
+- 이메일 발신 설정은 아직 준비 중
+- print_options 일부 항목은 저장만 되고 실제 출력 반영은 제한적
+- 시스템 공지 읽음 처리/팝업/다국어는 미구현
+
+Next priorities:
+1. Supabase Advisor RLS Disabled 경고 테이블별 분류 및 정책 설계
+2. 테스트 데이터 정리 전략 확정 및 백업
+3. 이메일 발신 설정 설계 및 Resend 운영 키 점검
+4. 초대 메일 실제 발송 QA
+5. print_options 문서별 단계 적용
+6. 시스템 공지 다국어/읽음 처리 여부 결정
+7. 운영용 seed/base data 문서화
+
+Validation:
+- 현재 단계는 코드 수정 없음
+- migration 생성 없음
+- RLS 즉시 활성화 없음
+- 점검표 작성 단계
+
+## LOCK - Coach Maker Moksilgi Progress Ministry Trust Theme Phase 1
+
+Completed date:
+- 2026-05-14
+
+Work:
+- /coach-maker/moksilgi-progress 전체 목실기 성취 현황 화면 Ministry Trust Theme 1차 적용
+- coach-maker moksilgi progress Ministry Trust Theme phase 1
+- coach-maker moksilgi progress common Card/Badge/Button tone
+- coach-maker moksilgi progress common FieldLabel/TextInput/Button/ButtonLink filters
+- coach-maker moksilgi progress summary Card metrics
+- coach-maker moksilgi progress ProgressBar achievement metrics
+- coach-maker moksilgi progress common Button/ButtonLink actions
+- coach-maker moksilgi progress Badge status tone cleanup
+- coach-maker moksilgi progress responsive overflow-x-auto min-w Card table wrappers
+
+Modified files:
+- src/app/coach-maker/moksilgi-progress/page.tsx
+- src/app/coach-maker/moksilgi-progress/MoksilgiProgressClientTable.tsx
+
+Summary:
+/coach-maker/moksilgi-progress 전체 목실기 성취 현황 화면에 Ministry Trust Theme 1차 공통 UI를 적용했다. 페이지 상단 제목/설명/인쇄/이동 버튼 영역은 공통 Card, Badge, Button 톤으로 정리했고, 서버 필터 영역에는 공통 Card, FieldLabel, TextInput, Button, ButtonLink를 적용했다. 요약 지표 카드는 공통 Card 기반으로 변경했으며 성취율 지표에는 ProgressBar를 추가했다. 보기 전환, CSV 내보내기, 필터 초기화, 상세/기록 보기, 메모 작성 버튼은 공통 Button/ButtonLink 톤으로 통일했다. 상태값은 기존 공통 Badge 표시를 유지하면서 전체 톤을 정리했고, 월별 성취 현황 표와 관계별/돌봄 필요자 표에는 overflow-x-auto, min-w, Card 래핑을 보완해 모바일/태블릿 화면 깨짐을 줄였다.
+
+Kept unchanged:
+- 기능 로직 변경 없음
+- API 변경 없음
+- Supabase 조회 로직 변경 없음
+- 권한 체크 변경 없음
+- 성취율 계산 로직 변경 없음
+- DB schema 변경 없음
+- RLS 변경 없음
+
+Do not regress:
+- /coach-maker/moksilgi-progress progress data loading
+- team view, relationship view, care needed view
+- existing filters and sorting
+- CSV export
+- action note creation
+- print/PDF flow
+- achievement and care assessment calculation
+- super_admin and coach_maker access checks
+- existing API and Supabase data flow
+- existing i18n translation key/fallback structure
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
