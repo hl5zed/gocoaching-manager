@@ -5,42 +5,21 @@ import type { FormEvent, SyntheticEvent } from "react";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
-import type { AdminCountrySummary } from "@/lib/api/admin/countries";
 import type {
-  AdminLookupSummary,
-  AdminOrganizationSummary,
   AdminUserSummary,
 } from "@/lib/api/admin/users";
 import { PROFILE_STATUSES, USER_ROLES } from "@/types/database";
 import type { ScopeType, UserRole } from "@/types/database";
 import { AdminUserAffiliationFields } from "./AdminUserAffiliationFields";
+import {
+  loadAdminUsersOptions,
+  type AdminUserGenerationOption,
+  type AdminUsersOptionsPayload,
+} from "./AdminUsersOptionsCache";
 import { LoginGuideCopyButton } from "./LoginGuideCopyButton";
-
-type GenerationOption = {
-  generation_number: number;
-  label: string;
-};
 
 type DetailPayload = {
   user: AdminUserSummary;
-};
-
-type OptionsPayload = {
-  options: {
-    countries: AdminCountrySummary[];
-    regions: AdminLookupSummary[];
-    organizations: AdminOrganizationSummary[];
-    churches: AdminLookupSummary[];
-    groups: AdminLookupSummary[];
-    generations: GenerationOption[];
-  };
-  optionErrors?: {
-    countries?: string | null;
-    regions?: string | null;
-    organizations?: string | null;
-    churches?: string | null;
-    groups?: string | null;
-  };
 };
 
 const MANAGEABLE_USER_ROLES = USER_ROLES.filter(
@@ -175,7 +154,7 @@ function getMinistryPositionOptions(currentValue?: string | null) {
 }
 
 function getGenerationSelectOptions(
-  generationOptions: GenerationOption[] = [],
+  generationOptions: AdminUserGenerationOption[] = [],
   currentValue?: number | null,
 ) {
   const safeGenerationOptions = Array.isArray(generationOptions)
@@ -442,7 +421,8 @@ function ProfileUpdateForm({
   onUserUpdated: (user: AdminUserSummary) => void;
   user: AdminUserSummary;
 }) {
-  const [optionsPayload, setOptionsPayload] = useState<OptionsPayload | null>(null);
+  const [optionsPayload, setOptionsPayload] =
+    useState<AdminUsersOptionsPayload | null>(null);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   const [optionsError, setOptionsError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -454,30 +434,16 @@ function ProfileUpdateForm({
       return;
     }
 
-    const controller = new AbortController();
     setIsLoadingOptions(true);
     setOptionsError(null);
 
-    void fetch("/api/admin/users/options", {
-      cache: "no-store",
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error("options request failed");
-        }
-
-        setOptionsPayload((await response.json()) as OptionsPayload);
-      })
-      .catch((fetchError) => {
-        if ((fetchError as Error).name !== "AbortError") {
-          setOptionsError("소속 선택값을 불러오지 못했습니다.");
-        }
+    void loadAdminUsersOptions()
+      .then(setOptionsPayload)
+      .catch(() => {
+        setOptionsError("소속 선택값을 불러오지 못했습니다.");
       })
       .finally(() => {
-        if (!controller.signal.aborted) {
-          setIsLoadingOptions(false);
-        }
+        setIsLoadingOptions(false);
       });
   }
 

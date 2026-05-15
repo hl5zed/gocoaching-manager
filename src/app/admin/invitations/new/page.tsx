@@ -2,19 +2,19 @@ import Link from "next/link";
 import { AdminInvitationCreateForm } from "@/components/admin/AdminInvitationCreateForm";
 import {
   FALLBACK_INVITATION_EXPIRES_IN_DAYS,
-  getGlobalSystemSettings,
-  getOrganizationDefaultRoleSettings,
+  getInvitationExpiresInDaysSetting,
+  getInvitationOrganizationDefaultRoleOptions,
 } from "@/lib/api/admin/system-settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewAdminInvitationPage() {
-  const [{ settings }, organizationDefaultRolesResult] = await Promise.all([
-    getGlobalSystemSettings(),
-    getOrganizationDefaultRoleSettings(),
+  const [expiresInDaysResult, organizationDefaultRolesResult] = await Promise.all([
+    getInvitationExpiresInDaysSetting(),
+    getInvitationOrganizationDefaultRoleOptions(),
   ]);
   const defaultExpiresInDays =
-    settings.invitation_expires_in_days ?? FALLBACK_INVITATION_EXPIRES_IN_DAYS;
+    expiresInDaysResult.expiresInDays ?? FALLBACK_INVITATION_EXPIRES_IN_DAYS;
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">

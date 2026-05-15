@@ -54,6 +54,20 @@ export type CoachActionNoteItem = {
   completed_at: string | null;
 };
 
+export type CoachActionNoteReportItem = Pick<
+  CoachActionNoteItem,
+  | "id"
+  | "target_type"
+  | "target_name"
+  | "team_name"
+  | "action_type"
+  | "priority"
+  | "status"
+  | "note"
+  | "due_date"
+  | "created_at"
+>;
+
 type CoachActionNoteInsert = {
   organization_id: string | null;
   church_id: string | null;
@@ -102,12 +116,16 @@ type QueryListResult<TData> = Promise<{
 
 type ActionNoteSelectBuilder = {
   eq: (column: string, value: string) => ActionNoteSelectBuilder;
+  gte: (column: string, value: string) => ActionNoteSelectBuilder;
+  ilike: (column: string, value: string) => ActionNoteSelectBuilder;
   is: (column: string, value: null) => ActionNoteSelectBuilder;
+  lte: (column: string, value: string) => ActionNoteSelectBuilder;
   maybeSingle: () => QueryResult<CoachActionNoteItem>;
   order: (
     column: string,
     options: { ascending: boolean },
-  ) => QueryListResult<CoachActionNoteItem>;
+  ) => ActionNoteSelectBuilder;
+  range: (from: number, to: number) => QueryListResult<CoachActionNoteItem>;
 };
 
 type ActionNoteMutationFilter = {
@@ -145,6 +163,20 @@ type ActiveRoleRow = {
   scope_id: string | null;
 };
 
+type ActionNotesFilters = {
+  dueDate: string | null;
+  from: string | null;
+  limit: number;
+  offset: number;
+  page: number;
+  priority: ActionNotePriority | null;
+  region: string | null;
+  status: ActionNoteStatus | null;
+  targetType: ActionNoteTargetType | null;
+  teamName: string | null;
+  to: string | null;
+};
+
 export type ActionNotesAccessResult =
   | {
       ok: true;
@@ -162,6 +194,11 @@ export type ActionNotesResult<TData> =
   | {
       ok: true;
       data: TData;
+      pagination?: {
+        limit: number;
+        offset: number;
+        page: number;
+      };
     }
   | {
       ok: false;
@@ -185,6 +222,11 @@ const WRITE_ROLES: UserRole[] = [
 ];
 const SAFE_SELECT =
   "id, organization_id, church_id, coach_id, target_user_id, target_type, target_name, team_id, team_name, region, action_type, priority, status, note, due_date, created_by, created_at, updated_at, completed_at";
+const REPORT_SELECT =
+  "id, target_type, target_name, team_name, action_type, priority, status, note, due_date, created_at";
+const DEFAULT_ACTION_NOTES_LIMIT = 500;
+const REPORT_ACTION_NOTES_LIMIT = 1000;
+const MAX_ACTION_NOTES_LIMIT = 1000;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -241,6 +283,31 @@ function normalizeDate(value: unknown) {
 
   const trimmed = value.trim();
   return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : null;
+}
+
+function normalizePositiveInteger(value: string | null, fallback: number) {
+  const numeric = Number(value);
+  return Number.isInteger(numeric) && numeric > 0 ? numeric : fallback;
+}
+
+function normalizeLimit(value: string | null, fallback: number) {
+  return Math.min(normalizePositiveInteger(value, fallback), MAX_ACTION_NOTES_LIMIT);
+}
+
+function normalizeStartOfDay(value: string | null) {
+  const normalized = normalizeDate(value);
+  return normalized ? `${normalized}T00:00:00.000Z` : null;
+}
+
+function normalizeEndOfDay(value: string | null) {
+  const normalized = normalizeDate(value);
+  return normalized ? `${normalized}T23:59:59.999Z` : null;
+}
+
+function normalizeIlikePattern(value: string | null) {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  return `%${trimmed.replace(/[\\%_]/g, (match) => `\\${match}`)}%`;
 }
 
 function isAllowedValue<TValue extends string>(
@@ -459,13 +526,7 @@ export async function requireActionNotesAccess(
 export function validateActionNotesFilters(searchParams: URLSearchParams):
   | {
       ok: true;
-      filters: {
-        status: ActionNoteStatus | null;
-        priority: ActionNotePriority | null;
-        targetType: ActionNoteTargetType | null;
-        teamName: string | null;
-        region: string | null;
-      };
+      filters: ActionNotesFilters;
     }
   | {
       ok: false;
@@ -505,13 +566,62 @@ export function validateActionNotesFilters(searchParams: URLSearchParams):
   return {
     ok: true,
     filters: {
+      dueDate: normalizeDate(searchParams.get("due_date")),
+      from: normalizeDate(searchParams.get("from")),
+      limit: normalizeLimit(searchParams.get("limit"), DEFAULT_ACTION_NOTES_LIMIT),
+      offset: Math.max(0, normalizePositiveInteger(searchParams.get("offset"), 0)),
+      page: normalizePositiveInteger(searchParams.get("page"), 1),
       status: normalizedStatus,
       priority: normalizedPriority,
       targetType: normalizedTargetType,
       teamName: normalizeNullableText(searchParams.get("team_name"), 120),
+      to: normalizeDate(searchParams.get("to")),
       region: normalizeNullableText(searchParams.get("region"), 120),
     },
   };
+}
+
+function applyActionNotesFilters(
+  query: ActionNoteSelectBuilder,
+  filters: ActionNotesFilters,
+) {
+  let nextQuery = query;
+  const { dueDate, from, priority, region, status, targetType, teamName, to } =
+    filters;
+
+  if (status) {
+    nextQuery = nextQuery.eq("status", status);
+  }
+
+  if (priority) {
+    nextQuery = nextQuery.eq("priority", priority);
+  }
+
+  if (targetType) {
+    nextQuery = nextQuery.eq("target_type", targetType);
+  }
+
+  if (teamName) {
+    nextQuery = nextQuery.ilike("team_name", normalizeIlikePattern(teamName) ?? teamName);
+  }
+
+  if (region) {
+    nextQuery = nextQuery.ilike("region", normalizeIlikePattern(region) ?? region);
+  }
+
+  if (from) {
+    nextQuery = nextQuery.gte("created_at", normalizeStartOfDay(from) ?? from);
+  }
+
+  if (to) {
+    nextQuery = nextQuery.lte("created_at", normalizeEndOfDay(to) ?? to);
+  }
+
+  if (dueDate) {
+    nextQuery = nextQuery.eq("due_date", dueDate);
+  }
+
+  return nextQuery;
 }
 
 export async function getCoachActionNotes(
@@ -535,30 +645,15 @@ export async function getCoachActionNotes(
 
   const table = getActionNotesTable(access.supabase);
   let query = table.select(SAFE_SELECT).is("deleted_at", null);
-  const { status, priority, targetType, teamName, region } =
-    validatedFilters.filters;
+  const { limit, offset, page } = validatedFilters.filters;
+  const rangeStart = searchParams.has("offset") ? offset : (page - 1) * limit;
+  const rangeEnd = rangeStart + limit - 1;
 
-  if (status) {
-    query = query.eq("status", status);
-  }
+  query = applyActionNotesFilters(query, validatedFilters.filters);
 
-  if (priority) {
-    query = query.eq("priority", priority);
-  }
-
-  if (targetType) {
-    query = query.eq("target_type", targetType);
-  }
-
-  if (teamName) {
-    query = query.eq("team_name", teamName);
-  }
-
-  if (region) {
-    query = query.eq("region", region);
-  }
-
-  const { data, error } = await query.order("created_at", { ascending: false });
+  const { data, error } = await query
+    .order("created_at", { ascending: false })
+    .range(rangeStart, rangeEnd);
 
   if (error) {
     console.error("[ACTION_NOTES_LIST_FAILED]", error.message);
@@ -574,6 +669,71 @@ export async function getCoachActionNotes(
   return {
     ok: true,
     data: data ?? [],
+    pagination: {
+      limit,
+      offset: rangeStart,
+      page,
+    },
+  };
+}
+
+export async function getCoachActionNotesForReport(
+  searchParams: URLSearchParams,
+): Promise<ActionNotesResult<CoachActionNoteReportItem[]>> {
+  const access = await requireActionNotesAccess("read");
+
+  if (!access.ok) {
+    return access;
+  }
+
+  const validatedFilters = validateActionNotesFilters(searchParams);
+
+  if (!validatedFilters.ok) {
+    return {
+      ok: false,
+      status: 400,
+      message: validatedFilters.message,
+    };
+  }
+
+  const limit = normalizeLimit(searchParams.get("limit"), REPORT_ACTION_NOTES_LIMIT);
+  const page = normalizePositiveInteger(searchParams.get("page"), 1);
+  const offset = Math.max(0, normalizePositiveInteger(searchParams.get("offset"), 0));
+  const rangeStart = searchParams.has("offset") ? offset : (page - 1) * limit;
+  const rangeEnd = rangeStart + limit - 1;
+  const table = getActionNotesTable(access.supabase);
+  let query = table.select(REPORT_SELECT).is("deleted_at", null);
+
+  query = applyActionNotesFilters(query, {
+    ...validatedFilters.filters,
+    limit,
+    offset,
+    page,
+  });
+
+  const { data, error } = await query
+    .order("created_at", { ascending: false })
+    .range(rangeStart, rangeEnd);
+
+  if (error) {
+    console.error("[ACTION_NOTES_REPORT_LIST_FAILED]", error.message);
+    return {
+      ok: false,
+      status: isPermissionError(error) ? 403 : 500,
+      message: isPermissionError(error)
+        ? "권한이 없습니다."
+        : "관리 액션 메모를 조회하는 중 오류가 발생했습니다.",
+    };
+  }
+
+  return {
+    ok: true,
+    data: ((data ?? []) as unknown) as CoachActionNoteReportItem[],
+    pagination: {
+      limit,
+      offset: rangeStart,
+      page,
+    },
   };
 }
 

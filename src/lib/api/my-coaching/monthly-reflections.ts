@@ -93,7 +93,10 @@ type MonthlyReflectionsSelectQuery = PromiseLike<{
   error: QueryError | null;
 }> & {
   eq: (column: string, value: string | number) => MonthlyReflectionsSelectQuery;
+  ilike: (column: string, value: string) => MonthlyReflectionsSelectQuery;
   is: (column: "deleted_at", value: null) => MonthlyReflectionsSelectQuery;
+  limit: (count: number) => MonthlyReflectionsSelectQuery;
+  or: (filters: string) => MonthlyReflectionsSelectQuery;
   order: (
     column: "year" | "month" | "created_at",
     options: { ascending: boolean },
@@ -128,6 +131,7 @@ type MonthlyReflectionsClient = {
 
 const SAFE_SELECT =
   "id, year, month, summary, growth_points, difficulty, next_month_plan, visibility, shared_with_coach, status, submitted_at, reviewed_at, created_at, updated_at";
+const MAX_RECORDS_LIMIT = 500;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_TEXT_LENGTH = 4000;
@@ -167,6 +171,19 @@ function normalizeYear(value: unknown) {
 function normalizeMonth(value: unknown) {
   const month = normalizeInteger(value);
   return month !== null && month >= 1 && month <= 12 ? month : null;
+}
+
+function normalizePositiveInteger(value: string | null) {
+  const numeric = Number(value);
+  return Number.isInteger(numeric) && numeric > 0
+    ? Math.min(numeric, MAX_RECORDS_LIMIT)
+    : null;
+}
+
+function buildIlikePattern(value: string | null) {
+  const trimmed = value?.trim();
+  if (!trimmed || /[(),]/.test(trimmed)) return null;
+  return `%${trimmed.replace(/[\\%_]/g, (match) => `\\${match}`)}%`;
 }
 
 function normalizeNullableText(value: unknown, maxLength: number) {
@@ -354,6 +371,9 @@ export async function getMonthlyReflections(
   const yearParam = searchParams.get("year");
   const monthParam = searchParams.get("month");
   const status = searchParams.get("status");
+  const visibility = searchParams.get("visibility");
+  const search = searchParams.get("q");
+  const limit = normalizePositiveInteger(searchParams.get("limit"));
   const year = yearParam ? normalizeYear(yearParam) : null;
   const month = monthParam ? normalizeMonth(monthParam) : null;
 
@@ -366,6 +386,14 @@ export async function getMonthlyReflections(
   }
 
   if (status && !isAllowedValue(status, MONTHLY_REFLECTION_STATUSES)) {
+    return {
+      ok: false,
+      status: 400,
+      message: "입력값을 확인해 주세요.",
+    };
+  }
+
+  if (visibility && !isAllowedValue(visibility, MONTHLY_REFLECTION_VISIBILITIES)) {
     return {
       ok: false,
       status: 400,
@@ -392,10 +420,32 @@ export async function getMonthlyReflections(
     query = query.eq("status", status);
   }
 
-  const { data, error } = await query
+  if (visibility) {
+    query = query.eq("visibility", visibility);
+  }
+
+  const searchPattern = buildIlikePattern(search);
+  if (searchPattern) {
+    query = query.or(
+      [
+        `summary.ilike.${searchPattern}`,
+        `growth_points.ilike.${searchPattern}`,
+        `difficulty.ilike.${searchPattern}`,
+        `next_month_plan.ilike.${searchPattern}`,
+      ].join(","),
+    );
+  }
+
+  let orderedQuery = query
     .order("year", { ascending: false })
     .order("month", { ascending: false })
     .order("created_at", { ascending: false });
+
+  if (limit) {
+    orderedQuery = orderedQuery.limit(limit);
+  }
+
+  const { data, error } = await orderedQuery;
 
   if (error) {
     console.error("[MONTHLY_REFLECTION_LIST_FAILED]", error.message);

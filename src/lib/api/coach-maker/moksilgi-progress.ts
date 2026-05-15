@@ -16,6 +16,7 @@ const BROAD_ACCESS_ROLES = new Set<UserRole>([
   "country_admin",
   "super_admin",
 ]);
+const MAX_DB_PREFILTER_PROFILE_IDS = 200;
 
 type ServiceSupabaseClient = NonNullable<
   ReturnType<typeof createSupabaseServiceClient>["client"]
@@ -56,7 +57,6 @@ type PlanRow = Pick<
   | "generation_label"
   | "region_name"
   | "team_name"
-  | "deleted_at"
   | "updated_at"
 >;
 type SummaryRow = Pick<
@@ -228,6 +228,50 @@ function safeText(value: string | null | undefined) {
   return trimmed && trimmed.length > 0 ? trimmed : null;
 }
 
+function escapeIlikePattern(value: string) {
+  return value.replace(/[\\%_]/g, (match) => `\\${match}`);
+}
+
+function buildIlikePattern(value: string | null | undefined) {
+  const normalized = safeText(value);
+  return normalized ? `%${escapeIlikePattern(normalized)}%` : null;
+}
+
+function buildPostgrestOrIlikePattern(value: string | null | undefined) {
+  const normalized = safeText(value);
+  if (!normalized || /[(),]/.test(normalized)) return null;
+  return `%${escapeIlikePattern(normalized)}%`;
+}
+
+function profileIdCondition(profileIds: string[]) {
+  return `profile_id.in.(${profileIds.join(",")})`;
+}
+
+function columnOrProfileCondition(
+  column: string,
+  pattern: string,
+  profileIds: string[] | null,
+) {
+  const conditions = [`${column}.ilike.${pattern}`];
+
+  if (profileIds && profileIds.length > 0) {
+    conditions.push(profileIdCondition(profileIds));
+  }
+
+  return conditions.join(",");
+}
+
+function parseGenerationFilter(value: string | null | undefined) {
+  const normalized = safeText(value);
+  if (!normalized) return null;
+
+  const match = normalized.match(/\d+/);
+  if (!match) return null;
+
+  const generation = Number.parseInt(match[0], 10);
+  return Number.isInteger(generation) && generation > 0 ? generation : null;
+}
+
 function safeNumber(value: number | null | undefined) {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
@@ -238,6 +282,122 @@ function uniqueNonNull(values: Array<string | null | undefined>) {
 
 function mapById<TRow extends { id: string }>(rows: TRow[]) {
   return new Map(rows.map((row) => [row.id, row]));
+}
+
+function limitedProfileIds(rows: ProfileIdRow[] | null) {
+  if (!rows) return [];
+  if (rows.length > MAX_DB_PREFILTER_PROFILE_IDS) return null;
+  return rows.map((row) => row.id);
+}
+
+async function getProfileIdsBySearch(
+  serviceClient: ServiceSupabaseClient,
+  search: string | null | undefined,
+) {
+  const pattern = buildPostgrestOrIlikePattern(search);
+  if (!pattern) return null;
+
+  const { data, error } = await serviceClient
+    .from("profiles")
+    .select("id")
+    .or(
+      [
+        `display_name.ilike.${pattern}`,
+        `full_name.ilike.${pattern}`,
+        `email.ilike.${pattern}`,
+      ].join(","),
+    )
+    .is("deleted_at", null)
+    .limit(MAX_DB_PREFILTER_PROFILE_IDS + 1);
+
+  if (error) {
+    console.error("[COACH_MAKER_MOKSILGI_PROGRESS_SEARCH_PREFILTER_FAILED]", error);
+    return null;
+  }
+
+  return limitedProfileIds((data ?? []) as ProfileIdRow[]);
+}
+
+async function getProfileIdsByGeneration(
+  serviceClient: ServiceSupabaseClient,
+  generationLabel: string | null | undefined,
+) {
+  const generation = parseGenerationFilter(generationLabel);
+  if (!generation) return null;
+
+  const { data, error } = await serviceClient
+    .from("profiles")
+    .select("id")
+    .eq("generation_number", generation)
+    .is("deleted_at", null)
+    .limit(MAX_DB_PREFILTER_PROFILE_IDS + 1);
+
+  if (error) {
+    console.error("[COACH_MAKER_MOKSILGI_PROGRESS_GENERATION_PREFILTER_FAILED]", error);
+    return null;
+  }
+
+  return limitedProfileIds((data ?? []) as ProfileIdRow[]);
+}
+
+async function getProfileIdsByRegionName(
+  serviceClient: ServiceSupabaseClient,
+  regionName: string | null | undefined,
+) {
+  const pattern = buildIlikePattern(regionName);
+  if (!pattern) return null;
+
+  const { data: regions, error: regionsError } = await serviceClient
+    .from("regions")
+    .select("id")
+    .ilike("name", pattern)
+    .limit(MAX_DB_PREFILTER_PROFILE_IDS + 1);
+
+  if (regionsError) {
+    console.error("[COACH_MAKER_MOKSILGI_PROGRESS_REGION_PREFILTER_FAILED]", regionsError);
+    return null;
+  }
+
+  const regionIds = uniqueNonNull(
+    ((regions ?? []) as Array<{ id: string }>).map((region) => region.id),
+  );
+  if (regionIds.length === 0) return [];
+  if (regionIds.length > MAX_DB_PREFILTER_PROFILE_IDS) return null;
+
+  const { data: profiles, error: profilesError } = await serviceClient
+    .from("profiles")
+    .select("id")
+    .in("region_id", regionIds)
+    .is("deleted_at", null)
+    .limit(MAX_DB_PREFILTER_PROFILE_IDS + 1);
+
+  if (profilesError) {
+    console.error(
+      "[COACH_MAKER_MOKSILGI_PROGRESS_REGION_PROFILE_PREFILTER_FAILED]",
+      profilesError,
+    );
+    return null;
+  }
+
+  return limitedProfileIds((profiles ?? []) as ProfileIdRow[]);
+}
+
+async function buildDbPrefilters(
+  serviceClient: ServiceSupabaseClient,
+  filters: CoachMakerMoksilgiProgressFilters,
+) {
+  const [searchProfileIds, generationProfileIds, regionProfileIds] =
+    await Promise.all([
+      getProfileIdsBySearch(serviceClient, filters.search),
+      getProfileIdsByGeneration(serviceClient, filters.generationLabel),
+      getProfileIdsByRegionName(serviceClient, filters.regionName),
+    ]);
+
+  return {
+    searchProfileIds,
+    generationProfileIds,
+    regionProfileIds,
+  };
 }
 
 function average(values: number[]) {
@@ -624,16 +784,61 @@ export async function getCoachMakerMoksilgiProgress(
     activeRelationships = (relationships ?? []) as RelationshipRow[];
   }
 
+  const dbPrefilters = await buildDbPrefilters(serviceClient, filters);
+  const teamNamePattern = buildIlikePattern(filters.teamName);
+  const roleLabelPattern = buildIlikePattern(filters.roleLabel);
+  const regionNamePattern = buildPostgrestOrIlikePattern(filters.regionName);
+  const generationLabelPattern = buildPostgrestOrIlikePattern(filters.generationLabel);
+  const searchPattern = buildPostgrestOrIlikePattern(filters.search);
+
   let plansQuery = serviceClient
     .from("moksilgi_plans")
     .select(
-      "id, profile_id, author_name, role_label, generation_label, region_name, team_name, deleted_at, updated_at",
+      "id, profile_id, author_name, role_label, generation_label, region_name, team_name, updated_at",
     )
     .is("deleted_at", null)
     .order("updated_at", { ascending: false });
 
   if (accessibleProfileIds) {
     plansQuery = plansQuery.in("profile_id", accessibleProfileIds);
+  }
+
+  if (teamNamePattern) {
+    plansQuery = plansQuery.ilike("team_name", teamNamePattern);
+  }
+
+  if (roleLabelPattern) {
+    plansQuery = plansQuery.ilike("role_label", roleLabelPattern);
+  }
+
+  if (regionNamePattern && dbPrefilters.regionProfileIds !== null) {
+    plansQuery = plansQuery.or(
+      columnOrProfileCondition(
+        "region_name",
+        regionNamePattern,
+        dbPrefilters.regionProfileIds,
+      ),
+    );
+  }
+
+  if (generationLabelPattern && dbPrefilters.generationProfileIds !== null) {
+    plansQuery = plansQuery.or(
+      columnOrProfileCondition(
+        "generation_label",
+        generationLabelPattern,
+        dbPrefilters.generationProfileIds,
+      ),
+    );
+  }
+
+  if (searchPattern && dbPrefilters.searchProfileIds !== null) {
+    plansQuery = plansQuery.or(
+      columnOrProfileCondition(
+        "author_name",
+        searchPattern,
+        dbPrefilters.searchProfileIds,
+      ),
+    );
   }
 
   const { data: plans, error: plansError } = await plansQuery;

@@ -27,6 +27,11 @@ export type OrganizationDefaultRoleSettingsItem = {
   policy: OrganizationDefaultInvitationRolePolicy;
 };
 
+export type InvitationOrganizationDefaultRoleOption = Pick<
+  OrganizationDefaultRoleSettingsItem,
+  "organization_id" | "organization_name" | "country_name" | "policy"
+>;
+
 export type GlobalSystemSettings = {
   default_locale: SystemDefaultLocale;
   default_country_id: string | null;
@@ -58,6 +63,12 @@ type RawOrganization = {
   name: string;
   is_active: boolean | null;
   deleted_at: string | null;
+};
+
+type RawInvitationOrganization = {
+  id: string;
+  country_id: string;
+  name: string;
 };
 
 type RawCountry = {
@@ -306,6 +317,177 @@ export async function updateGlobalSystemSettings(
 
 export const FALLBACK_INVITATION_EXPIRES_IN_DAYS =
   DEFAULT_GLOBAL_SYSTEM_SETTINGS.invitation_expires_in_days;
+
+export async function getInvitationExpiresInDaysSetting(): Promise<{
+  expiresInDays: number;
+  error: string | null;
+}> {
+  let supabase: DynamicSupabaseClient;
+  try {
+    supabase = getDynamicClient();
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "초대 만료 설정을 불러오지 못했습니다.";
+
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[INVITATION_EXPIRES_SETTING_CLIENT_FAILED]", message);
+    }
+
+    return {
+      expiresInDays: FALLBACK_INVITATION_EXPIRES_IN_DAYS,
+      error: message,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("system_settings")
+    .select("value")
+    .eq("scope_type", "global")
+    .is("scope_id", null)
+    .eq("key", "invitation_expires_in_days")
+    .maybeSingle();
+
+  if (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[INVITATION_EXPIRES_SETTING_FAILED]", error.message);
+    }
+
+    return {
+      expiresInDays: FALLBACK_INVITATION_EXPIRES_IN_DAYS,
+      error: error.message,
+    };
+  }
+
+  const value = (data as { value?: unknown } | null)?.value;
+  const days = isRecord(value) ? value.days : null;
+
+  return {
+    expiresInDays:
+      typeof days === "number" &&
+      Number.isInteger(days) &&
+      days >= 1 &&
+      days <= 30
+        ? days
+        : FALLBACK_INVITATION_EXPIRES_IN_DAYS,
+    error: null,
+  };
+}
+
+export async function getInvitationOrganizationDefaultRoleOptions(): Promise<{
+  organizations: InvitationOrganizationDefaultRoleOption[];
+  error: string | null;
+}> {
+  let supabase: DynamicSupabaseClient;
+  try {
+    supabase = getDynamicClient();
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "조직별 기본 권한 설정을 불러오지 못했습니다.";
+
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[INVITATION_ORGANIZATION_OPTIONS_CLIENT_FAILED]", message);
+    }
+
+    return {
+      organizations: [],
+      error: message,
+    };
+  }
+
+  const { data: organizationsData, error: organizationsError } = await supabase
+    .from("organizations")
+    .select("id,country_id,name")
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .order("name", { ascending: true });
+
+  if (organizationsError) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        "[INVITATION_ORGANIZATION_OPTIONS_FAILED]",
+        organizationsError.message,
+      );
+    }
+
+    return {
+      organizations: [],
+      error: "조직 목록을 불러오지 못했습니다.",
+    };
+  }
+
+  const organizations = Array.from(
+    new Map(
+      ((organizationsData ?? []) as RawInvitationOrganization[]).map(
+        (organization) => [organization.id, organization],
+      ),
+    ).values(),
+  );
+  if (organizations.length === 0) {
+    return {
+      organizations: [],
+      error: null,
+    };
+  }
+
+  const countryIds = Array.from(
+    new Set(organizations.map((organization) => organization.country_id)),
+  );
+  const organizationIds = organizations.map((organization) => organization.id);
+
+  const [{ data: countriesData, error: countriesError }, { data: settingsData, error: settingsError }] =
+    await Promise.all([
+      supabase.from("countries").select("id,name").in("id", countryIds),
+      supabase
+        .from("system_settings")
+        .select("scope_id,value")
+        .eq("scope_type", "organization")
+        .in("scope_id", organizationIds)
+        .eq("key", ORGANIZATION_DEFAULT_INVITATION_ROLE_POLICY_KEY),
+    ]);
+
+  if (countriesError || settingsError) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[INVITATION_ORGANIZATION_OPTIONS_LOOKUP_FAILED]", {
+        countries: countriesError?.message,
+        settings: settingsError?.message,
+      });
+    }
+
+    return {
+      organizations: [],
+      error: "조직별 기본 권한 설정을 불러오지 못했습니다.",
+    };
+  }
+
+  const countryMap = new Map(
+    ((countriesData ?? []) as RawCountry[]).map((country) => [
+      country.id,
+      country.name,
+    ]),
+  );
+  const settingMap = new Map(
+    ((settingsData ?? []) as RawOrganizationSetting[])
+      .filter((setting) => typeof setting.scope_id === "string")
+      .map((setting) => [
+        setting.scope_id as string,
+        parseOrganizationDefaultInvitationRolePolicy(setting.value),
+      ]),
+  );
+
+  return {
+    organizations: organizations.map((organization) => ({
+      organization_id: organization.id,
+      organization_name: organization.name,
+      country_name: countryMap.get(organization.country_id) ?? "미지정",
+      policy:
+        settingMap.get(organization.id) ??
+        DEFAULT_ORGANIZATION_INVITATION_ROLE_POLICY,
+    })),
+    error: null,
+  };
+}
 
 export async function getOrganizationDefaultRoleSettings(): Promise<{
   organizations: OrganizationDefaultRoleSettingsItem[];

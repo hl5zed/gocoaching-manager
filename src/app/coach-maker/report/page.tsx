@@ -10,12 +10,12 @@ import {
   type CoachMakerCoachStatsRow,
 } from "@/lib/api/coach-maker/coach-stats";
 import {
-  getCoachActionNotes,
+  getCoachActionNotesForReport,
   type ActionNoteActionType,
   type ActionNotePriority,
   type ActionNoteStatus,
   type ActionNoteTargetType,
-  type CoachActionNoteItem,
+  type CoachActionNoteReportItem,
 } from "@/lib/api/coach/action-notes";
 import { PrintReportButton } from "./PrintReportButton";
 import { ReportFilters } from "./ReportFilters";
@@ -239,7 +239,7 @@ function parseReportDate(value: string | null) {
 }
 
 function isWithinCreatedAtRange(
-  note: CoachActionNoteItem,
+  note: CoachActionNoteReportItem,
   from: string | null,
   to: string | null,
 ) {
@@ -261,7 +261,7 @@ function filterRowsByTeam(
 }
 
 function filterNotesForReport(
-  notes: CoachActionNoteItem[],
+  notes: CoachActionNoteReportItem[],
   team: string | null,
   from: string | null,
   to: string | null,
@@ -273,7 +273,7 @@ function filterNotesForReport(
 
 function collectTeamOptions(
   rows: CoachMakerMoksilgiProgressRow[],
-  notes: CoachActionNoteItem[],
+  notes: CoachActionNoteReportItem[],
 ) {
   const teams = new Set<string>();
   let hasUnassigned = false;
@@ -396,21 +396,21 @@ function buildReportAutoSummary({
   return `${periodLabel}, ${teamLabel}으로 전체 ${totalCount}명 중 ${participantCount}명이 목실기 기록에 참여했으며, 평균 성취율은 ${formatPercent(safeAverage)}입니다. 현재 관심이 필요한 대상자는 ${attentionCount}명이며, 코치의 후속 관리가 필요합니다.`;
 }
 
-function isIncomplete(note: CoachActionNoteItem) {
+function isIncomplete(note: CoachActionNoteReportItem) {
   return note.status !== "completed" && note.status !== "archived";
 }
 
-function isOverdue(note: CoachActionNoteItem) {
+function isOverdue(note: CoachActionNoteReportItem) {
   const dueDate = parseDueDate(note.due_date);
   return isIncomplete(note) && dueDate !== null && dueDate.getTime() < dateOnly(new Date()).getTime();
 }
 
-function isDueToday(note: CoachActionNoteItem) {
+function isDueToday(note: CoachActionNoteReportItem) {
   const dueDate = parseDueDate(note.due_date);
   return isIncomplete(note) && dueDate !== null && dueDate.getTime() === dateOnly(new Date()).getTime();
 }
 
-function isDueThisWeek(note: CoachActionNoteItem) {
+function isDueThisWeek(note: CoachActionNoteReportItem) {
   const dueDate = parseDueDate(note.due_date);
   if (!isIncomplete(note) || dueDate === null) return false;
 
@@ -443,6 +443,26 @@ function truncateText(value: string, maxLength = 120) {
   const normalized = value.replace(/\s+/g, " ").trim();
   if (normalized.length <= maxLength) return normalized;
   return `${normalized.slice(0, maxLength)}...`;
+}
+
+function buildActionNotesReportParams({
+  from,
+  team,
+  to,
+}: {
+  from: string | null;
+  team: string | null;
+  to: string | null;
+}) {
+  const params = new URLSearchParams({
+    limit: "1000",
+  });
+
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
+  if (team && team !== UNASSIGNED_LABEL) params.set("team_name", team);
+
+  return params;
 }
 
 function SummaryBox({
@@ -504,7 +524,13 @@ export default async function CoachMakerReportPage({
       search: null,
       teamName: null,
     }),
-    getCoachActionNotes(new URLSearchParams()),
+    getCoachActionNotesForReport(
+      buildActionNotesReportParams({
+        from: selectedFrom,
+        team: selectedTeam,
+        to: selectedTo,
+      }),
+    ),
     getCoachMakerCoachStats(),
   ]);
 

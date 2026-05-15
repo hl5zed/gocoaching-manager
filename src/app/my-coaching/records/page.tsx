@@ -20,6 +20,8 @@ import {
 import { PrintRecordsButton } from "./PrintRecordsButton";
 
 export const dynamic = "force-dynamic";
+const RECENT_RECORDS_LIMIT = 3;
+const RECORDS_PAGE_LIST_LIMIT = 200;
 
 type RecordTypeFilter = "all" | "daily" | "weekly" | "monthly";
 type StatusFilter = "all" | "draft" | "submitted" | "reviewed" | "unknown";
@@ -482,12 +484,52 @@ export default async function MyCoachingRecordsPage({
   const sortOption = normalizeSort(
     normalizeParam(resolvedSearchParams.sort, "newest"),
   );
+  const hasActiveSearchOrFilter =
+    normalizeSearch(query).length > 0 ||
+    typeFilter !== "all" ||
+    statusFilter !== "all" ||
+    visibilityFilter !== "all" ||
+    sortOption !== "newest";
+  const recordsLimit = hasActiveSearchOrFilter
+    ? RECORDS_PAGE_LIST_LIMIT
+    : RECENT_RECORDS_LIMIT;
+  const buildRecordParams = (recordType: RecordType) => {
+    const params = new URLSearchParams({
+      limit: String(recordsLimit),
+    });
 
-  const emptyParams = new URLSearchParams();
+    if (query.trim().length > 0) {
+      params.set("q", query.trim());
+    }
+
+    if (
+      statusFilter !== "all" &&
+      statusFilter !== "unknown" &&
+      (recordType !== "weekly" || statusFilter !== "reviewed")
+    ) {
+      params.set("status", statusFilter);
+    }
+
+    if (
+      visibilityFilter === "private" &&
+      (recordType === "daily" || recordType === "monthly")
+    ) {
+      params.set("visibility", "private");
+    }
+
+    return params;
+  };
   const [dailyResult, weeklyResult, monthlyResult] = await Promise.all([
-    getDailyRecords(emptyParams),
-    getRecentMyWeeklyLogs({ limit: null }),
-    getMonthlyReflections(emptyParams),
+    getDailyRecords(buildRecordParams("daily")),
+    getRecentMyWeeklyLogs({
+      limit: recordsLimit,
+      search: query,
+      status:
+        statusFilter !== "all" && statusFilter !== "unknown"
+          ? statusFilter
+          : null,
+    }),
+    getMonthlyReflections(buildRecordParams("monthly")),
   ]);
   const dailyRecords = dailyResult.ok ? dailyResult.data : [];
   const weeklyLogs = weeklyResult.ok ? weeklyResult.data : [];
@@ -644,12 +686,6 @@ export default async function MyCoachingRecordsPage({
     type: typeFilter,
     visibility: visibilityFilter,
   });
-  const hasActiveSearchOrFilter =
-    normalizeSearch(query).length > 0 ||
-    typeFilter !== "all" ||
-    statusFilter !== "all" ||
-    visibilityFilter !== "all" ||
-    sortOption !== "newest";
   const dailyFilteredRecords = filteredRecords.filter(
     (record) => record.type === "daily",
   );

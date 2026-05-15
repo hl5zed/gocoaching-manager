@@ -17,7 +17,7 @@ import {
   isValidUuid,
   normalizeText,
 } from "@/lib/validation/common";
-import type { OrganizationDefaultRoleSettingsItem } from "@/lib/api/admin/system-settings";
+import type { InvitationOrganizationDefaultRoleOption } from "@/lib/api/admin/system-settings";
 
 type CreateInvitationSuccess = {
   invitation_id: string;
@@ -85,7 +85,7 @@ export function AdminInvitationCreateForm({
   organizations = [],
 }: {
   defaultExpiresInDays?: number;
-  organizations?: OrganizationDefaultRoleSettingsItem[];
+  organizations?: InvitationOrganizationDefaultRoleOption[];
 }) {
   const [email, setEmail] = useState("");
   const [invitedRole, setInvitedRole] = useState<UserRole>("coachee");

@@ -12,6 +12,7 @@ import type {
 } from "@/types/database";
 
 const MAX_TEXT_LENGTH = 2000;
+const MAX_RECENT_WEEKLY_LOGS_LIMIT = 500;
 
 type WeeklyLogRole = {
   role: UserRole;
@@ -95,6 +96,12 @@ type WeeklyLogsListQuery = PromiseLike<{
   data: WeeklyLogRecord[] | null;
   error: PostgrestErrorLike | null;
 }> & {
+  eq: (
+    column: "status",
+    value: WeeklyLogStatus,
+  ) => WeeklyLogsListQuery;
+  limit: (count: number) => WeeklyLogsListQuery;
+  or: (filters: string) => WeeklyLogsListQuery;
   order: (
     column: "week_start" | "created_at",
     options: { ascending: boolean },
@@ -339,6 +346,22 @@ function normalizeIntent(value: unknown): WeeklyLogStatus | null {
   }
 
   return null;
+}
+
+function normalizePositiveInteger(value: number | null | undefined) {
+  return typeof value === "number" && Number.isInteger(value) && value > 0
+    ? Math.min(value, MAX_RECENT_WEEKLY_LOGS_LIMIT)
+    : null;
+}
+
+function normalizeOptionalWeeklyStatus(value: string | null | undefined) {
+  return value === "draft" || value === "submitted" ? value : null;
+}
+
+function buildIlikePattern(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed || /[(),]/.test(trimmed)) return null;
+  return `%${trimmed.replace(/[\\%_]/g, (match) => `\\${match}`)}%`;
 }
 
 function createDateOnlyString(date: Date) {
@@ -1209,8 +1232,12 @@ export async function removeMyWeeklyLog(input: {
 
 export async function getRecentMyWeeklyLogs({
   limit = 3,
+  search = null,
+  status = null,
 }: {
   limit?: number | null;
+  search?: string | null;
+  status?: string | null;
 } = {}): Promise<RecentMyWeeklyLogsResult> {
   const me = await getCurrentProfileAndRoles();
 
@@ -1255,14 +1282,42 @@ export async function getRecentMyWeeklyLogs({
   }
 
   const weeklyLogsListTable = createWeeklyLogsListTable(serviceClient);
-  const { data, error } = await weeklyLogsListTable
+  let query = weeklyLogsListTable
     .select(
       "id, relationship_id, coachee_profile_id, week_start, week_end, gratitude, prayer_request, progress_summary, difficulty, message_to_coach, status, version, submitted_at, created_at, updated_at",
     )
     .eq("coachee_profile_id", me.data.profile.id)
-    .is("deleted_at", null)
+    .is("deleted_at", null);
+  const normalizedStatus = normalizeOptionalWeeklyStatus(status);
+  const searchPattern = buildIlikePattern(search);
+  const normalizedLimit =
+    limit === null ? MAX_RECENT_WEEKLY_LOGS_LIMIT : normalizePositiveInteger(limit);
+
+  if (normalizedStatus) {
+    query = query.eq("status", normalizedStatus);
+  }
+
+  if (searchPattern) {
+    query = query.or(
+      [
+        `gratitude.ilike.${searchPattern}`,
+        `prayer_request.ilike.${searchPattern}`,
+        `progress_summary.ilike.${searchPattern}`,
+        `difficulty.ilike.${searchPattern}`,
+        `message_to_coach.ilike.${searchPattern}`,
+      ].join(","),
+    );
+  }
+
+  let orderedQuery = query
     .order("week_start", { ascending: false })
     .order("created_at", { ascending: false });
+
+  if (normalizedLimit) {
+    orderedQuery = orderedQuery.limit(normalizedLimit);
+  }
+
+  const { data, error } = await orderedQuery;
 
   if (error) {
     logServerError(
@@ -1281,8 +1336,6 @@ export async function getRecentMyWeeklyLogs({
 
   return {
     ok: true,
-    data: (limit === null ? (data ?? []) : (data ?? []).slice(0, limit)).map(
-      mapWeeklyLog,
-    ),
+    data: (data ?? []).map(mapWeeklyLog),
   };
 }

@@ -821,54 +821,14 @@ export async function getAdminUsers({
   const client = serviceClient;
   const from = (safePage - 1) * safeLimit;
   const to = from + safeLimit;
-  let roleFilteredProfileIds: string[] | null = null;
-
-  if (role !== "all") {
-    const { data: matchingRoles, error: matchingRolesError } = await client
-      .from("user_roles")
-      .select("profile_id")
-      .eq("role", role)
-      .eq("status", "active")
-      .eq("is_active", true)
-      .is("deleted_at", null);
-
-    if (matchingRolesError) {
-      console.error("[ADMIN_USERS_ROLE_FILTER] role lookup failed");
-      return {
-        users: [],
-        summary: createEmptySummary(),
-        error: "Unable to load users right now.",
-        page: safePage,
-        limit: safeLimit,
-        hasNext: false,
-      };
-    }
-
-    roleFilteredProfileIds = Array.from(
-      new Set(
-        ((matchingRoles ?? []) as Array<{ profile_id: string | null }>)
-          .map((row) => row.profile_id)
-          .filter((value): value is string => typeof value === "string"),
-      ),
-    );
-
-    if (roleFilteredProfileIds.length === 0) {
-      return {
-        users: [],
-        summary: createEmptySummary(),
-        error: null,
-        page: safePage,
-        limit: safeLimit,
-        hasNext: false,
-      };
-    }
-  }
+  const profileSelect =
+    role === "all"
+      ? "id, auth_user_id, full_name, display_name, email, phone, country_id, region_id, organization_id, church_id, group_id, ministry_position, primary_role, generation_number, status, created_at, updated_at"
+      : "id, auth_user_id, full_name, display_name, email, phone, country_id, region_id, organization_id, church_id, group_id, ministry_position, primary_role, generation_number, status, created_at, updated_at, user_roles!inner(id)";
 
   let profilesQuery = client
     .from("profiles")
-    .select(
-      "id, auth_user_id, full_name, display_name, email, phone, country_id, region_id, organization_id, church_id, group_id, ministry_position, primary_role, generation_number, status, created_at, updated_at",
-    )
+    .select(profileSelect)
     .is("deleted_at", null);
 
   if (status !== "all") {
@@ -879,8 +839,12 @@ export async function getAdminUsers({
     profilesQuery = profilesQuery.or(buildProfileSearchFilter(q));
   }
 
-  if (roleFilteredProfileIds) {
-    profilesQuery = profilesQuery.in("id", roleFilteredProfileIds);
+  if (role !== "all") {
+    profilesQuery = profilesQuery
+      .eq("user_roles.role", role)
+      .eq("user_roles.status", "active")
+      .eq("user_roles.is_active", true)
+      .is("user_roles.deleted_at", null);
   }
 
   const summary = createEmptySummary();

@@ -95,9 +95,12 @@ type DailyRecordsSelectQuery = PromiseLike<{
   error: QueryError | null;
 }> & {
   eq: (column: string, value: string) => DailyRecordsSelectQuery;
+  ilike: (column: string, value: string) => DailyRecordsSelectQuery;
   is: (column: "deleted_at", value: null) => DailyRecordsSelectQuery;
   gte: (column: "record_date", value: string) => DailyRecordsSelectQuery;
+  limit: (count: number) => DailyRecordsSelectQuery;
   lte: (column: "record_date", value: string) => DailyRecordsSelectQuery;
+  or: (filters: string) => DailyRecordsSelectQuery;
   order: (
     column: "record_date" | "created_at",
     options: { ascending: boolean },
@@ -132,6 +135,7 @@ type DailyRecordsClient = {
 
 const SAFE_SELECT =
   "id, record_date, title, reflection, practice, prayer_request, visibility, shared_with_coach, status, submitted_at, created_at, updated_at";
+const MAX_RECORDS_LIMIT = 500;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_TITLE_LENGTH = 120;
@@ -157,6 +161,19 @@ function normalizeDate(value: unknown) {
 
   const trimmed = value.trim();
   return isValidDate(trimmed) ? trimmed : null;
+}
+
+function normalizePositiveInteger(value: string | null) {
+  const numeric = Number(value);
+  return Number.isInteger(numeric) && numeric > 0
+    ? Math.min(numeric, MAX_RECORDS_LIMIT)
+    : null;
+}
+
+function buildIlikePattern(value: string | null) {
+  const trimmed = value?.trim();
+  if (!trimmed || /[(),]/.test(trimmed)) return null;
+  return `%${trimmed.replace(/[\\%_]/g, (match) => `\\${match}`)}%`;
 }
 
 function normalizeNullableText(value: unknown, maxLength: number) {
@@ -316,6 +333,9 @@ export async function getDailyRecords(
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   const status = searchParams.get("status");
+  const visibility = searchParams.get("visibility");
+  const search = searchParams.get("q");
+  const limit = normalizePositiveInteger(searchParams.get("limit"));
 
   const normalizedDate = date ? normalizeDate(date) : null;
   const normalizedFrom = from ? normalizeDate(from) : null;
@@ -334,6 +354,14 @@ export async function getDailyRecords(
   }
 
   if (status && !isAllowedValue(status, DAILY_RECORD_STATUSES)) {
+    return {
+      ok: false,
+      status: 400,
+      message: "입력값을 확인해 주세요.",
+    };
+  }
+
+  if (visibility && !isAllowedValue(visibility, DAILY_RECORD_VISIBILITIES)) {
     return {
       ok: false,
       status: 400,
@@ -364,9 +392,31 @@ export async function getDailyRecords(
     query = query.eq("status", status);
   }
 
-  const { data, error } = await query
+  if (visibility) {
+    query = query.eq("visibility", visibility);
+  }
+
+  const searchPattern = buildIlikePattern(search);
+  if (searchPattern) {
+    query = query.or(
+      [
+        `title.ilike.${searchPattern}`,
+        `reflection.ilike.${searchPattern}`,
+        `practice.ilike.${searchPattern}`,
+        `prayer_request.ilike.${searchPattern}`,
+      ].join(","),
+    );
+  }
+
+  let orderedQuery = query
     .order("record_date", { ascending: false })
     .order("created_at", { ascending: false });
+
+  if (limit) {
+    orderedQuery = orderedQuery.limit(limit);
+  }
+
+  const { data, error } = await orderedQuery;
 
   if (error) {
     console.error("[DAILY_RECORD_LIST_FAILED]", error.message);

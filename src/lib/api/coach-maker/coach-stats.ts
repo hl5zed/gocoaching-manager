@@ -5,6 +5,7 @@ import type {
   ProfileRow,
   RelationshipType,
   ScopeType,
+  Tables,
   UserRole,
 } from "@/types/database";
 
@@ -51,8 +52,6 @@ type WeeklyLogStatsRow = {
   id: string;
   relationship_id: string;
   coachee_profile_id: string;
-  week_start: string;
-  week_end: string;
   status: string;
   submitted_at: string | null;
 };
@@ -61,8 +60,6 @@ type SharedDailyStatsRow = {
   id: string;
   profile_id: string;
   relationship_id: string | null;
-  status: string;
-  record_date: string;
   shared_with_coach: boolean;
   visibility: string;
 };
@@ -71,9 +68,6 @@ type SharedMonthlyStatsRow = {
   id: string;
   profile_id: string;
   relationship_id: string | null;
-  year: number;
-  month: number;
-  status: string;
   shared_with_coach: boolean;
   visibility: string;
 };
@@ -81,9 +75,21 @@ type SharedMonthlyStatsRow = {
 type FeedbackStatsRow = {
   weekly_log_id: string;
   relationship_id: string;
-  coach_profile_id: string;
-  coachee_profile_id: string;
 };
+
+type MoksilgiDashboardPlanRow = Pick<
+  Tables<"moksilgi_plans">,
+  "id" | "profile_id" | "author_name" | "region_name" | "team_name"
+>;
+type MoksilgiDashboardProfileRow = Pick<
+  ProfileRow,
+  "id" | "display_name" | "full_name" | "email" | "region_id"
+>;
+type MoksilgiDashboardRegionRow = Pick<Tables<"regions">, "id" | "name">;
+type MoksilgiDashboardSummaryRow = Pick<
+  Tables<"moksilgi_monthly_summaries">,
+  "plan_id" | "month" | "average_rate"
+>;
 
 export type CoachMakerCoachStatsRow = {
   coachId: string;
@@ -121,6 +127,29 @@ export type CoachMakerCoachStatsData = {
   scopeLabel: string;
 };
 
+export type CoachMakerMoksilgiDashboardAttentionRow = {
+  author_name: string | null;
+  display_name: string | null;
+  email: string | null;
+  full_name: string | null;
+  plan_id: string;
+  profile_id: string;
+  region_name: string | null;
+  team_name: string | null;
+};
+
+export type CoachMakerMoksilgiDashboardSummaryData = {
+  attentionCount: number;
+  attentionRows: Array<{
+    rate: number;
+    row: CoachMakerMoksilgiDashboardAttentionRow;
+  }>;
+  missingCount: number;
+  totalCount: number;
+  upToCurrentRate: number;
+  year: number;
+};
+
 type CoachMakerCoachStatsError = {
   code:
     | "UNAUTHORIZED"
@@ -141,6 +170,16 @@ export type GetCoachMakerCoachStatsResult =
       data: null;
       error: CoachMakerCoachStatsError;
 };
+
+export type GetCoachMakerMoksilgiDashboardSummaryResult =
+  | {
+      data: CoachMakerMoksilgiDashboardSummaryData;
+      error: null;
+    }
+  | {
+      data: null;
+      error: CoachMakerCoachStatsError;
+    };
 
 const COACH_MAKER_ACCESS_ROLES: UserRole[] = ["coach_maker", "super_admin"];
 const EMPTY_SUMMARY: CoachMakerCoachStatsSummary = {
@@ -191,10 +230,6 @@ function displayName(profile: ScopedProfileRow | null | undefined) {
 
 function isSubmittedWeeklyLog(log: WeeklyLogStatsRow) {
   return log.status === "submitted" || Boolean(log.submitted_at);
-}
-
-function isOverlappingWeek(log: WeeklyLogStatsRow, weekStart: string, weekEnd: string) {
-  return log.week_start <= weekEnd && log.week_end >= weekStart;
 }
 
 function getProfileScopeValue(profile: ScopedProfileRow | undefined, scopeType: ScopeType) {
@@ -291,6 +326,31 @@ function hasCoachMakerFullAccess(roles: CoachMakerRoleRow[]) {
 
 function uniqueSize(values: string[]) {
   return new Set(values).size;
+}
+
+function safeNumber(value: number | null | undefined) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function average(values: number[]) {
+  if (values.length === 0) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function getCurrentMonthCutoff(year: number) {
+  const today = new Date();
+
+  if (year < today.getFullYear()) return 12;
+  if (year > today.getFullYear()) return 0;
+  return today.getMonth() + 1;
+}
+
+function mapById<TRow extends { id: string }>(rows: TRow[]) {
+  return new Map(rows.map((row) => [row.id, row]));
+}
+
+function uniqueNonNull(values: Array<string | null | undefined>) {
+  return [...new Set(values.filter((value): value is string => Boolean(value)))];
 }
 
 async function getServiceClient():
@@ -514,19 +574,21 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
     await Promise.all([
       serviceClient
         .from("weekly_logs")
-        .select("id, relationship_id, coachee_profile_id, week_start, week_end, status, submitted_at")
+        .select("id, relationship_id, coachee_profile_id, status, submitted_at")
         .in("relationship_id", relationshipIds)
+        .lte("week_start", weekRange.end)
+        .gte("week_end", weekRange.start)
         .is("deleted_at", null),
       serviceClient
         .from("daily_records")
-        .select("id, profile_id, relationship_id, status, record_date, shared_with_coach, visibility")
+        .select("id, profile_id, relationship_id, shared_with_coach, visibility")
         .in("profile_id", coacheeIds)
         .eq("shared_with_coach", true)
         .eq("visibility", "coach")
         .is("deleted_at", null),
       serviceClient
         .from("monthly_reflections")
-        .select("id, profile_id, relationship_id, year, month, status, shared_with_coach, visibility")
+        .select("id, profile_id, relationship_id, shared_with_coach, visibility")
         .in("profile_id", coacheeIds)
         .eq("shared_with_coach", true)
         .eq("visibility", "coach")
@@ -580,15 +642,12 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
   const sharedDailyRecords = (dailyRecordsResult.data ?? []) as SharedDailyStatsRow[];
   const sharedMonthlyReflections =
     (monthlyReflectionsResult.data ?? []) as SharedMonthlyStatsRow[];
-  const submittedWeeklyLogs = weeklyLogs.filter(isSubmittedWeeklyLog);
-  const submittedThisWeekLogs = submittedWeeklyLogs.filter((log) =>
-    isOverlappingWeek(log, weekRange.start, weekRange.end),
-  );
-  const submittedWeeklyLogIds = submittedWeeklyLogs.map((log) => log.id);
+  const submittedThisWeekLogs = weeklyLogs.filter(isSubmittedWeeklyLog);
+  const submittedWeeklyLogIds = submittedThisWeekLogs.map((log) => log.id);
   const { data: feedbackRows, error: feedbackError } = submittedWeeklyLogIds.length
     ? await serviceClient
         .from("coach_feedback")
-        .select("weekly_log_id, relationship_id, coach_profile_id, coachee_profile_id")
+        .select("weekly_log_id, relationship_id")
         .in("weekly_log_id", submittedWeeklyLogIds)
         .is("deleted_at", null)
     : { data: [], error: null };
@@ -602,7 +661,7 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
 
   const feedbacks = (feedbackRows ?? []) as FeedbackStatsRow[];
   const feedbackLogIds = new Set(feedbacks.map((feedback) => feedback.weekly_log_id));
-  const feedbackPendingLogs = submittedWeeklyLogs.filter(
+  const feedbackPendingLogs = submittedThisWeekLogs.filter(
     (log) => !feedbackLogIds.has(log.id),
   );
   const assignedCoacheesByCoach = new Map<string, Set<string>>();
@@ -658,8 +717,9 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
   });
 
   feedbacks.forEach((feedback) => {
-    if (coachIds.includes(feedback.coach_profile_id)) {
-      addToCountMap(feedbackByCoach, feedback.coach_profile_id);
+    const relationship = relationshipById.get(feedback.relationship_id);
+    if (relationship) {
+      addToCountMap(feedbackByCoach, relationship.coach_profile_id);
     }
   });
 
@@ -728,6 +788,305 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
       },
       coaches,
       scopeLabel: buildScopeLabel(coachMakerRoles),
+    },
+    error: null,
+  };
+}
+
+export async function getCoachMakerMoksilgiDashboardSummary(
+  year = new Date().getFullYear(),
+): Promise<GetCoachMakerMoksilgiDashboardSummaryResult> {
+  const selectedYear =
+    Number.isInteger(year) && year >= 2000 && year <= 2100
+      ? year
+      : new Date().getFullYear();
+  const session = await getSession();
+
+  if (!session.user) {
+    return {
+      data: null,
+      error: {
+        code: "UNAUTHORIZED",
+        message: "로그인이 필요합니다.",
+      },
+    };
+  }
+
+  const serviceClientResult = await getServiceClient();
+
+  if (!serviceClientResult.ok) {
+    return { data: null, error: serviceClientResult.error };
+  }
+
+  const { serviceClient } = serviceClientResult;
+  const { data: profile, error: profileError } = await serviceClient
+    .from("profiles")
+    .select("id, display_name, full_name, email")
+    .eq("auth_user_id", session.user.id)
+    .is("deleted_at", null)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (profileError) {
+    logServerError(
+      "COACH_MAKER_MOKSILGI_DASHBOARD_PROFILE_LOOKUP_FAILED",
+      profileError.message ?? "Coach maker moksilgi dashboard profile lookup failed.",
+    );
+    return {
+      data: null,
+      error: {
+        code: "PROFILE_QUERY_FAILED",
+        message: "프로필을 조회하는 중 오류가 발생했습니다.",
+      },
+    };
+  }
+
+  if (!profile) {
+    return {
+      data: null,
+      error: {
+        code: "PROFILE_NOT_FOUND",
+        message: "아직 프로필이 생성되지 않았습니다.",
+      },
+    };
+  }
+
+  const currentProfile = profile as CurrentProfileRow;
+  const { data: roles, error: rolesError } = await serviceClient
+    .from("user_roles")
+    .select("role, scope_type, scope_id, status")
+    .eq("profile_id", currentProfile.id)
+    .in("role", COACH_MAKER_ACCESS_ROLES)
+    .eq("status", "active")
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+
+  if (rolesError) {
+    logServerError(
+      "COACH_MAKER_MOKSILGI_DASHBOARD_ROLES_LOOKUP_FAILED",
+      rolesError.message ?? "Coach maker moksilgi dashboard roles lookup failed.",
+    );
+    return {
+      data: null,
+      error: {
+        code: "ROLES_QUERY_FAILED",
+        message: "역할 정보를 조회하는 중 오류가 발생했습니다.",
+      },
+    };
+  }
+
+  const coachMakerRoles = (roles ?? []) as CoachMakerRoleRow[];
+
+  if (coachMakerRoles.length === 0) {
+    return {
+      data: null,
+      error: {
+        code: "ACCESS_DENIED",
+        message: "코치메이커 또는 최고관리자 권한이 필요합니다.",
+      },
+    };
+  }
+
+  const hasFullAccess = hasCoachMakerFullAccess(coachMakerRoles);
+  let accessibleProfileIds: string[] | null = null;
+
+  if (!hasFullAccess) {
+    const { data: relationships, error: relationshipsError } = await serviceClient
+      .from("coaching_relationships")
+      .select("coachee_profile_id")
+      .eq("coach_profile_id", currentProfile.id)
+      .eq("status", "active")
+      .is("deleted_at", null);
+
+    if (relationshipsError) {
+      logServerError(
+        "COACH_MAKER_MOKSILGI_DASHBOARD_RELATIONSHIPS_FETCH_FAILED",
+        relationshipsError.message ??
+          "Coach maker moksilgi dashboard relationships fetch failed.",
+      );
+      return {
+        data: null,
+        error: {
+          code: "COACH_STATS_FETCH_FAILED",
+          message: "코칭 관계를 조회하는 중 오류가 발생했습니다.",
+        },
+      };
+    }
+
+    accessibleProfileIds = uniqueNonNull(
+      ((relationships ?? []) as Array<{ coachee_profile_id: string | null }>).map(
+        (relationship) => relationship.coachee_profile_id,
+      ),
+    );
+
+    if (accessibleProfileIds.length === 0) {
+      return {
+        data: {
+          attentionCount: 0,
+          attentionRows: [],
+          missingCount: 0,
+          totalCount: 0,
+          upToCurrentRate: 0,
+          year: selectedYear,
+        },
+        error: null,
+      };
+    }
+  }
+
+  let plansQuery = serviceClient
+    .from("moksilgi_plans")
+    .select("id, profile_id, author_name, region_name, team_name")
+    .is("deleted_at", null)
+    .order("updated_at", { ascending: false });
+
+  if (accessibleProfileIds) {
+    plansQuery = plansQuery.in("profile_id", accessibleProfileIds);
+  }
+
+  const { data: plans, error: plansError } = await plansQuery;
+
+  if (plansError) {
+    logServerError(
+      "COACH_MAKER_MOKSILGI_DASHBOARD_PLANS_FETCH_FAILED",
+      plansError.message ?? "Coach maker moksilgi dashboard plans fetch failed.",
+    );
+    return {
+      data: null,
+      error: {
+        code: "COACH_STATS_FETCH_FAILED",
+        message: "목실기 요약을 불러오지 못했습니다.",
+      },
+    };
+  }
+
+  const planRows = (plans ?? []) as MoksilgiDashboardPlanRow[];
+  const planIds = planRows.map((plan) => plan.id);
+  const profileIds = uniqueNonNull(planRows.map((plan) => plan.profile_id));
+
+  const [profilesResult, summariesResult] = await Promise.all([
+    profileIds.length > 0
+      ? serviceClient
+          .from("profiles")
+          .select("id, display_name, full_name, email, region_id")
+          .in("id", profileIds)
+          .is("deleted_at", null)
+      : Promise.resolve({ data: [], error: null }),
+    planIds.length > 0
+      ? serviceClient
+          .from("moksilgi_monthly_summaries")
+          .select("plan_id, month, average_rate")
+          .in("plan_id", planIds)
+          .eq("year", selectedYear)
+          .is("deleted_at", null)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  if (profilesResult.error || summariesResult.error) {
+    const error = profilesResult.error ?? summariesResult.error;
+    logServerError(
+      "COACH_MAKER_MOKSILGI_DASHBOARD_SUMMARY_FETCH_FAILED",
+      error?.message ?? "Coach maker moksilgi dashboard summary fetch failed.",
+    );
+    return {
+      data: null,
+      error: {
+        code: "COACH_STATS_FETCH_FAILED",
+        message: "목실기 요약을 불러오지 못했습니다.",
+      },
+    };
+  }
+
+  const profileRows = (profilesResult.data ?? []) as MoksilgiDashboardProfileRow[];
+  const regionIds = uniqueNonNull(profileRows.map((profile) => profile.region_id));
+  const { data: regions, error: regionsError } = regionIds.length
+    ? await serviceClient.from("regions").select("id, name").in("id", regionIds)
+    : { data: [], error: null };
+
+  if (regionsError) {
+    logServerError(
+      "COACH_MAKER_MOKSILGI_DASHBOARD_REGIONS_FETCH_FAILED",
+      regionsError.message ?? "Coach maker moksilgi dashboard regions fetch failed.",
+    );
+    return {
+      data: null,
+      error: {
+        code: "COACH_STATS_FETCH_FAILED",
+        message: "소속 정보를 조회하는 중 오류가 발생했습니다.",
+      },
+    };
+  }
+
+  const profilesById = mapById(profileRows);
+  const regionsById = mapById((regions ?? []) as MoksilgiDashboardRegionRow[]);
+  const summariesByPlanId = new Map<string, MoksilgiDashboardSummaryRow[]>();
+
+  for (const summary of (summariesResult.data ?? []) as MoksilgiDashboardSummaryRow[]) {
+    const current = summariesByPlanId.get(summary.plan_id) ?? [];
+    current.push(summary);
+    summariesByPlanId.set(summary.plan_id, current);
+  }
+
+  const cutoff = getCurrentMonthCutoff(selectedYear);
+  const rows = planRows.map((plan) => {
+    const profile = profilesById.get(plan.profile_id);
+    const summaries = summariesByPlanId.get(plan.id) ?? [];
+    const monthRates = Array.from({ length: 12 }, (_, index) => {
+      const month = index + 1;
+      return safeNumber(
+        summaries.find((summary) => summary.month === month)?.average_rate,
+      );
+    });
+    const hasInput =
+      monthRates.some((rate) => rate > 0) || average(monthRates) > 0;
+    const currentRate =
+      cutoff === 0
+        ? null
+        : average(monthRates.slice(0, cutoff).map((rate) => safeNumber(rate)));
+
+    return {
+      currentRate,
+      hasInput,
+      row: {
+        author_name: plan.author_name,
+        display_name: profile?.display_name ?? null,
+        email: profile?.email ?? null,
+        full_name: profile?.full_name ?? null,
+        plan_id: plan.id,
+        profile_id: plan.profile_id,
+        region_name: profile?.region_id
+          ? regionsById.get(profile.region_id)?.name ?? plan.region_name
+          : plan.region_name,
+        team_name: plan.team_name,
+      } satisfies CoachMakerMoksilgiDashboardAttentionRow,
+    };
+  });
+  const attentionRows = rows
+    .filter(
+      (item): item is {
+        currentRate: number;
+        hasInput: true;
+        row: CoachMakerMoksilgiDashboardAttentionRow;
+      } => item.currentRate !== null && item.hasInput && item.currentRate < 50,
+    )
+    .sort((left, right) => left.currentRate - right.currentRate);
+  const rateValues = rows
+    .map((row) => row.currentRate)
+    .filter((rate): rate is number => rate !== null);
+
+  return {
+    data: {
+      attentionCount: attentionRows.length,
+      attentionRows: attentionRows.slice(0, 5).map((item) => ({
+        rate: item.currentRate,
+        row: item.row,
+      })),
+      missingCount: rows.filter((row) => row.currentRate === null || !row.hasInput)
+        .length,
+      totalCount: rows.length,
+      upToCurrentRate: average(rateValues),
+      year: selectedYear,
     },
     error: null,
   };

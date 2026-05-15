@@ -3,12 +3,11 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import {
   getCoachMakerCoachStats,
+  getCoachMakerMoksilgiDashboardSummary,
   type CoachMakerCoachStatsData,
+  type CoachMakerMoksilgiDashboardAttentionRow,
+  type CoachMakerMoksilgiDashboardSummaryData,
 } from "@/lib/api/coach-maker/coach-stats";
-import {
-  getCoachMakerMoksilgiProgress,
-  type CoachMakerMoksilgiProgressRow,
-} from "@/lib/api/coach-maker/moksilgi-progress";
 import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import { ActionMemoDrafts, ActionMemoTaskSummary } from "./ActionMemoDrafts";
@@ -24,11 +23,6 @@ function safeNumber(value: number | null | undefined) {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-function average(values: number[]) {
-  if (values.length === 0) return 0;
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
 function displayValue(value: string | null | undefined) {
   const trimmed = value?.trim();
   return trimmed && trimmed.length > 0 ? trimmed : "미입력";
@@ -39,86 +33,8 @@ function displayOptional(value: string | null | undefined, fallback = "미등록
   return trimmed && trimmed.length > 0 ? trimmed : fallback;
 }
 
-function personName(row: CoachMakerMoksilgiProgressRow) {
+function personName(row: CoachMakerMoksilgiDashboardAttentionRow) {
   return row.display_name ?? row.full_name ?? row.email ?? row.author_name ?? "알 수 없음";
-}
-
-function monthRate(row: CoachMakerMoksilgiProgressRow, month: number) {
-  switch (month) {
-    case 1:
-      return row.month_1_rate;
-    case 2:
-      return row.month_2_rate;
-    case 3:
-      return row.month_3_rate;
-    case 4:
-      return row.month_4_rate;
-    case 5:
-      return row.month_5_rate;
-    case 6:
-      return row.month_6_rate;
-    case 7:
-      return row.month_7_rate;
-    case 8:
-      return row.month_8_rate;
-    case 9:
-      return row.month_9_rate;
-    case 10:
-      return row.month_10_rate;
-    case 11:
-      return row.month_11_rate;
-    case 12:
-      return row.month_12_rate;
-    default:
-      return 0;
-  }
-}
-
-function getCurrentMonthCutoff(year: number) {
-  const today = new Date();
-
-  if (year < today.getFullYear()) return 12;
-  if (year > today.getFullYear()) return 0;
-  return today.getMonth() + 1;
-}
-
-function hasProgressInput(row: CoachMakerMoksilgiProgressRow) {
-  return Array.from({ length: 12 }, (_, index) => index + 1).some(
-    (month) => safeNumber(monthRate(row, month)) > 0,
-  ) || safeNumber(row.cumulative_rate) > 0;
-}
-
-function upToCurrentRate(row: CoachMakerMoksilgiProgressRow, year: number) {
-  const cutoff = getCurrentMonthCutoff(year);
-  if (cutoff === 0) return null;
-
-  return average(
-    Array.from({ length: cutoff }, (_, index) =>
-      safeNumber(monthRate(row, index + 1)),
-    ),
-  );
-}
-
-function attentionSummary(rows: CoachMakerMoksilgiProgressRow[], year: number) {
-  const rowsWithRate = rows.map((row) => ({
-    rate: upToCurrentRate(row, year),
-    row,
-  }));
-  const missingRows = rowsWithRate.filter(
-    (item) => item.rate === null || !hasProgressInput(item.row),
-  );
-  const allAttentionRows = rowsWithRate
-    .filter(
-      (item): item is { rate: number; row: CoachMakerMoksilgiProgressRow } =>
-        item.rate !== null && hasProgressInput(item.row) && item.rate < 50,
-    )
-    .sort((left, right) => left.rate - right.rate);
-
-  return {
-    attentionRows: allAttentionRows.slice(0, 5),
-    attentionCount: allAttentionRows.length,
-    missingCount: missingRows.length,
-  };
 }
 
 function SummaryCard({
@@ -185,7 +101,7 @@ type AttentionSummaryData = {
   attentionCount: number;
   attentionRows: Array<{
     rate: number;
-    row: CoachMakerMoksilgiProgressRow;
+    row: CoachMakerMoksilgiDashboardAttentionRow;
   }>;
   missingCount: number;
 };
@@ -507,7 +423,7 @@ function MoksilgiSummarySection({
   data,
 }: {
   attention: AttentionSummaryData;
-  data: NonNullable<Awaited<ReturnType<typeof getCoachMakerMoksilgiProgress>>["data"]>;
+  data: CoachMakerMoksilgiDashboardSummaryData;
 }) {
   return (
     <section className="mt-8 rounded-md border border-slate-200 bg-white p-4 sm:p-6">
@@ -520,7 +436,7 @@ function MoksilgiSummarySection({
             목실기 성취 요약
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            전체 {data.rows.length}명 중 현재 월까지 평균 성취율은{" "}
+            전체 {data.totalCount}명 중 현재 월까지 평균 성취율은{" "}
             <span className="font-semibold text-slate-950">
               {formatPercent(data.upToCurrentRate)}
             </span>
@@ -535,7 +451,7 @@ function MoksilgiSummarySection({
         </Link>
       </div>
 
-      {data.rows.length === 0 ? (
+      {data.totalCount === 0 ? (
         <p className="mt-6 rounded-md border border-slate-200 bg-slate-50 px-4 py-6 text-center text-slate-500">
           <I18nText
             k="moksilgi.noProgressSummary"
@@ -547,7 +463,7 @@ function MoksilgiSummarySection({
           <SummaryCard
             description={<I18nText k="moksilgi.totalTargetsDescription" fallback="현재 확인 가능한 대상자입니다." />}
             title={<I18nText k="moksilgi.totalTargets" fallback="전체 대상자 수" />}
-            value={data.rows.length}
+            value={data.totalCount}
           />
           <SummaryCard
             description={<I18nText k="moksilgi.currentAverageDescription" fallback="현재 월까지 평균입니다." />}
@@ -653,16 +569,9 @@ function QuickLinksSection({
 export default async function CoachMakerPage() {
   const currentYear = new Date().getFullYear();
   const coachStatsResult = await getCoachMakerCoachStats();
-  const result = await getCoachMakerMoksilgiProgress({
-    year: currentYear,
-    teamName: null,
-    regionName: null,
-    roleLabel: null,
-    generationLabel: null,
-    search: null,
-  });
+  const moksilgiSummaryResult = await getCoachMakerMoksilgiDashboardSummary(currentYear);
 
-  if (result.error?.code === "UNAUTHORIZED") {
+  if (moksilgiSummaryResult.error?.code === "UNAUTHORIZED") {
     redirect("/login?redirectTo=/coach-maker");
   }
 
@@ -670,8 +579,12 @@ export default async function CoachMakerPage() {
     redirect("/login?redirectTo=/coach-maker");
   }
 
-  const attention = result.data
-    ? attentionSummary(result.data.rows, result.data.year)
+  const attention = moksilgiSummaryResult.data
+    ? {
+        attentionCount: moksilgiSummaryResult.data.attentionCount,
+        attentionRows: moksilgiSummaryResult.data.attentionRows,
+        missingCount: moksilgiSummaryResult.data.missingCount,
+      }
     : { attentionCount: 0, attentionRows: [], missingCount: 0 };
   const canAccessAdminGenealogy =
     coachStatsResult.data?.roles.some((role) => role.role === "super_admin") ?? false;
@@ -705,13 +618,13 @@ export default async function CoachMakerPage() {
           </div>
         </div>
 
-        {result.error?.code === "PROFILE_NOT_FOUND" ? (
+        {moksilgiSummaryResult.error?.code === "PROFILE_NOT_FOUND" ? (
           <ProfileMissing />
-        ) : result.error?.code === "ACCESS_DENIED" ? (
+        ) : moksilgiSummaryResult.error?.code === "ACCESS_DENIED" ? (
           <section className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
             <I18nText k="moksilgi.accessDenied" fallback="코치메이커 권한이 없습니다." />
           </section>
-        ) : result.error ? (
+        ) : moksilgiSummaryResult.error ? (
           <section className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
             <I18nText
               k="moksilgi.loadFailed"
@@ -729,7 +642,7 @@ export default async function CoachMakerPage() {
                 <WorkQueueSection
                   attention={attention}
                   coachStats={coachStatsResult.data}
-                  year={result.data.year}
+                  year={moksilgiSummaryResult.data.year}
                 />
               </>
             ) : coachStatsResult.error ? (
@@ -738,13 +651,19 @@ export default async function CoachMakerPage() {
               </section>
             ) : null}
 
-            <QuickCheckSection attention={attention} year={result.data.year} />
+            <QuickCheckSection
+              attention={attention}
+              year={moksilgiSummaryResult.data.year}
+            />
 
             {coachStatsResult.data ? (
               <CoachStatsSection data={coachStatsResult.data} />
             ) : null}
 
-            <MoksilgiSummarySection attention={attention} data={result.data} />
+            <MoksilgiSummarySection
+              attention={attention}
+              data={moksilgiSummaryResult.data}
+            />
             <QuickLinksSection canAccessAdminGenealogy={canAccessAdminGenealogy} />
             <ActionMemoDrafts
               attentionTargets={attention.attentionRows.map((item) => ({

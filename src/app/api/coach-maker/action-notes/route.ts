@@ -45,6 +45,7 @@ export async function GET(request: Request) {
     {
       ok: true,
       notes: result.data,
+      pagination: result.pagination,
     },
     200,
   );

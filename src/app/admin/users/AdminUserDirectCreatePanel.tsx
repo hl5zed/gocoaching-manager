@@ -4,36 +4,13 @@ import { useState } from "react";
 import type { SyntheticEvent } from "react";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import { formatScope, getRoleLabel } from "@/lib/ui/labels";
-import type { AdminCountrySummary } from "@/lib/api/admin/countries";
-import type {
-  AdminLookupSummary,
-  AdminOrganizationSummary,
-} from "@/lib/api/admin/users";
 import { SCOPE_TYPES, USER_ROLES } from "@/types/database";
 import { AdminUserAffiliationFields } from "./AdminUserAffiliationFields";
-
-type GenerationOption = {
-  generation_number: number;
-  label: string;
-};
-
-type OptionsPayload = {
-  options: {
-    countries: AdminCountrySummary[];
-    regions: AdminLookupSummary[];
-    organizations: AdminOrganizationSummary[];
-    churches: AdminLookupSummary[];
-    groups: AdminLookupSummary[];
-    generations: GenerationOption[];
-  };
-  optionErrors?: {
-    countries?: string | null;
-    regions?: string | null;
-    organizations?: string | null;
-    churches?: string | null;
-    groups?: string | null;
-  };
-};
+import {
+  loadAdminUsersOptions,
+  type AdminUserGenerationOption,
+  type AdminUsersOptionsPayload,
+} from "./AdminUsersOptionsCache";
 
 const MANAGEABLE_USER_ROLES = USER_ROLES.filter(
   (userRole) => userRole !== "super_admin",
@@ -57,12 +34,12 @@ const FALLBACK_GENERATION_OPTIONS = Array.from({ length: 10 }, (_, index) => ({
   label: `${index + 1}세대`,
 }));
 
-function getGenerationOptions(options: GenerationOption[]) {
+function getGenerationOptions(options: AdminUserGenerationOption[]) {
   return options.length > 0 ? options : FALLBACK_GENERATION_OPTIONS;
 }
 
 export function AdminUserDirectCreatePanel() {
-  const [payload, setPayload] = useState<OptionsPayload | null>(null);
+  const [payload, setPayload] = useState<AdminUsersOptionsPayload | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,14 +51,8 @@ export function AdminUserDirectCreatePanel() {
     setIsLoading(true);
     setError(null);
 
-    void fetch("/api/admin/users/options", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error("options request failed");
-        }
-
-        setPayload((await response.json()) as OptionsPayload);
-      })
+    void loadAdminUsersOptions()
+      .then(setPayload)
       .catch(() => {
         setError("회원 등록 선택값을 불러오지 못했습니다.");
       })

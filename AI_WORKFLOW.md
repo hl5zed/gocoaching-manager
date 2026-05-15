@@ -1947,6 +1947,41 @@ Validation:
 - `npm run typecheck`: passed
 - `npm run build`: passed
 
+## LOCK - Performance Optimization Round 1
+
+Completed date:
+- 2026-05-16
+
+Completed:
+- 성능 최적화 1차 라운드 완료
+- /coach-maker/moksilgi-progress DB prefilter 적용
+- /coach-maker 메인 대시보드 summary 조회 구조 개선
+- weekly_logs 이번 주 범위 조회 적용
+- action-notes API limit/pagination 및 보고서 필터 DB query 적용
+- /my-coaching/records 기본 최근 3개 조회 및 검색/필터 시 limit 적용
+- /admin/users role filter inner join 개선
+- /admin/users options 클라이언트 cache/promise 공유
+- /admin/invitations/new 초대 만료일 설정 단일 조회
+- 초대 폼 조직 기본값 slim option 조회 적용
+
+Kept unchanged:
+- DB schema 변경 없음
+- migration 변경 없음
+- RLS 변경 없음
+- role enum 변경 없음
+- 인증/권한 로직 변경 없음
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+
+Do not regress:
+- 기존 pagination/search/filter 흐름 유지
+- 기존 권한/RLS 전제 유지
+- 목록 화면 응답은 화면에 필요한 최소 필드 중심으로 유지
+- 대량 데이터 화면은 DB query 단계에서 가능한 필터를 먼저 적용
+- 생성/상세 화면 설정 조회는 필요한 설정만 읽도록 유지
+
 ## LOCK: Coach-maker Dashboard UX Simplification and Flow Stabilization
 
 완료일: 2026-05-15

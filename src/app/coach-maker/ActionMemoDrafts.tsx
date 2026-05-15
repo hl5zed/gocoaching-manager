@@ -245,6 +245,43 @@ function isOverdueIncomplete(note: ActionNote) {
   return note.status !== "completed" && isOverdue(note.due_date);
 }
 
+let actionNotesCache: ActionNote[] | null = null;
+let actionNotesPromise: Promise<ActionNote[]> | null = null;
+
+async function fetchActionNotesList(forceRefresh = false) {
+  if (!forceRefresh && actionNotesCache) return actionNotesCache;
+  if (!forceRefresh && actionNotesPromise) return actionNotesPromise;
+
+  actionNotesPromise = (async () => {
+    const response = await fetch("/api/coach-maker/action-notes", {
+      cache: "no-store",
+    });
+    const payload = await parseJsonResponse(response);
+
+    if (!response.ok || !isListResponse(payload) || !payload.ok) {
+      throw new Error(
+        isListResponse(payload)
+          ? getApiErrorMessage(payload) ?? "관리 액션 메모를 불러오지 못했습니다."
+          : "관리 액션 메모를 불러오지 못했습니다.",
+      );
+    }
+
+    actionNotesCache = payload.notes;
+    return payload.notes;
+  })();
+
+  try {
+    return await actionNotesPromise;
+  } finally {
+    actionNotesPromise = null;
+  }
+}
+
+function clearActionNotesCache() {
+  actionNotesCache = null;
+  actionNotesPromise = null;
+}
+
 export function ActionMemoTaskSummary() {
   const [notes, setNotes] = useState<ActionNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -258,31 +295,18 @@ export function ActionMemoTaskSummary() {
       setError(null);
 
       try {
-        const response = await fetch("/api/coach-maker/action-notes", {
-          cache: "no-store",
-        });
-        const payload = await parseJsonResponse(response);
-
-        if (!response.ok || !isListResponse(payload) || !payload.ok) {
-          if (isMounted) {
-            setNotes([]);
-            setError(
-              isListResponse(payload)
-                ? getApiErrorMessage(payload) ??
-                    "관리 액션 메모를 불러오지 못했습니다."
-                : "관리 액션 메모를 불러오지 못했습니다.",
-            );
-          }
-          return;
-        }
-
+        const nextNotes = await fetchActionNotesList();
         if (isMounted) {
-          setNotes(payload.notes);
+          setNotes(nextNotes);
         }
-      } catch {
+      } catch (error) {
         if (isMounted) {
           setNotes([]);
-          setError("관리 액션 메모를 불러오지 못했습니다.");
+          setError(
+            error instanceof Error
+              ? error.message
+              : "관리 액션 메모를 불러오지 못했습니다.",
+          );
         }
       } finally {
         if (isMounted) {
@@ -718,29 +742,19 @@ export function ActionMemoDrafts({
     setError(null);
   }
 
-  const loadNotes = useCallback(async () => {
+  const loadNotes = useCallback(async (forceRefresh = false) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/coach-maker/action-notes", {
-        cache: "no-store",
-      });
-      const payload = await parseJsonResponse(response);
-
-      if (!response.ok || !isListResponse(payload) || !payload.ok) {
-        setError(
-          isListResponse(payload)
-            ? getApiErrorMessage(payload) ?? "관리 액션 메모를 불러오지 못했습니다."
-            : "관리 액션 메모를 불러오지 못했습니다.",
-        );
-        setNotes([]);
-        return;
-      }
-
-      setNotes(payload.notes);
-    } catch {
-      setError("관리 액션 메모를 불러오지 못했습니다.");
+      const nextNotes = await fetchActionNotesList(forceRefresh);
+      setNotes(nextNotes);
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "관리 액션 메모를 불러오지 못했습니다.",
+      );
       setNotes([]);
     } finally {
       setIsLoading(false);
@@ -885,7 +899,8 @@ export function ActionMemoDrafts({
       setContent("");
       setDueDate("");
       setMessage("관리 액션 메모가 저장되었습니다.");
-      await loadNotes();
+      clearActionNotesCache();
+      await loadNotes(true);
     } catch {
       setError("관리 액션 메모 저장에 실패했습니다.");
     } finally {
@@ -922,7 +937,8 @@ export function ActionMemoDrafts({
         setSelectedNote(payload.note);
         setEditForm(buildEditForm(payload.note));
       }
-      await loadNotes();
+      clearActionNotesCache();
+      await loadNotes(true);
     } catch {
       setError("관리 액션 메모 상태 변경에 실패했습니다.");
     }
@@ -971,7 +987,8 @@ export function ActionMemoDrafts({
           ? "상태가 변경되었습니다."
           : "우선순위가 변경되었습니다.",
       );
-      await loadNotes();
+      clearActionNotesCache();
+      await loadNotes(true);
     } catch {
       setError(
         field === "status"
@@ -1039,7 +1056,8 @@ export function ActionMemoDrafts({
       setEditForm(buildEditForm(payload.note));
       setIsEditingDetail(false);
       setMessage("관리 액션 메모가 수정되었습니다.");
-      await loadNotes();
+      clearActionNotesCache();
+      await loadNotes(true);
     } catch {
       setError("관리 액션 메모 수정에 실패했습니다.");
     } finally {
@@ -1082,7 +1100,8 @@ export function ActionMemoDrafts({
       if (selectedNote?.id === id) {
         closeDetail();
       }
-      await loadNotes();
+      clearActionNotesCache();
+      await loadNotes(true);
     } catch {
       setError("관리 액션 메모 처리에 실패했습니다.");
     } finally {
@@ -1199,7 +1218,7 @@ export function ActionMemoDrafts({
           </div>
           <button
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            onClick={() => void loadNotes()}
+            onClick={() => void loadNotes(true)}
             type="button"
           >
             새로고침
