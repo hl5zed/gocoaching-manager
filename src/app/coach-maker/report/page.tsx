@@ -187,41 +187,6 @@ function upToCurrentRate(row: CoachMakerMoksilgiProgressRow, year: number) {
   );
 }
 
-function attentionSummary(rows: CoachMakerMoksilgiProgressRow[], year: number) {
-  const rowsWithRate = rows.map((row) => ({
-    rate: upToCurrentRate(row, year),
-    row,
-  }));
-  const missingRows = rowsWithRate.filter(
-    (item) => item.rate === null || !hasProgressInput(item.row),
-  );
-  const attentionRows = rowsWithRate
-    .filter(
-      (item): item is { rate: number; row: CoachMakerMoksilgiProgressRow } =>
-        item.rate !== null && hasProgressInput(item.row) && item.rate < 50,
-    )
-    .sort((left, right) => left.rate - right.rate);
-
-  return {
-    attentionCount: attentionRows.length,
-    attentionRows: attentionRows.slice(0, 5),
-    missingCount: missingRows.length,
-  };
-}
-
-function progressStatusCounts(rows: CoachMakerMoksilgiProgressRow[]) {
-  return rows.reduce(
-    (counts, row) => {
-      const rate = safeNumber(row.cumulative_rate);
-
-      if (rate >= 100) return { ...counts, completed: counts.completed + 1 };
-      if (rate > 0) return { ...counts, inProgress: counts.inProgress + 1 };
-      return { ...counts, notStarted: counts.notStarted + 1 };
-    },
-    { completed: 0, inProgress: 0, notStarted: 0 },
-  );
-}
-
 function dateOnly(value: Date) {
   return new Date(value.getFullYear(), value.getMonth(), value.getDate());
 }
@@ -253,24 +218,6 @@ function isWithinCreatedAtRange(
   return true;
 }
 
-function filterRowsByTeam(
-  rows: CoachMakerMoksilgiProgressRow[],
-  team: string | null,
-) {
-  return rows.filter((row) => matchesTeamFilter(row.team_name, team));
-}
-
-function filterNotesForReport(
-  notes: CoachActionNoteReportItem[],
-  team: string | null,
-  from: string | null,
-  to: string | null,
-) {
-  return notes
-    .filter((note) => matchesTeamFilter(note.team_name, team))
-    .filter((note) => isWithinCreatedAtRange(note, from, to));
-}
-
 function collectTeamOptions(
   rows: CoachMakerMoksilgiProgressRow[],
   notes: CoachActionNoteReportItem[],
@@ -278,10 +225,7 @@ function collectTeamOptions(
   const teams = new Set<string>();
   let hasUnassigned = false;
 
-  for (const value of [
-    ...rows.map((row) => row.team_name),
-    ...notes.map((note) => note.team_name),
-  ]) {
+  const collectTeam = (value: string | null | undefined) => {
     const trimmed = value?.trim();
 
     if (trimmed) {
@@ -289,6 +233,14 @@ function collectTeamOptions(
     } else {
       hasUnassigned = true;
     }
+  };
+
+  for (const row of rows) {
+    collectTeam(row.team_name);
+  }
+
+  for (const note of notes) {
+    collectTeam(note.team_name);
   }
 
   return [
@@ -297,17 +249,71 @@ function collectTeamOptions(
   ];
 }
 
-function calculateFilteredUpToCurrentRate(
-  rows: CoachMakerMoksilgiProgressRow[],
+function buildRowsReportSummary(
+  allRows: CoachMakerMoksilgiProgressRow[],
+  team: string | null,
   year: number,
 ) {
-  if (rows.length === 0) return 0;
-  return average(rows.map((row) => upToCurrentRate(row, year) ?? 0));
-}
+  const rows: CoachMakerMoksilgiProgressRow[] = [];
+  const attentionRows: {
+    rate: number;
+    row: CoachMakerMoksilgiProgressRow;
+  }[] = [];
+  const statusCounts = { completed: 0, inProgress: 0, notStarted: 0 };
+  let cumulativeRateTotal = 0;
+  let upToCurrentRateTotal = 0;
+  let missingCount = 0;
+  let participantCount = 0;
 
-function calculateFilteredCumulativeRate(rows: CoachMakerMoksilgiProgressRow[]) {
-  if (rows.length === 0) return 0;
-  return average(rows.map((row) => safeNumber(row.cumulative_rate)));
+  for (const row of allRows) {
+    if (!matchesTeamFilter(row.team_name, team)) continue;
+
+    rows.push(row);
+
+    const cumulativeRate = safeNumber(row.cumulative_rate);
+    const currentRate = upToCurrentRate(row, year);
+    cumulativeRateTotal += cumulativeRate;
+    upToCurrentRateTotal += currentRate ?? 0;
+
+    if (cumulativeRate >= 100) {
+      statusCounts.completed += 1;
+    } else if (cumulativeRate > 0) {
+      statusCounts.inProgress += 1;
+    } else {
+      statusCounts.notStarted += 1;
+    }
+
+    const hasInput = hasProgressInput(row);
+
+    if (hasInput) {
+      participantCount += 1;
+    }
+
+    if (!hasInput || currentRate === null) {
+      missingCount += 1;
+    } else {
+      if (currentRate < 50) {
+        attentionRows.push({ rate: currentRate, row });
+      }
+    }
+  }
+
+  attentionRows.sort((left, right) => left.rate - right.rate);
+
+  return {
+    attention: {
+      attentionCount: attentionRows.length,
+      attentionRows: attentionRows.slice(0, 5),
+      missingCount,
+    },
+    averageCumulativeRate:
+      rows.length === 0 ? 0 : cumulativeRateTotal / rows.length,
+    averageUpToCurrentRate:
+      rows.length === 0 ? 0 : upToCurrentRateTotal / rows.length,
+    participantCount,
+    rows,
+    statusCounts,
+  };
 }
 
 function buildFilterSummary({
@@ -419,6 +425,68 @@ function isDueThisWeek(note: CoachActionNoteReportItem) {
   weekEnd.setDate(today.getDate() + 6);
 
   return dueDate.getTime() >= today.getTime() && dueDate.getTime() <= weekEnd.getTime();
+}
+
+function buildNotesReportSummary(
+  allNotes: CoachActionNoteReportItem[],
+  team: string | null,
+  from: string | null,
+  to: string | null,
+) {
+  const notes: CoachActionNoteReportItem[] = [];
+  const highPriorityIncompleteNotes: CoachActionNoteReportItem[] = [];
+  const overdueIncompleteNotes: CoachActionNoteReportItem[] = [];
+  const counts = {
+    completed: 0,
+    highPriority: 0,
+    inProgress: 0,
+    overdue: 0,
+  };
+
+  for (const note of allNotes) {
+    if (
+      !matchesTeamFilter(note.team_name, team) ||
+      !isWithinCreatedAtRange(note, from, to)
+    ) {
+      continue;
+    }
+
+    notes.push(note);
+
+    if (note.status === "in_progress") counts.inProgress += 1;
+    if (note.status === "completed") counts.completed += 1;
+    if (note.priority === "high") counts.highPriority += 1;
+
+    const overdue = isOverdue(note);
+    if (overdue) {
+      counts.overdue += 1;
+      if (overdueIncompleteNotes.length < 10) {
+        overdueIncompleteNotes.push(note);
+      }
+    }
+
+    if (
+      note.priority === "high" &&
+      isIncomplete(note) &&
+      highPriorityIncompleteNotes.length < 10
+    ) {
+      highPriorityIncompleteNotes.push(note);
+    }
+  }
+
+  const highPriorityIds = new Set(
+    highPriorityIncompleteNotes.map((note) => note.id),
+  );
+  const priorityActionNotes = [
+    ...highPriorityIncompleteNotes,
+    ...overdueIncompleteNotes.filter((note) => !highPriorityIds.has(note.id)),
+  ].slice(0, 10);
+
+  return {
+    counts,
+    notes,
+    priorityActionNotes,
+  };
 }
 
 function formatDate(value: string | null | undefined) {
@@ -546,17 +614,20 @@ export default async function CoachMakerReportPage({
   const allNotes = actionNotesResult.ok ? actionNotesResult.data : [];
   const coachStats = coachStatsResult.data;
   const teamOptions = collectTeamOptions(allRows, allNotes);
-  const rows = filterRowsByTeam(allRows, selectedTeam);
-  const statusCounts = progressStatusCounts(rows);
-  const attention = attentionSummary(rows, selectedYear);
-  const notes = filterNotesForReport(
+  const rowsSummary = buildRowsReportSummary(
+    allRows,
+    selectedTeam,
+    selectedYear,
+  );
+  const notesSummary = buildNotesReportSummary(
     allNotes,
     selectedTeam,
     selectedFrom,
     selectedTo,
   );
-  const participantCount = rows.filter(hasProgressInput).length;
-  const averageAchievementRate = calculateFilteredCumulativeRate(rows);
+  const { attention, averageCumulativeRate, averageUpToCurrentRate, participantCount, rows, statusCounts } =
+    rowsSummary;
+  const { counts: noteCounts, notes, priorityActionNotes } = notesSummary;
   const filterSummary = buildFilterSummary({
     from: selectedFrom,
     team: selectedTeam,
@@ -565,7 +636,7 @@ export default async function CoachMakerReportPage({
   });
   const autoSummary = buildReportAutoSummary({
     attentionCount: attention.attentionCount,
-    averageAchievementRate,
+    averageAchievementRate: averageCumulativeRate,
     from: selectedFrom,
     noteCount: notes.length,
     participantCount,
@@ -574,17 +645,6 @@ export default async function CoachMakerReportPage({
     totalCount: rows.length,
     year: selectedYear,
   });
-  const highPriorityIncompleteNotes = notes
-    .filter((note) => note.priority === "high" && isIncomplete(note))
-    .slice(0, 10);
-  const overdueIncompleteNotes = notes.filter(isOverdue).slice(0, 10);
-  const priorityActionNotes = [
-    ...highPriorityIncompleteNotes,
-    ...overdueIncompleteNotes.filter(
-      (overdueNote) =>
-        !highPriorityIncompleteNotes.some((note) => note.id === overdueNote.id),
-    ),
-  ].slice(0, 10);
 
   return (
     <main className="min-h-screen bg-slate-100 px-3 py-5 text-slate-950 sm:px-6 sm:py-8 print:bg-white print:px-0 print:py-0">
@@ -844,11 +904,11 @@ export default async function CoachMakerReportPage({
                   <SummaryBox label="미완료 인원" value={statusCounts.notStarted} />
                   <SummaryBox
                     label="현재 월까지 평균 성취율"
-                    value={formatPercent(calculateFilteredUpToCurrentRate(rows, selectedYear))}
+                    value={formatPercent(averageUpToCurrentRate)}
                   />
                   <SummaryBox
                     label="12개월 전체 평균 성취율"
-                    value={formatPercent(calculateFilteredCumulativeRate(rows))}
+                    value={formatPercent(averageCumulativeRate)}
                   />
                 </div>
               )}
@@ -905,10 +965,10 @@ export default async function CoachMakerReportPage({
           ) : (
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               <SummaryBox label="전체 메모 수" value={notes.length} />
-              <SummaryBox label="진행 중" value={notes.filter((note) => note.status === "in_progress").length} />
-              <SummaryBox label="완료" value={notes.filter((note) => note.status === "completed").length} />
-              <SummaryBox label="높은 우선순위" value={notes.filter((note) => note.priority === "high").length} />
-              <SummaryBox label="기한 지난 메모" value={notes.filter(isOverdue).length} />
+              <SummaryBox label="진행 중" value={noteCounts.inProgress} />
+              <SummaryBox label="완료" value={noteCounts.completed} />
+              <SummaryBox label="높은 우선순위" value={noteCounts.highPriority} />
+              <SummaryBox label="기한 지난 메모" value={noteCounts.overdue} />
             </div>
           )}
         </section>

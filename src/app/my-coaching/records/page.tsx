@@ -51,6 +51,27 @@ type CombinedRecord = {
   metaText?: string;
 };
 
+type RecordGroups = {
+  all: CombinedRecord[];
+  daily: CombinedRecord[];
+  monthly: CombinedRecord[];
+  weekly: CombinedRecord[];
+};
+
+function createRecordGroups(): RecordGroups {
+  return {
+    all: [],
+    daily: [],
+    monthly: [],
+    weekly: [],
+  };
+}
+
+function addRecordToGroups(groups: RecordGroups, record: CombinedRecord) {
+  groups.all.push(record);
+  groups[record.type].push(record);
+}
+
 function normalizeParam(
   value: string | string[] | undefined,
   fallback = "",
@@ -406,6 +427,63 @@ function getRecordsResultSectionClass(hasActiveSearchOrFilter: boolean) {
     .join(" ");
 }
 
+function compareRecords(
+  first: CombinedRecord,
+  second: CombinedRecord,
+  sortOption: SortOption,
+) {
+  if (sortOption === "oldest") {
+    return getSortTime(first.sortDate) - getSortTime(second.sortDate);
+  }
+
+  if (sortOption === "type") {
+    const typeComparison =
+      getRecordTypeRank(first.type) - getRecordTypeRank(second.type);
+    return typeComparison || getSortTime(second.sortDate) - getSortTime(first.sortDate);
+  }
+
+  if (sortOption === "status") {
+    const statusComparison =
+      getStatusRank(first.status) - getStatusRank(second.status);
+    return statusComparison || getSortTime(second.sortDate) - getSortTime(first.sortDate);
+  }
+
+  return getSortTime(second.sortDate) - getSortTime(first.sortDate);
+}
+
+function matchesRecordFilters({
+  normalizedQuery,
+  record,
+  statusFilter,
+  typeFilter,
+  visibilityFilter,
+}: {
+  normalizedQuery: string;
+  record: CombinedRecord;
+  statusFilter: StatusFilter;
+  typeFilter: RecordTypeFilter;
+  visibilityFilter: VisibilityFilter;
+}) {
+  const matchesSearch =
+    normalizedQuery.length === 0 ||
+    normalizeSearch(record.searchText).includes(normalizedQuery);
+  const matchesType = typeFilter === "all" || record.type === typeFilter;
+  const matchesStatus = matchesStatusFilter(record, statusFilter);
+  const matchesVisibility = matchesVisibilityFilter(record, visibilityFilter);
+
+  return matchesSearch && matchesType && matchesStatus && matchesVisibility;
+}
+
+function groupRecordsByType(records: CombinedRecord[]) {
+  const groups = createRecordGroups();
+
+  for (const record of records) {
+    addRecordToGroups(groups, record);
+  }
+
+  return groups;
+}
+
 function RecordCard({ record }: { record: CombinedRecord }) {
   return (
     <article className="break-inside-avoid rounded-lg border border-slate-200 bg-white p-4 shadow-sm print:mb-3 print:overflow-visible print:bg-white print:shadow-none">
@@ -645,40 +723,18 @@ export default async function MyCoachingRecordsPage({
     })),
   ];
   const normalizedQuery = normalizeSearch(query);
-  const filteredRecords = combinedRecords
-    .filter((record) => {
-      const matchesSearch =
-        normalizedQuery.length === 0 ||
-        normalizeSearch(record.searchText).includes(normalizedQuery);
-      const matchesType =
-        typeFilter === "all" || record.type === typeFilter;
-      const matchesStatus = matchesStatusFilter(record, statusFilter);
-      const matchesVisibility = matchesVisibilityFilter(
-        record,
-        visibilityFilter,
-      );
-
-      return matchesSearch && matchesType && matchesStatus && matchesVisibility;
-    })
-    .sort((first, second) => {
-      if (sortOption === "oldest") {
-        return getSortTime(first.sortDate) - getSortTime(second.sortDate);
-      }
-
-      if (sortOption === "type") {
-        const typeComparison =
-          getRecordTypeRank(first.type) - getRecordTypeRank(second.type);
-        return typeComparison || getSortTime(second.sortDate) - getSortTime(first.sortDate);
-      }
-
-      if (sortOption === "status") {
-        const statusComparison =
-          getStatusRank(first.status) - getStatusRank(second.status);
-        return statusComparison || getSortTime(second.sortDate) - getSortTime(first.sortDate);
-      }
-
-      return getSortTime(second.sortDate) - getSortTime(first.sortDate);
-    });
+  const filteredRecords = combinedRecords.filter((record) =>
+    matchesRecordFilters({
+      normalizedQuery,
+      record,
+      statusFilter,
+      typeFilter,
+      visibilityFilter,
+    }),
+  );
+  filteredRecords.sort((first, second) =>
+    compareRecords(first, second, sortOption),
+  );
   const filterSummary = getFilterSummary({
     query,
     sort: sortOption,
@@ -686,35 +742,38 @@ export default async function MyCoachingRecordsPage({
     type: typeFilter,
     visibility: visibilityFilter,
   });
-  const dailyFilteredRecords = filteredRecords.filter(
-    (record) => record.type === "daily",
-  );
-  const weeklyFilteredRecords = filteredRecords.filter(
-    (record) => record.type === "weekly",
-  );
-  const monthlyFilteredRecords = filteredRecords.filter(
-    (record) => record.type === "monthly",
-  );
-  const recentRecordKeys = new Set([
-    ...recentDailyRecords.map((record) => `daily:${record.id}`),
-    ...recentWeeklyLogs.map((record) => `weekly:${record.id}`),
-    ...recentMonthlyReflections.map((record) => `monthly:${record.id}`),
-  ]);
-  const defaultPrintRecords = combinedRecords.filter((record) =>
-    recentRecordKeys.has(`${record.type}:${record.id}`),
-  );
+  const filteredRecordGroups = groupRecordsByType(filteredRecords);
+  const recentRecordKeys = new Set<string>();
+
+  for (const record of recentDailyRecords) {
+    recentRecordKeys.add(`daily:${record.id}`);
+  }
+
+  for (const record of recentWeeklyLogs) {
+    recentRecordKeys.add(`weekly:${record.id}`);
+  }
+
+  for (const record of recentMonthlyReflections) {
+    recentRecordKeys.add(`monthly:${record.id}`);
+  }
+
+  const defaultPrintRecordGroups = createRecordGroups();
+
+  for (const record of combinedRecords) {
+    if (recentRecordKeys.has(`${record.type}:${record.id}`)) {
+      addRecordToGroups(defaultPrintRecordGroups, record);
+    }
+  }
+
   const printRecords = hasActiveSearchOrFilter
     ? filteredRecords
-    : defaultPrintRecords;
-  const dailyPrintRecords = printRecords.filter(
-    (record) => record.type === "daily",
-  );
-  const weeklyPrintRecords = printRecords.filter(
-    (record) => record.type === "weekly",
-  );
-  const monthlyPrintRecords = printRecords.filter(
-    (record) => record.type === "monthly",
-  );
+    : defaultPrintRecordGroups.all;
+  const printRecordGroups = hasActiveSearchOrFilter
+    ? filteredRecordGroups
+    : defaultPrintRecordGroups;
+  const dailyPrintRecords = printRecordGroups.daily;
+  const weeklyPrintRecords = printRecordGroups.weekly;
+  const monthlyPrintRecords = printRecordGroups.monthly;
   const filenameToday = formatLocalDateForFilename();
   const filenameMonth = filenameToday.slice(0, 7);
   const suggestedPrintTitles = {
