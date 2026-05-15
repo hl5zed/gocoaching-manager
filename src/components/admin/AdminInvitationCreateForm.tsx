@@ -17,6 +17,7 @@ import {
   isValidUuid,
   normalizeText,
 } from "@/lib/validation/common";
+import type { OrganizationDefaultRoleSettingsItem } from "@/lib/api/admin/system-settings";
 
 type CreateInvitationSuccess = {
   invitation_id: string;
@@ -81,13 +82,16 @@ function getInvitationExpireOptions(currentValue: string) {
 
 export function AdminInvitationCreateForm({
   defaultExpiresInDays = 7,
+  organizations = [],
 }: {
   defaultExpiresInDays?: number;
+  organizations?: OrganizationDefaultRoleSettingsItem[];
 }) {
   const [email, setEmail] = useState("");
   const [invitedRole, setInvitedRole] = useState<UserRole>("coachee");
   const [scopeType, setScopeType] = useState<ScopeType>("global");
   const [scopeId, setScopeId] = useState("");
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState("");
   const [expiresInDays, setExpiresInDays] = useState(() =>
     normalizeDefaultExpiresInDays(defaultExpiresInDays),
   );
@@ -101,6 +105,41 @@ export function AdminInvitationCreateForm({
   const normalizedScopeId = useMemo(() => {
     return scopeType === "global" ? null : scopeId.trim() || null;
   }, [scopeId, scopeType]);
+  const selectedOrganization = useMemo(
+    () =>
+      organizations.find(
+        (organization) =>
+          organization.organization_id === selectedOrganizationId,
+      ) ?? null,
+    [organizations, selectedOrganizationId],
+  );
+  const uniqueOrganizations = useMemo(() => {
+    const seen = new Set<string>();
+
+    return organizations.filter((organization) => {
+      if (seen.has(organization.organization_id)) {
+        return false;
+      }
+
+      seen.add(organization.organization_id);
+      return true;
+    });
+  }, [organizations]);
+  const isOrganizationPolicyActive =
+    selectedOrganization?.policy.enabled === true;
+
+  function handleSelectOrganization(organizationId: string) {
+    setSelectedOrganizationId(organizationId);
+    const organization = organizations.find(
+      (item) => item.organization_id === organizationId,
+    );
+
+    if (organization?.policy.enabled) {
+      setInvitedRole("coachee");
+      setScopeType("organization");
+      setScopeId(organization.organization_id);
+    }
+  }
 
   async function handleSubmit() {
     const normalizedEmail = normalizeText(email).toLowerCase();
@@ -151,6 +190,9 @@ export function AdminInvitationCreateForm({
           invited_role: invitedRole,
           scope_type: scopeType,
           scope_id: normalizedScopeId,
+          organization_id: isOrganizationPolicyActive
+            ? selectedOrganization?.organization_id
+            : undefined,
           expires_in_days: expiresInDaysNumber,
           send_email: sendEmailNow,
         }),
@@ -203,10 +245,49 @@ export function AdminInvitationCreateForm({
           />
         </label>
 
+        <label className="grid gap-2 md:col-span-2">
+          <span className="text-sm font-medium text-slate-700">
+            조직 기본값 제안
+          </span>
+          <select
+            className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+            onChange={(event) => handleSelectOrganization(event.target.value)}
+            value={selectedOrganizationId}
+          >
+            <option value="">직접 권한 설정</option>
+            {uniqueOrganizations.map((organization) => (
+              <option
+                key={organization.organization_id}
+                value={organization.organization_id}
+              >
+                {organization.organization_name} · {organization.country_name}
+              </option>
+            ))}
+          </select>
+          {selectedOrganization ? (
+            isOrganizationPolicyActive ? (
+              <span className="text-xs leading-5 text-slate-600">
+                이 조직의 기본 초대 권한이 적용됩니다. 역할: 코칭 대상자 /
+                범위: 선택한 조직
+              </span>
+            ) : (
+              <span className="text-xs leading-5 text-slate-600">
+                이 조직에는 아직 기본 권한 정책이 없습니다. 직접 권한과
+                범위를 선택해 주세요.
+              </span>
+            )
+          ) : (
+            <span className="text-xs leading-5 text-slate-500">
+              조직 기본값을 사용하지 않고 직접 권한과 범위를 선택합니다.
+            </span>
+          )}
+        </label>
+
         <label className="grid gap-2">
           <span className="text-sm font-medium text-slate-700">초대 역할</span>
           <select
-            className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+            className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
+            disabled={isOrganizationPolicyActive}
             onChange={(event) => setInvitedRole(event.target.value as UserRole)}
             value={invitedRole}
           >
@@ -221,7 +302,8 @@ export function AdminInvitationCreateForm({
         <label className="grid gap-2">
           <span className="text-sm font-medium text-slate-700">범위 유형</span>
           <select
-            className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+            className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
+            disabled={isOrganizationPolicyActive}
             onChange={(event) => {
               const nextScopeType = event.target.value as ScopeType;
               setScopeType(nextScopeType);
@@ -244,7 +326,7 @@ export function AdminInvitationCreateForm({
           <span className="text-sm font-medium text-slate-700">범위 ID</span>
           <input
             className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
-            disabled={scopeType === "global"}
+            disabled={scopeType === "global" || isOrganizationPolicyActive}
             onChange={(event) => setScopeId(event.target.value)}
             placeholder={
               scopeType === "global"
