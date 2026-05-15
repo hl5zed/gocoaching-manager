@@ -253,6 +253,8 @@ export function GenealogyMapView({ data }: GenealogyMapViewProps) {
         marker.markerType === selectedMarkerType,
     ) ?? null;
   const center = getCenter(visibleMarkers);
+  const markerTypeLabel =
+    markerType === "all" ? "전체" : getMarkerTypeLabel(markerType);
   const coordinateMissingCount = markerTypeFilteredMarkers.filter(
     (marker) => !resolveCoordinates(marker),
   ).length;
@@ -281,15 +283,15 @@ export function GenealogyMapView({ data }: GenealogyMapViewProps) {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-      <section className="rounded-md border border-slate-200 bg-white p-5">
-        <div className="mb-5 flex flex-wrap items-end gap-4">
+    <div className="genealogy-map-print-layout grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <section className="map-screen-map-section rounded-md border border-slate-200 bg-white p-5">
+        <div className="map-screen-filter mb-5 flex flex-wrap items-end gap-4">
           <div className="min-w-44">
             <label
               className="block text-sm font-medium text-slate-600"
               htmlFor="marker-type-filter"
             >
-              표시 구분
+              마커 표시 기준
             </label>
             <select
               className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
@@ -303,61 +305,6 @@ export function GenealogyMapView({ data }: GenealogyMapViewProps) {
               <option value="country">국가</option>
               <option value="region">지역</option>
               <option value="church">교회</option>
-            </select>
-          </div>
-
-          <div className="min-w-44">
-            <label
-              className="block text-sm font-medium text-slate-600"
-              htmlFor="map-country-filter"
-            >
-              국가
-            </label>
-            <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-              id="map-country-filter"
-              onChange={(event) => updateMapFilter("countryId", event.target.value)}
-              value={data.filters.countryId ?? ""}
-            >
-              <option value="">전체</option>
-              {data.countryStats
-                .filter((country) => country.countryId)
-                .map((country) => (
-                  <option key={country.countryId} value={country.countryId ?? ""}>
-                    {country.countryCode
-                      ? `${country.countryName} (${country.countryCode})`
-                      : country.countryName}
-                  </option>
-                ))}
-            </select>
-          </div>
-
-          <div className="min-w-36">
-            <label
-              className="block text-sm font-medium text-slate-600"
-              htmlFor="map-generation-filter"
-            >
-              세대
-            </label>
-            <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-              id="map-generation-filter"
-              onChange={(event) =>
-                updateMapFilter("generationNumber", event.target.value)
-              }
-              value={data.filters.generationNumber?.toString() ?? ""}
-            >
-              <option value="">전체</option>
-              {data.generationStats
-                .filter((generation) => generation.generationNumber !== null)
-                .map((generation) => (
-                  <option
-                    key={generation.generationNumber}
-                    value={generation.generationNumber ?? ""}
-                  >
-                    {generation.label}
-                  </option>
-                ))}
             </select>
           </div>
         </div>
@@ -387,7 +334,7 @@ export function GenealogyMapView({ data }: GenealogyMapViewProps) {
         )}
       </section>
 
-      <aside className="space-y-5">
+      <aside className="map-screen-aside space-y-5">
         <MarkerDetail marker={selectedMarker} searchParams={searchParams} />
 
         <section className="rounded-md border border-slate-200 bg-white p-5">
@@ -439,6 +386,93 @@ export function GenealogyMapView({ data }: GenealogyMapViewProps) {
           </div>
         </section>
       </aside>
+
+      <section className="map-print-summary print-only">
+        <div>
+          <h2>지역 지도 요약</h2>
+          <dl>
+            <div>
+              <dt>마커 표시 기준</dt>
+              <dd>{markerTypeLabel}</dd>
+            </div>
+            <div>
+              <dt>표시 마커</dt>
+              <dd>{visibleMarkers.length}개</dd>
+            </div>
+            <div>
+              <dt>전체 노드</dt>
+              <dd>{data.nodes.length}명</dd>
+            </div>
+            <div>
+              <dt>국가</dt>
+              <dd>{data.summaryStats.totalCountries}개</dd>
+            </div>
+            <div>
+              <dt>교회</dt>
+              <dd>{data.summaryStats.totalChurches}개</dd>
+            </div>
+            <div>
+              <dt>세대</dt>
+              <dd>
+                {
+                  data.generationStats.filter(
+                    (generation) => generation.generationNumber !== null,
+                  ).length
+                }
+                개
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <div>
+          <h2>선택 지역</h2>
+          {selectedMarker ? (
+            <dl>
+              <div>
+                <dt>이름</dt>
+                <dd>{selectedMarker.name}</dd>
+              </div>
+              <div>
+                <dt>구분</dt>
+                <dd>{getMarkerTypeLabel(selectedMarker.markerType)}</dd>
+              </div>
+              <div>
+                <dt>프로필</dt>
+                <dd>{selectedMarker.profileCount}명</dd>
+              </div>
+              <div>
+                <dt>코치/코치이</dt>
+                <dd>
+                  {selectedMarker.coachCount}명 / {selectedMarker.coacheeCount}명
+                </dd>
+              </div>
+              <div>
+                <dt>관계</dt>
+                <dd>{selectedMarker.relationshipCount}개</dd>
+              </div>
+            </dl>
+          ) : (
+            <p>선택된 지역이 없습니다.</p>
+          )}
+        </div>
+
+        <div>
+          <h2>세대 분포</h2>
+          {data.generationStats.length > 0 ? (
+            <ul>
+              {data.generationStats.slice(0, 6).map((generation) => (
+                <li key={generation.generationNumber ?? "missing"}>
+                  <span>{generation.label}</span>
+                  <strong>{generation.profileCount}명</strong>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>세대 통계가 없습니다.</p>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

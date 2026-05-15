@@ -159,10 +159,16 @@ function CompactPrintStatsPanel({
   data: CoachingGenealogyData;
   selectedNode: GenealogyNode | null;
 }) {
+  const topGenerations = data.generationStats.slice(0, 6);
+  const remainingGenerationCount = Math.max(0, data.generationStats.length - 6);
   const topCountries = [...data.countryStats]
     .sort((left, right) => right.profileCount - left.profileCount)
-    .slice(0, 5);
-  const remainingCountryCount = Math.max(0, data.countryStats.length - 5);
+    .slice(0, 4);
+  const remainingCountryCount = Math.max(0, data.countryStats.length - 4);
+  const topChurches = [...data.churchStats]
+    .sort((left, right) => right.profileCount - left.profileCount)
+    .slice(0, 4);
+  const remainingChurchCount = Math.max(0, data.churchStats.length - 4);
 
   return (
     <aside className="genealogy-print-side print-only">
@@ -232,15 +238,22 @@ function CompactPrintStatsPanel({
 
       <section className="print-card">
         <h2>세대별 인원 분포</h2>
-        {data.generationStats.length > 0 ? (
-          <ul className="print-compact-list">
-            {data.generationStats.map((stat) => (
-              <li key={stat.generationNumber ?? "missing"}>
-                <span>{stat.generationNumber ? `G${stat.generationNumber}` : "미지정"}</span>
-                <strong>{stat.profileCount}명</strong>
-              </li>
-            ))}
-          </ul>
+        {topGenerations.length > 0 ? (
+          <>
+            <ul className="print-compact-list">
+              {topGenerations.map((stat) => (
+                <li key={stat.generationNumber ?? "missing"}>
+                  <span>
+                    {stat.generationNumber ? `G${stat.generationNumber}` : "미지정"}
+                  </span>
+                  <strong>{stat.profileCount}명</strong>
+                </li>
+              ))}
+            </ul>
+            {remainingGenerationCount > 0 ? (
+              <p className="print-more">외 {remainingGenerationCount}개 세대</p>
+            ) : null}
+          </>
         ) : (
           <p>세대 통계가 없습니다.</p>
         )}
@@ -270,6 +283,29 @@ function CompactPrintStatsPanel({
           </>
         ) : (
           <p>국가 통계가 없습니다.</p>
+        )}
+      </section>
+
+      <section className="print-card">
+        <h2>교회별 현황</h2>
+        {topChurches.length > 0 ? (
+          <>
+            <ul className="print-compact-list">
+              {topChurches.map((church) => (
+                <li key={church.churchId ?? "missing"}>
+                  <span>{church.churchName}</span>
+                  <strong>
+                    {church.profileCount}명 / 관계 {church.relationshipCount}
+                  </strong>
+                </li>
+              ))}
+            </ul>
+            {remainingChurchCount > 0 ? (
+              <p className="print-more">외 {remainingChurchCount}개 교회</p>
+            ) : null}
+          </>
+        ) : (
+          <p>교회 통계가 없습니다.</p>
         )}
       </section>
     </aside>
@@ -392,30 +428,35 @@ export function CoachingGenealogyClient({
             background: white !important;
           }
 
-          body.printing-genealogy-tree *,
-          body.printing-genealogy-map * {
-            visibility: hidden !important;
-          }
-
-          body.printing-genealogy-tree #genealogy-tree-print-area,
-          body.printing-genealogy-tree #genealogy-tree-print-area *,
-          body.printing-genealogy-map #genealogy-map-print-area,
-          body.printing-genealogy-map #genealogy-map-print-area * {
-            visibility: visible !important;
-          }
-
           body.printing-genealogy-tree #genealogy-tree-print-area,
           body.printing-genealogy-map #genealogy-map-print-area {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+            display: block !important;
+            position: static !important;
+            left: auto !important;
+            top: auto !important;
             width: 100% !important;
+            height: auto !important;
             max-width: none !important;
             background: white !important;
             color: black !important;
             padding: 0 !important;
+            margin: 0 !important;
+            overflow: visible !important;
+            visibility: visible !important;
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
+          }
+
+          body.printing-genealogy-tree #genealogy-tree-print-area *,
+          body.printing-genealogy-map #genealogy-map-print-area * {
+            visibility: visible !important;
+          }
+
+          body.printing-genealogy-tree main > section > div:first-child,
+          body.printing-genealogy-map main > section > div:first-child,
+          body.printing-genealogy-tree .no-print,
+          body.printing-genealogy-map .no-print {
+            display: none !important;
           }
 
           body.printing-genealogy-tree .genealogy-print-content,
@@ -424,30 +465,265 @@ export function CoachingGenealogyClient({
             grid-template-columns: minmax(0, 1fr) 78mm !important;
             gap: 6mm !important;
             align-items: start !important;
+            break-before: auto !important;
+            page-break-before: auto !important;
+            break-after: auto !important;
+            page-break-after: auto !important;
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+            position: static !important;
+            left: auto !important;
+            top: auto !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+
+          body.printing-genealogy-tree .genealogy-print-content {
+            grid-template-columns: minmax(0, 70%) minmax(0, 30%) !important;
+            gap: 4mm !important;
+          }
+
+          body.printing-genealogy-map #genealogy-map-print-area > .grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 72%) minmax(0, 28%) !important;
+            gap: 5mm !important;
+            align-items: stretch !important;
+            break-before: auto !important;
+            page-break-before: auto !important;
+            break-after: auto !important;
+            page-break-after: auto !important;
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+          }
+
+          body.printing-genealogy-map #genealogy-map-print-area .genealogy-map-print-layout {
+            display: grid !important;
+            grid-template-columns: minmax(0, 72%) minmax(0, 28%) !important;
+            gap: 5mm !important;
+            align-items: stretch !important;
+            break-before: auto !important;
+            page-break-before: auto !important;
+            break-after: auto !important;
+            page-break-after: auto !important;
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+          }
+
+          body.printing-genealogy-map #genealogy-map-print-area > .grid > section,
+          body.printing-genealogy-map #genealogy-map-print-area > .grid > aside {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            padding: 2mm !important;
+            margin: 0 !important;
+            position: static !important;
+            inset: auto !important;
+            z-index: auto !important;
+            overflow: hidden !important;
+          }
+
+          body.printing-genealogy-map #genealogy-map-print-area .map-screen-map-section {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            height: 115mm !important;
+            max-height: 115mm !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            position: relative !important;
+            inset: auto !important;
+            z-index: auto !important;
+            overflow: hidden !important;
+            break-before: auto !important;
+            page-break-before: auto !important;
+            break-after: auto !important;
+            page-break-after: auto !important;
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+          }
+
+          body.printing-genealogy-map #genealogy-map-print-area .map-screen-filter {
+            display: none !important;
+          }
+
+          body.printing-genealogy-map #genealogy-map-print-area .map-screen-aside {
+            display: none !important;
+          }
+
+          body.printing-genealogy-map #genealogy-map-print-area .map-print-summary {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 2mm !important;
+            align-content: start !important;
+            height: 115mm !important;
+            max-height: 115mm !important;
+            margin-top: 0 !important;
+            padding: 0 !important;
+            position: static !important;
+            z-index: auto !important;
+            overflow: hidden !important;
+            break-before: auto !important;
+            page-break-before: auto !important;
+            break-after: auto !important;
+            page-break-after: auto !important;
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+          }
+
+          body.printing-genealogy-map #genealogy-map-print-area .map-print-summary > div {
+            border: 1px solid #e5e7eb !important;
+            border-radius: 4px !important;
+            background: white !important;
+            margin: 0 !important;
+            padding: 2mm !important;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+            overflow: hidden !important;
+          }
+
+          body.printing-genealogy-map #genealogy-map-print-area .map-print-summary dl,
+          body.printing-genealogy-map #genealogy-map-print-area .map-print-summary ul {
+            display: grid !important;
+            gap: 1mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            list-style: none !important;
+          }
+
+          body.printing-genealogy-map #genealogy-map-print-area .map-print-summary dl > div,
+          body.printing-genealogy-map #genealogy-map-print-area .map-print-summary li {
+            display: flex !important;
+            justify-content: space-between !important;
+            gap: 2mm !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            padding-bottom: 0.7mm !important;
           }
 
           body.printing-genealogy-tree .genealogy-print-main {
             min-width: 0 !important;
             min-height: 0 !important;
+            padding: 2mm !important;
+            break-before: auto !important;
+            page-break-before: auto !important;
+            break-after: auto !important;
+            page-break-after: auto !important;
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+            overflow: visible !important;
+            position: static !important;
+            left: auto !important;
+            top: auto !important;
+            height: auto !important;
+          }
+
+          body.printing-genealogy-tree .genealogy-print-main > div:first-child {
+            margin: 0 0 2mm 0 !important;
+          }
+
+          body.printing-genealogy-tree .genealogy-print-main > div:first-child h2 {
+            font-size: 11pt !important;
+            line-height: 1.15 !important;
+            margin: 0 !important;
+          }
+
+          body.printing-genealogy-tree .genealogy-print-main > div:first-child p {
+            display: none !important;
+          }
+
+          body.printing-genealogy-tree #genealogy-tree-print-area,
+          body.printing-genealogy-map #genealogy-map-print-area {
+            break-before: auto !important;
+            page-break-before: auto !important;
+            break-after: auto !important;
+            page-break-after: auto !important;
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+          }
+
+          body.printing-genealogy-tree #genealogy-tree-print-area .space-y-4 {
+            display: block !important;
+          }
+
+          body.printing-genealogy-tree #genealogy-tree-print-area .overflow-x-auto {
+            overflow: visible !important;
+            max-height: none !important;
+            max-width: 100% !important;
+            border: 0 !important;
+            background: white !important;
           }
 
           body.printing-genealogy-tree #genealogy-tree-print-area svg,
           body.printing-genealogy-map #genealogy-map-print-area svg {
             width: 100% !important;
+            min-width: 0 !important;
             max-width: 100% !important;
+            display: block !important;
             height: auto !important;
-            max-height: 160mm !important;
+            max-height: 145mm !important;
+          }
+
+          body.printing-genealogy-tree #genealogy-tree-print-area svg {
+            max-height: 132mm !important;
           }
 
           body.printing-genealogy-map .leaflet-container {
-            height: 155mm !important;
-            max-height: 155mm !important;
+            height: 113mm !important;
+            max-height: 113mm !important;
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+            overflow: hidden !important;
+            z-index: auto !important;
+            break-before: auto !important;
+            page-break-before: auto !important;
+            break-after: auto !important;
+            page-break-after: auto !important;
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+          }
+
+          body.printing-genealogy-map .leaflet-pane,
+          body.printing-genealogy-map .leaflet-map-pane,
+          body.printing-genealogy-map .leaflet-tile-pane,
+          body.printing-genealogy-map .leaflet-tile-container,
+          body.printing-genealogy-map .leaflet-marker-pane,
+          body.printing-genealogy-map .leaflet-overlay-pane {
+            break-before: auto !important;
+            page-break-before: auto !important;
+            break-after: auto !important;
+            page-break-after: auto !important;
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+            will-change: auto !important;
           }
 
           body.printing-genealogy-map .genealogy-map-print-panel,
           body.printing-genealogy-map .genealogy-map-panel {
-            max-height: 160mm !important;
+            width: 100% !important;
+            height: 115mm !important;
+            max-height: 115mm !important;
             overflow: hidden !important;
+            position: relative !important;
+            left: auto !important;
+            top: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            inset: auto !important;
+            z-index: auto !important;
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+            break-before: auto !important;
+            page-break-before: auto !important;
+            break-after: auto !important;
+            page-break-after: auto !important;
+            break-inside: auto !important;
+            page-break-inside: auto !important;
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
           }
@@ -456,27 +732,88 @@ export function CoachingGenealogyClient({
             background: linear-gradient(160deg, #dbeafe 0%, #bfdbfe 35%, #a7f3d0 70%, #d1fae5 100%) !important;
           }
 
+          body.printing-genealogy-map .genealogy-map-print-panel {
+            display: block !important;
+          }
+
           body.printing-genealogy-map .genealogy-map-legend {
-            font-size: 8px !important;
-            padding: 2mm 3mm !important;
-            print-color-adjust: exact;
-            -webkit-print-color-adjust: exact;
+            display: none !important;
+          }
+
+          body.printing-genealogy-map .leaflet-control-container,
+          body.printing-genealogy-map .leaflet-popup-pane {
+            display: none !important;
           }
 
           body.printing-genealogy-map .genealogy-map-coordinate-warning {
             display: none !important;
           }
 
+          body.printing-genealogy-map .genealogy-print-header > p:first-child {
+            display: none !important;
+          }
+
+          body.printing-genealogy-map .genealogy-print-header h1 {
+            font-size: 14px !important;
+            line-height: 1.2 !important;
+            margin: 0 !important;
+          }
+
+          body.printing-genealogy-map .genealogy-print-header > div {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 1mm 5mm !important;
+            margin-top: 1mm !important;
+          }
+
+          body.printing-genealogy-map .genealogy-print-header > div p {
+            font-size: 8px !important;
+            line-height: 1.2 !important;
+            margin: 0 !important;
+          }
+
+          body.printing-genealogy-map .genealogy-print-header {
+            margin: 0 0 2mm 0 !important;
+            padding: 0 !important;
+          }
+
           body.printing-genealogy-tree .genealogy-print-header,
           body.printing-genealogy-map .genealogy-print-header {
             display: block !important;
-            margin: 0 0 5mm 0 !important;
-            padding: 0 0 4mm 0 !important;
+            margin: 0 0 2mm 0 !important;
+            padding: 0 0 2mm 0 !important;
             border-bottom: 1px solid #d4d4d8 !important;
+            break-after: avoid !important;
+            page-break-after: avoid !important;
           }
 
-          body.printing-genealogy-tree .no-print,
-          body.printing-genealogy-map .no-print,
+          body.printing-genealogy-map .genealogy-print-header {
+            padding: 0 !important;
+          }
+
+          body.printing-genealogy-tree .genealogy-print-header > p:first-child {
+            display: none !important;
+          }
+
+          body.printing-genealogy-tree .genealogy-print-header h1 {
+            font-size: 14pt !important;
+            line-height: 1.15 !important;
+            margin: 0 !important;
+          }
+
+          body.printing-genealogy-tree .genealogy-print-header > div {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 1mm 5mm !important;
+            margin-top: 1mm !important;
+          }
+
+          body.printing-genealogy-tree .genealogy-print-header > div p {
+            font-size: 8pt !important;
+            line-height: 1.2 !important;
+            margin: 0 !important;
+          }
+
           body.printing-genealogy-map #genealogy-map-print-area label,
           body.printing-genealogy-map #genealogy-map-print-area select,
           body.printing-genealogy-map #genealogy-map-print-area button,
@@ -484,20 +821,42 @@ export function CoachingGenealogyClient({
             display: none !important;
           }
 
+          body.printing-genealogy-map #genealogy-map-print-area h2 {
+            font-size: 9pt !important;
+            line-height: 1.15 !important;
+            margin: 0 0 2mm 0 !important;
+          }
+
+          body.printing-genealogy-map #genealogy-map-print-area .mt-4,
+          body.printing-genealogy-map #genealogy-map-print-area .mt-3,
+          body.printing-genealogy-map #genealogy-map-print-area .space-y-2 {
+            margin-top: 1.5mm !important;
+          }
+
+          body.printing-genealogy-map #genealogy-map-print-area p,
+          body.printing-genealogy-map #genealogy-map-print-area dt,
+          body.printing-genealogy-map #genealogy-map-print-area dd,
+          body.printing-genealogy-map #genealogy-map-print-area span {
+            font-size: 8px !important;
+            line-height: 1.2 !important;
+          }
+
           body.printing-genealogy-tree .genealogy-print-side {
-            max-height: 160mm !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            max-height: 142mm !important;
             overflow: hidden !important;
             display: grid !important;
-            gap: 3mm !important;
+            gap: 1.5mm !important;
             align-content: start !important;
-            font-size: 9px !important;
-            line-height: 1.25 !important;
+            font-size: 7.5px !important;
+            line-height: 1.15 !important;
           }
 
           body.printing-genealogy-tree .genealogy-print-side .print-card {
             border: 1px solid #e5e7eb !important;
-            border-radius: 6px !important;
-            padding: 3mm !important;
+            border-radius: 4px !important;
+            padding: 1.6mm !important;
             break-inside: avoid !important;
             page-break-inside: avoid !important;
             background: white !important;
@@ -505,8 +864,8 @@ export function CoachingGenealogyClient({
 
           body.printing-genealogy-tree .genealogy-print-side h2,
           body.printing-genealogy-tree .genealogy-print-side h3 {
-            font-size: 10px !important;
-            margin: 0 0 2mm 0 !important;
+            font-size: 8.5px !important;
+            margin: 0 0 1mm 0 !important;
             line-height: 1.2 !important;
           }
 
@@ -516,13 +875,13 @@ export function CoachingGenealogyClient({
           body.printing-genealogy-tree .genealogy-print-side dt,
           body.printing-genealogy-tree .genealogy-print-side dd,
           body.printing-genealogy-tree .genealogy-print-side strong {
-            font-size: 8.5px !important;
-            line-height: 1.25 !important;
+            font-size: 7.5px !important;
+            line-height: 1.15 !important;
           }
 
           body.printing-genealogy-tree .print-compact-list {
             display: grid !important;
-            gap: 1.5mm !important;
+            gap: 0.7mm !important;
             margin: 0 !important;
             padding: 0 !important;
             list-style: none !important;
@@ -532,9 +891,9 @@ export function CoachingGenealogyClient({
           body.printing-genealogy-tree .print-compact-list li {
             display: flex !important;
             justify-content: space-between !important;
-            gap: 3mm !important;
+            gap: 1.5mm !important;
             border-bottom: 1px solid #f1f5f9 !important;
-            padding-bottom: 1mm !important;
+            padding-bottom: 0.5mm !important;
           }
 
           body.printing-genealogy-tree .print-summary-grid {
@@ -564,8 +923,18 @@ export function CoachingGenealogyClient({
           body.printing-genealogy-tree aside,
           body.printing-genealogy-map section,
           body.printing-genealogy-map aside {
-            break-inside: avoid;
+            break-before: auto !important;
+            page-break-before: auto !important;
+            break-after: auto !important;
+            page-break-after: auto !important;
+            break-inside: auto !important;
+            page-break-inside: auto !important;
             box-shadow: none !important;
+          }
+
+          body.printing-genealogy-tree .genealogy-print-side .print-card {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
         }
       `}</style>
@@ -604,7 +973,7 @@ export function CoachingGenealogyClient({
         ) : null}
       </div>
 
-      <section className="rounded-md border border-slate-200 bg-white p-5">
+      <section className="no-print rounded-md border border-slate-200 bg-white p-5">
         <div className="flex flex-wrap items-end gap-4">
           <div className="min-w-48">
             <label
