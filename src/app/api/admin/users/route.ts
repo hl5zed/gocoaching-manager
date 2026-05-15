@@ -20,6 +20,15 @@ const noStoreHeaders = {
 };
 const allowedRoles = new Set<UserRole>(USER_ROLES);
 const allowedScopes = new Set<ScopeType>(SCOPE_TYPES);
+const ROLE_SCOPE_RULES: Partial<Record<UserRole, ScopeType[]>> = {
+  country_admin: ["country"],
+  organization_admin: ["organization"],
+  church_admin: ["church"],
+  group_leader: ["group"],
+  coach_maker: ["organization", "church", "group"],
+  coach: ["organization", "church", "group", "coach"],
+  coachee: ["organization", "church", "group"],
+};
 
 type InsertSingleResult<TData> = Promise<{
   data: TData | null;
@@ -332,6 +341,16 @@ function getAdminUsersRedirectWithMessage(
   return getAdminUsersRedirect(request, params);
 }
 
+function getRoleScopeValidationResponse(error: string) {
+  return NextResponse.json(
+    { error },
+    {
+      status: 400,
+      headers: noStoreHeaders,
+    },
+  );
+}
+
 async function handleRoleAdd({
   request,
   adminClient,
@@ -373,6 +392,20 @@ async function handleRoleAdd({
     });
   }
 
+  const allowedScopeTypes = ROLE_SCOPE_RULES[role as UserRole] ?? [];
+
+  if (scopeType === "global") {
+    return getRoleScopeValidationResponse(
+      "super_admin이 아닌 역할에는 global 범위를 사용할 수 없습니다.",
+    );
+  }
+
+  if (!allowedScopeTypes.includes(scopeType as ScopeType)) {
+    return getRoleScopeValidationResponse(
+      "선택한 역할에 허용되지 않은 권한 범위입니다.",
+    );
+  }
+
   const normalizedScopeId = normalizeOptionalUuid(formData.get("scope_id"));
 
   if (!normalizedScopeId.ok) {
@@ -384,9 +417,9 @@ async function handleRoleAdd({
   const scopeId = scopeType === "global" ? null : normalizedScopeId.value;
 
   if (scopeType !== "global" && !scopeId) {
-    return getAdminUsersRedirectWithMessage(request, {
-      role_error: "missing_scope_id",
-    });
+    return getRoleScopeValidationResponse(
+      "global이 아닌 권한 범위에는 범위 ID가 필요합니다.",
+    );
   }
 
   const { data: profile, error: profileError } = await adminClient

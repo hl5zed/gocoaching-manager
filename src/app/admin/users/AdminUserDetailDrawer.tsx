@@ -11,8 +11,8 @@ import type {
   AdminOrganizationSummary,
   AdminUserSummary,
 } from "@/lib/api/admin/users";
-import { PROFILE_STATUSES, SCOPE_TYPES, USER_ROLES } from "@/types/database";
-import type { UserRole } from "@/types/database";
+import { PROFILE_STATUSES, USER_ROLES } from "@/types/database";
+import type { ScopeType, UserRole } from "@/types/database";
 import { AdminUserAffiliationFields } from "./AdminUserAffiliationFields";
 import { LoginGuideCopyButton } from "./LoginGuideCopyButton";
 
@@ -46,6 +46,15 @@ type OptionsPayload = {
 const MANAGEABLE_USER_ROLES = USER_ROLES.filter(
   (userRole) => userRole !== "super_admin",
 );
+const ROLE_SCOPE_RULES: Partial<Record<UserRole, ScopeType[]>> = {
+  country_admin: ["country"],
+  organization_admin: ["organization"],
+  church_admin: ["church"],
+  group_leader: ["group"],
+  coach_maker: ["organization", "church", "group"],
+  coach: ["organization", "church", "group", "coach"],
+  coachee: ["organization", "church", "group"],
+};
 const MINISTRY_POSITION_OPTIONS = [
   "목사",
   "선교사",
@@ -262,6 +271,11 @@ function RoleAddForm({ user }: { user: AdminUserSummary }) {
   const roleOptions = MANAGEABLE_USER_ROLES.filter(
     (userRole) => !existingRoles.has(userRole),
   );
+  const [selectedRole, setSelectedRole] = useState<UserRole | "">("");
+  const [selectedScopeType, setSelectedScopeType] = useState<ScopeType | "">("");
+  const allowedScopeTypes = selectedRole
+    ? ROLE_SCOPE_RULES[selectedRole] ?? []
+    : [];
 
   if (hasProtectedRole) {
     return null;
@@ -282,9 +296,15 @@ function RoleAddForm({ user }: { user: AdminUserSummary }) {
       <div className="flex flex-wrap items-center gap-2">
         <select
           className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
-          defaultValue={roleOptions.includes("coach") ? "coach" : roleOptions[0] ?? "coachee"}
           name="role"
+          onChange={(event) => {
+            setSelectedRole(event.target.value as UserRole | "");
+            setSelectedScopeType("");
+          }}
+          required
+          value={selectedRole}
         >
+          <option value="">역할 선택</option>
           {roleOptions.map((userRole) => (
             <option key={userRole} value={userRole}>
               {getRoleLabel(userRole)}
@@ -292,20 +312,32 @@ function RoleAddForm({ user }: { user: AdminUserSummary }) {
           ))}
         </select>
         <select
-          className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
-          defaultValue="global"
+          className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
+          disabled={!selectedRole}
           name="scope_type"
+          onChange={(event) => setSelectedScopeType(event.target.value as ScopeType | "")}
+          required={Boolean(selectedRole)}
+          value={selectedScopeType}
         >
-          {SCOPE_TYPES.map((scopeType) => (
+          <option value="">
+            {selectedRole ? "권한 범위 선택" : "역할을 먼저 선택하세요"}
+          </option>
+          {allowedScopeTypes.map((scopeType) => (
             <option key={scopeType} value={scopeType}>
               {formatScope(scopeType, null)}
             </option>
           ))}
         </select>
         <input
-          className="min-w-[150px] rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
+          className="min-w-[180px] rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
+          disabled={!selectedScopeType}
           name="scope_id"
-          placeholder="global이면 비움"
+          placeholder={
+            selectedScopeType
+              ? "선택한 권한 범위의 ID를 입력하세요."
+              : "권한 범위를 먼저 선택하세요."
+          }
+          required={Boolean(selectedScopeType)}
           type="text"
         />
         <button
@@ -733,35 +765,8 @@ function MemberDetailContent({
         </dl>
       </section>
       <section className="mt-4 rounded-md border border-slate-200 p-4">
-        <h3 className="text-base font-semibold">역할 및 세대</h3>
+        <h3 className="text-base font-semibold">세대</h3>
         <dl className="mt-4 grid gap-4">
-          <DetailValue
-            label="대표 시스템 역할"
-            value={user.primary_role ? getRoleLabel(user.primary_role) : "미지정"}
-          />
-          <div>
-            <dt className="text-sm font-medium text-slate-500">시스템 역할</dt>
-            <dd className="mt-2 flex flex-wrap gap-2">
-              {user.roles.length === 0 ? (
-                <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                  미지정
-                </span>
-              ) : (
-                user.roles.map((roleItem) => (
-                  <span
-                    className="inline-flex flex-col rounded-md border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
-                    key={roleItem.id}
-                  >
-                    <span>{getRoleLabel(roleItem.role)}</span>
-                    <span className="mt-0.5 text-[11px] font-normal text-slate-500">
-                      역할 상태: {getRoleActiveLabel(roleItem)}
-                    </span>
-                  </span>
-                ))
-              )}
-            </dd>
-          </div>
-          <DetailValue label="역할 권한 범위" value={formatScopeSummary(user.roles)} />
           <DetailValue label="세대" value={formatGeneration(user.generation_number)} />
         </dl>
       </section>
@@ -774,10 +779,48 @@ function MemberDetailContent({
         </dl>
       </section>
       <section className="mt-4 rounded-md border border-slate-200 p-4">
-        <h3 className="text-base font-semibold">빠른 작업</h3>
+        <h3 className="text-base font-semibold">회원 정보 관리</h3>
         <div className="mt-4 grid gap-4">
           <ProfileUpdateForm onUserUpdated={onUserUpdated} user={user} />
           <LoginGuideCopyButton email={user.email} />
+          <StatusChangeForm user={user} />
+        </div>
+      </section>
+      <section className="mt-4 rounded-md border border-slate-200 p-4">
+        <h3 className="text-base font-semibold">시스템 역할 관리</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          이 영역은 회원의 시스템 접근 권한을 관리하는 관리자 전용 기능입니다.
+        </p>
+        <div className="mt-4 grid gap-4">
+          <dl className="grid gap-4 rounded-md border border-slate-100 bg-slate-50 p-3">
+            <DetailValue
+              label="대표 시스템 역할"
+              value={user.primary_role ? getRoleLabel(user.primary_role) : "미지정"}
+            />
+            <div>
+              <dt className="text-sm font-medium text-slate-500">시스템 역할</dt>
+              <dd className="mt-2 flex flex-wrap gap-2">
+                {user.roles.length === 0 ? (
+                  <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                    미지정
+                  </span>
+                ) : (
+                  user.roles.map((roleItem) => (
+                    <span
+                      className="inline-flex flex-col rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700"
+                      key={roleItem.id}
+                    >
+                      <span>{getRoleLabel(roleItem.role)}</span>
+                      <span className="mt-0.5 text-[11px] font-normal text-slate-500">
+                        역할 상태: {getRoleActiveLabel(roleItem)}
+                      </span>
+                    </span>
+                  ))
+                )}
+              </dd>
+            </div>
+            <DetailValue label="역할 권한 범위" value={formatScopeSummary(user.roles)} />
+          </dl>
           <RoleChangeForm user={user} />
           <div className="grid gap-2 rounded-md border border-dashed border-slate-200 bg-white p-3">
             <p className="text-xs font-semibold text-slate-700">시스템 역할 활성/비활성</p>
@@ -805,7 +848,6 @@ function MemberDetailContent({
             )}
           </div>
           <RoleAddForm user={user} />
-          <StatusChangeForm user={user} />
         </div>
       </section>
     </>
