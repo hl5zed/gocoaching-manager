@@ -245,6 +245,90 @@ function isOverdueIncomplete(note: ActionNote) {
   return note.status !== "completed" && isOverdue(note.due_date);
 }
 
+export function ActionMemoTaskSummary() {
+  const [notes, setNotes] = useState<ActionNote[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSummary() {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch("/api/coach-maker/action-notes", {
+          cache: "no-store",
+        });
+        const payload = await parseJsonResponse(response);
+
+        if (!response.ok || !isListResponse(payload) || !payload.ok) {
+          if (isMounted) {
+            setNotes([]);
+            setError(
+              isListResponse(payload)
+                ? getApiErrorMessage(payload) ??
+                    "관리 액션 메모를 불러오지 못했습니다."
+                : "관리 액션 메모를 불러오지 못했습니다.",
+            );
+          }
+          return;
+        }
+
+        if (isMounted) {
+          setNotes(payload.notes);
+        }
+      } catch {
+        if (isMounted) {
+          setNotes([]);
+          setError("관리 액션 메모를 불러오지 못했습니다.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadSummary();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const overdueCount = notes.filter(isOverdueIncomplete).length;
+
+  function openActionMemos() {
+    window.dispatchEvent(new Event("coach-maker:open-action-memos"));
+    document
+      .getElementById("action-memos")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  return (
+    <article className="min-w-0 rounded-md border border-slate-200 bg-white p-4">
+      <p className="text-sm font-medium text-slate-500">
+        기한 지난 관리 메모
+      </p>
+      <p className="mt-2 text-3xl font-semibold text-slate-950">
+        {isLoading ? "..." : `${overdueCount}개`}
+      </p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">
+        {error ?? "오늘 먼저 처리할 메모입니다."}
+      </p>
+      <button
+        className="mt-4 inline-flex min-h-10 w-full justify-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+        onClick={openActionMemos}
+        type="button"
+      >
+        메모 처리
+      </button>
+    </article>
+  );
+}
+
 function buildEditForm(note: ActionNote): EditForm {
   return {
     actionType: note.action_type,
@@ -365,6 +449,8 @@ export function ActionMemoDrafts({
   const [quickUpdating, setQuickUpdating] = useState<QuickUpdatingState>(null);
   const [drilldownFilter, setDrilldownFilter] =
     useState<DrilldownFilter | null>(null);
+  const [isFullViewOpen, setIsFullViewOpen] = useState(false);
+  const [shouldScrollToCreate, setShouldScrollToCreate] = useState(false);
 
   const summary = useMemo(() => {
     const teamMap = new Map<
@@ -664,6 +750,37 @@ export function ActionMemoDrafts({
   useEffect(() => {
     void loadNotes();
   }, [loadNotes]);
+
+  useEffect(() => {
+    function openActionMemos() {
+      setIsFullViewOpen(true);
+      window.setTimeout(() => {
+        document
+          .getElementById("action-memos")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 0);
+    }
+
+    window.addEventListener("coach-maker:open-action-memos", openActionMemos);
+
+    return () => {
+      window.removeEventListener(
+        "coach-maker:open-action-memos",
+        openActionMemos,
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isFullViewOpen || !shouldScrollToCreate) return;
+
+    window.setTimeout(() => {
+      document
+        .getElementById("action-memo-create")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setShouldScrollToCreate(false);
+    }, 0);
+  }, [isFullViewOpen, shouldScrollToCreate]);
 
   function fillAttentionTarget(target: ActionMemoAttentionTarget) {
     setTargetType("attention_target");
@@ -974,33 +1091,79 @@ export function ActionMemoDrafts({
   }
 
   return (
-    <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
+    <section
+      className="mt-8 rounded-md border border-slate-200 bg-white p-4 sm:p-6"
+      id="action-memos"
+    >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-slate-500">저장된 기록</p>
           <h2 className="mt-1 text-xl font-semibold text-slate-950">
-            관리 액션 메모
+            관리 액션 메모 요약
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            코치, 팀, 관심 필요 대상자에게 필요한 후속 액션을 내부 관리 메모로 기록하고 진행 상태를 확인합니다.
+            후속 액션을 메모로 남기고 진행 상태를 처리합니다.
           </p>
         </div>
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
-          <div className="rounded-md bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800">
-            <p>관리 액션 메모는 코치이에게 공개되는 피드백이 아닌 내부 관리 메모입니다.</p>
-            <p className="mt-1">작성자와 대상자가 함께 저장되며 권한 범위 안에서만 조회됩니다.</p>
-            <p className="mt-1">민감한 개인정보나 비밀번호는 메모에 기록하지 마세요.</p>
+          <div className="rounded-md bg-emerald-50 px-3 py-2 text-sm font-medium leading-6 text-emerald-800">
+            <p>내부 관리 메모입니다. 코치이에게 공개되지 않습니다.</p>
+            <p className="mt-1">필요하면 아래에서 전체 목록과 작성폼을 펼쳐 사용하세요.</p>
           </div>
-          <button
-            className="inline-flex w-full justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
-            onClick={exportFilteredNotesToCsv}
-            type="button"
-          >
-            CSV 내보내기
-          </button>
         </div>
       </div>
 
+      <div className="mt-5 grid gap-3 md:grid-cols-5">
+        {[
+          { label: "전체 메모 수", value: summary.totalCount },
+          { label: "진행 중", value: summary.inProgressCount },
+          { label: "완료", value: summary.completedCount },
+          { label: "높은 우선순위", value: summary.highPriorityCount },
+          { label: "기한 지난 메모", value: summary.overdueCount },
+        ].map((card) => (
+          <div
+            className="min-w-0 rounded-md border border-slate-200 bg-slate-50 p-4"
+            key={card.label}
+          >
+            <p className="text-xs font-medium text-slate-500">{card.label}</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-950">
+              {isLoading ? "..." : card.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-2">
+        <button
+          className="min-h-10 w-full rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 sm:w-auto"
+          onClick={() => setIsFullViewOpen(true)}
+          type="button"
+        >
+          메모 전체 보기
+        </button>
+        <button
+          className="min-h-10 w-full rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+          onClick={() => {
+            setIsFullViewOpen(true);
+            setShouldScrollToCreate(true);
+          }}
+          type="button"
+        >
+          새 메모 작성
+        </button>
+        {isFullViewOpen ? (
+          <button
+            className="min-h-10 w-full rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+            onClick={() => setIsFullViewOpen(false)}
+            type="button"
+          >
+            접기
+          </button>
+        ) : null}
+      </div>
+
+      {isFullViewOpen ? (
+        <div className="mt-6" id="action-memo-full">
       {attentionTargets.length > 0 ? (
         <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-4">
           <p className="text-sm font-semibold text-amber-900">
@@ -1345,7 +1508,10 @@ export function ActionMemoDrafts({
             </div>
           </div>
         </div>
-        <section className="mt-4 rounded-md border border-slate-200 bg-white p-4">
+        <section
+          className="mt-4 rounded-md border border-slate-200 bg-white p-4"
+          id="action-memo-create"
+        >
           <div>
             <h3 className="text-base font-semibold text-slate-950">
               관리 액션 메모 작성
@@ -1924,6 +2090,8 @@ export function ActionMemoDrafts({
             </section>
           </div>
         </aside>
+      ) : null}
+        </div>
       ) : null}
     </section>
   );

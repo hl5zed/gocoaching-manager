@@ -11,7 +11,7 @@ import {
 } from "@/lib/api/coach-maker/moksilgi-progress";
 import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
 import { I18nText } from "@/lib/i18n/I18nProvider";
-import { ActionMemoDrafts } from "./ActionMemoDrafts";
+import { ActionMemoDrafts, ActionMemoTaskSummary } from "./ActionMemoDrafts";
 
 export const dynamic = "force-dynamic";
 
@@ -121,27 +121,6 @@ function attentionSummary(rows: CoachMakerMoksilgiProgressRow[], year: number) {
   };
 }
 
-function progressStatusCounts(rows: CoachMakerMoksilgiProgressRow[]) {
-  return rows.reduce(
-    (counts, row) => {
-      const rate = typeof row.cumulative_rate === "number" && Number.isFinite(row.cumulative_rate)
-        ? row.cumulative_rate
-        : 0;
-
-      if (rate >= 100) {
-        return { ...counts, completed: counts.completed + 1 };
-      }
-
-      if (rate > 0) {
-        return { ...counts, inProgress: counts.inProgress + 1 };
-      }
-
-      return { ...counts, notStarted: counts.notStarted + 1 };
-    },
-    { completed: 0, inProgress: 0, notStarted: 0 },
-  );
-}
-
 function SummaryCard({
   accent = "default",
   description,
@@ -155,7 +134,7 @@ function SummaryCard({
 }) {
   return (
     <div
-      className={`rounded-md border p-5 ${
+      className={`min-w-0 rounded-md border p-5 ${
         accent === "strong"
           ? "border-slate-300 bg-slate-950 text-white"
           : "border-slate-200 bg-white"
@@ -169,7 +148,7 @@ function SummaryCard({
         {title}
       </p>
       <p
-        className={`mt-2 text-3xl font-semibold ${
+        className={`mt-2 break-words text-3xl font-semibold ${
           accent === "strong" ? "text-white" : "text-slate-950"
         }`}
       >
@@ -188,7 +167,7 @@ function SummaryCard({
 
 function ProfileMissing() {
   return (
-    <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
+    <section className="mt-8 rounded-md border border-slate-200 bg-white p-4 sm:p-6">
       <p className="text-slate-700">
         <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
       </p>
@@ -202,13 +181,223 @@ function ProfileMissing() {
   );
 }
 
+type AttentionSummaryData = {
+  attentionCount: number;
+  attentionRows: Array<{
+    rate: number;
+    row: CoachMakerMoksilgiProgressRow;
+  }>;
+  missingCount: number;
+};
+
+function TopSummarySection({
+  attention,
+  coachStats,
+}: {
+  attention: AttentionSummaryData;
+  coachStats: CoachMakerCoachStatsData;
+}) {
+  return (
+    <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+      <SummaryCard
+        description={<I18nText k="coachMaker.totalCoachesDescription" fallback="현재 관리 중인 코치입니다." />}
+        title={<I18nText k="coachMaker.totalCoaches" fallback="전체 코치 수" />}
+        value={`${coachStats.summary.coachCount}명`}
+      />
+      <SummaryCard
+        description={<I18nText k="coachMaker.totalCoacheesDescription" fallback="배정된 코치이입니다." />}
+        title={<I18nText k="coachMaker.totalCoachees" fallback="전체 담당 코치이 수" />}
+        value={`${coachStats.summary.assignedCoacheeCount}명`}
+      />
+      <SummaryCard
+        description={<I18nText k="coachMaker.weeklySubmittedDescription" fallback="이번 주 기록 제출 인원입니다." />}
+        title={<I18nText k="coachMaker.weeklySubmitted" fallback="이번 주 제출" />}
+        value={`${coachStats.summary.weeklySubmittedThisWeekCount}명`}
+      />
+      <SummaryCard
+        description={<I18nText k="coachMaker.weeklyMissingDescription" fallback="이번 주 확인이 필요합니다." />}
+        title={<I18nText k="coachMaker.weeklyMissing" fallback="이번 주 미제출" />}
+        value={`${coachStats.summary.weeklyMissingThisWeekCount}명`}
+      />
+      <SummaryCard
+        description={<I18nText k="coachMaker.feedbackPendingDescription" fallback="아직 피드백이 필요합니다." />}
+        title={<I18nText k="coachMaker.feedbackPending" fallback="피드백 대기" />}
+        value={`${coachStats.summary.feedbackPendingCount}개`}
+      />
+      <SummaryCard
+        description={<I18nText k="moksilgi.attentionTargetsDescription" fallback="목실기 점검이 필요합니다." />}
+        title={<I18nText k="moksilgi.attentionTargets" fallback="관심 필요 대상자" />}
+        value={`${attention.attentionCount}명`}
+        accent="strong"
+      />
+    </section>
+  );
+}
+
+function WorkQueueSection({
+  attention,
+  coachStats,
+  year,
+}: {
+  attention: AttentionSummaryData;
+  coachStats: CoachMakerCoachStatsData;
+  year: number;
+}) {
+  const cards = [
+    {
+      action: "미제출 확인",
+      description: "이번 주 기록을 아직 내지 않았습니다.",
+      href: "/coach/weekly-logs",
+      title: "미제출 인원",
+      value: `${coachStats.summary.weeklyMissingThisWeekCount}명`,
+    },
+    {
+      action: "피드백 확인",
+      description: "제출된 기록에 피드백이 필요합니다.",
+      href: "/coach/weekly-logs",
+      title: "피드백 대기",
+      value: `${coachStats.summary.feedbackPendingCount}개`,
+    },
+    {
+      action: "목실기 현황 보기",
+      description: "성취율이 낮은 대상자를 먼저 봅니다.",
+      href: "#quick-check",
+      title: "관심 필요 대상자",
+      value: `${attention.attentionCount}명`,
+    },
+  ];
+
+  return (
+    <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
+      <div>
+        <p className="text-sm font-medium text-slate-500">
+          오늘/이번 주 처리 필요
+        </p>
+        <h2 className="mt-1 text-xl font-semibold text-slate-950">
+          우선 확인할 작업
+        </h2>
+      </div>
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {cards.map((card) => (
+          <article
+            className="min-w-0 rounded-md border border-slate-200 bg-slate-50 p-4"
+            key={card.title}
+          >
+            <p className="text-sm font-medium text-slate-500">{card.title}</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">
+              {card.value}
+            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {card.description}
+            </p>
+            <Link
+              className="mt-4 inline-flex min-h-10 w-full justify-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+              href={card.href}
+            >
+              {card.action}
+            </Link>
+          </article>
+        ))}
+        <ActionMemoTaskSummary />
+      </div>
+      <div className="mt-4 text-sm text-slate-500">
+        목실기 기준 연도: {year}
+      </div>
+    </section>
+  );
+}
+
+function QuickCheckSection({
+  attention,
+  year,
+}: {
+  attention: AttentionSummaryData;
+  year: number;
+}) {
+  return (
+    <section
+      className="mt-8 rounded-md border border-slate-200 bg-white p-4 sm:p-6"
+      id="quick-check"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-slate-500">
+            <I18nText k="moksilgi.quickCheck" fallback="빠른 점검" />
+          </p>
+          <h2 className="mt-1 text-xl font-semibold text-slate-950">
+            <I18nText k="moksilgi.attentionUsers" fallback="관심 필요 대상자" />
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            성취율이 낮은 대상자 중 낮은 순서로 최대 5명만 표시합니다.
+          </p>
+        </div>
+        <Link
+          className="inline-flex w-full justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto"
+          href={`/coach-maker/moksilgi-progress?year=${year}`}
+        >
+          <I18nText k="moksilgi.viewOverallProgress" fallback="전체 목실기 현황 보기" />
+        </Link>
+      </div>
+
+      {attention.attentionRows.length === 0 ? (
+        <p className="mt-5 rounded-md border border-slate-200 bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">
+          <I18nText k="moksilgi.noAttentionUsers" fallback="관심 필요 대상자가 없습니다." />
+        </p>
+      ) : (
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 text-slate-600">
+                <th className="px-3 py-2 font-semibold">
+                  <I18nText k="members.name" fallback="이름" />
+                </th>
+                <th className="px-3 py-2 font-semibold">소속</th>
+                <th className="px-3 py-2 font-semibold">
+                  <I18nText k="moksilgi.currentAverage" fallback="현재 월까지 성취율" />
+                </th>
+                <th className="px-3 py-2 font-semibold">조치</th>
+              </tr>
+            </thead>
+            <tbody>
+              {attention.attentionRows.map((item) => (
+                <tr className="border-b border-slate-100" key={item.row.plan_id}>
+                  <td className="px-3 py-3 font-medium text-slate-950">
+                    {personName(item.row)}
+                  </td>
+                  <td className="px-3 py-3 text-slate-700">
+                    <p>국가/소속: {displayValue(item.row.region_name)}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      공동체/팀: {displayValue(item.row.team_name)}
+                    </p>
+                  </td>
+                  <td className="px-3 py-3 font-semibold text-amber-700">
+                    {formatPercent(item.rate)}
+                  </td>
+                  <td className="px-3 py-3">
+                    <Link
+                      className="inline-flex rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      href={`/coach-maker/moksilgi-progress?year=${year}&memberId=${encodeURIComponent(item.row.profile_id)}`}
+                    >
+                      <I18nText k="moksilgi.viewProgress" fallback="현황 보기" />
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function CoachStatsSection({
   data,
 }: {
   data: CoachMakerCoachStatsData;
 }) {
   return (
-    <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
+    <section className="mt-8 rounded-md border border-slate-200 bg-white p-4 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
           <p className="text-sm font-medium text-slate-500">
@@ -216,10 +405,7 @@ function CoachStatsSection({
             {data.weekRange.start} ~ {data.weekRange.end}
           </p>
           <h2 className="mt-1 text-xl font-semibold text-slate-950">
-            <I18nText
-              k="coachMaker.coachStatusDescription"
-              fallback="관리 범위 내 코치별 담당 코치이 통계"
-            />
+            코칭 진행 요약
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
             {data.scopeLabel}{" "}
@@ -237,49 +423,6 @@ function CoachStatsSection({
         </Link>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard
-          description={<I18nText k="coachMaker.totalCoachesDescription" fallback="관리 범위 안에서 active 관계가 있는 코치 수입니다." />}
-          title={<I18nText k="coachMaker.totalCoaches" fallback="전체 코치 수" />}
-          value={`${data.summary.coachCount}명`}
-        />
-        <SummaryCard
-          description={<I18nText k="coachMaker.totalCoacheesDescription" fallback="active 코칭 관계의 코치이 수입니다." />}
-          title={<I18nText k="coachMaker.totalCoachees" fallback="전체 담당 코치이 수" />}
-          value={`${data.summary.assignedCoacheeCount}명`}
-        />
-        <SummaryCard
-          description={<I18nText k="coachMaker.weeklySubmittedDescription" fallback="이번 주 제출된 주간 기록 기준 코치이 수입니다." />}
-          title={<I18nText k="coachMaker.weeklySubmitted" fallback="이번 주 제출" />}
-          value={`${data.summary.weeklySubmittedThisWeekCount}명`}
-        />
-        <SummaryCard
-          description={<I18nText k="coachMaker.weeklyMissingDescription" fallback="담당 코치이 중 이번 주 제출이 확인되지 않은 인원입니다." />}
-          title={<I18nText k="coachMaker.weeklyMissing" fallback="이번 주 미제출" />}
-          value={`${data.summary.weeklyMissingThisWeekCount}명`}
-        />
-        <SummaryCard
-          description={<I18nText k="coachMaker.sharedDailyRecordsDescription" fallback="코치에게 공유된 하루 기록 수입니다." />}
-          title={<I18nText k="coachMaker.sharedDailyRecords" fallback="공유된 하루 기록" />}
-          value={`${data.summary.sharedDailyRecordCount}개`}
-        />
-        <SummaryCard
-          description={<I18nText k="coachMaker.sharedMonthlyReflectionsDescription" fallback="코치에게 공유된 월간 회고 수입니다." />}
-          title={<I18nText k="coachMaker.sharedMonthlyReflections" fallback="공유된 월간 회고" />}
-          value={`${data.summary.sharedMonthlyReflectionCount}개`}
-        />
-        <SummaryCard
-          description={<I18nText k="coachMaker.totalFeedbackDescription" fallback="작성된 코치 피드백 수입니다." />}
-          title={<I18nText k="coachMaker.totalFeedback" fallback="전체 피드백 수" />}
-          value={`${data.summary.feedbackCount}개`}
-        />
-        <SummaryCard
-          description={<I18nText k="coachMaker.feedbackPendingDescription" fallback="제출된 주간 기록 중 피드백이 없는 항목입니다." />}
-          title={<I18nText k="coachMaker.feedbackPending" fallback="피드백 대기" />}
-          value={`${data.summary.feedbackPendingCount}개`}
-        />
-      </div>
-
       {data.coaches.length === 0 ? (
         <p className="mt-6 rounded-md border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
           <I18nText
@@ -289,17 +432,14 @@ function CoachStatsSection({
         </p>
       ) : (
         <div className="mt-6 overflow-x-auto">
-          <table className="min-w-[980px] w-full border-collapse text-left text-sm">
+          <table className="w-full min-w-[760px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-slate-600">
                 <th className="px-3 py-2 font-semibold"><I18nText k="roles.coach" fallback="코치" /></th>
                 <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.assignedCoachees" fallback="담당 코치이" /></th>
-                <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.weeklySubmitted" fallback="이번 주 제출" /></th>
-                <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.weeklyMissing" fallback="이번 주 미제출" /></th>
-                <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.sharedDailyRecords" fallback="공유 하루 기록" /></th>
-                <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.sharedMonthlyReflections" fallback="공유 월간 회고" /></th>
-                <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.totalFeedback" fallback="피드백 작성" /></th>
-                <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.feedbackPending" fallback="피드백 대기" /></th>
+                <th className="px-3 py-2 font-semibold">이번 주 진행</th>
+                <th className="px-3 py-2 font-semibold">확인 필요</th>
+                <th className="px-3 py-2 font-semibold">조치</th>
               </tr>
             </thead>
             <tbody>
@@ -315,32 +455,42 @@ function CoachStatsSection({
                     {coach.assignedCoacheeCount}명
                   </td>
                   <td className="px-3 py-3 text-slate-700">
-                    {coach.weeklySubmittedThisWeekCount}명
-                  </td>
-                  <td className="px-3 py-3 text-slate-700">
-                    {coach.weeklyMissingThisWeekCount}명
-                  </td>
-                  <td className="px-3 py-3 text-slate-700">
-                    {coach.sharedDailyRecordCount}개
-                  </td>
-                  <td className="px-3 py-3 text-slate-700">
-                    {coach.sharedMonthlyReflectionCount}개
-                  </td>
-                  <td className="px-3 py-3 text-slate-700">
-                    {coach.feedbackCount}개
+                    제출 {coach.weeklySubmittedThisWeekCount}명 / 담당{" "}
+                    {coach.assignedCoacheeCount}명
                   </td>
                   <td className="px-3 py-3">
-                    <span
-                      className={
-                        coach.feedbackPendingCount > 0
-                          ? "inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700"
-                          : "inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700"
-                      }
-                    >
-                      {coach.feedbackPendingCount > 0
-                        ? `${coach.feedbackPendingCount}개 확인 필요`
-                        : "대기 없음"}
-                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      <span
+                        className={
+                          coach.weeklyMissingThisWeekCount > 0
+                            ? "inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700"
+                            : "inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700"
+                        }
+                      >
+                        미제출 {coach.weeklyMissingThisWeekCount}명
+                      </span>
+                      <span
+                        className={
+                          coach.feedbackPendingCount > 0
+                            ? "inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700"
+                            : "inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700"
+                        }
+                      >
+                        피드백 대기 {coach.feedbackPendingCount}개
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-3">
+                    <details className="min-w-36">
+                      <summary className="cursor-pointer text-sm font-medium text-slate-700 underline">
+                        상세 통계
+                      </summary>
+                      <dl className="mt-2 grid gap-1 text-xs text-slate-600">
+                        <div>공유 하루 기록 {coach.sharedDailyRecordCount}개</div>
+                        <div>공유 월간 회고 {coach.sharedMonthlyReflectionCount}개</div>
+                        <div>피드백 작성 {coach.feedbackCount}개</div>
+                      </dl>
+                    </details>
                   </td>
                 </tr>
               ))}
@@ -348,6 +498,154 @@ function CoachStatsSection({
           </table>
         </div>
       )}
+    </section>
+  );
+}
+
+function MoksilgiSummarySection({
+  attention,
+  data,
+}: {
+  attention: AttentionSummaryData;
+  data: NonNullable<Awaited<ReturnType<typeof getCoachMakerMoksilgiProgress>>["data"]>;
+}) {
+  return (
+    <section className="mt-8 rounded-md border border-slate-200 bg-white p-4 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+          <p className="text-sm font-medium text-slate-500">
+            {data.year} <I18nText k="moksilgi.yearSummary" fallback="년 목실기 요약" />
+          </p>
+          <h2 className="mt-1 text-xl font-semibold text-slate-950">
+            목실기 성취 요약
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            전체 {data.rows.length}명 중 현재 월까지 평균 성취율은{" "}
+            <span className="font-semibold text-slate-950">
+              {formatPercent(data.upToCurrentRate)}
+            </span>
+            입니다.
+          </p>
+        </div>
+        <Link
+          className="inline-flex w-full justify-center rounded-md bg-slate-950 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 sm:w-auto"
+          href={`/coach-maker/moksilgi-progress?year=${data.year}`}
+        >
+          <I18nText k="moksilgi.viewOverallProgress" fallback="전체 목실기 현황 보기" />
+        </Link>
+      </div>
+
+      {data.rows.length === 0 ? (
+        <p className="mt-6 rounded-md border border-slate-200 bg-slate-50 px-4 py-6 text-center text-slate-500">
+          <I18nText
+            k="moksilgi.noProgressSummary"
+            fallback="아직 목실기 현황 데이터가 없습니다. 코치이가 목실기와 월별 기록을 저장하면 이곳에 요약이 표시됩니다."
+          />
+        </p>
+      ) : (
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryCard
+            description={<I18nText k="moksilgi.totalTargetsDescription" fallback="현재 확인 가능한 대상자입니다." />}
+            title={<I18nText k="moksilgi.totalTargets" fallback="전체 대상자 수" />}
+            value={data.rows.length}
+          />
+          <SummaryCard
+            description={<I18nText k="moksilgi.currentAverageDescription" fallback="현재 월까지 평균입니다." />}
+            title={<I18nText k="moksilgi.currentAverage" fallback="현재 월까지 평균 성취율" />}
+            value={formatPercent(data.upToCurrentRate)}
+            accent="strong"
+          />
+          <SummaryCard
+            description={<I18nText k="moksilgi.attentionTargetsDescription" fallback="먼저 살펴볼 대상자입니다." />}
+            title={<I18nText k="moksilgi.attentionTargets" fallback="관심 필요 대상자 수" />}
+            value={attention.attentionCount}
+          />
+          <SummaryCard
+            description={<I18nText k="moksilgi.missingTargetsDescription" fallback="기록 확인이 필요합니다." />}
+            title={<I18nText k="moksilgi.missingTargets" fallback="미입력 대상자 수" />}
+            value={attention.missingCount}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
+function QuickLinksSection({
+  canAccessAdminGenealogy,
+}: {
+  canAccessAdminGenealogy: boolean;
+}) {
+  const cards: Array<{
+    description: string;
+    href?: string;
+    title: string;
+  }> = [
+    {
+      description: "담당 코치이와 코칭 기록을 확인합니다.",
+      href: "/coach",
+      title: "나의 코칭 관리",
+    },
+    {
+      description: "전체 목실기 월별 성취율을 확인합니다.",
+      href: "/coach-maker/moksilgi-progress",
+      title: "전체 목실기 성취 현황",
+    },
+    {
+      description: canAccessAdminGenealogy
+        ? "코칭 관계와 세대별 계층 구조를 관리자 권한으로 확인합니다."
+        : "관리자 권한에서 제공됩니다.",
+      href: canAccessAdminGenealogy ? "/admin/coaching-genealogy" : undefined,
+      title: "세대별 계층 계보도",
+    },
+    {
+      description: "후속 관리 메모를 확인하고 작성합니다.",
+      href: "#action-memos",
+      title: "관리 액션 메모",
+    },
+  ];
+
+  return (
+    <section className="mt-8 rounded-md border border-slate-200 bg-white p-4 sm:p-6">
+      <div>
+        <p className="text-sm font-medium text-slate-500">주요 기능</p>
+        <h2 className="mt-1 text-xl font-semibold text-slate-950">
+          바로가기
+        </h2>
+      </div>
+      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {cards.map((card) =>
+          card.href ? (
+            <Link
+              className="min-w-0 rounded-md border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
+              href={card.href}
+              key={card.title}
+            >
+              <h3 className="font-semibold text-slate-950">{card.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {card.description}
+              </p>
+            </Link>
+          ) : (
+            <div
+              aria-disabled="true"
+              className="min-w-0 cursor-default select-none rounded-md border border-dashed border-slate-300 bg-slate-100/80 p-5 text-slate-500"
+              key={card.title}
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="font-semibold text-slate-700">{card.title}</h3>
+                <span className="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-xs font-medium text-slate-500">
+                  준비 중
+                </span>
+              </div>
+              <p className="mt-2 text-sm leading-6">{card.description}</p>
+              <p className="mt-1 text-xs text-slate-500">
+                현재 권한에서는 사용할 수 없습니다.
+              </p>
+            </div>
+          ),
+        )}
+      </div>
     </section>
   );
 }
@@ -372,18 +670,17 @@ export default async function CoachMakerPage() {
     redirect("/login?redirectTo=/coach-maker");
   }
 
-  const statusCounts = result.data
-    ? progressStatusCounts(result.data.rows)
-    : { completed: 0, inProgress: 0, notStarted: 0 };
   const attention = result.data
     ? attentionSummary(result.data.rows, result.data.year)
     : { attentionCount: 0, attentionRows: [], missingCount: 0 };
+  const canAccessAdminGenealogy =
+    coachStatsResult.data?.roles.some((role) => role.role === "super_admin") ?? false;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-950 sm:px-6 sm:py-10">
       <section className="mx-auto w-full max-w-7xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
               <I18nText k="nav.coachMaker" fallback="코치메이커" />
             </p>
@@ -397,10 +694,10 @@ export default async function CoachMakerPage() {
               />
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:justify-end">
             <PageNavigationButtons className="justify-start sm:justify-end" />
             <Link
-              className="inline-flex rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+              className="inline-flex min-h-10 w-full justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto"
               href={`/coach-maker/report?year=${currentYear}`}
             >
               <I18nText k="common.print" fallback="인쇄용 보고서 보기" />
@@ -424,311 +721,41 @@ export default async function CoachMakerPage() {
         ) : (
           <>
             {coachStatsResult.data ? (
-              <CoachStatsSection data={coachStatsResult.data} />
+              <>
+                <TopSummarySection
+                  attention={attention}
+                  coachStats={coachStatsResult.data}
+                />
+                <WorkQueueSection
+                  attention={attention}
+                  coachStats={coachStatsResult.data}
+                  year={result.data.year}
+                />
+              </>
             ) : coachStatsResult.error ? (
               <section className="mt-8 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                 {coachStatsResult.error.message}
               </section>
             ) : null}
 
-            <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
-              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
-                <div>
-                  <p className="text-sm font-medium text-slate-500">
-                    {result.data.year} <I18nText k="moksilgi.yearSummary" fallback="년 목실기 요약" />
-                  </p>
-                  <h2 className="mt-1 text-xl font-semibold text-slate-950">
-                    <I18nText k="moksilgi.achievementStatus" fallback="목실기 성취 현황" />
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    <I18nText
-                      k="moksilgi.summaryDescription"
-                      fallback="접근 가능한 대상자의 목실기 진행 상태와 평균 성취율을 요약합니다."
-                    />
-                  </p>
-                </div>
-                <Link
-                  className="inline-flex w-full justify-center rounded-md bg-slate-950 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 sm:w-auto"
-                  href={`/coach-maker/moksilgi-progress?year=${result.data.year}`}
-                >
-                  <I18nText k="moksilgi.viewOverallProgress" fallback="전체 목실기 현황 보기" />
-                </Link>
-              </div>
+            <QuickCheckSection attention={attention} year={result.data.year} />
 
-              {result.data.rows.length === 0 ? (
-                <p className="mt-6 rounded-md border border-slate-200 bg-slate-50 px-4 py-6 text-center text-slate-500">
-                  <I18nText
-                    k="moksilgi.noProgressSummary"
-                    fallback="아직 목실기 현황 데이터가 없습니다. 코치이가 목실기와 월별 기록을 저장하면 이곳에 요약이 표시됩니다."
-                  />
-                </p>
-              ) : (
-                <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                  <SummaryCard
-                    description={<I18nText k="moksilgi.totalTargetsDescription" fallback="현재 접근 가능한 목실기 대상자 수입니다." />}
-                    title={<I18nText k="moksilgi.totalTargets" fallback="전체 대상자 수" />}
-                    value={result.data.rows.length}
-                  />
-                  <SummaryCard
-                    description={<I18nText k="moksilgi.inProgressTargetsDescription" fallback="누적 성취율이 0% 초과 100% 미만인 인원입니다." />}
-                    title={<I18nText k="moksilgi.inProgressTargets" fallback="진행 중 인원" />}
-                    value={statusCounts.inProgress}
-                  />
-                  <SummaryCard
-                    description={<I18nText k="moksilgi.completedTargetsDescription" fallback="12개월 누적 성취율이 100% 이상인 인원입니다." />}
-                    title={<I18nText k="moksilgi.completedTargets" fallback="완료 인원" />}
-                    value={statusCounts.completed}
-                  />
-                  <SummaryCard
-                    description={<I18nText k="moksilgi.notStartedTargetsDescription" fallback="아직 누적 성취 기록이 없는 인원입니다." />}
-                    title={<I18nText k="moksilgi.notStartedTargets" fallback="미완료 인원" />}
-                    value={statusCounts.notStarted}
-                  />
-                  <SummaryCard
-                    description={<I18nText k="moksilgi.currentAverageDescription" fallback="선택 연도 기준 현재 월까지의 평균 성취율입니다." />}
-                    title={<I18nText k="moksilgi.currentAverage" fallback="현재 월까지 평균 성취율" />}
-                    value={formatPercent(result.data.upToCurrentRate)}
-                    accent="strong"
-                  />
-                  <SummaryCard
-                    description={<I18nText k="moksilgi.fullYearAverageDescription" fallback="1월부터 12월까지 전체 평균 누적 성취율입니다." />}
-                    title={<I18nText k="moksilgi.fullYearAverage" fallback="12개월 전체 평균 성취율" />}
-                    value={formatPercent(result.data.averageRow.cumulative_rate)}
-                    accent="strong"
-                  />
-                  <SummaryCard
-                    description={<I18nText k="moksilgi.attentionTargetsDescription" fallback="현재 월까지 성취율이 50% 미만인 대상자 수입니다." />}
-                    title={<I18nText k="moksilgi.attentionTargets" fallback="관심 필요 대상자 수" />}
-                    value={attention.attentionCount}
-                  />
-                  <SummaryCard
-                    description={<I18nText k="moksilgi.missingTargetsDescription" fallback="성취율 계산이 어렵거나 기록이 없는 대상자 수입니다." />}
-                    title={<I18nText k="moksilgi.missingTargets" fallback="미입력 대상자 수" />}
-                    value={attention.missingCount}
-                  />
-                </div>
-              )}
+            {coachStatsResult.data ? (
+              <CoachStatsSection data={coachStatsResult.data} />
+            ) : null}
 
-              {result.data.rows.length > 0 ? (
-                <section className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-5">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">
-                        <I18nText k="moksilgi.quickCheck" fallback="빠른 점검" />
-                      </p>
-                      <h3 className="text-lg font-semibold text-slate-950">
-                        <I18nText k="moksilgi.attentionUsers" fallback="관심 필요 대상자" />
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
-                        <I18nText
-                          k="moksilgi.attentionUsersDescription"
-                          fallback="현재 월까지 성취율이 50% 미만인 대상자 중 낮은 성취율 순으로 최대 5명을 표시합니다."
-                        />
-                      </p>
-                    </div>
-                    <Link
-                      className="inline-flex w-full justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto"
-                      href={`/coach-maker/moksilgi-progress?year=${result.data.year}`}
-                    >
-                      <I18nText k="moksilgi.viewOverallProgress" fallback="전체 목실기 현황 보기" />
-                    </Link>
-                  </div>
-
-                  <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    <div className="rounded-md border border-amber-200 bg-white p-4">
-                      <p className="text-sm font-medium text-slate-500">
-                        <I18nText k="moksilgi.attentionTargets" fallback="관심 필요 대상자 수" />
-                      </p>
-                      <p className="mt-2 text-2xl font-semibold text-amber-700">
-                        {attention.attentionCount}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-600">
-                        <I18nText k="moksilgi.lowAverageReason" fallback="현재 월까지 성취율이 50% 미만입니다." />
-                      </p>
-                    </div>
-                    <div className="rounded-md border border-slate-200 bg-white p-4">
-                      <p className="text-sm font-medium text-slate-500">
-                        <I18nText k="moksilgi.missingTargets" fallback="미입력 대상자 수" />
-                      </p>
-                      <p className="mt-2 text-2xl font-semibold text-slate-950">
-                        {attention.missingCount}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-600">
-                        <I18nText
-                          k="moksilgi.missingTargetsReason"
-                          fallback="기록이 없거나 성취율 계산이 어려운 대상자입니다."
-                        />
-                      </p>
-                    </div>
-                  </div>
-
-                  {attention.attentionRows.length === 0 ? (
-                    <p className="mt-4 rounded-md border border-slate-200 bg-white px-4 py-5 text-center text-sm text-slate-500">
-                      <I18nText k="moksilgi.noAttentionUsers" fallback="관심 필요 대상자가 없습니다." />
-                    </p>
-                  ) : (
-                    <div className="mt-4 overflow-x-auto">
-                      <table className="min-w-[760px] w-full border-collapse text-left text-sm">
-                        <thead>
-                          <tr className="border-b border-slate-200 text-slate-600">
-                            <th className="px-3 py-2 font-semibold"><I18nText k="members.name" fallback="이름" /></th>
-                            <th className="px-3 py-2 font-semibold"><I18nText k="moksilgi.team" fallback="팀" /></th>
-                            <th className="px-3 py-2 font-semibold"><I18nText k="moksilgi.region" fallback="지역" /></th>
-                            <th className="px-3 py-2 font-semibold"><I18nText k="moksilgi.currentAverage" fallback="현재 월까지 성취율" /></th>
-                            <th className="px-3 py-2 font-semibold"><I18nText k="moksilgi.details" fallback="상세" /></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {attention.attentionRows.map((item) => (
-                            <tr className="border-b border-slate-100" key={item.row.plan_id}>
-                              <td className="px-3 py-3 font-medium text-slate-950">
-                                {personName(item.row)}
-                              </td>
-                              <td className="px-3 py-3 text-slate-700">
-                                {displayValue(item.row.team_name)}
-                              </td>
-                              <td className="px-3 py-3 text-slate-700">
-                                {displayValue(item.row.region_name)}
-                              </td>
-                              <td className="px-3 py-3 font-semibold text-amber-700">
-                                {formatPercent(item.rate)}
-                              </td>
-                              <td className="px-3 py-3">
-                                <Link
-                                  className="inline-flex rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-white"
-                                  href={`/coach-maker/moksilgi-progress?year=${result.data.year}&memberId=${encodeURIComponent(item.row.profile_id)}`}
-                                >
-                                  <I18nText k="moksilgi.viewProgress" fallback="현황 보기" />
-                                </Link>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </section>
-              ) : null}
-            </section>
-
-            <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-500">
-                    <I18nText k="coachMaker.myCoachingManagement" fallback="나의 코칭 관리" />
-                  </p>
-                  <h2 className="mt-1 text-xl font-semibold text-slate-950">
-                    <I18nText k="coachMaker.personalCoachRole" fallback="개인 코치 역할 기능" />
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    <I18nText
-                      k="coachMaker.myCoachingManagementDescription"
-                      fallback="코치메이커가 동시에 코치 역할을 수행할 때 사용하는 개인 코칭 관리 기능입니다."
-                    />
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <Link
-                  className="rounded-md border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
-                  href="/coach"
-                >
-                  <h3 className="font-semibold text-slate-950">
-                    <I18nText k="coachMaker.myCoachingManagement" fallback="나의 코칭 관리" />
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    <I18nText
-                      k="coachMaker.myCoachingManagementCardDescription"
-                      fallback="내가 코치로 담당하는 코치이와 코칭 기록을 확인합니다."
-                    />
-                  </p>
-                </Link>
-              </div>
-            </section>
-
-            <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-500">
-                    <I18nText k="coachMaker.moksilgiProgress" fallback="전체 목실기 성취 현황" />
-                  </p>
-                  <h2 className="mt-1 text-xl font-semibold text-slate-950">
-                    <I18nText k="coachMaker.teamMoksilgiManagement" fallback="지역/팀 목실기 관리 기능" />
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    <I18nText
-                      k="coachMaker.moksilgiProgressDescription"
-                      fallback="코치메이커가 담당 지역/팀의 목실기 진행 흐름을 확인하는 관리 기능입니다."
-                    />
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <Link
-                  className="rounded-md border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
-                  href="/coach-maker/moksilgi-progress"
-                >
-                  <h3 className="font-semibold text-slate-950">
-                    <I18nText k="coachMaker.moksilgiProgress" fallback="전체 목실기 성취 현황" />
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    <I18nText
-                      k="coachMaker.moksilgiProgressCardDescription"
-                      fallback="담당 지역/팀의 코치와 코치이 목실기 월별 성취율을 한눈에 확인합니다."
-                    />
-                  </p>
-                </Link>
-              </div>
-            </section>
-
-            <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-500">
-                    <I18nText k="coachMaker.coachingStructureManagement" fallback="코칭 구조 관리" />
-                  </p>
-                  <h2 className="mt-1 text-xl font-semibold text-slate-950">
-                    <I18nText k="coachMaker.coachingRelationshipFlow" fallback="코칭 관계와 세대 흐름" />
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    <I18nText
-                      k="coachMaker.coachingStructureDescription"
-                      fallback="코칭 관계와 세대별 계층 구조를 시각적으로 확인하는 기능입니다."
-                    />
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <Link
-                  className="rounded-md border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
-                  href="/admin/coaching-genealogy"
-                >
-                  <h3 className="font-semibold text-slate-950">
-                    <I18nText k="coachMaker.coachingGenealogy" fallback="세대별 계층 계보도" />
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    <I18nText
-                      k="coachMaker.coachingGenealogyDescription"
-                      fallback="내가 담당하거나 접근 가능한 코칭 관계의 세대별 흐름과 계층 구조를 확인합니다."
-                    />
-                  </p>
-                </Link>
-              </div>
-            </section>
+            <MoksilgiSummarySection attention={attention} data={result.data} />
+            <QuickLinksSection canAccessAdminGenealogy={canAccessAdminGenealogy} />
+            <ActionMemoDrafts
+              attentionTargets={attention.attentionRows.map((item) => ({
+                region: item.row.region_name,
+                targetName: personName(item.row),
+                targetUserId: item.row.profile_id,
+                teamName: item.row.team_name,
+              }))}
+            />
           </>
         )}
-
-        <ActionMemoDrafts
-          attentionTargets={attention.attentionRows.map((item) => ({
-            region: item.row.region_name,
-            targetName: personName(item.row),
-            targetUserId: item.row.profile_id,
-            teamName: item.row.team_name,
-          }))}
-        />
       </section>
     </main>
   );

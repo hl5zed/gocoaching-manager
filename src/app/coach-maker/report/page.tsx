@@ -5,6 +5,11 @@ import {
   type CoachMakerMoksilgiProgressRow,
 } from "@/lib/api/coach-maker/moksilgi-progress";
 import {
+  getCoachMakerCoachStats,
+  type CoachMakerCoachStatsData,
+  type CoachMakerCoachStatsRow,
+} from "@/lib/api/coach-maker/coach-stats";
+import {
   getCoachActionNotes,
   type ActionNoteActionType,
   type ActionNotePriority,
@@ -457,12 +462,29 @@ function SummaryBox({
   );
 }
 
-function EmptyState() {
+function EmptyState({ children }: { children: string }) {
   return (
     <p className="report-card rounded-md border border-slate-200 px-4 py-5 text-center text-sm text-slate-500 print:border-slate-300">
-      선택한 조건에 해당하는 데이터가 없습니다.
+      {children}
     </p>
   );
+}
+
+function formatWeekRange(weekRange: CoachMakerCoachStatsData["weekRange"]) {
+  return `${weekRange.start} ~ ${weekRange.end}`;
+}
+
+function coachStatsErrorMessage(code: string) {
+  if (code === "PROFILE_NOT_FOUND") return "아직 프로필이 생성되지 않았습니다.";
+  if (code === "ACCESS_DENIED") return "코치메이커 권한이 없습니다.";
+  return "코치별 현황 데이터를 불러오지 못했습니다.";
+}
+
+function checkNeededLabel(coach: CoachMakerCoachStatsRow) {
+  const total = coach.weeklyMissingThisWeekCount + coach.feedbackPendingCount;
+
+  if (total === 0) return "없음";
+  return `미제출 ${coach.weeklyMissingThisWeekCount}명 / 피드백 ${coach.feedbackPendingCount}건`;
 }
 
 export default async function CoachMakerReportPage({
@@ -473,7 +495,7 @@ export default async function CoachMakerReportPage({
   const selectedTeam = normalizeOptionalText(params.team);
   const selectedFrom = normalizeDateParam(params.from);
   const selectedTo = normalizeDateParam(params.to);
-  const [moksilgiResult, actionNotesResult] = await Promise.all([
+  const [moksilgiResult, actionNotesResult, coachStatsResult] = await Promise.all([
     getCoachMakerMoksilgiProgress({
       year: selectedYear,
       generationLabel: null,
@@ -483,15 +505,20 @@ export default async function CoachMakerReportPage({
       teamName: null,
     }),
     getCoachActionNotes(new URLSearchParams()),
+    getCoachMakerCoachStats(),
   ]);
 
-  if (moksilgiResult.error?.code === "UNAUTHORIZED") {
+  if (
+    moksilgiResult.error?.code === "UNAUTHORIZED"
+    || coachStatsResult.error?.code === "UNAUTHORIZED"
+  ) {
     redirect("/login?redirectTo=/coach-maker/report");
   }
 
   const generatedAt = new Date();
   const allRows = moksilgiResult.data?.rows ?? [];
   const allNotes = actionNotesResult.ok ? actionNotesResult.data : [];
+  const coachStats = coachStatsResult.data;
   const teamOptions = collectTeamOptions(allRows, allNotes);
   const rows = filterRowsByTeam(allRows, selectedTeam);
   const statusCounts = progressStatusCounts(rows);
@@ -534,7 +561,7 @@ export default async function CoachMakerReportPage({
   ].slice(0, 10);
 
   return (
-    <main className="min-h-screen bg-slate-100 px-6 py-8 text-slate-950 print:bg-white print:px-0 print:py-0">
+    <main className="min-h-screen bg-slate-100 px-3 py-5 text-slate-950 sm:px-6 sm:py-8 print:bg-white print:px-0 print:py-0">
       <style>
         {`
           @page {
@@ -575,6 +602,8 @@ export default async function CoachMakerReportPage({
               border-top: 1px solid #e2e8f0;
               break-inside: auto;
               page-break-inside: auto;
+              orphans: 3;
+              widows: 3;
             }
 
             .report-section-first {
@@ -621,6 +650,12 @@ export default async function CoachMakerReportPage({
               vertical-align: top;
             }
 
+            .report-table th,
+            .report-table td {
+              padding-top: 4pt !important;
+              padding-bottom: 4pt !important;
+            }
+
             .report-section p,
             .report-section li,
             .report-section dd {
@@ -630,10 +665,10 @@ export default async function CoachMakerReportPage({
           }
         `}
       </style>
-      <section className="print-report-shell mx-auto max-w-[210mm] rounded-md bg-white p-8 shadow-sm print:max-w-none print:rounded-none print:p-0 print:shadow-none">
+      <section className="print-report-shell mx-auto max-w-[210mm] rounded-md bg-white p-4 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:p-0 print:shadow-none">
         <div className="report-controls mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
           <Link
-            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="inline-flex min-h-10 w-full justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
             href="/coach-maker"
           >
             대시보드로 돌아가기
@@ -687,11 +722,93 @@ export default async function CoachMakerReportPage({
           <>
             <section className="report-section report-section-first mt-8 print:break-inside-auto">
               <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
-                목실기 성취 현황
+                코치메이커 담당 범위 요약
+              </h2>
+              {coachStatsResult.error ? (
+                <p className="report-card mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-5 text-center text-sm text-red-800 print:border-slate-300 print:bg-white print:text-slate-900">
+                  {coachStatsErrorMessage(coachStatsResult.error.code)}
+                </p>
+              ) : !coachStats ? (
+                <div className="mt-4">
+                  <EmptyState>코치메이커 담당 범위 데이터가 없습니다.</EmptyState>
+                </div>
+              ) : (
+                <>
+                  <div className="report-card mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 print:border-slate-300 print:bg-white print:text-slate-900">
+                    <p>담당 범위: {coachStats.scopeLabel}</p>
+                    <p className="mt-1">이번 주 기준: {formatWeekRange(coachStats.weekRange)}</p>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <SummaryBox label="전체 코치 수" value={coachStats.summary.coachCount} />
+                    <SummaryBox label="전체 담당 코치이 수" value={coachStats.summary.assignedCoacheeCount} />
+                    <SummaryBox label="이번 주 제출" value={coachStats.summary.weeklySubmittedThisWeekCount} />
+                    <SummaryBox label="이번 주 미제출" value={coachStats.summary.weeklyMissingThisWeekCount} />
+                    <SummaryBox label="피드백 대기" value={coachStats.summary.feedbackPendingCount} />
+                    <SummaryBox label="공유 기록" value={coachStats.summary.sharedDailyRecordCount + coachStats.summary.sharedMonthlyReflectionCount} />
+                  </div>
+                </>
+              )}
+            </section>
+
+            <section className="report-section mt-8 print:break-inside-auto">
+              <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
+                코치별 담당 코치이 현황
+              </h2>
+              <p className="mt-2 text-sm text-slate-600 print:text-slate-800">
+                이번 주 제출, 미제출, 피드백 대기 현황을 코치별로 요약합니다.
+              </p>
+              {coachStatsResult.error ? (
+                <p className="report-card mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-5 text-center text-sm text-red-800 print:border-slate-300 print:bg-white print:text-slate-900">
+                  {coachStatsErrorMessage(coachStatsResult.error.code)}
+                </p>
+              ) : !coachStats || coachStats.coaches.length === 0 ? (
+                <div className="mt-4">
+                  <EmptyState>코치별 담당 현황 데이터가 없습니다.</EmptyState>
+                </div>
+              ) : (
+                <div className="mt-4 overflow-x-auto print:overflow-visible">
+                  <table className="report-table w-full border-collapse text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-300">
+                        <th className="py-2 pr-3">코치</th>
+                        <th className="py-2 pr-3">담당 코치이</th>
+                        <th className="py-2 pr-3">이번 주 제출</th>
+                        <th className="py-2 pr-3">이번 주 미제출</th>
+                        <th className="py-2 pr-3">피드백 대기</th>
+                        <th className="py-2 pr-3">확인 필요</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {coachStats.coaches.map((coach) => (
+                        <tr className="border-b border-slate-100 align-top" key={coach.coachId}>
+                          <td className="py-2 pr-3">
+                            <p className="font-medium">{coach.coachName}</p>
+                            {coach.coachEmail ? (
+                              <p className="text-xs text-slate-500 print:text-slate-700">
+                                {coach.coachEmail}
+                              </p>
+                            ) : null}
+                          </td>
+                          <td className="py-2 pr-3">{coach.assignedCoacheeCount}</td>
+                          <td className="py-2 pr-3">{coach.weeklySubmittedThisWeekCount}</td>
+                          <td className="py-2 pr-3">{coach.weeklyMissingThisWeekCount}</td>
+                          <td className="py-2 pr-3">{coach.feedbackPendingCount}</td>
+                          <td className="py-2 pr-3">{checkNeededLabel(coach)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+
+            <section className="report-section mt-8 print:break-inside-auto">
+              <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
+                목실기 성취 요약
               </h2>
               {rows.length === 0 ? (
                 <div className="mt-4">
-                  <EmptyState />
+                  <EmptyState>목실기 성취 데이터가 없습니다.</EmptyState>
                 </div>
               ) : (
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -721,7 +838,7 @@ export default async function CoachMakerReportPage({
               </div>
               {attention.attentionRows.length === 0 ? (
                 <div className="mt-4">
-                  <EmptyState />
+                  <EmptyState>관심 필요 대상자가 없습니다.</EmptyState>
                 </div>
               ) : (
                 <div className="mt-4 overflow-x-auto print:overflow-visible">
@@ -729,8 +846,8 @@ export default async function CoachMakerReportPage({
                     <thead>
                       <tr className="border-b border-slate-300">
                         <th className="py-2 pr-3">이름</th>
-                        <th className="py-2 pr-3">지역</th>
-                        <th className="py-2 pr-3">팀</th>
+                        <th className="py-2 pr-3">국가/소속</th>
+                        <th className="py-2 pr-3">공동체/팀</th>
                         <th className="py-2 pr-3">현재 월까지 성취율</th>
                       </tr>
                     </thead>
@@ -760,15 +877,12 @@ export default async function CoachMakerReportPage({
               보고서 데이터를 불러오지 못했습니다.
             </p>
           ) : (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               <SummaryBox label="전체 메모 수" value={notes.length} />
-              <SummaryBox label="진행 전" value={notes.filter((note) => note.status === "open").length} />
               <SummaryBox label="진행 중" value={notes.filter((note) => note.status === "in_progress").length} />
               <SummaryBox label="완료" value={notes.filter((note) => note.status === "completed").length} />
               <SummaryBox label="높은 우선순위" value={notes.filter((note) => note.priority === "high").length} />
               <SummaryBox label="기한 지난 메모" value={notes.filter(isOverdue).length} />
-              <SummaryBox label="오늘 마감" value={notes.filter(isDueToday).length} />
-              <SummaryBox label="이번 주 마감" value={notes.filter(isDueThisWeek).length} />
             </div>
           )}
         </section>
@@ -782,7 +896,7 @@ export default async function CoachMakerReportPage({
           </p>
           {priorityActionNotes.length === 0 ? (
             <div className="mt-4">
-              <EmptyState />
+              <EmptyState>관리 액션 메모가 없습니다.</EmptyState>
             </div>
           ) : (
             <div className="mt-4 overflow-x-auto print:overflow-visible">
