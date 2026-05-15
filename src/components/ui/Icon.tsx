@@ -10,6 +10,7 @@ export type IconName =
   | "delete"
   | "filter"
   | "globe"
+  | "logout"
   | "print"
   | "report"
   | "save"
@@ -41,6 +42,7 @@ const paths: Record<IconName, string[]> = {
     "M12 3c2.2 2.5 3.2 5.5 3.2 9S14.2 18.5 12 21",
     "M12 3C9.8 5.5 8.8 8.5 8.8 12s1 6.5 3.2 9",
   ],
+  logout: ["M10 17l5-5-5-5", "M15 12H3", "M21 3v18h-8"],
   print: ["M7 8V3h10v5", "M7 17H5a2 2 0 0 1-2-2v-5h18v5a2 2 0 0 1-2 2h-2", "M7 14h10v7H7v-7Z"],
   report: ["M7 3h7l5 5v13H7V3Z", "M14 3v5h5", "M10 13h6", "M10 17h6"],
   save: ["M5 3h12l2 2v16H5V3Z", "M8 3v6h8V3", "M8 17h8"],

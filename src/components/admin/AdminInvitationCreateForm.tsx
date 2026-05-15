@@ -231,6 +231,19 @@ export function AdminInvitationCreateForm({
     }
   }
 
+  function resetFormForNextInvitation() {
+    setEmail("");
+    setInvitedRole("coachee");
+    setScopeType("global");
+    setScopeId("");
+    setSelectedOrganizationId("");
+    setExpiresInDays(normalizeDefaultExpiresInDays(defaultExpiresInDays));
+    setSendEmailNow(true);
+    setSuccess(null);
+    setError(null);
+    setCopyMessage("");
+  }
+
   return (
     <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
       <div className="grid gap-4 md:grid-cols-2">
@@ -366,7 +379,13 @@ export function AdminInvitationCreateForm({
         </label>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-3">
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        <Link
+          className="rounded-md border border-slate-300 px-4 py-2 font-medium text-slate-700 hover:bg-slate-100"
+          href="/admin/invitations"
+        >
+          취소
+        </Link>
         <button
           className="rounded-md bg-slate-950 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
           disabled={isSubmitting}
@@ -375,13 +394,6 @@ export function AdminInvitationCreateForm({
         >
           {isSubmitting ? "생성 중..." : "초대 생성"}
         </button>
-
-        <Link
-          className="rounded-md border border-slate-300 px-4 py-2 font-medium text-slate-700"
-          href="/admin/invitations"
-        >
-          초대 목록으로 돌아가기
-        </Link>
       </div>
 
       {success && (
@@ -407,6 +419,21 @@ export function AdminInvitationCreateForm({
             </button>
           </div>
           {copyMessage && <p className="mt-2 text-sm">{copyMessage}</p>}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link
+              className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-100"
+              href="/admin/invitations"
+            >
+              초대 목록으로 이동
+            </Link>
+            <button
+              className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-100"
+              onClick={resetFormForNextInvitation}
+              type="button"
+            >
+              새 초대 계속 만들기
+            </button>
+          </div>
           {success.emailDelivery?.sent === true && (
             <p className="mt-2 text-sm">이메일을 보냈습니다.</p>
           )}
