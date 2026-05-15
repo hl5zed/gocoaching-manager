@@ -122,12 +122,16 @@ function TextInput({
   name,
   value,
   maxLength,
+  helpText,
+  placeholder,
   type = "text",
 }: {
   label: string;
   name: string;
   value?: string | number | null;
   maxLength?: number;
+  helpText?: string;
+  placeholder?: string;
   type?: string;
 }) {
   return (
@@ -138,8 +142,14 @@ function TextInput({
         defaultValue={fieldValue(value)}
         maxLength={maxLength}
         name={name}
+        placeholder={placeholder}
         type={type}
       />
+      {helpText ? (
+        <span className="mt-1 block text-xs leading-5 text-slate-500">
+          {helpText}
+        </span>
+      ) : null}
     </label>
   );
 }
@@ -201,7 +211,14 @@ function PlanForm({
           <TextInput label="기간 종료일" name="period_end" type="date" value={plan?.period_end} />
           <TextInput label="작성일" name="written_at" type="date" value={plan?.written_at} />
           <TextInput label="작성자" maxLength={120} name="author_name" value={plan?.author_name} />
-          <TextInput label="지역/목장" maxLength={120} name="region_name" value={plan?.region_name} />
+          <TextInput
+            helpText="내가 속한 국가와 함께 신앙과 사역을 나누는 공동체를 기록합니다."
+            label="국가/소속/공동체"
+            maxLength={120}
+            name="region_name"
+            placeholder="예: 태국 / CCT 22노회 / 치앙라이 교회 / 코칭그룹"
+            value={plan?.region_name}
+          />
           <TextInput label="지역팀장" maxLength={120} name="regional_leader_name" value={plan?.regional_leader_name} />
           <TextInput label="코치" maxLength={120} name="coach_name" value={plan?.coach_name} />
           <TextInput label="직책" maxLength={80} name="role_label" value={plan?.role_label} />

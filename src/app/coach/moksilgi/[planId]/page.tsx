@@ -2,6 +2,19 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PrintPageButton } from "@/components/print/PrintPageButton";
 import {
+  Badge,
+  Button,
+  ButtonLink,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  FieldLabel,
+  ProgressBar,
+  TextInput,
+} from "@/components/ui";
+import {
   getCoachMoksilgiDetail,
   type CoachMoksilgiDetail,
   type CoachMoksilgiDetailGoal,
@@ -17,6 +30,13 @@ const STATUS_LABEL: Record<string, string> = {
   active: "활성",
   archived: "보관",
 };
+
+function statusTone(status: string): "success" | "warning" | "neutral" | "info" {
+  if (status === "active") return "success";
+  if (status === "draft") return "warning";
+  if (status === "archived") return "neutral";
+  return "info";
+}
 
 const MEASUREMENT_LABEL: Record<string, string> = {
   daily_check: "매일 실행 확인",
@@ -111,9 +131,9 @@ function InfoGrid({
   return (
     <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
-        <div key={item.label}>
+        <div className="min-w-0" key={item.label}>
           <dt className="text-sm font-medium text-slate-500">{item.label}</dt>
-          <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+          <dd className="mt-1 whitespace-pre-wrap break-words text-slate-950">
             {displayValue(item.value)}
           </dd>
         </div>
@@ -124,21 +144,21 @@ function InfoGrid({
 
 function PageNav({ planId, year }: { planId: string; year: number }) {
   return (
-    <nav className="flex flex-wrap gap-3 text-sm">
-      <Link
+    <nav className="print-hidden flex flex-wrap gap-2 text-sm">
+      <ButtonLink
         href={`/coach/moksilgi?year=${year}`}
-        className="font-medium text-blue-600 hover:underline"
+        icon="arrow-left"
+        size="sm"
+        variant="secondary"
       >
         코치이 목실기 목록으로 돌아가기
-      </Link>
-      <span className="text-slate-300">/</span>
-      <Link href="/coach" className="font-medium text-blue-600 hover:underline">
+      </ButtonLink>
+      <ButtonLink href="/coach" icon="users" size="sm" variant="ghost">
         코치 홈으로 돌아가기
-      </Link>
-      <span className="text-slate-300">/</span>
-      <Link href="/dashboard" className="font-medium text-blue-600 hover:underline">
+      </ButtonLink>
+      <ButtonLink href="/dashboard" icon="dashboard" size="sm" variant="ghost">
         대시보드
-      </Link>
+      </ButtonLink>
       <span className="sr-only">{planId}</span>
     </nav>
   );
@@ -147,10 +167,10 @@ function PageNav({ planId, year }: { planId: string; year: number }) {
 function YearSelector({ planId, year }: { planId: string; year: number }) {
   return (
     <form className="print-hidden mt-5 flex flex-wrap items-end gap-3" method="get">
-      <label className="block">
-        <span className="text-sm font-medium text-slate-700">연도</span>
-        <input
-          className="mt-2 w-36 rounded-md border border-slate-300 bg-white px-3 py-2"
+      <label className="block min-w-0">
+        <FieldLabel>연도</FieldLabel>
+        <TextInput
+          className="mt-2 w-36"
           defaultValue={year}
           max={2100}
           min={2000}
@@ -158,18 +178,16 @@ function YearSelector({ planId, year }: { planId: string; year: number }) {
           type="number"
         />
       </label>
-      <button
-        className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-        type="submit"
-      >
+      <Button icon="search" type="submit">
         조회
-      </button>
-      <Link
-        className="pb-2 text-sm font-medium text-slate-700 underline"
+      </Button>
+      <ButtonLink
         href={`/coach/moksilgi/${planId}`}
+        size="sm"
+        variant="ghost"
       >
         올해로 보기
-      </Link>
+      </ButtonLink>
     </form>
   );
 }
@@ -201,10 +219,12 @@ function Section({
   title: string;
 }) {
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-6">
-      <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
-      <div className="mt-4">{children}</div>
-    </section>
+    <Card className="print-section">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
   );
 }
 
@@ -216,11 +236,12 @@ function CoreValuesSection({ values }: { values: CoreValueItem[] }) {
   return (
     <div className="grid gap-4 md:grid-cols-3">
       {values.map((value, index) => (
-        <article
-          className="rounded-md border border-slate-200 bg-slate-50 p-4"
+        <Card
+          className="print-card bg-slate-50"
           key={`${value.value_name}-${index}`}
         >
-          <h3 className="font-semibold text-slate-950">
+          <CardContent className="p-4">
+          <h3 className="break-words font-semibold text-slate-950">
             {displayValue(value.value_name)}
           </h3>
           <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
@@ -230,7 +251,8 @@ function CoreValuesSection({ values }: { values: CoreValueItem[] }) {
           <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">
             {displayValue(value.practice_example)}
           </p>
-        </article>
+          </CardContent>
+        </Card>
       ))}
     </div>
   );
@@ -240,8 +262,9 @@ function DetailGoalCard({ goal }: { goal: CoachMoksilgiDetailGoal }) {
   const strategies = strategiesFromJson(goal.strategies_json);
 
   return (
-    <article className="rounded-md border border-slate-200 bg-white p-4">
-      <h4 className="font-semibold text-slate-950">{goal.title}</h4>
+    <Card className="print-card">
+      <CardContent className="p-4">
+      <h4 className="break-words font-semibold text-slate-950">{goal.title}</h4>
       <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
         {displayValue(goal.description)}
       </p>
@@ -281,7 +304,8 @@ function DetailGoalCard({ goal }: { goal: CoachMoksilgiDetailGoal }) {
           </ul>
         )}
       </div>
-    </article>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -302,9 +326,10 @@ function GoalAreasSection({
         const goals = detailGoals.filter((goal) => goal.area_id === area.id);
 
         return (
-          <article className="rounded-md border border-slate-200 bg-slate-50 p-5" key={area.id}>
+          <Card className="print-card bg-slate-50" key={area.id}>
+            <CardContent className="p-5">
             <div>
-              <h3 className="font-semibold text-slate-950">
+              <h3 className="break-words font-semibold text-slate-950">
                 목표 {index + 1}: {area.area_title}
               </h3>
               <p className="mt-1 text-sm text-slate-600">
@@ -320,7 +345,8 @@ function GoalAreasSection({
                 ))}
               </div>
             )}
-          </article>
+            </CardContent>
+          </Card>
         );
       })}
     </div>
@@ -371,9 +397,9 @@ function SummaryTable({
                 <th className="whitespace-nowrap px-3 py-2 text-left font-medium">
                   {row.monthLabel}
                   {isCurrentMonth ? (
-                    <span className="ml-2 rounded-full bg-slate-900 px-2 py-0.5 text-xs font-medium text-white">
+                    <Badge className="ml-2" tone="info">
                       현재 월
-                    </span>
+                    </Badge>
                   ) : null}
                 </th>
                 <td className="px-3 py-2">{formatPercent(row.spiritual_rate)}</td>
@@ -459,7 +485,7 @@ export default async function CoachMoksilgiDetailPage({
   const coreValues = coreValuesFromJson(plan.core_values_json);
 
   return (
-    <main className="print-root min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="print-root min-h-screen bg-[var(--trust-bg)] px-4 py-8 text-slate-950 sm:px-6 lg:py-10">
       <div className="mx-auto max-w-6xl">
         <PageNav planId={planId} year={year} />
 
@@ -469,35 +495,50 @@ export default async function CoachMoksilgiDetailPage({
           <p>출력 연도: {year}년</p>
           <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
         </div>
-        <header className="mt-6">
-          <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-            코치용 목실기 상세 보기
-          </p>
-          <h1 className="mt-3 text-3xl font-semibold">코치이 목실기 상세</h1>
-          <p className="mt-2 text-lg text-slate-700">목표와 실행전략 기획안</p>
-          <p className="mt-3 max-w-3xl text-slate-600">
-            담당 코치이가 작성한 목실기와 연간 성취 요약을 확인합니다.
-          </p>
-          <div className="flex flex-wrap items-end gap-3">
-            <YearSelector planId={planId} year={year} />
+        <Card className="print-section mt-6">
+          <CardHeader className="flex flex-col gap-4 border-b-0 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <Badge icon="report" tone="info">코치용 목실기 상세 보기</Badge>
+              <CardTitle className="mt-3 text-3xl">코치이 목실기 상세</CardTitle>
+              <CardDescription className="text-base">
+                목표와 실행전략 기획안
+              </CardDescription>
+              <p className="mt-3 max-w-3xl break-words text-slate-600">
+                담당 코치이가 작성한 목실기와 연간 성취 요약을 확인합니다.
+              </p>
+              <YearSelector planId={planId} year={year} />
+            </div>
             <PrintPageButton
               fileName={`moksilgi-coachee-detail-${year}-${planId.slice(0, 8)}`}
               label="코치이 목실기 상세 출력"
             />
-          </div>
-        </header>
+          </CardHeader>
+        </Card>
 
-        <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
-          <p className="text-sm font-medium text-slate-500">{year}년 총 달성률</p>
-          <p className="mt-2 text-4xl font-semibold">
-            {formatPercent(data.totalAchievementRate)}
-          </p>
-          {!data.hasSummaryData ? (
-            <p className="mt-3 text-sm text-amber-700">
-              아직 선택한 연도의 월별 체크리스트 기록이 없습니다.
-            </p>
-          ) : null}
-        </section>
+        <Card className="print-section mt-6">
+          <CardContent>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-slate-500">
+                  {year}년 총 달성률
+                </p>
+                <p className="mt-2 text-4xl font-semibold">
+                  {formatPercent(data.totalAchievementRate)}
+                </p>
+              </div>
+              <ProgressBar
+                className="min-w-[220px] flex-1 sm:max-w-sm"
+                label="연간 성취율"
+                value={data.totalAchievementRate}
+              />
+            </div>
+            {!data.hasSummaryData ? (
+              <p className="mt-3 text-sm text-amber-700">
+                아직 선택한 연도의 월별 체크리스트 기록이 없습니다.
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
 
         <div className="mt-6 grid gap-6">
           <Section title="코치이 정보">

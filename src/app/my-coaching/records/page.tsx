@@ -1,9 +1,22 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/getSession";
 import { getDailyRecords } from "@/lib/api/my-coaching/daily-records";
 import { getMonthlyReflections } from "@/lib/api/my-coaching/monthly-reflections";
 import { getRecentMyWeeklyLogs } from "@/lib/api/my-coaching/weekly-log";
+import {
+  Badge,
+  Button,
+  ButtonLink,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  FieldLabel,
+  FieldText,
+  SelectInput,
+  TextInput,
+} from "@/components/ui";
 import { PrintRecordsButton } from "./PrintRecordsButton";
 
 export const dynamic = "force-dynamic";
@@ -181,6 +194,18 @@ function getRecordTypeClass(type: RecordType) {
   return "border-rose-200 bg-rose-50 text-rose-800";
 }
 
+function getRecordTypeTone(type: RecordType) {
+  if (type === "daily") {
+    return "success";
+  }
+
+  if (type === "weekly") {
+    return "info";
+  }
+
+  return "warning";
+}
+
 function getStatusLabel(status: string | null) {
   if (status === "draft") {
     return "임시저장";
@@ -213,6 +238,18 @@ function getStatusClass(status: string | null) {
   return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
+function getStatusTone(status: string | null) {
+  if (status === "submitted" || status === "reviewed") {
+    return "success";
+  }
+
+  if (status === "draft") {
+    return "warning";
+  }
+
+  return "neutral";
+}
+
 function getVisibilityLabel(
   visibility: string | null,
   sharedWithCoach: boolean | null,
@@ -241,6 +278,17 @@ function getVisibilityClass(
   }
 
   return "border-slate-200 bg-slate-50 text-slate-700";
+}
+
+function getVisibilityTone(
+  visibility: string | null,
+  sharedWithCoach: boolean | null,
+) {
+  if (sharedWithCoach || visibility === "coach") {
+    return "info";
+  }
+
+  return "neutral";
 }
 
 function getStatusRank(status: string | null) {
@@ -349,7 +397,7 @@ function getFilterSummary({
 
 function getRecordsResultSectionClass(hasActiveSearchOrFilter: boolean) {
   return [
-    "mt-8 rounded-md border border-slate-200 bg-white p-6 print:block print:border-0 print:p-0",
+    "mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm print:block print:border-0 print:p-0 print:shadow-none",
     hasActiveSearchOrFilter ? "" : "hidden",
   ]
     .filter(Boolean)
@@ -358,42 +406,31 @@ function getRecordsResultSectionClass(hasActiveSearchOrFilter: boolean) {
 
 function RecordCard({ record }: { record: CombinedRecord }) {
   return (
-    <article className="break-inside-avoid rounded-md border border-slate-200 bg-white p-4 print:mb-3 print:overflow-visible print:bg-white print:shadow-none">
+    <article className="break-inside-avoid rounded-lg border border-slate-200 bg-white p-4 shadow-sm print:mb-3 print:overflow-visible print:bg-white print:shadow-none">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={`rounded-full border px-2.5 py-1 text-xs font-medium ${getRecordTypeClass(
-                record.type,
-              )}`}
-            >
+            <Badge tone={getRecordTypeTone(record.type)}>
               {getRecordTypeLabel(record.type)}
-            </span>
-            <span
-              className={`rounded-full border px-2.5 py-1 text-xs font-medium ${getStatusClass(
-                record.status,
-              )}`}
-            >
+            </Badge>
+            <Badge tone={getStatusTone(record.status)}>
               {getStatusLabel(record.status)}
-            </span>
-            <span
-              className={`rounded-full border px-2.5 py-1 text-xs font-medium ${getVisibilityClass(
-                record.visibility,
-                record.sharedWithCoach,
-              )}`}
-            >
+            </Badge>
+            <Badge tone={getVisibilityTone(record.visibility, record.sharedWithCoach)}>
               {getVisibilityLabel(record.visibility, record.sharedWithCoach)}
-            </span>
+            </Badge>
           </div>
-          <h3 className="mt-3 font-semibold text-slate-950">{record.title}</h3>
+          <h3 className="mt-3 break-words font-semibold text-slate-950">{record.title}</h3>
           <p className="mt-1 text-sm text-slate-500">{record.dateLabel}</p>
         </div>
-        <Link
-          className="text-sm font-medium text-slate-700 underline print:hidden"
+        <ButtonLink
+          className="print:hidden"
           href={record.href}
+          size="sm"
+          variant="secondary"
         >
           자세히 보기
-        </Link>
+        </ButtonLink>
       </div>
 
       <dl className="mt-4 grid gap-3 text-sm text-slate-700">
@@ -680,7 +717,7 @@ export default async function MyCoachingRecordsPage({
 
   return (
     <main
-      className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950 print:bg-white print:px-0 print:py-0"
+      className="min-h-screen bg-[var(--trust-bg)] px-4 py-6 text-slate-950 print:bg-white print:px-0 print:py-0 sm:px-6 sm:py-10"
       data-records-print-page
     >
       <style>{`
@@ -749,21 +786,22 @@ export default async function MyCoachingRecordsPage({
         }
       `}</style>
       <section className="mx-auto w-full max-w-6xl print:max-w-none">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500 print:hidden">
+        <Card className="print:border-0 print:shadow-none">
+          <CardHeader className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <Badge className="print:hidden" icon="report" tone="info">
               코칭 기록
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold print:hidden">
+            </Badge>
+            <CardTitle className="mt-3 text-2xl print:hidden sm:text-3xl">
               나의 기록
-            </h1>
+            </CardTitle>
             <h1 className="hidden text-3xl font-semibold print:block">
               나의 기록 보고서
             </h1>
-            <p className="mt-3 max-w-3xl text-slate-600">
+            <CardDescription className="mt-3 max-w-3xl">
               하루, 주간, 월간 단위로 나의 코칭 여정과 실천 내용을
               기록합니다.
-            </p>
+            </CardDescription>
             <p className="mt-3 hidden text-sm text-slate-600 print:block">
               생성일: {generatedAt}
             </p>
@@ -778,32 +816,37 @@ export default async function MyCoachingRecordsPage({
               적용된 필터: {filterSummary}
             </p>
           </div>
-          <div className="flex flex-col items-start gap-2 text-sm print:hidden">
+          <div className="flex min-w-0 flex-col items-start gap-3 text-sm print:hidden lg:items-end">
             <PrintRecordsButton suggestedTitles={suggestedPrintTitles} />
-            <Link
-              className="font-medium text-slate-700 underline"
-              href="/my-coaching"
-            >
-              내 코칭 공간으로 돌아가기
-            </Link>
-            <Link
-              className="font-medium text-slate-700 underline"
-              href="/dashboard"
-            >
-              대시보드로 돌아가기
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <ButtonLink href="/my-coaching" icon="arrow-left" size="sm" variant="secondary">
+                내 코칭 공간으로 돌아가기
+              </ButtonLink>
+              <ButtonLink href="/my-coaching/moksilgi" icon="report" size="sm" variant="secondary">
+                나의 목실기
+              </ButtonLink>
+              <ButtonLink href="/dashboard" icon="dashboard" size="sm" variant="secondary">
+                대시보드로 돌아가기
+              </ButtonLink>
+            </div>
           </div>
-        </div>
+          </CardHeader>
+        </Card>
 
-        <section className="mt-8 rounded-md border border-slate-200 bg-white p-6 print:hidden">
-          <h2 className="text-lg font-semibold">기록 방식 선택</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            하루, 주간, 월간 기록 중 필요한 기록 방식을 선택해 주세요.
-          </p>
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
-            <Link
-              className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
+        <Card className="mt-8 print:hidden">
+          <CardHeader>
+            <CardTitle>기록 방식 선택</CardTitle>
+            <CardDescription>
+              하루, 주간, 월간 기록 중 필요한 기록 방식을 선택해 주세요.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            <ButtonLink
+              className="h-full flex-col items-start justify-start p-4 text-left"
               href="/my-coaching/records/daily"
+              icon="report"
+              variant="secondary"
             >
               <p className="font-medium text-slate-950">하루 기록</p>
               <p className="mt-2 text-sm text-slate-600">
@@ -812,11 +855,13 @@ export default async function MyCoachingRecordsPage({
               <p className="mt-4 text-sm font-medium text-slate-700 underline">
                 하루 기록 작성
               </p>
-            </Link>
+            </ButtonLink>
 
-            <Link
-              className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
+            <ButtonLink
+              className="h-full flex-col items-start justify-start p-4 text-left"
               href="/my-coaching/weekly-log"
+              icon="report"
+              variant="secondary"
             >
               <p className="font-medium text-slate-950">주간 기록</p>
               <p className="mt-2 text-sm text-slate-600">
@@ -825,11 +870,13 @@ export default async function MyCoachingRecordsPage({
               <p className="mt-4 text-sm font-medium text-slate-700 underline">
                 주간 기록 작성
               </p>
-            </Link>
+            </ButtonLink>
 
-            <Link
-              className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
+            <ButtonLink
+              className="h-full flex-col items-start justify-start p-4 text-left"
               href="/my-coaching/records/monthly"
+              icon="report"
+              variant="secondary"
             >
               <p className="font-medium text-slate-950">월간 기록</p>
               <p className="mt-2 text-sm text-slate-600">
@@ -838,44 +885,40 @@ export default async function MyCoachingRecordsPage({
               <p className="mt-4 text-sm font-medium text-slate-700 underline">
                 월간 회고 작성
               </p>
-            </Link>
+            </ButtonLink>
           </div>
-        </section>
+          </CardContent>
+        </Card>
 
-        <section className="mt-8 rounded-md border border-slate-200 bg-white p-6 print:hidden">
-          <h2 className="text-lg font-semibold">나의 기록 검색/필터</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            하루, 주간, 월간 기록을 함께 검색하고 필요한 조건으로
-            정리합니다.
-          </p>
+        <Card className="mt-8 print:hidden">
+          <CardHeader>
+            <CardTitle>나의 기록 검색/필터</CardTitle>
+            <CardDescription>
+              하루, 주간, 월간 기록을 함께 검색하고 필요한 조건으로
+              정리합니다.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
           <form className="mt-5 grid gap-4" method="get">
-            <div>
-              <label
-                className="text-sm font-medium text-slate-700"
-                htmlFor="q"
-              >
+            <FieldLabel htmlFor="q">
+              <FieldText>
                 검색어
-              </label>
-              <input
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              </FieldText>
+              <TextInput
                 defaultValue={query}
                 id="q"
                 name="q"
                 placeholder="제목, 돌아봄, 기도제목, 진행요약, 회고 내용 검색"
                 type="search"
               />
-            </div>
+            </FieldLabel>
 
             <div className="grid gap-4 md:grid-cols-4">
-              <div>
-                <label
-                  className="text-sm font-medium text-slate-700"
-                  htmlFor="type"
-                >
+              <FieldLabel htmlFor="type">
+                <FieldText>
                   기록 유형
-                </label>
-                <select
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                </FieldText>
+                <SelectInput
                   defaultValue={typeFilter}
                   id="type"
                   name="type"
@@ -884,18 +927,14 @@ export default async function MyCoachingRecordsPage({
                   <option value="daily">하루 기록</option>
                   <option value="weekly">주간 기록</option>
                   <option value="monthly">월간 회고</option>
-                </select>
-              </div>
+                </SelectInput>
+              </FieldLabel>
 
-              <div>
-                <label
-                  className="text-sm font-medium text-slate-700"
-                  htmlFor="status"
-                >
+              <FieldLabel htmlFor="status">
+                <FieldText>
                   상태
-                </label>
-                <select
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                </FieldText>
+                <SelectInput
                   defaultValue={statusFilter}
                   id="status"
                   name="status"
@@ -905,18 +944,14 @@ export default async function MyCoachingRecordsPage({
                   <option value="submitted">제출완료</option>
                   <option value="reviewed">검토완료</option>
                   <option value="unknown">확인 필요</option>
-                </select>
-              </div>
+                </SelectInput>
+              </FieldLabel>
 
-              <div>
-                <label
-                  className="text-sm font-medium text-slate-700"
-                  htmlFor="visibility"
-                >
+              <FieldLabel htmlFor="visibility">
+                <FieldText>
                   공유
-                </label>
-                <select
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                </FieldText>
+                <SelectInput
                   defaultValue={visibilityFilter}
                   id="visibility"
                   name="visibility"
@@ -924,18 +959,14 @@ export default async function MyCoachingRecordsPage({
                   <option value="all">전체</option>
                   <option value="private">나만 보기</option>
                   <option value="coach">코치에게 공유</option>
-                </select>
-              </div>
+                </SelectInput>
+              </FieldLabel>
 
-              <div>
-                <label
-                  className="text-sm font-medium text-slate-700"
-                  htmlFor="sort"
-                >
+              <FieldLabel htmlFor="sort">
+                <FieldText>
                   정렬
-                </label>
-                <select
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                </FieldText>
+                <SelectInput
                   defaultValue={sortOption}
                   id="sort"
                   name="sort"
@@ -944,8 +975,8 @@ export default async function MyCoachingRecordsPage({
                   <option value="oldest">오래된순</option>
                   <option value="type">기록 유형순</option>
                   <option value="status">상태순</option>
-                </select>
-              </div>
+                </SelectInput>
+              </FieldLabel>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -953,35 +984,34 @@ export default async function MyCoachingRecordsPage({
                 전체 {combinedRecords.length}개 중 {filteredRecords.length}개 표시
               </p>
               <div className="flex flex-wrap gap-2">
-                <Link
-                  className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700"
+                <ButtonLink
                   href="/my-coaching/records"
+                  icon="filter"
+                  variant="secondary"
                 >
                   필터 초기화
-                </Link>
-                <button
-                  className="rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white"
-                  type="submit"
-                >
+                </ButtonLink>
+                <Button icon="search" type="submit">
                   필터 적용
-                </button>
+                </Button>
               </div>
             </div>
           </form>
-        </section>
+          </CardContent>
+        </Card>
 
-        <section className="mt-8 rounded-md border border-slate-200 bg-white p-6 print:hidden">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">최근 나의 기록</h2>
-              <p className="mt-2 text-sm text-slate-600">
+        <Card className="mt-8 print:hidden">
+          <CardHeader>
+            <CardTitle>최근 나의 기록</CardTitle>
+            <CardDescription>
                 하루, 주간, 월간 기록의 최근 내용을 한눈에 확인합니다.
-              </p>
-            </div>
-          </div>
+            </CardDescription>
+          </CardHeader>
 
-          <div className="mt-5 grid gap-5 lg:grid-cols-3">
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+          <CardContent>
+          <div className="grid gap-5 lg:grid-cols-3">
+            <Card className="bg-slate-50">
+              <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="font-semibold text-slate-950">최근 하루 기록</h3>
@@ -989,12 +1019,14 @@ export default async function MyCoachingRecordsPage({
                     최신 기록 날짜순 3개
                   </p>
                 </div>
-                <Link
-                  className="shrink-0 text-sm font-medium text-slate-700 underline"
+                <ButtonLink
+                  className="shrink-0"
                   href="/my-coaching/records/daily"
+                  size="sm"
+                  variant="secondary"
                 >
                   하루 기록으로 이동
-                </Link>
+                </ButtonLink>
               </div>
 
               {!dailyResult.ok ? (
@@ -1035,9 +1067,11 @@ export default async function MyCoachingRecordsPage({
                   ))}
                 </div>
               )}
-            </div>
+              </CardContent>
+            </Card>
 
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+            <Card className="bg-slate-50">
+              <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="font-semibold text-slate-950">최근 주간 기록</h3>
@@ -1045,12 +1079,14 @@ export default async function MyCoachingRecordsPage({
                     최신 주간 기간순 3개
                   </p>
                 </div>
-                <Link
-                  className="shrink-0 text-sm font-medium text-slate-700 underline"
+                <ButtonLink
+                  className="shrink-0"
                   href="/my-coaching/weekly-log"
+                  size="sm"
+                  variant="secondary"
                 >
                   주간 기록으로 이동
-                </Link>
+                </ButtonLink>
               </div>
 
               {!weeklyResult.ok ? (
@@ -1097,9 +1133,11 @@ export default async function MyCoachingRecordsPage({
                   ))}
                 </div>
               )}
-            </div>
+              </CardContent>
+            </Card>
 
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+            <Card className="bg-slate-50">
+              <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="font-semibold text-slate-950">최근 월간 회고</h3>
@@ -1107,12 +1145,14 @@ export default async function MyCoachingRecordsPage({
                     최신 연도/월순 3개
                   </p>
                 </div>
-                <Link
-                  className="shrink-0 text-sm font-medium text-slate-700 underline"
+                <ButtonLink
+                  className="shrink-0"
                   href="/my-coaching/records/monthly"
+                  size="sm"
+                  variant="secondary"
                 >
                   월간 회고로 이동
-                </Link>
+                </ButtonLink>
               </div>
 
               {!monthlyResult.ok ? (
@@ -1159,9 +1199,11 @@ export default async function MyCoachingRecordsPage({
                   ))}
                 </div>
               )}
-            </div>
+              </CardContent>
+            </Card>
           </div>
-        </section>
+          </CardContent>
+        </Card>
 
         <section className={getRecordsResultSectionClass(hasActiveSearchOrFilter)}>
           <div className="flex flex-wrap items-start justify-between gap-3">

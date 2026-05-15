@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui";
 
 type PrintRange = "all" | "daily" | "weekly" | "monthly";
 
@@ -82,18 +83,16 @@ export function PrintRecordsButton({
   return (
     <div className="flex flex-wrap gap-2">
       {printRangeButtons.map((button) => (
-        <button
-          className={`rounded-md px-3 py-2 text-sm font-medium ${
-            printRange === button.value
-              ? "bg-slate-950 text-white"
-              : "border border-slate-300 bg-white text-slate-700"
-          }`}
+        <Button
+          icon="print"
           key={button.value}
           onClick={() => handlePrint(button.value)}
+          size="sm"
           type="button"
+          variant={printRange === button.value ? "primary" : "secondary"}
         >
           {button.label}
-        </button>
+        </Button>
       ))}
     </div>
   );

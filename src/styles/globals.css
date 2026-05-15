@@ -4,6 +4,16 @@
 
 :root {
   color-scheme: light;
+  --trust-bg: #f8faf9;
+  --trust-card: #ffffff;
+  --trust-ink: #17231f;
+  --trust-muted: #64746d;
+  --trust-line: #d8e2dd;
+  --trust-primary: #0f6e56;
+  --trust-primary-strong: #0a4f3f;
+  --trust-primary-soft: #e1f5ee;
+  --trust-gold: #ba7517;
+  --trust-gold-soft: #faeeda;
 }
 
 * {
@@ -18,4 +28,27 @@ body {
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+  background: var(--trust-bg);
+  color: var(--trust-ink);
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  overflow-wrap: anywhere;
+}
+
+::selection {
+  background: var(--trust-primary-soft);
+  color: var(--trust-primary-strong);
 }

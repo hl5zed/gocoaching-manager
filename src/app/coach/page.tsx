@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/getSession";
 import {
@@ -6,6 +5,16 @@ import {
   type CoachDashboardCoacheeStatus,
 } from "@/lib/api/coach/dashboard";
 import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
+import {
+  Badge,
+  ButtonLink,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  ProgressBar,
+} from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +53,69 @@ function getScopeLabel(coachee: CoachDashboardCoacheeStatus) {
   return labels.length > 0 ? labels.join(" / ") : "소속 미등록";
 }
 
+function ratioPercent(value: number, total: number) {
+  if (!Number.isFinite(value) || !Number.isFinite(total) || total <= 0) {
+    return 0;
+  }
+
+  return Math.min(Math.max((value / total) * 100, 0), 100);
+}
+
+function weeklyStatusTone(status: string) {
+  if (status === "reviewed" || status === "submitted") {
+    return "success";
+  }
+
+  if (status === "draft") {
+    return "warning";
+  }
+
+  return "neutral";
+}
+
+function WeeklyStatusBadge({ status }: { status: string }) {
+  return (
+    <Badge tone={weeklyStatusTone(status)}>
+      {getWeeklyStatusLabel(status)}
+    </Badge>
+  );
+}
+
+function FeedbackBadge({ pending }: { pending: boolean }) {
+  return (
+    <Badge tone={pending ? "warning" : "success"}>
+      {pending ? "대기 있음" : "대기 없음"}
+    </Badge>
+  );
+}
+
+function SummaryMetricCard({
+  description,
+  progressValue,
+  title,
+  value,
+}: {
+  description: string;
+  progressValue?: number;
+  title: string;
+  value: string;
+}) {
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <p className="break-words text-sm text-slate-500">{title}</p>
+        <p className="mt-2 break-words text-2xl font-semibold">{value}</p>
+        {typeof progressValue === "number" ? (
+          <ProgressBar className="mt-3" showValue={false} value={progressValue} />
+        ) : null}
+        <p className="mt-3 break-words text-xs leading-5 text-slate-500">
+          {description}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default async function CoachPage() {
   const session = await getSession();
 
@@ -54,90 +126,103 @@ export default async function CoachPage() {
   const dashboard = await getCoachDashboard();
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-[var(--trust-bg)] px-4 py-6 text-slate-950 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold">코치 홈</h1>
-            <p className="mt-2 text-sm text-slate-600">
-              코치 기능을 선택해 주세요.
-            </p>
-          </div>
-          <PageNavigationButtons className="justify-start sm:justify-end" />
-        </div>
+        <Card>
+          <CardHeader className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <Badge icon="users" tone="info">코치 대시보드</Badge>
+              <CardTitle className="mt-3 text-2xl">코치 홈</CardTitle>
+              <CardDescription className="mt-2">
+                코치 기능을 선택하고 담당 코치이의 최근 기록 상태를 확인해 주세요.
+              </CardDescription>
+            </div>
+            <PageNavigationButtons className="justify-start sm:justify-end" />
+          </CardHeader>
+        </Card>
 
         {dashboard.ok ? (
           <section className="mt-8 space-y-5">
-            <div className="rounded-md border border-slate-200 bg-white p-5">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold">담당 코치이 현황</h2>
-                  <p className="mt-1 text-sm text-slate-500">
+            <Card>
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
+                  <CardTitle>담당 코치이 현황</CardTitle>
+                  <CardDescription>
                     {dashboard.data.weekRange.start} ~ {dashboard.data.weekRange.end} 기준
                     주간 제출과 공유 기록 현황입니다.
-                  </p>
+                  </CardDescription>
                 </div>
-                <Link
+                <ButtonLink
                   href="/coach/weekly-logs"
-                  className="inline-flex w-fit items-center justify-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+                  icon="report"
+                  variant="secondary"
                 >
                   주간 기록 보기
-                </Link>
-              </div>
+                </ButtonLink>
+              </CardHeader>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm text-slate-500">담당 코치이</p>
-                  <p className="mt-2 text-2xl font-semibold">
-                    {dashboard.data.summary.assignedCoacheeCount}명
-                  </p>
+              <CardContent>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <SummaryMetricCard
+                    description="현재 active 코칭 관계 기준입니다."
+                    title="담당 코치이"
+                    value={`${dashboard.data.summary.assignedCoacheeCount}명`}
+                  />
+                  <SummaryMetricCard
+                    description="담당 코치이 대비 이번 주 제출 비율입니다."
+                    progressValue={ratioPercent(
+                      dashboard.data.summary.weeklySubmittedThisWeekCount,
+                      dashboard.data.summary.assignedCoacheeCount,
+                    )}
+                    title="이번 주 제출"
+                    value={`${dashboard.data.summary.weeklySubmittedThisWeekCount}명`}
+                  />
+                  <SummaryMetricCard
+                    description="확인이 필요한 이번 주 미제출 인원입니다."
+                    progressValue={ratioPercent(
+                      dashboard.data.summary.weeklyMissingThisWeekCount,
+                      dashboard.data.summary.assignedCoacheeCount,
+                    )}
+                    title="이번 주 미제출"
+                    value={`${dashboard.data.summary.weeklyMissingThisWeekCount}명`}
+                  />
+                  <SummaryMetricCard
+                    description="코치에게 공유된 하루 기록 수입니다."
+                    title="공유된 하루 기록"
+                    value={`${dashboard.data.summary.sharedDailyRecordCount}개`}
+                  />
+                  <SummaryMetricCard
+                    description="코치에게 공유된 월간 회고 수입니다."
+                    title="공유된 월간 회고"
+                    value={`${dashboard.data.summary.sharedMonthlyReflectionCount}개`}
+                  />
+                  <SummaryMetricCard
+                    description="피드백 작성이 필요한 기록 수입니다."
+                    title="피드백 대기"
+                    value={`${dashboard.data.summary.feedbackPendingCount}개`}
+                  />
                 </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm text-slate-500">이번 주 제출</p>
-                  <p className="mt-2 text-2xl font-semibold">
-                    {dashboard.data.summary.weeklySubmittedThisWeekCount}명
-                  </p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm text-slate-500">이번 주 미제출</p>
-                  <p className="mt-2 text-2xl font-semibold">
-                    {dashboard.data.summary.weeklyMissingThisWeekCount}명
-                  </p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm text-slate-500">공유된 하루 기록</p>
-                  <p className="mt-2 text-2xl font-semibold">
-                    {dashboard.data.summary.sharedDailyRecordCount}개
-                  </p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm text-slate-500">공유된 월간 회고</p>
-                  <p className="mt-2 text-2xl font-semibold">
-                    {dashboard.data.summary.sharedMonthlyReflectionCount}개
-                  </p>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm text-slate-500">피드백 대기</p>
-                  <p className="mt-2 text-2xl font-semibold">
-                    {dashboard.data.summary.feedbackPendingCount}개
-                  </p>
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            <div className="rounded-md border border-slate-200 bg-white p-5">
-              <h2 className="text-lg font-semibold">담당 코치이 목록</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                active 코칭 관계 기준으로 최근 제출/공유 상태만 표시합니다.
-              </p>
+            <Card>
+              <CardHeader>
+                <CardTitle>담당 코치이 목록</CardTitle>
+                <CardDescription>
+                  active 코칭 관계 기준으로 최근 제출/공유 상태만 표시합니다.
+                </CardDescription>
+              </CardHeader>
 
               {dashboard.data.coachees.length === 0 ? (
-                <div className="mt-5 rounded-md border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600">
+                <CardContent>
+                <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600">
                   현재 배정된 코치이가 없습니다.
                 </div>
+                </CardContent>
               ) : (
-                <div className="mt-5 overflow-x-auto">
-                  <table className="min-w-full text-left text-sm">
+                <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="min-w-[920px] w-full text-left text-sm">
                     <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
                       <tr>
                         <th className="whitespace-nowrap px-3 py-2 font-medium">코치이</th>
@@ -158,25 +243,26 @@ export default async function CoachPage() {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {dashboard.data.coachees.map((coachee) => (
-                        <tr key={coachee.relationshipId} className="align-top">
+                        <tr
+                          key={coachee.relationshipId}
+                          className="align-top transition hover:bg-[var(--trust-primary-soft)]/40"
+                        >
                           <td className="px-3 py-3">
-                            <div className="font-medium text-slate-900">
+                            <div className="min-w-0 break-words font-medium text-slate-900">
                               {coachee.coacheeName}
                             </div>
-                            <div className="mt-1 text-xs text-slate-500">
+                            <div className="mt-1 break-all text-xs text-slate-500">
                               {coachee.coacheeEmail ?? "이메일 미등록"}
                             </div>
                           </td>
-                          <td className="px-3 py-3 text-slate-600">
+                          <td className="px-3 py-3 break-words text-slate-600">
                             {getScopeLabel(coachee)}
                           </td>
                           <td className="px-3 py-3 text-slate-600">
                             {formatDate(coachee.startedAt)}
                           </td>
                           <td className="px-3 py-3">
-                            <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700">
-                              {getWeeklyStatusLabel(coachee.latestWeeklyStatus)}
-                            </span>
+                            <WeeklyStatusBadge status={coachee.latestWeeklyStatus} />
                             <div className="mt-1 text-xs text-slate-500">
                               제출일: {formatDate(coachee.latestWeeklySubmittedAt)}
                             </div>
@@ -192,60 +278,59 @@ export default async function CoachPage() {
                             </div>
                           </td>
                           <td className="px-3 py-3">
-                            <span
-                              className={
-                                coachee.feedbackPending
-                                  ? "inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700"
-                                  : "inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700"
-                              }
-                            >
-                              {coachee.feedbackPending ? "대기 있음" : "대기 없음"}
-                            </span>
+                            <FeedbackBadge pending={coachee.feedbackPending} />
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+                </CardContent>
               )}
-            </div>
+            </Card>
           </section>
         ) : (
-          <div className="mt-8 rounded-md border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
+          <div className="mt-8 rounded-lg border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
             {dashboard.error.message}
           </div>
         )}
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <Link
+          <ButtonLink
             href="/coach/relationships"
-            className="rounded-md border border-slate-200 bg-white px-5 py-4 transition hover:border-blue-300 hover:shadow-sm"
+            className="h-full flex-col items-start justify-start p-5 text-left"
+            icon="users"
+            variant="secondary"
           >
             <h2 className="text-lg font-semibold">코칭 관계 보기</h2>
             <p className="mt-1 text-sm text-slate-500">
               현재 담당 중인 코칭 관계를 확인합니다.
             </p>
-          </Link>
+          </ButtonLink>
 
-          <Link
+          <ButtonLink
             href="/coach/weekly-logs"
-            className="rounded-md border border-slate-200 bg-white px-5 py-4 transition hover:border-blue-300 hover:shadow-sm"
+            className="h-full flex-col items-start justify-start p-5 text-left"
+            icon="report"
+            variant="secondary"
           >
             <h2 className="text-lg font-semibold">주간 기록 보기</h2>
             <p className="mt-1 text-sm text-slate-500">
               담당 코치이들의 주간 기록을 확인합니다.
             </p>
-          </Link>
+          </ButtonLink>
 
-          <Link
+          <ButtonLink
             href="/coach/moksilgi"
-            className="rounded-md border border-slate-200 bg-white px-5 py-4 transition hover:border-blue-300 hover:shadow-sm"
+            className="h-full flex-col items-start justify-start p-5 text-left"
+            icon="report"
+            variant="secondary"
           >
             <h2 className="text-lg font-semibold">코치이 목실기 보기</h2>
             <p className="mt-1 text-sm text-slate-500">
               담당 코치이들의 목실기와 성취 요약을 확인합니다.
             </p>
-          </Link>
+          </ButtonLink>
         </div>
       </div>
     </main>

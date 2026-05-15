@@ -27,21 +27,9 @@ const MEASUREMENT_TYPES = new Set<MoksilgiMeasurementType>([
 ]);
 
 const DEFAULT_CORE_VALUES: MoksilgiCoreValue[] = [
-  {
-    value_name: "정직",
-    meaning: "하나님 앞에서 진실하고 투명한 삶",
-    practice_example: "",
-  },
-  {
-    value_name: "충성",
-    meaning: "맡겨진 사명에 대한 헌신",
-    practice_example: "",
-  },
-  {
-    value_name: "사람을 세워주기",
-    meaning: "사랑으로 서로를 격려하고 성장 지원",
-    practice_example: "",
-  },
+  { value_name: "", meaning: "", practice_example: "" },
+  { value_name: "", meaning: "", practice_example: "" },
+  { value_name: "", meaning: "", practice_example: "" },
 ];
 
 const DEFAULT_AREAS: Array<{
@@ -590,7 +578,11 @@ export async function saveMyMoksilgiPlan(
 
   const textFields = {
     author_name: nullableText(formData.get("author_name"), 120, "작성자"),
-    region_name: nullableText(formData.get("region_name"), 120, "지역/목장"),
+    region_name: nullableText(
+      formData.get("region_name"),
+      120,
+      "국가/소속/공동체",
+    ),
     team_name: nullableText(formData.get("team_name"), 120, "팀"),
     regional_leader_name: nullableText(
       formData.get("regional_leader_name"),
