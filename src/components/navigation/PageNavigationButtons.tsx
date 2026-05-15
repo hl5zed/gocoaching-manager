@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { useI18n } from "@/lib/i18n/useI18n";
 
 type PageNavigationButtonsProps = {
@@ -10,12 +10,19 @@ type PageNavigationButtonsProps = {
   dashboardHref?: string;
 };
 
+const navButtonClassName =
+  "h-10 min-h-10 min-w-[112px] rounded-xl px-4 py-2 text-sm";
+
 export function PageNavigationButtons({
   className = "",
   dashboardHref = "/dashboard",
 }: PageNavigationButtonsProps) {
   const router = useRouter();
   const { t } = useI18n();
+  const homeLabel =
+    dashboardHref === "/admin"
+      ? t("nav.adminCenter", "관리자 센터")
+      : t("nav.dashboard", "나의 홈");
 
   function handleForward() {
     if (typeof window !== "undefined") {
@@ -28,26 +35,33 @@ export function PageNavigationButtons({
       aria-label="페이지 이동"
       className={`flex flex-wrap items-center gap-2 text-sm ${className}`}
     >
-      <button
-        className="rounded-md border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 hover:bg-slate-50"
+      <Button
+        className={navButtonClassName}
+        icon="arrow-left"
         onClick={() => router.back()}
+        size="sm"
         type="button"
       >
         {t("common.previous", "이전 화면")}
-      </button>
-      <button
-        className="rounded-md border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 hover:bg-slate-50"
+      </Button>
+      <Button
+        className={navButtonClassName}
+        icon="arrow-right"
+        iconPosition="right"
         onClick={handleForward}
+        size="sm"
         type="button"
       >
         {t("common.next", "다음 화면")}
-      </button>
-      <Link
-        className="rounded-md border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 hover:bg-slate-50"
+      </Button>
+      <ButtonLink
+        className={navButtonClassName}
         href={dashboardHref}
+        icon="dashboard"
+        size="sm"
       >
-        {t("nav.dashboard", "대시보드")}
-      </Link>
+        {homeLabel}
+      </ButtonLink>
       <LanguageSwitcher />
     </nav>
   );
