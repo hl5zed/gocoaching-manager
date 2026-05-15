@@ -23,6 +23,7 @@ const allowedScopes = new Set<ScopeType>(SCOPE_TYPES);
 type CreateInvitationInput = {
   email?: unknown;
   invited_role?: unknown;
+  organization_id?: unknown;
   scope_type?: unknown;
   scope_id?: unknown;
   expires_in_days?: unknown;
@@ -48,6 +49,26 @@ type PostgrestErrorLike = {
   code?: string;
   message?: string;
   details?: string;
+};
+
+type OrganizationValidationRow = {
+  id: string;
+  is_active: boolean | null;
+  deleted_at: string | null;
+};
+
+type OrganizationValidationTable = {
+  select: (columns: string) => {
+    eq: (
+      column: string,
+      value: string,
+    ) => {
+      maybeSingle: () => Promise<{
+        data: OrganizationValidationRow | null;
+        error: PostgrestErrorLike | null;
+      }>;
+    };
+  };
 };
 
 export type CreateInvitationSuccess = {
@@ -100,6 +121,12 @@ function normalizeScopeId(value: unknown) {
   return typeof value === "string" && value.trim().length > 0
     ? value.trim()
     : null;
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
+  );
 }
 
 function normalizeExpiresInDays(value: unknown) {
@@ -228,8 +255,19 @@ export async function createAdminInvitation({
     typeof input.invited_role === "string" ? input.invited_role : "";
   const scopeType = typeof input.scope_type === "string" ? input.scope_type : "";
   const rawScopeId = normalizeScopeId(input.scope_id);
+  const organizationId = normalizeScopeId(input.organization_id);
   const expiresInDays = normalizeExpiresInDays(input.expires_in_days);
   const sendEmail = normalizeSendEmail(input.send_email);
+  const isOrganizationDefaultRoleSuggestion = organizationId !== null;
+  const effectiveInvitedRole = isOrganizationDefaultRoleSuggestion
+    ? "coachee"
+    : invitedRole;
+  const effectiveScopeType = isOrganizationDefaultRoleSuggestion
+    ? "organization"
+    : scopeType;
+  const effectiveRawScopeId = isOrganizationDefaultRoleSuggestion
+    ? organizationId
+    : rawScopeId;
 
   if (!isProbablyEmail(email)) {
     return {
@@ -242,7 +280,22 @@ export async function createAdminInvitation({
     };
   }
 
-  if (!allowedRoles.has(invitedRole as UserRole)) {
+  if (
+    isOrganizationDefaultRoleSuggestion &&
+    invitedRole !== "" &&
+    invitedRole !== "coachee"
+  ) {
+    return {
+      ok: false,
+      error: {
+        status: 400,
+        code: "INVALID_ORGANIZATION_DEFAULT_ROLE",
+        message: "조직 기본 권한 초대는 코치이 역할만 허용됩니다.",
+      },
+    };
+  }
+
+  if (!allowedRoles.has(effectiveInvitedRole as UserRole)) {
     return {
       ok: false,
       error: {
@@ -253,7 +306,7 @@ export async function createAdminInvitation({
     };
   }
 
-  if (!allowedScopes.has(scopeType as ScopeType)) {
+  if (!allowedScopes.has(effectiveScopeType as ScopeType)) {
     return {
       ok: false,
       error: {
@@ -264,9 +317,10 @@ export async function createAdminInvitation({
     };
   }
 
-  const normalizedScopeId = scopeType === "global" ? null : rawScopeId;
+  const normalizedScopeId =
+    effectiveScopeType === "global" ? null : effectiveRawScopeId;
 
-  if (scopeType === "global" && rawScopeId !== null) {
+  if (effectiveScopeType === "global" && effectiveRawScopeId !== null) {
     return {
       ok: false,
       error: {
@@ -277,13 +331,27 @@ export async function createAdminInvitation({
     };
   }
 
-  if (scopeType !== "global" && normalizedScopeId === null) {
+  if (effectiveScopeType !== "global" && normalizedScopeId === null) {
     return {
       ok: false,
       error: {
         status: 400,
         code: "MISSING_SCOPE_ID",
         message: "이 범위 유형에는 범위 ID가 필요합니다.",
+      },
+    };
+  }
+
+  if (
+    isOrganizationDefaultRoleSuggestion &&
+    (!organizationId || !isUuid(organizationId))
+  ) {
+    return {
+      ok: false,
+      error: {
+        status: 400,
+        code: "INVALID_ORGANIZATION_ID",
+        message: "조직 기본 권한 초대에는 올바른 조직 ID가 필요합니다.",
       },
     };
   }
@@ -317,11 +385,51 @@ export async function createAdminInvitation({
     };
   }
 
+  if (isOrganizationDefaultRoleSuggestion) {
+    const organizationsTable = serviceClient.from(
+      "organizations",
+    ) as unknown as OrganizationValidationTable;
+    const { data: organization, error: organizationError } = await organizationsTable
+      .select("id,is_active,deleted_at")
+      .eq("id", organizationId)
+      .maybeSingle();
+
+    if (organizationError) {
+      logServerError(
+        "ORGANIZATION_LOOKUP_FAILED",
+        organizationError.message ?? "Organization lookup failed.",
+      );
+      return {
+        ok: false,
+        error: {
+          status: 500,
+          code: "ORGANIZATION_LOOKUP_FAILED",
+          message: "조직을 확인하지 못했습니다.",
+        },
+      };
+    }
+
+    if (
+      !organization ||
+      organization.is_active !== true ||
+      organization.deleted_at !== null
+    ) {
+      return {
+        ok: false,
+        error: {
+          status: 400,
+          code: "INVALID_ORGANIZATION",
+          message: "활성 조직에만 기본 권한 초대를 생성할 수 있습니다.",
+        },
+      };
+    }
+  }
+
   const duplicateCheck = await findExistingPendingInvitation(
     serviceClient,
     email,
-    invitedRole as UserRole,
-    scopeType as ScopeType,
+    effectiveInvitedRole as UserRole,
+    effectiveScopeType as ScopeType,
     normalizedScopeId,
   );
 
@@ -355,8 +463,8 @@ export async function createAdminInvitation({
   const expiresAt = createExpiresAt(expiresInDays);
   const invitationInsert: InvitationInsert = {
     invited_email: email,
-    invited_role: invitedRole as UserRole,
-    scope_type: scopeType as ScopeType,
+    invited_role: effectiveInvitedRole as UserRole,
+    scope_type: effectiveScopeType as ScopeType,
     scope_id: normalizedScopeId,
     invited_by: admin.profile.id,
     token_hash: tokenHash,

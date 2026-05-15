@@ -5,8 +5,12 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
 import { Badge, ButtonLink, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 import { getAdminCountries } from "@/lib/api/admin/countries";
-import { getGlobalSystemSettings } from "@/lib/api/admin/system-settings";
+import {
+  getGlobalSystemSettings,
+  getOrganizationDefaultRoleSettings,
+} from "@/lib/api/admin/system-settings";
 import { getAdminSystemAnnouncements } from "@/lib/api/admin/system-announcements";
+import { OrganizationDefaultRoleSettings } from "./OrganizationDefaultRoleSettings";
 import { SystemAnnouncementsClient } from "./SystemAnnouncementsClient";
 import { SystemSettingsForm } from "./SystemSettingsForm";
 
@@ -44,10 +48,6 @@ const systemSettingSections = [
     description: "초대, 알림, 안내 메일 발신 기본값을 관리합니다.",
     title: "이메일 발신 설정",
   },
-  {
-    description: "조직별 신규 사용자에게 적용할 기본 권한 정책을 관리합니다.",
-    title: "조직별 기본 권한 설정",
-  },
 ];
 
 export default async function AdminSettingsPage() {
@@ -65,10 +65,16 @@ export default async function AdminSettingsPage() {
     redirect("/dashboard");
   }
 
-  const [settingsResult, countriesResult, announcementsResult] = await Promise.all([
+  const [
+    settingsResult,
+    countriesResult,
+    announcementsResult,
+    organizationDefaultRolesResult,
+  ] = await Promise.all([
     getGlobalSystemSettings(),
     getAdminCountries(),
     getAdminSystemAnnouncements(),
+    getOrganizationDefaultRoleSettings(),
   ]);
   const countryOptions = countriesResult.countries
     .filter((country) => country.is_active)
@@ -141,6 +147,12 @@ export default async function AdminSettingsPage() {
             <SystemAnnouncementsClient
               initialAnnouncements={announcementsResult.announcements}
               initialError={announcementsResult.error}
+            />
+          </div>
+          <div className="mt-6">
+            <OrganizationDefaultRoleSettings
+              initialError={organizationDefaultRolesResult.error}
+              initialOrganizations={organizationDefaultRolesResult.organizations}
             />
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">

@@ -3,12 +3,16 @@ import { AdminInvitationCreateForm } from "@/components/admin/AdminInvitationCre
 import {
   FALLBACK_INVITATION_EXPIRES_IN_DAYS,
   getGlobalSystemSettings,
+  getOrganizationDefaultRoleSettings,
 } from "@/lib/api/admin/system-settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewAdminInvitationPage() {
-  const { settings } = await getGlobalSystemSettings();
+  const [{ settings }, organizationDefaultRolesResult] = await Promise.all([
+    getGlobalSystemSettings(),
+    getOrganizationDefaultRoleSettings(),
+  ]);
   const defaultExpiresInDays =
     settings.invitation_expires_in_days ?? FALLBACK_INVITATION_EXPIRES_IN_DAYS;
 
@@ -23,7 +27,10 @@ export default async function NewAdminInvitationPage() {
           특정 역할과 범위를 가진 사용자를 위한 대기 중 초대를 생성합니다.
         </p>
 
-        <AdminInvitationCreateForm defaultExpiresInDays={defaultExpiresInDays} />
+        <AdminInvitationCreateForm
+          defaultExpiresInDays={defaultExpiresInDays}
+          organizations={organizationDefaultRolesResult.organizations}
+        />
 
         <div className="mt-6">
           <Link
