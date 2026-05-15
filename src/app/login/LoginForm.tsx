@@ -19,22 +19,7 @@ type LoginFormProps = {
   translations: AuthLoginTranslations;
 };
 
-type MeResponse =
-  | {
-      ok: true;
-      data: {
-        roles: Array<{
-          role: string;
-        }>;
-      };
-    }
-  | {
-      ok: false;
-      error: {
-        code: string;
-        message: string;
-      };
-    };
+const DEFAULT_LOGIN_REDIRECT_PATH = "/dashboard";
 
 function getFriendlyLoginError(message: string, fallbackMessage: string) {
   const lowerMessage = message.toLowerCase();
@@ -66,33 +51,6 @@ function safeRedirectPath(value: string | null) {
   }
 
   return path;
-}
-
-async function getRoleBasedRedirectPath() {
-  try {
-    const response = await fetch("/api/me", {
-      cache: "no-store",
-    });
-    const result = (await response.json()) as MeResponse;
-
-    if (!response.ok || !result.ok) {
-      return "/dashboard";
-    }
-
-    const roles = result.data.roles.map((role) => role.role);
-
-    if (roles.includes("super_admin")) {
-      return "/dashboard";
-    }
-
-    if (roles.includes("coach_maker")) {
-      return "/coach-maker";
-    }
-
-    return "/dashboard";
-  } catch {
-    return "/dashboard";
-  }
 }
 
 export function LoginForm({ translations }: LoginFormProps) {
@@ -132,7 +90,7 @@ export function LoginForm({ translations }: LoginFormProps) {
     const requestedPath =
       safeRedirectPath(searchParams.get("redirectTo")) ??
       safeRedirectPath(searchParams.get("next"));
-    const nextPath = requestedPath ?? (await getRoleBasedRedirectPath());
+    const nextPath = requestedPath ?? DEFAULT_LOGIN_REDIRECT_PATH;
 
     router.replace(nextPath);
   }

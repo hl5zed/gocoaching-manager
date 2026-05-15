@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/getSession";
 import { getDashboardMe } from "@/lib/api/dashboard/me";
 import { getDashboardQuickLinksState } from "@/lib/dashboard/quick-links";
+import { getActiveAnnouncementsForCurrentUser } from "@/lib/api/admin/system-announcements";
 import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
 import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
 import { I18nText } from "@/lib/i18n/I18nProvider";
@@ -30,41 +31,14 @@ function profileStatusBadgeClass(status: string) {
   }
 }
 
-const adminFeatureCards = [
-  {
-    href: "/admin/settings/organizations",
-    descriptionKey: "dashboard.organizationSettingsDescription",
-    title: "기관 및 단체 관리",
-    titleKey: "dashboard.organizationSettings",
-    description:
-      "회원 소속 기관 및 단체를 추가하고, 국가 연결과 사용 여부를 관리합니다.",
-  },
-  {
-    href: "/admin/settings/affiliations",
-    descriptionKey: "dashboard.affiliationSettingsDescription",
-    title: "소속 선택값 관리",
-    titleKey: "dashboard.affiliationSettings",
-    description:
-      "회원정보수정에서 사용하는 지역/도시, 세부 교회, 그룹/팀/목장 선택값을 등록하고 수정합니다.",
-  },
-  {
-    href: "/admin/coaching-genealogy",
-    descriptionKey: "dashboard.genealogyDescription",
-    title: "세대별 계층 계보도",
-    titleKey: "dashboard.genealogy",
-    description:
-      "코칭 관계가 세대별, 조직별, 코치-코치이 흐름으로 어떻게 이어지는지 시각적으로 확인합니다.",
-  },
-];
-
 const coachMakerFeatureCards = [
   {
     href: "/coach-maker",
-    descriptionKey: "dashboard.coachMakerDashboardDescription",
-    title: "코치메이커 대시보드",
-    titleKey: "dashboard.coachMakerDashboard",
+    descriptionKey: "dashboard.coachMakerCenterDescription",
+    title: "코치메이커 센터",
+    titleKey: "dashboard.coachMakerCenter",
     description:
-      "코치메이커가 담당하는 팀, 목실기 진행 현황, 코칭 구조를 확인합니다.",
+      "담당 코치와 코치이의 성장 현황과 목실기 진행 상황을 관리합니다.",
   },
   {
     href: "/coach-maker/moksilgi-progress",
@@ -73,6 +47,20 @@ const coachMakerFeatureCards = [
     titleKey: "dashboard.moksilgiProgress",
     description:
       "코치메이커가 담당하는 지역/팀과 코치-코치이 관계의 목실기 월별 성취율을 확인합니다.",
+  },
+  {
+    href: "/my-coaching/moksilgi",
+    descriptionKey: "dashboard.myMoksilgiDescription",
+    title: "나의 목실기",
+    titleKey: "dashboard.myMoksilgi",
+    description: "내 목실기 목표와 실행전략을 작성하고 점검합니다.",
+  },
+  {
+    href: "/my-coaching/records",
+    descriptionKey: "dashboard.myRecordsDescription",
+    title: "나의 기록",
+    titleKey: "dashboard.myRecords",
+    description: "하루기록, 주간기록, 월간기록을 확인하고 작성합니다.",
   },
 ];
 
@@ -130,7 +118,9 @@ export default async function DashboardPage() {
 
   const roleValues = result.data.roles.map((role) => role.role);
   const quickLinks = getDashboardQuickLinksState(roleValues);
-  const showSuperAdminFeatureCards = roleValues.includes("super_admin");
+  const showAdminCenterCard = roleValues.includes("super_admin");
+  const showMyMoksilgiCard =
+    roleValues.includes("coach") || roleValues.includes("coachee");
   const showCoachMakerFeatureCards =
     roleValues.includes("super_admin") || roleValues.includes("coach_maker");
   const welcomeName =
@@ -139,6 +129,9 @@ export default async function DashboardPage() {
     profile?.email ||
     authEmail ||
     "사용자";
+  const dashboardAnnouncements = await getActiveAnnouncementsForCurrentUser({
+    placement: "dashboard",
+  });
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
@@ -146,10 +139,10 @@ export default async function DashboardPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-            <I18nText k="dashboard.title" fallback="대시보드" />
-          </p>
+              <I18nText k="dashboard.personalHomeBadge" fallback="개인 홈" />
+            </p>
             <h1 className="mt-3 text-3xl font-semibold">
-              <I18nText k="dashboard.title" fallback="대시보드" />
+              <I18nText k="dashboard.title" fallback="나의 홈" />
             </h1>
           </div>
           <PageNavigationButtons className="justify-start sm:justify-end" />
@@ -166,10 +159,38 @@ export default async function DashboardPage() {
           <p className="mt-2 text-slate-600">
             <I18nText
               k="dashboard.subtitle"
-              fallback="프로필과 역할별 작업 공간으로 이동할 수 있는 기본 화면입니다."
+              fallback="내 역할에 맞는 코칭 기록, 목실기, 담당 현황으로 이동하는 개인 시작 화면입니다."
             />
           </p>
         </section>
+
+        {dashboardAnnouncements.length > 0 ? (
+          <section className="mt-6 grid gap-3">
+            {dashboardAnnouncements.map((announcement) => (
+              <article
+                className="rounded-md border border-sky-200 bg-sky-50 p-5 text-slate-950"
+                key={announcement.id}
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex rounded-full border border-sky-200 bg-white px-2.5 py-1 text-xs font-semibold text-sky-700">
+                    시스템 공지
+                  </span>
+                  {announcement.audience === "admin" ? (
+                    <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                      관리자 전용
+                    </span>
+                  ) : null}
+                </div>
+                <h2 className="mt-3 break-words text-base font-semibold">
+                  {announcement.title}
+                </h2>
+                <p className="mt-2 whitespace-pre-line break-words text-sm leading-6 text-slate-700">
+                  {announcement.body}
+                </p>
+              </article>
+            ))}
+          </section>
+        ) : null}
 
         <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -303,20 +324,12 @@ export default async function DashboardPage() {
             </Link>
 
             {quickLinks.showAdminUsers && (
-              <>
-                <Link
-                  className="text-sm font-medium text-slate-700 underline"
-                  href="/admin/users"
-                >
-                  <I18nText k="dashboard.adminUsers" fallback="관리자: 사용자" />
-                </Link>
-                <Link
-                  className="text-sm font-medium text-slate-700 underline"
-                  href="/admin/invitations"
-                >
-                  <I18nText k="dashboard.adminInvitations" fallback="관리자: 초대" />
-                </Link>
-              </>
+              <Link
+                className="text-sm font-medium text-slate-700 underline"
+                href="/admin"
+              >
+                <I18nText k="dashboard.adminCenter" fallback="관리자 센터" />
+              </Link>
             )}
 
             {quickLinks.showCoachLink && (
@@ -336,6 +349,23 @@ export default async function DashboardPage() {
                 <I18nText k="dashboard.myCoachingSpace" fallback="내 코칭 공간" />
               </Link>
             )}
+
+            {showMyMoksilgiCard ? (
+              <Link
+                className="rounded-md border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
+                href="/my-coaching/moksilgi"
+              >
+                <h3 className="break-words font-semibold text-slate-950">
+                  <I18nText k="dashboard.myMoksilgi" fallback="나의 목실기" />
+                </h3>
+                <p className="mt-2 break-words text-sm leading-6 text-slate-600">
+                  <I18nText
+                    k="dashboard.myMoksilgiDescription"
+                    fallback="내 목실기 목표와 실행전략을 작성하고 점검합니다."
+                  />
+                </p>
+              </Link>
+            ) : null}
 
             {quickLinks.showCoacheeMessage && (
               <div className="text-slate-700">
@@ -376,7 +406,7 @@ export default async function DashboardPage() {
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 <I18nText
                   k="dashboard.coachMakerFeaturesDescription"
-                  fallback="코치메이커 대시보드와 전체 목실기 성취 현황으로 바로 이동합니다."
+                  fallback="코치메이커 센터, 전체 목실기 성취 현황, 나의 목실기와 나의 기록으로 바로 이동합니다."
                 />
               </p>
             </div>
@@ -399,35 +429,33 @@ export default async function DashboardPage() {
           </section>
         ) : null}
 
-        {showSuperAdminFeatureCards ? (
+        {showAdminCenterCard ? (
           <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
             <div>
               <h2 className="text-lg font-semibold">
-                <I18nText k="dashboard.adminFeatures" fallback="관리자 기능" />
+                <I18nText k="dashboard.adminCenter" fallback="관리자 센터" />
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 <I18nText
-                  k="dashboard.adminFeaturesDescription"
-                  fallback="최고관리자가 자주 확인하는 관리 화면으로 바로 이동합니다."
+                  k="dashboard.adminCenterDescription"
+                  fallback="회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간으로 이동합니다."
                 />
               </p>
             </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {adminFeatureCards.map((card) => (
-                <Link
-                  className="rounded-md border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
-                  href={card.href}
-                  key={card.href}
-                >
-                  <h3 className="font-semibold text-slate-950">
-                    <I18nText k={card.titleKey} fallback={card.title} />
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    <I18nText k={card.descriptionKey} fallback={card.description} />
-                  </p>
-                </Link>
-              ))}
-            </div>
+            <Link
+              className="mt-4 block rounded-md border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
+              href="/admin"
+            >
+              <h3 className="font-semibold text-slate-950">
+                <I18nText k="dashboard.adminCenter" fallback="관리자 센터" />
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                <I18nText
+                  k="dashboard.adminCenterDescription"
+                  fallback="회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간으로 이동합니다."
+                />
+              </p>
+            </Link>
           </section>
         ) : null}
       </section>

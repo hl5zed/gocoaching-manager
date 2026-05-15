@@ -6,6 +6,8 @@ import {
   isActiveLocale,
   type ActiveLocale,
 } from "@/lib/i18n/config";
+import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 import { useI18n } from "@/lib/i18n/useI18n";
 
 export function LanguageSwitcher() {
@@ -63,15 +65,21 @@ export function LanguageSwitcher() {
 
   return (
     <div className="relative" ref={rootRef}>
-      <button
+      <Button
         aria-expanded={open}
         aria-haspopup="menu"
-        className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        className="inline-flex h-10 min-h-10 min-w-[112px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border-slate-200 bg-white px-4 py-2 text-sm leading-none hover:bg-slate-50 [&_span]:whitespace-nowrap"
+        icon="globe"
+        iconPosition="left"
         onClick={() => setOpen((value) => !value)}
+        size="sm"
         type="button"
       >
-        🌐 {activeLabel} ▾
-      </button>
+        <span className="inline-flex items-center gap-1 whitespace-nowrap">
+          {activeLabel}
+          <Icon className="h-3.5 w-3.5" name="chevron-down" />
+        </span>
+      </Button>
 
       {open ? (
         <div
@@ -99,7 +107,7 @@ export function LanguageSwitcher() {
               <span>
                 {option.flag} {option.label}
               </span>
-              {option.code === locale ? <span>✓</span> : null}
+              {option.code === locale ? <Icon className="h-3.5 w-3.5" name="check" /> : null}
             </button>
           ))}
 
