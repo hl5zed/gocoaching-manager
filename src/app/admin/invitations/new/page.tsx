@@ -1,9 +1,17 @@
 import Link from "next/link";
 import { AdminInvitationCreateForm } from "@/components/admin/AdminInvitationCreateForm";
+import {
+  FALLBACK_INVITATION_EXPIRES_IN_DAYS,
+  getGlobalSystemSettings,
+} from "@/lib/api/admin/system-settings";
 
 export const dynamic = "force-dynamic";
 
-export default function NewAdminInvitationPage() {
+export default async function NewAdminInvitationPage() {
+  const { settings } = await getGlobalSystemSettings();
+  const defaultExpiresInDays =
+    settings.invitation_expires_in_days ?? FALLBACK_INVITATION_EXPIRES_IN_DAYS;
+
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
       <section className="mx-auto w-full max-w-4xl">
@@ -15,7 +23,7 @@ export default function NewAdminInvitationPage() {
           특정 역할과 범위를 가진 사용자를 위한 대기 중 초대를 생성합니다.
         </p>
 
-        <AdminInvitationCreateForm />
+        <AdminInvitationCreateForm defaultExpiresInDays={defaultExpiresInDays} />
 
         <div className="mt-6">
           <Link

@@ -53,17 +53,50 @@ type CreateInvitationResponse =
       error: CreateInvitationError;
     };
 
-export function AdminInvitationCreateForm() {
+function normalizeDefaultExpiresInDays(value?: number) {
+  return typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= 30
+    ? String(value)
+    : "7";
+}
+
+const INVITATION_EXPIRE_OPTIONS = [1, 3, 7, 14, 30];
+
+function getInvitationExpireOptions(currentValue: string) {
+  const currentDays = Number(currentValue);
+
+  if (
+    Number.isInteger(currentDays) &&
+    currentDays >= 1 &&
+    currentDays <= 30 &&
+    !INVITATION_EXPIRE_OPTIONS.includes(currentDays)
+  ) {
+    return [...INVITATION_EXPIRE_OPTIONS, currentDays].sort((left, right) => left - right);
+  }
+
+  return INVITATION_EXPIRE_OPTIONS;
+}
+
+export function AdminInvitationCreateForm({
+  defaultExpiresInDays = 7,
+}: {
+  defaultExpiresInDays?: number;
+}) {
   const [email, setEmail] = useState("");
   const [invitedRole, setInvitedRole] = useState<UserRole>("coachee");
   const [scopeType, setScopeType] = useState<ScopeType>("global");
   const [scopeId, setScopeId] = useState("");
-  const [expiresInDays, setExpiresInDays] = useState("7");
+  const [expiresInDays, setExpiresInDays] = useState(() =>
+    normalizeDefaultExpiresInDays(defaultExpiresInDays),
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sendEmailNow, setSendEmailNow] = useState(true);
   const [success, setSuccess] = useState<CreateInvitationSuccess | null>(null);
   const [error, setError] = useState<CreateInvitationError | null>(null);
   const [copyMessage, setCopyMessage] = useState("");
+  const invitationExpireOptions = getInvitationExpireOptions(expiresInDays);
 
   const normalizedScopeId = useMemo(() => {
     return scopeType === "global" ? null : scopeId.trim() || null;
@@ -230,9 +263,11 @@ export function AdminInvitationCreateForm() {
             onChange={(event) => setExpiresInDays(event.target.value)}
             value={expiresInDays}
           >
-            <option value="7">7일</option>
-            <option value="14">14일</option>
-            <option value="30">30일</option>
+            {invitationExpireOptions.map((days) => (
+              <option key={days} value={days}>
+                {days}일
+              </option>
+            ))}
           </select>
         </label>
 

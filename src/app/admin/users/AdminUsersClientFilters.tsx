@@ -1,6 +1,15 @@
 "use client";
 
 import { type ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  Button,
+  Card,
+  CardContent,
+  FieldLabel,
+  FieldText,
+  SelectInput,
+  TextInput,
+} from "@/components/ui";
 import { useI18n } from "@/lib/i18n/useI18n";
 
 type FilterOption = {
@@ -237,27 +246,26 @@ export function AdminUsersClientFilters({
 
   return (
     <>
-      <section className="mt-6 rounded-md border border-slate-200 bg-white p-4">
+      <Card className="mt-6">
+        <CardContent className="p-4">
         <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
-          <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+          <FieldLabel>
+            <FieldText>
               {t("common.search", "검색")}
-            </span>
-            <input
-              className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+            </FieldText>
+            <TextInput
               onChange={(event) => setSearch(event.target.value)}
               placeholder={t("adminUsers.searchPlaceholder", "이름, 이메일, 역할, 소속/조직")}
               type="search"
               value={search}
             />
-          </label>
+          </FieldLabel>
 
-          <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+          <FieldLabel>
+            <FieldText>
               {t("members.role", "역할")}
-            </span>
-            <select
-              className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+            </FieldText>
+            <SelectInput
               onChange={(event) => setRole(event.target.value)}
               value={role}
             >
@@ -267,15 +275,14 @@ export function AdminUsersClientFilters({
                   {t(`roles.${option.value}`, option.label)}
                 </option>
               ))}
-            </select>
-          </label>
+            </SelectInput>
+          </FieldLabel>
 
-          <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+          <FieldLabel>
+            <FieldText>
               {t("members.status", "상태")}
-            </span>
-            <select
-              className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+            </FieldText>
+            <SelectInput
               onChange={(event) => setStatus(event.target.value)}
               value={status}
             >
@@ -285,15 +292,14 @@ export function AdminUsersClientFilters({
                   {t(`status.${option.value}`, option.label)}
                 </option>
               ))}
-            </select>
-          </label>
+            </SelectInput>
+          </FieldLabel>
 
-          <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+          <FieldLabel>
+            <FieldText>
               {t("adminUsers.pageSize", "페이지 크기")}
-            </span>
-            <select
-              className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+            </FieldText>
+            <SelectInput
               onChange={(event) =>
                 setPageSize(Number(event.target.value) as typeof pageSize)
               }
@@ -304,16 +310,17 @@ export function AdminUsersClientFilters({
                   {option}
                 </option>
               ))}
-            </select>
-          </label>
+            </SelectInput>
+          </FieldLabel>
 
-          <button
-            className="rounded-md border border-slate-300 px-4 py-2 font-medium text-slate-700"
+          <Button
+            icon="filter"
             onClick={resetFilters}
             type="button"
+            variant="secondary"
           >
             {t("adminUsers.resetFilters", "필터 초기화")}
-          </button>
+          </Button>
         </div>
 
         <p className="mt-3 text-sm text-slate-600">
@@ -322,17 +329,21 @@ export function AdminUsersClientFilters({
             { filtered: filteredCount, total: totalCount },
           )}
         </p>
-      </section>
+        </CardContent>
+      </Card>
 
       {children}
 
       {filteredCount === 0 ? (
-        <div className="mt-4 rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600">
-          {getEmptyFilterMessage({ search, role, status, t })}
-        </div>
+        <Card className="mt-4">
+          <CardContent className="p-6 text-sm text-slate-600">
+            {getEmptyFilterMessage({ search, role, status, t })}
+          </CardContent>
+        </Card>
       ) : null}
 
-      <section className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-md border border-slate-200 bg-white px-4 py-3">
+      <Card className="mt-4">
+        <CardContent className="flex flex-wrap items-center justify-between gap-4 px-4 py-3">
         <p className="text-sm text-slate-600">
           {formatMessage(
             t("adminUsers.pageInfo", "전체 결과 {total}명 · 현재 페이지 {page} / {pages}"),
@@ -340,24 +351,30 @@ export function AdminUsersClientFilters({
           )}
         </p>
         <div className="flex items-center gap-2">
-          <button
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 disabled:border-slate-200 disabled:text-slate-400"
+          <Button
             disabled={currentPage <= 1}
+            icon="arrow-left"
             onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+            size="sm"
             type="button"
+            variant="secondary"
           >
             {t("adminUsers.previousPage", "이전")}
-          </button>
-          <button
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 disabled:border-slate-200 disabled:text-slate-400"
+          </Button>
+          <Button
             disabled={currentPage >= totalPages}
+            icon="arrow-right"
+            iconPosition="right"
             onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+            size="sm"
             type="button"
+            variant="secondary"
           >
             {t("adminUsers.nextPage", "다음")}
-          </button>
+          </Button>
         </div>
-      </section>
+        </CardContent>
+      </Card>
     </>
   );
 }

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireAdminProfile } from "@/lib/auth/require-admin-profile";
 import { getAdminUsers } from "@/lib/api/admin/users";
 import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
+import { Badge, ButtonLink } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +79,35 @@ function SummaryCard({
   );
 }
 
+const adminMenuCards = [
+  {
+    description: "회원 정보와 상태를 확인하고 수정합니다.",
+    href: "/admin/users",
+    title: "회원 관리",
+  },
+  {
+    description: "새 사용자를 초대하고 초대 상태를 확인합니다.",
+    href: "/admin/invitations",
+    title: "초대 관리",
+  },
+  {
+    description: "회원별 시스템 역할과 활성 상태를 관리합니다.",
+    href: "/admin/users",
+    title: "역할 관리",
+  },
+  {
+    description: "국가, 기관/교회, 세대, 소속 선택값을 관리합니다.",
+    href: "/admin/settings",
+    title: "국가/지역/기관/교회/그룹 관리",
+  },
+  {
+    description:
+      "기본 언어, 기본 국가, 이메일 발신, 초대 만료 기간, 시스템 공지, 인쇄 기본 옵션, 조직별 기본 권한을 관리합니다.",
+    href: "/admin/settings",
+    title: "시스템 설정",
+  },
+];
+
 export default async function AdminPage() {
   const admin = await requireAdminProfile();
 
@@ -103,34 +133,51 @@ export default async function AdminPage() {
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
       <section className="mx-auto w-full max-w-7xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-              관리자
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold">관리자 대시보드</h1>
+          <div className="min-w-0">
+            <Badge icon="settings" tone="info">관리자 전용</Badge>
+            <h1 className="mt-3 text-3xl font-semibold">관리자 센터</h1>
             <p className="mt-4 max-w-3xl leading-7 text-slate-600">
-              회원관리 현황을 확인하고 사용자 관리 화면으로 이동합니다.
+              회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간입니다.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <PageNavigationButtons className="justify-start sm:justify-end" />
             {canAccessSettings ? (
-              <Link
-                className="inline-flex rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-                href="/admin/settings"
-              >
+              <ButtonLink href="/admin/settings" icon="settings" size="sm">
                 관리자 설정
-              </Link>
+              </ButtonLink>
             ) : null}
-            <Link
-              className="inline-flex rounded-md bg-slate-950 px-4 py-2.5 text-sm font-medium text-white"
-              href="/admin/users"
-            >
+            <ButtonLink href="/admin/users" icon="users" size="sm" variant="primary">
               회원관리로 이동
-            </Link>
+            </ButtonLink>
           </div>
         </div>
+
+        <section className="mt-8 rounded-md border border-slate-200 bg-white p-5">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-950">
+              관리자 전용 메뉴
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              운영 관리에 필요한 기능을 이곳에서 확인하고 이동합니다.
+            </p>
+          </div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            {adminMenuCards.map((card) => (
+              <Link
+                className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
+                href={card.href}
+                key={`${card.title}-${card.href}`}
+              >
+                <h3 className="font-semibold text-slate-950">{card.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {card.description}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         {error ? (
           <div className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">

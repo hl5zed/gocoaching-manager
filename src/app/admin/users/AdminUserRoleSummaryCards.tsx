@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Badge, Card, CardContent } from "@/components/ui";
 
 type RoleSummary = {
   totalProfiles: number;
@@ -129,20 +130,25 @@ export function AdminUserRoleSummaryCards() {
 
   if (error) {
     return (
-      <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-        {error}
-      </div>
+      <Card className="mt-4 border-amber-200 bg-amber-50">
+        <CardContent className="text-sm text-amber-800">{error}</CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
       {cards.map((card) => (
-        <article
-          className="rounded-md border border-slate-200 bg-white p-4"
-          key={card.label}
-        >
-          <p className="text-sm font-medium text-slate-500">{card.label}</p>
+        <Card key={card.label}>
+          <CardContent>
+            <div className="flex min-w-0 items-start justify-between gap-3">
+              <p className="break-words text-sm font-semibold text-slate-600">
+                {card.label}
+              </p>
+              <Badge className="shrink-0" icon="users" tone="info">
+                <span className="sr-only">회원</span>
+              </Badge>
+            </div>
           <p className="mt-2 text-2xl font-semibold text-slate-950">
             {isLoading ? (
               <span className="inline-block h-8 w-14 animate-pulse rounded bg-slate-200 align-middle" />
@@ -153,7 +159,8 @@ export function AdminUserRoleSummaryCards() {
           <p className="mt-1 text-xs text-slate-500">
             {isLoading ? "요약 불러오는 중..." : card.description}
           </p>
-        </article>
+          </CardContent>
+        </Card>
       ))}
     </div>
   );

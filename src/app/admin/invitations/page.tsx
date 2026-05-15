@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ResendInvitationButton } from "@/components/admin/ResendInvitationButton";
 import { RevokeInvitationButton } from "@/components/admin/RevokeInvitationButton";
+import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
 import {
   getAdminInvitations,
   normalizeAdminInvitationsPage,
@@ -164,7 +165,7 @@ export default async function AdminInvitationsPage({
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
       <section className="mx-auto w-full max-w-7xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
               관리자
             </p>
@@ -172,6 +173,10 @@ export default async function AdminInvitationsPage({
             <p className="mt-4 max-w-3xl leading-7 text-slate-600">
               초대와 현재 상태를 읽기 전용으로 확인할 수 있습니다.
             </p>
+            <PageNavigationButtons
+              className="mt-4 min-w-0 justify-start"
+              dashboardHref="/admin"
+            />
           </div>
 
           <Link

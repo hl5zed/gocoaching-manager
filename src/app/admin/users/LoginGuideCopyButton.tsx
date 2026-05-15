@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button, TextareaInput } from "@/components/ui";
 
 type LoginGuideCopyButtonProps = {
   email: string | null;
@@ -47,21 +48,17 @@ export function LoginGuideCopyButton({ email }: LoginGuideCopyButtonProps) {
 
   return (
     <div className="grid gap-2">
-      <button
-        className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
-        onClick={handleCopy}
-        type="button"
-      >
+      <Button icon="report" onClick={handleCopy} size="sm" type="button" variant="secondary">
         로그인 안내 복사
-      </button>
+      </Button>
       {copied ? (
         <p className="text-xs text-emerald-700">로그인 안내문이 복사되었습니다.</p>
       ) : null}
       {fallbackText ? (
         <label className="grid gap-1 text-xs text-slate-600">
           <span>복사에 실패했습니다. 아래 안내문을 수동으로 복사해 주세요.</span>
-          <textarea
-            className="min-h-32 rounded-md border border-slate-300 p-2 font-sans text-xs"
+          <TextareaInput
+            className="min-h-32 text-xs"
             readOnly
             value={fallbackText}
           />

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   getAdminUsers,
@@ -14,6 +13,15 @@ import { PageNavigationButtons } from "@/components/navigation/PageNavigationBut
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { requireAdminProfile } from "@/lib/auth/require-admin-profile";
 import { I18nText } from "@/lib/i18n/I18nProvider";
+import {
+  Badge,
+  ButtonLink,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui";
 import { AdminUsersClientFilters } from "./AdminUsersClientFilters";
 import { AdminUserDetailDrawer } from "./AdminUserDetailDrawer";
 import { AdminUserDirectCreatePanel } from "./AdminUserDirectCreatePanel";
@@ -193,48 +201,80 @@ function isActiveRole(roleItem: AdminUserSummary["roles"][number]) {
   return roleItem.status === "active" && roleItem.is_active;
 }
 
-function getUserStatusBadgeClass(status: AdminUserSummary["status"]) {
+function getUserStatusBadgeTone(status: AdminUserSummary["status"]) {
   if (status === "active") {
-    return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  }
-
-  if (status === "inactive") {
-    return "border-slate-200 bg-slate-100 text-slate-700";
+    return "success";
   }
 
   if (status === "suspended") {
-    return "border-amber-200 bg-amber-50 text-amber-700";
+    return "warning";
   }
 
-  if (status === "archived") {
-    return "border-violet-200 bg-violet-50 text-violet-700";
+  if (status === "anonymized") {
+    return "danger";
   }
 
-  return "border-rose-200 bg-rose-50 text-rose-700";
+  return "neutral";
 }
 
 function RoleBadgeList({ roles }: { roles: AdminUserSummary["roles"] }) {
   if (roles.length === 0) {
     return (
-      <span className="inline-flex w-fit rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+      <Badge tone="neutral">
         <I18nText k="members.notSpecified" fallback="미지정" />
-      </span>
+      </Badge>
     );
   }
 
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex min-w-0 flex-wrap gap-1.5">
       {roles.map((roleItem) => (
-        <span
-          className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
+        <Badge
           key={roleItem.id}
+          tone={isActiveRole(roleItem) ? "info" : "neutral"}
           title={`역할 상태: ${getRoleActiveLabel(roleItem)}`}
         >
           <I18nText
             k={`roles.${roleItem.role}`}
             fallback={getRoleLabel(roleItem.role)}
           />
-        </span>
+        </Badge>
+      ))}
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: AdminUserSummary["status"] }) {
+  return (
+    <Badge tone={getUserStatusBadgeTone(status)}>
+      {getStatusLabel(status)}
+    </Badge>
+  );
+}
+
+function ProfileAffiliationBadges({ user }: { user: AdminUserSummary }) {
+  const items = [
+    ["국가", formatCountryValue(user)],
+    ["지역", formatLookupValue(user.region_name, user.region_id)],
+    ["기관", formatLookupValue(user.organization_name, user.organization_id)],
+    ["교회", formatLookupValue(user.church_name, user.church_id)],
+    ["그룹", formatLookupValue(user.group_name, user.group_id)],
+    ["직분", displayProfileValue(user.ministry_position)],
+    ["세대", formatGeneration(user.generation_number)],
+  ] as const;
+
+  return (
+    <div className="flex min-w-0 flex-wrap gap-1.5">
+      {items.map(([label, value]) => (
+        <Badge
+          className="max-w-full justify-start whitespace-normal break-words text-left"
+          key={label}
+          tone={value === "미지정" ? "neutral" : "info"}
+        >
+          <span className="font-semibold">{label}</span>
+          <span className="text-slate-500">·</span>
+          <span className="min-w-0 break-words">{value}</span>
+        </Badge>
       ))}
     </div>
   );
@@ -881,50 +921,70 @@ export default async function AdminUsersPage({
 
   const getUserCountryLabel = (user: AdminUserSummary) => formatCountryValue(user);
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-[var(--trust-bg)] px-4 py-6 text-slate-950 sm:px-6 sm:py-10">
       <section className="mx-auto w-full max-w-7xl">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-              <I18nText k="members.admin" fallback="관리자" />
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold">
-              <I18nText k="members.usersAndRoles" fallback="사용자 및 역할" />
-            </h1>
-            <p className="mt-4 max-w-3xl leading-7 text-slate-600">
-              <I18nText
-                k="members.pageDescription"
-                fallback="프로필과 활성 역할을 조회하고, 필요한 경우 관리자가 직접 회원을 등록할 수 있습니다."
-              />
-            </p>
-            <p className="mt-2 text-sm text-slate-500">
-              <I18nText
-                k="members.invitationNotice"
-                fallback="기존 이메일 초대 방식은 그대로 유지됩니다. 직접 등록 시 임시 비밀번호는 별도로 전달해야 합니다."
-              />
-            </p>
-          </div>
+        <Card>
+          <CardHeader className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <Badge icon="users" tone="info">
+                <I18nText k="members.admin" fallback="관리자" />
+              </Badge>
+              <CardTitle className="mt-3 text-2xl sm:text-3xl">
+                <I18nText k="members.usersAndRoles" fallback="사용자 및 역할" />
+              </CardTitle>
+              <CardDescription className="mt-4 max-w-3xl leading-7">
+                <I18nText
+                  k="members.pageDescription"
+                  fallback="프로필과 활성 역할을 조회하고, 필요한 경우 관리자가 직접 회원을 등록할 수 있습니다."
+                />
+              </CardDescription>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+                <I18nText
+                  k="members.invitationNotice"
+                  fallback="기존 이메일 초대 방식은 그대로 유지됩니다. 직접 등록 시 임시 비밀번호는 별도로 전달해야 합니다."
+                />
+              </p>
+            </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <PageNavigationButtons className="justify-start sm:justify-end" />
-            <Link
-              className="inline-flex rounded-md border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700"
-              href="/admin/coaching-relationships/new"
-            >
-              <I18nText k="members.createRelationship" fallback="코칭 관계 생성" />
-            </Link>
-            <Link
-              className="inline-flex rounded-md bg-slate-950 px-4 py-2.5 text-sm font-medium text-white"
-              href="/admin/invitations/new"
-            >
-              <I18nText k="members.addMember" fallback="회원 추가" />
-            </Link>
-          </div>
+            <div className="flex min-w-0 flex-wrap items-center gap-3 lg:justify-end">
+              <PageNavigationButtons className="justify-start sm:justify-end" />
+              <ButtonLink
+                href="/admin/coaching-relationships/new"
+                icon="users"
+                variant="secondary"
+              >
+                <I18nText k="members.createRelationship" fallback="코칭 관계 생성" />
+              </ButtonLink>
+              <ButtonLink href="/admin/invitations/new" icon="users">
+                <I18nText k="members.addMember" fallback="회원 추가" />
+              </ButtonLink>
+            </div>
+          </CardHeader>
+        </Card>
+
+        <div className="mt-6">
+          <AdminUserDirectCreatePanel />
         </div>
+
+        {!error ? (
+          <section className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">역할별 회원 요약</CardTitle>
+                <CardDescription>
+                  회원 목록은 먼저 표시하고, 역할별 요약은 별도로 불러옵니다.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AdminUserRoleSummaryCards />
+              </CardContent>
+            </Card>
+          </section>
+        ) : null}
 
         {createUserMessage ? (
           <div
-            className={`mt-6 rounded-md border p-4 ${
+            className={`mt-6 rounded-lg border p-4 text-sm leading-6 ${
               createUserMessage.tone === "success"
                 ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                 : "border-red-200 bg-red-50 text-red-800"
@@ -936,7 +996,7 @@ export default async function AdminUsersPage({
 
         {roleChangeMessage ? (
           <div
-            className={`mt-6 rounded-md border p-4 ${
+            className={`mt-6 rounded-lg border p-4 text-sm leading-6 ${
               roleChangeMessage.tone === "success"
                 ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                 : "border-red-200 bg-red-50 text-red-800"
@@ -948,7 +1008,7 @@ export default async function AdminUsersPage({
 
         {statusChangeMessage ? (
           <div
-            className={`mt-6 rounded-md border p-4 ${
+            className={`mt-6 rounded-lg border p-4 text-sm leading-6 ${
               statusChangeMessage.tone === "success"
                 ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                 : "border-red-200 bg-red-50 text-red-800"
@@ -960,7 +1020,7 @@ export default async function AdminUsersPage({
 
         {profileUpdateMessage ? (
           <div
-            className={`mt-6 rounded-md border p-4 ${
+            className={`mt-6 rounded-lg border p-4 text-sm leading-6 ${
               profileUpdateMessage.tone === "success"
                 ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                 : "border-red-200 bg-red-50 text-red-800"
@@ -970,30 +1030,18 @@ export default async function AdminUsersPage({
           </div>
         ) : null}
 
-        <AdminUserDirectCreatePanel />
-
-        {!error ? (
-          <section className="mt-6">
-            <div>
-              <h2 className="text-lg font-semibold">역할별 회원 요약</h2>
-              <p className="mt-1 text-sm text-slate-600">
-                회원 목록은 먼저 표시하고, 역할별 요약은 별도로 불러옵니다.
-              </p>
-            </div>
-            <AdminUserRoleSummaryCards />
-          </section>
-        ) : null}
-
         {error && (
-          <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
             지금 사용자를 불러올 수 없습니다.
           </div>
         )}
 
         {!error && users.length === 0 && (
-          <div className="mt-6 rounded-md border border-slate-200 bg-white p-6 text-slate-600">
+          <Card className="mt-6">
+            <CardContent className="p-6 text-sm text-slate-600">
             {getEmptyUsersMessage({ q, role, status })}
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         {!error && users.length > 0 && (
@@ -1008,19 +1056,21 @@ export default async function AdminUsersPage({
             }))}
             totalCount={users.length}
           >
-            <div className="mt-6">
-              <h2 className="text-lg font-semibold">
-                <I18nText k="members.title" fallback="회원목록" />
-              </h2>
-              <p className="mt-1 text-sm text-slate-600">
-                <I18nText
-                  k="members.currentListDescription"
-                  fallback="검색, 필터, 정렬, 페이지네이션을 사용해 현재 목록을 확인합니다."
-                />
-              </p>
-            </div>
-            <div className="mt-6 rounded-lg border border-slate-200 bg-white p-3 lg:p-0">
-              <table className="block w-full table-auto border-collapse text-left text-sm lg:table">
+            <Card className="mt-6 overflow-hidden">
+              <CardHeader>
+                <CardTitle className="text-lg">
+                  <I18nText k="members.title" fallback="회원목록" />
+                </CardTitle>
+                <CardDescription>
+                  <I18nText
+                    k="members.currentListDescription"
+                    fallback="검색, 필터, 정렬, 페이지네이션을 사용해 현재 목록을 확인합니다."
+                  />
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-3 pt-0 lg:p-0">
+                <div className="overflow-x-auto">
+                  <table className="block min-w-full table-auto border-collapse text-left text-sm lg:table">
                 <thead className="hidden lg:table-header-group">
                   <tr className="border-b border-slate-200 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
                     <th className="w-[22%] px-3 py-3 font-medium">
@@ -1077,7 +1127,7 @@ export default async function AdminUsersPage({
                 <tbody className="block space-y-4 lg:table-row-group lg:space-y-0">
                   {users.map((user) => (
                     <tr
-                      className="block rounded-lg border border-slate-200 bg-white p-4 text-slate-800 shadow-sm transition lg:table-row lg:border-0 lg:border-b lg:border-slate-100 lg:p-0 lg:shadow-none lg:hover:bg-slate-50/70"
+                      className="block rounded-lg border border-slate-200 bg-white p-4 text-slate-800 shadow-sm transition lg:table-row lg:border-0 lg:border-b lg:border-slate-100 lg:p-0 lg:shadow-none lg:hover:bg-[var(--trust-primary-soft)]/40"
                       data-admin-user-row
                       data-created-at={user.created_at}
                       data-email={user.email ?? ""}
@@ -1104,23 +1154,13 @@ export default async function AdminUsersPage({
                                     {formatEmail(user.email)}
                                   </p>
                                 </div>
-                                <span
-                                  className={`inline-flex shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium lg:hidden ${getUserStatusBadgeClass(
-                                    user.status,
-                                  )}`}
-                                >
-                                  {getStatusLabel(user.status)}
+                                <span className="shrink-0 lg:hidden">
+                                  <StatusBadge status={user.status} />
                                 </span>
                               </div>
                             </td>
                             <td className="hidden lg:table-cell lg:px-3 lg:py-3">
-                              <span
-                                className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${getUserStatusBadgeClass(
-                                  user.status,
-                                )}`}
-                              >
-                                {getStatusLabel(user.status)}
-                              </span>
+                              <StatusBadge status={user.status} />
                             </td>
                             <td className="block border-b border-slate-100 py-3 lg:table-cell lg:border-b-0 lg:max-w-[240px] lg:px-3 lg:py-3">
                               <span className="mb-1 block text-xs font-semibold text-slate-500 lg:hidden">
@@ -1135,9 +1175,7 @@ export default async function AdminUsersPage({
                               <span className="mb-1 block text-xs font-semibold text-slate-500 lg:hidden">
                                 <I18nText k="members.organization" fallback="소속 정보" />
                               </span>
-                              <p className="break-words text-sm leading-5 text-slate-700 lg:text-xs">
-                                {formatProfileAffiliationSummary(user)}
-                              </p>
+                              <ProfileAffiliationBadges user={user} />
                             </td>
                             <td className="block border-b border-slate-100 py-3 lg:table-cell lg:border-b-0 lg:px-3 lg:py-3">
                               <span className="mb-1 block text-xs font-semibold text-slate-500 lg:hidden">
@@ -1181,15 +1219,17 @@ export default async function AdminUsersPage({
                                 />
                                 <AdminUserDetailDrawer user={user} />
                               </div>
-                      </td>
+                            </td>
                           </>
                         );
                       })()}
                     </tr>
                   ))}
                 </tbody>
-              </table>
-            </div>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
           </AdminUsersClientFilters>
         )}
       </section>
