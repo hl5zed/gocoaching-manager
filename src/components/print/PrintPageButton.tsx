@@ -1,9 +1,17 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
+import {
+  getPrintMarginSize,
+  normalizePrintOptions,
+  type PrintOptions,
+} from "@/lib/print/print-options";
+
 type PrintPageButtonProps = {
   className?: string;
   fileName?: string;
   label?: string;
+  printOptions?: Partial<PrintOptions> | null;
   title?: string;
 };
 
@@ -32,8 +40,13 @@ export function PrintPageButton({
   className = "",
   fileName,
   label = "인쇄/PDF 저장",
+  printOptions,
   title,
 }: PrintPageButtonProps) {
+  const resolvedPrintOptions = normalizePrintOptions(printOptions);
+  const printMargin = getPrintMarginSize(resolvedPrintOptions.margin);
+  const pageSize = `A4 ${resolvedPrintOptions.orientation}`;
+
   function handlePrint() {
     if (typeof window === "undefined") {
       return;
@@ -66,13 +79,14 @@ export function PrintPageButton({
 
   return (
     <>
-      <button
-        className={`print-hidden rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 ${className}`}
+      <Button
+        className={`print-hidden ${className}`}
+        icon="print"
         onClick={handlePrint}
         type="button"
       >
         {label}
-      </button>
+      </Button>
       <style jsx global>{`
         .print-only {
           display: none;
@@ -80,8 +94,8 @@ export function PrintPageButton({
 
         @media print {
           @page {
-            size: A4 portrait;
-            margin: 10mm;
+            size: ${pageSize};
+            margin: ${printMargin};
           }
 
           html,
@@ -103,7 +117,15 @@ export function PrintPageButton({
             width: 100% !important;
           }
 
+          .print-root > div {
+            margin: 0 !important;
+            max-width: none !important;
+            width: 100% !important;
+          }
+
           .print-root * {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
             box-shadow: none !important;
             text-shadow: none !important;
           }
@@ -171,20 +193,34 @@ export function PrintPageButton({
             break-after: auto;
             break-before: auto;
             break-inside: auto;
-            margin: 0 0 8px !important;
+            margin: 0 0 5mm !important;
             page-break-after: auto;
             page-break-before: auto;
             page-break-inside: auto;
-            padding: 8px 10px !important;
+            padding: 0 !important;
           }
 
+          .print-section,
           .print-card {
             border: 1px solid #dddddd !important;
+          }
+
+          .print-section > div,
+          .print-card > div {
+            border-bottom: 0 !important;
+            padding: 3mm 4mm !important;
+          }
+
+          .print-root dl,
+          .print-root ul,
+          .print-root p {
+            margin-bottom: 0 !important;
           }
 
           .print-root table {
             border-collapse: collapse !important;
             font-size: 10px !important;
+            min-width: 0 !important;
             page-break-inside: auto;
             width: 100% !important;
           }
