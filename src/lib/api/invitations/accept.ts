@@ -27,6 +27,11 @@ type InvitationPreview = {
   invited_email: string;
 };
 
+type InvitationPreviewResult = {
+  data: InvitationPreview | null;
+  error: string | null;
+};
+
 type RpcError = {
   message?: string;
 };
@@ -40,6 +45,14 @@ type InvitationProfileUpdate = {
   country_id: string | null;
   generation_number: number | null;
   ministry_position: string | null;
+};
+
+type InvitationAcceptanceRow = {
+  accepted_at: string | null;
+  accepted_by: string | null;
+  id: string;
+  invited_email: string;
+  status: string;
 };
 
 type ProfilesUpdateTable = {
@@ -175,7 +188,7 @@ function getDisplayNameFromEmail(email: string) {
 async function findInvitationPreview(
   serviceClient: SupabaseClient,
   tokenHash: string,
-) {
+): Promise<InvitationPreviewResult> {
   const { data, error } = await serviceClient
     .from("invitations")
     .select("invited_email")
@@ -183,11 +196,24 @@ async function findInvitationPreview(
     .is("deleted_at", null)
     .maybeSingle();
 
-  if (error || !data) {
-    return null;
+  if (error) {
+    return {
+      data: null,
+      error: error.message ?? "Invitation preview could not be loaded.",
+    };
   }
 
-  return data as InvitationPreview;
+  if (!data) {
+    return {
+      data: null,
+      error: null,
+    };
+  }
+
+  return {
+    data: data as InvitationPreview,
+    error: null,
+  };
 }
 
 function getRpcStatus(error: RpcError) {
@@ -231,6 +257,120 @@ function callAcceptInvitationRpc(
   };
 
   return typedClient.rpc("accept_invitation", args);
+}
+
+async function ensureInvitationMarkedAccepted({
+  authEmail,
+  invitationId,
+  profileId,
+  serviceClient,
+}: {
+  authEmail: string;
+  invitationId: string;
+  profileId: string;
+  serviceClient: SupabaseClient;
+}) {
+  const invitationsTable = serviceClient.from("invitations") as any;
+  const { data: currentInvitation, error: currentInvitationError } =
+    await invitationsTable
+      .select("id, invited_email, status, accepted_at, accepted_by")
+      .eq("id", invitationId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+  if (currentInvitationError || !currentInvitation) {
+    return {
+      data: null,
+      error:
+        currentInvitationError?.message ??
+        "Accepted invitation could not be verified.",
+    };
+  }
+
+  const invitation = currentInvitation as InvitationAcceptanceRow;
+
+  if (normalizeEmail(invitation.invited_email) !== authEmail) {
+    return {
+      data: null,
+      error: "Accepted invitation email does not match current user.",
+    };
+  }
+
+  if (invitation.accepted_by !== null && invitation.accepted_by !== profileId) {
+    return {
+      data: null,
+      error: "Accepted invitation belongs to a different profile.",
+    };
+  }
+
+  if (
+    invitation.status === "accepted" &&
+    invitation.accepted_at !== null &&
+    invitation.accepted_by === profileId
+  ) {
+    return {
+      data: invitation,
+      error: null,
+    };
+  }
+
+  if (["revoked", "expired", "cancelled", "canceled"].includes(invitation.status)) {
+    return {
+      data: null,
+      error: "Invitation is no longer acceptable.",
+    };
+  }
+
+  if (invitation.status !== "pending" && invitation.status !== "accepted") {
+    return {
+      data: null,
+      error: "Invitation status cannot be marked accepted.",
+    };
+  }
+
+  const acceptedAt = invitation.accepted_at ?? new Date().toISOString();
+  const { data: updatedInvitation, error: updateError } = await invitationsTable
+    .update({
+      status: "accepted",
+      accepted_at: acceptedAt,
+      accepted_by: profileId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", invitation.id)
+    .eq("invited_email", invitation.invited_email)
+    .is("deleted_at", null)
+    .in("status", ["pending", "accepted"])
+    .or(`accepted_by.is.null,accepted_by.eq.${profileId}`)
+    .select("id, invited_email, status, accepted_at, accepted_by")
+    .maybeSingle();
+
+  if (updateError || !updatedInvitation) {
+    return {
+      data: null,
+      error:
+        updateError?.message ??
+        "Accepted invitation could not be updated with the expected state.",
+    };
+  }
+
+  const normalizedUpdatedInvitation =
+    updatedInvitation as InvitationAcceptanceRow;
+
+  if (
+    normalizedUpdatedInvitation.status !== "accepted" ||
+    normalizedUpdatedInvitation.accepted_at === null ||
+    normalizedUpdatedInvitation.accepted_by !== profileId
+  ) {
+    return {
+      data: null,
+      error: "Accepted invitation verification failed after update.",
+    };
+  }
+
+  return {
+    data: normalizedUpdatedInvitation,
+    error: null,
+  };
 }
 
 export async function POST(request: Request) {
@@ -299,11 +439,26 @@ export async function POST(request: Request) {
   }
 
   const tokenHash = hashToken(rawToken);
-  const invitationPreview = await findInvitationPreview(serviceClient, tokenHash);
+  const invitationPreviewResult = await findInvitationPreview(
+    serviceClient,
+    tokenHash,
+  );
+
+  if (invitationPreviewResult.error) {
+    logServerError("INVITATION_PREVIEW_FAILED", invitationPreviewResult.error);
+    return jsonError(
+      500,
+      "INVITATION_PREVIEW_FAILED",
+      "초대 정보를 확인하는 중 오류가 발생했습니다.",
+    );
+  }
+
+  if (!invitationPreviewResult.data) {
+    return jsonError(404, "INVITE_NOT_FOUND", "유효하지 않은 초대입니다.");
+  }
 
   if (
-    invitationPreview &&
-    normalizeEmail(invitationPreview.invited_email) !== authEmail
+    normalizeEmail(invitationPreviewResult.data.invited_email) !== authEmail
   ) {
     return jsonError(
       403,
@@ -341,6 +496,26 @@ export async function POST(request: Request) {
     );
   }
 
+  const invitationAcceptance = await ensureInvitationMarkedAccepted({
+    authEmail,
+    invitationId: acceptedInvitation.invitation.id,
+    profileId: acceptedInvitation.profile_id,
+    serviceClient,
+  });
+
+  if (invitationAcceptance.error || !invitationAcceptance.data) {
+    logServerError(
+      "INVITATION_STATUS_UPDATE_FAILED",
+      invitationAcceptance.error ??
+        "Accepted invitation status verification failed.",
+    );
+    return jsonError(
+      500,
+      "INVITATION_STATUS_UPDATE_FAILED",
+      "초대 수락 상태를 저장하는 중 오류가 발생했습니다.",
+    );
+  }
+
   const profileUpdate: InvitationProfileUpdate = {
     country_id: countryId.value,
     ministry_position: ministryPosition.value,
@@ -371,7 +546,7 @@ export async function POST(request: Request) {
         invitation_id: acceptedInvitation.invitation.id,
         profile_id: acceptedInvitation.profile_id,
         role: acceptedInvitation.role,
-        status: acceptedInvitation.invitation.status,
+        status: invitationAcceptance.data.status,
       },
     },
     {
