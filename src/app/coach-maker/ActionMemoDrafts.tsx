@@ -477,6 +477,12 @@ export function ActionMemoDrafts({
   const [shouldScrollToCreate, setShouldScrollToCreate] = useState(false);
 
   const summary = useMemo(() => {
+    let archivedCount = 0;
+    let completedCount = 0;
+    let highPriorityCount = 0;
+    let inProgressCount = 0;
+    let openCount = 0;
+    let overdueCount = 0;
     const teamMap = new Map<
       string,
       {
@@ -489,6 +495,25 @@ export function ActionMemoDrafts({
     const targetTypeMap = new Map<TargetType, number>();
 
     for (const note of notes) {
+      if (note.status === "archived") {
+        archivedCount += 1;
+      }
+      if (note.status === "completed") {
+        completedCount += 1;
+      }
+      if (note.status === "in_progress") {
+        inProgressCount += 1;
+      }
+      if (note.status === "open") {
+        openCount += 1;
+      }
+      if (note.priority === "high") {
+        highPriorityCount += 1;
+      }
+      if (isOverdueIncomplete(note)) {
+        overdueCount += 1;
+      }
+
       const teamKey = note.team_name?.trim() || "미지정 팀";
       const currentTeam = teamMap.get(teamKey) ?? {
         highPriorityCount: 0,
@@ -514,12 +539,12 @@ export function ActionMemoDrafts({
     }
 
     return {
-      archivedCount: notes.filter((note) => note.status === "archived").length,
-      completedCount: notes.filter((note) => note.status === "completed").length,
-      highPriorityCount: notes.filter((note) => note.priority === "high").length,
-      inProgressCount: notes.filter((note) => note.status === "in_progress").length,
-      openCount: notes.filter((note) => note.status === "open").length,
-      overdueCount: notes.filter(isOverdueIncomplete).length,
+      archivedCount,
+      completedCount,
+      highPriorityCount,
+      inProgressCount,
+      openCount,
+      overdueCount,
       targetSummaries: [...targetMap.entries()]
         .map(([targetName, totalCount]) => ({ targetName, totalCount }))
         .sort((left, right) => {

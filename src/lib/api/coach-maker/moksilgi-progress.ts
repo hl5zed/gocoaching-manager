@@ -514,10 +514,7 @@ function buildRow(
   summaries: SummaryRow[],
   index: number,
 ) {
-  const monthRates = Array.from({ length: 12 }, (_, index) => {
-    const month = index + 1;
-    return safeNumber(summaries.find((summary) => summary.month === month)?.average_rate);
-  });
+  const monthRates = buildSafeMonthRates(summaries);
 
   return {
     index,
@@ -574,6 +571,46 @@ function buildRow(
   } satisfies CoachMakerMoksilgiProgressRow;
 }
 
+function buildSafeMonthRates(summaries: SummaryRow[]) {
+  const monthRates: number[] = Array.from({ length: 12 }, () => 0);
+
+  for (const summary of summaries) {
+    const monthIndex = summary.month - 1;
+    if (monthIndex < 0 || monthIndex >= monthRates.length) {
+      continue;
+    }
+
+    if (
+      typeof summary.average_rate === "number" &&
+      Number.isFinite(summary.average_rate)
+    ) {
+      monthRates[monthIndex] = summary.average_rate;
+    }
+  }
+
+  return monthRates;
+}
+
+function buildNullableMonthRates(summaries: SummaryRow[]) {
+  const monthRates: Array<number | null> = Array.from({ length: 12 }, () => null);
+
+  for (const summary of summaries) {
+    const monthIndex = summary.month - 1;
+    if (monthIndex < 0 || monthIndex >= monthRates.length) {
+      continue;
+    }
+
+    if (
+      typeof summary.average_rate === "number" &&
+      Number.isFinite(summary.average_rate)
+    ) {
+      monthRates[monthIndex] = summary.average_rate;
+    }
+  }
+
+  return monthRates;
+}
+
 function buildRelationshipProgressRows({
   profilesById,
   relationships,
@@ -590,14 +627,7 @@ function buildRelationshipProgressRows({
     const summaries = coacheeProgress
       ? summariesByPlanId.get(coacheeProgress.plan_id) ?? []
       : [];
-    const monthRates = Array.from({ length: 12 }, (_, index) => {
-      const month = index + 1;
-      const summary = summaries.find((item) => item.month === month);
-      return typeof summary?.average_rate === "number" &&
-        Number.isFinite(summary.average_rate)
-        ? summary.average_rate
-        : null;
-    });
+    const monthRates = buildNullableMonthRates(summaries);
     const coach = profilesById.get(relationship.coach_profile_id);
     const coachee = profilesById.get(relationship.coachee_profile_id);
 
