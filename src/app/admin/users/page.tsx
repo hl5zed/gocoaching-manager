@@ -7,7 +7,7 @@ import {
   normalizeAdminUserStatus,
   type AdminUserSummary,
 } from "@/lib/api/admin/users";
-import { PROFILE_STATUSES, SCOPE_TYPES, USER_ROLES } from "@/types/database";
+import { PROFILE_STATUSES, USER_ROLES } from "@/types/database";
 import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
 import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
@@ -427,82 +427,6 @@ function RoleChangeForm({
       >
         <I18nText k="adminUsers.roleChange" fallback="역할 변경" />
       </button>
-    </form>
-  );
-}
-
-function RoleAddForm({ user }: { user: AdminUserSummary }) {
-  const hasProtectedRole = user.roles.some((roleItem) => roleItem.role === "super_admin");
-  const existingRoles = new Set(user.roles.map((roleItem) => roleItem.role));
-  const roleOptions = MANAGEABLE_USER_ROLES.filter(
-    (userRole) => !existingRoles.has(userRole),
-  );
-
-  if (hasProtectedRole) {
-    return null;
-  }
-
-  if (roleOptions.length === 0) {
-    return (
-      <p className="text-xs text-slate-500">
-        <I18nText
-          k="adminUsers.noAdditionalRoles"
-          fallback="추가로 부여할 수 있는 역할이 없습니다."
-        />
-      </p>
-    );
-  }
-
-  return (
-    <form
-      action="/api/admin/users"
-      className="grid gap-2 rounded-md border border-dashed border-slate-200 bg-white p-3"
-      method="post"
-    >
-      <input name="intent" type="hidden" value="add_role" />
-      <input name="profile_id" type="hidden" value={user.id} />
-      <div className="flex flex-wrap items-center gap-2">
-        <select
-          className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
-          defaultValue={roleOptions.includes("coach") ? "coach" : roleOptions[0] ?? "coachee"}
-          name="role"
-        >
-          {roleOptions.map((userRole) => (
-            <option key={userRole} value={userRole}>
-              {getRoleLabel(userRole)}
-            </option>
-          ))}
-        </select>
-        <select
-          className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
-          defaultValue="global"
-          name="scope_type"
-        >
-          {SCOPE_TYPES.map((scopeType) => (
-            <option key={scopeType} value={scopeType}>
-              {formatScope(scopeType, null)}
-            </option>
-          ))}
-        </select>
-        <input
-          className="min-w-[150px] rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
-          name="scope_id"
-          placeholder="global이면 비움"
-          type="text"
-        />
-        <button
-          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700"
-          type="submit"
-        >
-          <I18nText k="adminUsers.addRole" fallback="역할 추가" />
-        </button>
-      </div>
-      <p className="text-xs text-slate-500">
-        <I18nText
-          k="adminUsers.multiRoleNotice"
-          fallback="한 회원에게 coach와 coach_maker 역할을 함께 부여할 수 있습니다."
-        />
-      </p>
     </form>
   );
 }
