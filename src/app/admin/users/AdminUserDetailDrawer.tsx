@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent, SyntheticEvent } from "react";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { I18nText } from "@/lib/i18n/I18nProvider";
@@ -34,6 +34,13 @@ const ROLE_SCOPE_RULES: Partial<Record<UserRole, ScopeType[]>> = {
   coach: ["organization", "church", "group", "coach"],
   coachee: ["organization", "church", "group"],
 };
+const ADMIN_LEVEL_ROLES = new Set<UserRole>([
+  "country_admin",
+  "organization_admin",
+  "church_admin",
+  "group_leader",
+  "coach_maker",
+]);
 const MINISTRY_POSITION_OPTIONS = [
   "목사",
   "선교사",
@@ -183,6 +190,100 @@ function getGenerationSelectOptions(
   return baseOptions;
 }
 
+function isLookupScopeType(scopeType: ScopeType | "") {
+  return (
+    scopeType === "country" ||
+    scopeType === "organization" ||
+    scopeType === "church" ||
+    scopeType === "group"
+  );
+}
+
+function ScopeIdField({
+  isLoadingOptions,
+  optionsPayload,
+  optionsError,
+  scopeType,
+}: {
+  isLoadingOptions: boolean;
+  optionsPayload: AdminUsersOptionsPayload | null;
+  optionsError: string | null;
+  scopeType: ScopeType | "";
+}) {
+  const sharedClassName =
+    "min-w-[180px] rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal disabled:bg-slate-100 disabled:text-slate-500";
+
+  if (!scopeType) {
+    return (
+      <input
+        className={sharedClassName}
+        disabled
+        placeholder="권한 범위를 먼저 선택하세요."
+        type="text"
+      />
+    );
+  }
+
+  if (isLookupScopeType(scopeType) && isLoadingOptions) {
+    return (
+      <input
+        className={sharedClassName}
+        disabled
+        placeholder="권한 범위 목록을 불러오는 중..."
+        type="text"
+      />
+    );
+  }
+
+  if (isLookupScopeType(scopeType) && optionsPayload && !optionsError) {
+    const lookupOptions =
+      scopeType === "country"
+        ? optionsPayload.options.countries.map((country) => ({
+            id: country.id,
+            label: `${country.name}${country.code ? ` (${country.code})` : ""}`,
+          }))
+        : scopeType === "organization"
+          ? optionsPayload.options.organizations.map((organization) => ({
+              id: organization.id,
+              label: organization.name,
+            }))
+          : scopeType === "church"
+            ? optionsPayload.options.churches.map((church) => ({
+                id: church.id,
+                label: church.name,
+              }))
+            : optionsPayload.options.groups.map((group) => ({
+                id: group.id,
+                label: group.name,
+              }));
+
+    return (
+      <select className={sharedClassName} name="scope_id" required>
+        <option value="">권한을 적용할 범위를 선택하세요</option>
+        {lookupOptions.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
+  return (
+    <input
+      className={sharedClassName}
+      name="scope_id"
+      placeholder={
+        optionsError
+          ? "목록을 불러오지 못했습니다. 범위 ID를 입력하세요."
+          : "선택한 권한 범위의 ID를 입력하세요."
+      }
+      required
+      type="text"
+    />
+  );
+}
+
 function DetailValue({
   label,
   value,
@@ -219,28 +320,34 @@ function RoleChangeForm({ user }: { user: AdminUserSummary }) {
   );
 
   return (
-    <form action="/api/admin/users" className="flex flex-wrap items-center gap-2" method="post">
-      <input name="intent" type="hidden" value="update_role" />
-      <input name="profile_id" type="hidden" value={user.id} />
-      <input name="role_id" type="hidden" value={representativeRole.id} />
-      <select
-        className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
-        defaultValue={representativeRole.role}
-        name="role"
-      >
-        {roleOptions.map((userRole) => (
-          <option key={userRole} value={userRole}>
-            {getRoleLabel(userRole)}
-          </option>
-        ))}
-      </select>
-      <button
-        className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700"
-        type="submit"
-      >
-        역할 변경
-      </button>
-    </form>
+    <div className="grid gap-2 rounded-md border border-dashed border-slate-200 bg-white p-3">
+      <p className="text-xs leading-5 text-slate-500">
+        역할만 변경되며 기존 권한 범위는 유지됩니다. 범위 변경이 필요하면
+        권한을 다시 추가하거나 수정하세요.
+      </p>
+      <form action="/api/admin/users" className="flex flex-wrap items-center gap-2" method="post">
+        <input name="intent" type="hidden" value="update_role" />
+        <input name="profile_id" type="hidden" value={user.id} />
+        <input name="role_id" type="hidden" value={representativeRole.id} />
+        <select
+          className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
+          defaultValue={representativeRole.role}
+          name="role"
+        >
+          {roleOptions.map((userRole) => (
+            <option key={userRole} value={userRole}>
+              {getRoleLabel(userRole)}
+            </option>
+          ))}
+        </select>
+        <button
+          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700"
+          type="submit"
+        >
+          역할 변경
+        </button>
+      </form>
+    </div>
   );
 }
 
@@ -252,9 +359,44 @@ function RoleAddForm({ user }: { user: AdminUserSummary }) {
   );
   const [selectedRole, setSelectedRole] = useState<UserRole | "">("");
   const [selectedScopeType, setSelectedScopeType] = useState<ScopeType | "">("");
+  const [optionsPayload, setOptionsPayload] =
+    useState<AdminUsersOptionsPayload | null>(null);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+  const [optionsError, setOptionsError] = useState<string | null>(null);
   const allowedScopeTypes = selectedRole
     ? ROLE_SCOPE_RULES[selectedRole] ?? []
     : [];
+
+  useEffect(() => {
+    if (!isLookupScopeType(selectedScopeType) || optionsPayload || isLoadingOptions) {
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingOptions(true);
+    setOptionsError(null);
+
+    void loadAdminUsersOptions()
+      .then((payload) => {
+        if (isMounted) {
+          setOptionsPayload(payload);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setOptionsError("권한 범위 선택값을 불러오지 못했습니다.");
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingOptions(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isLoadingOptions, optionsPayload, selectedScopeType]);
 
   if (hasProtectedRole) {
     return null;
@@ -272,7 +414,17 @@ function RoleAddForm({ user }: { user: AdminUserSummary }) {
     >
       <input name="intent" type="hidden" value="add_role" />
       <input name="profile_id" type="hidden" value={user.id} />
-      <div className="flex flex-wrap items-center gap-2">
+      <p className="text-xs leading-5 text-slate-500">
+        권한 범위는 회원 소속 정보와 다를 수 있습니다. 관리자 권한은 해당
+        범위의 사용자와 기록에 접근할 수 있으므로 신중히 선택하세요.
+        super_admin은 이 화면에서 새로 추가할 수 없습니다.
+      </p>
+      {selectedRole && ADMIN_LEVEL_ROLES.has(selectedRole) ? (
+        <p className="rounded-md border border-amber-100 bg-amber-50 px-2 py-1.5 text-xs leading-5 text-amber-800">
+          관리자 권한은 선택한 범위 안의 관리 기능에 접근할 수 있습니다.
+        </p>
+      ) : null}
+      <div className="flex flex-wrap items-start gap-2">
         <select
           className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
           name="role"
@@ -307,20 +459,15 @@ function RoleAddForm({ user }: { user: AdminUserSummary }) {
             </option>
           ))}
         </select>
-        <input
-          className="min-w-[180px] rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
-          disabled={!selectedScopeType}
-          name="scope_id"
-          placeholder={
-            selectedScopeType
-              ? "선택한 권한 범위의 ID를 입력하세요."
-              : "권한 범위를 먼저 선택하세요."
-          }
-          required={Boolean(selectedScopeType)}
-          type="text"
+        <ScopeIdField
+          isLoadingOptions={isLoadingOptions}
+          optionsError={optionsError}
+          optionsPayload={optionsPayload}
+          scopeType={selectedScopeType}
         />
         <button
-          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700"
+          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={isLoadingOptions}
           type="submit"
         >
           역할 추가

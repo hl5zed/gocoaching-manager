@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { SyntheticEvent } from "react";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import { formatScope, getRoleLabel } from "@/lib/ui/labels";
-import { SCOPE_TYPES, USER_ROLES } from "@/types/database";
+import { USER_ROLES, type ScopeType, type UserRole } from "@/types/database";
 import { AdminUserAffiliationFields } from "./AdminUserAffiliationFields";
 import {
   loadAdminUsersOptions,
@@ -15,6 +15,22 @@ import {
 const MANAGEABLE_USER_ROLES = USER_ROLES.filter(
   (userRole) => userRole !== "super_admin",
 );
+const ROLE_SCOPE_RULES: Partial<Record<UserRole, ScopeType[]>> = {
+  country_admin: ["country"],
+  organization_admin: ["organization"],
+  church_admin: ["church"],
+  group_leader: ["group"],
+  coach_maker: ["organization", "church", "group"],
+  coach: ["organization", "church", "group", "coach"],
+  coachee: ["organization", "church", "group"],
+};
+const ADMIN_LEVEL_ROLES = new Set<UserRole>([
+  "country_admin",
+  "organization_admin",
+  "church_admin",
+  "group_leader",
+  "coach_maker",
+]);
 const MINISTRY_POSITION_OPTIONS = [
   "목사",
   "선교사",
@@ -38,10 +54,106 @@ function getGenerationOptions(options: AdminUserGenerationOption[]) {
   return options.length > 0 ? options : FALLBACK_GENERATION_OPTIONS;
 }
 
+function isLookupScopeType(scopeType: ScopeType | "") {
+  return (
+    scopeType === "country" ||
+    scopeType === "organization" ||
+    scopeType === "church" ||
+    scopeType === "group"
+  );
+}
+
+function ScopeIdField({
+  optionsPayload,
+  scopeType,
+}: {
+  optionsPayload: AdminUsersOptionsPayload;
+  scopeType: ScopeType | "";
+}) {
+  const sharedClassName =
+    "rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal disabled:bg-slate-100 disabled:text-slate-500";
+
+  if (!scopeType) {
+    return (
+      <label className="grid gap-2 lg:col-span-3">
+        <span className="text-sm font-medium text-slate-700">권한 범위</span>
+        <input
+          className={sharedClassName}
+          disabled
+          placeholder="권한 범위 유형을 먼저 선택하세요."
+          type="text"
+        />
+      </label>
+    );
+  }
+
+  if (isLookupScopeType(scopeType)) {
+    const lookupOptions =
+      scopeType === "country"
+        ? optionsPayload.options.countries.map((country) => ({
+            id: country.id,
+            label: `${country.name}${country.code ? ` (${country.code})` : ""}`,
+          }))
+        : scopeType === "organization"
+          ? optionsPayload.options.organizations.map((organization) => ({
+              id: organization.id,
+              label: organization.name,
+            }))
+          : scopeType === "church"
+            ? optionsPayload.options.churches.map((church) => ({
+                id: church.id,
+                label: church.name,
+              }))
+            : optionsPayload.options.groups.map((group) => ({
+                id: group.id,
+                label: group.name,
+              }));
+
+    return (
+      <label className="grid gap-2 lg:col-span-3">
+        <span className="text-sm font-medium text-slate-700">권한 범위</span>
+        <select className={sharedClassName} name="scope_id" required>
+          <option value="">권한을 적용할 범위를 선택하세요</option>
+          {lookupOptions.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <span className="text-xs leading-5 text-slate-500">
+          권한 범위는 회원 소속 정보와 다를 수 있습니다.
+        </span>
+      </label>
+    );
+  }
+
+  return (
+    <label className="grid gap-2 lg:col-span-3">
+      <span className="text-sm font-medium text-slate-700">권한 범위 ID</span>
+      <input
+        className={sharedClassName}
+        name="scope_id"
+        placeholder="선택한 권한 범위의 ID를 입력하세요."
+        required
+        type="text"
+      />
+      <span className="text-xs leading-5 text-slate-500">
+        이 범위는 선택 목록이 준비되지 않아 ID 입력이 필요합니다. 값이 확실한
+        경우에만 등록하세요.
+      </span>
+    </label>
+  );
+}
+
 export function AdminUserDirectCreatePanel() {
   const [payload, setPayload] = useState<AdminUsersOptionsPayload | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<UserRole | "">("");
+  const [selectedScopeType, setSelectedScopeType] = useState<ScopeType | "">("");
+  const allowedScopeTypes = selectedRole
+    ? ROLE_SCOPE_RULES[selectedRole] ?? []
+    : [];
 
   function handleToggle(event: SyntheticEvent<HTMLDetailsElement>) {
     if (!event.currentTarget.open || payload || isLoading) {
@@ -198,6 +310,16 @@ export function AdminUserDirectCreatePanel() {
                 <legend className="px-1 text-sm font-semibold text-slate-800">
                   역할 및 세대
                 </legend>
+                <div className="rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-900">
+                  <p>
+                    권한 범위는 회원 소속 정보와 다를 수 있습니다. 관리자 권한은
+                    해당 범위의 사용자와 기록에 접근할 수 있으므로 신중히
+                    선택하세요.
+                  </p>
+                  <p className="mt-1 text-xs">
+                    최고관리자 권한은 이 화면에서 새로 추가할 수 없습니다.
+                  </p>
+                </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   <label className="grid gap-2">
                     <span className="text-sm font-medium text-slate-700">
@@ -205,16 +327,27 @@ export function AdminUserDirectCreatePanel() {
                     </span>
                     <select
                       className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
-                      defaultValue="coachee"
                       name="role"
+                      onChange={(event) => {
+                        setSelectedRole(event.currentTarget.value as UserRole | "");
+                        setSelectedScopeType("");
+                      }}
                       required
+                      value={selectedRole}
                     >
+                      <option value="">역할 선택</option>
                       {MANAGEABLE_USER_ROLES.map((userRole) => (
                         <option key={userRole} value={userRole}>
                           {getRoleLabel(userRole)}
                         </option>
                       ))}
                     </select>
+                    {selectedRole && ADMIN_LEVEL_ROLES.has(selectedRole) ? (
+                      <span className="text-xs leading-5 text-amber-700">
+                        관리자 권한은 선택한 범위 안의 관리 기능에 접근할 수
+                        있습니다.
+                      </span>
+                    ) : null}
                   </label>
                   <label className="grid gap-2">
                     <span className="text-sm font-medium text-slate-700">세대</span>
@@ -241,29 +374,29 @@ export function AdminUserDirectCreatePanel() {
                       권한 범위 유형
                     </span>
                     <select
-                      className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
-                      defaultValue="global"
+                      className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
+                      disabled={!selectedRole}
                       name="scope_type"
+                      onChange={(event) =>
+                        setSelectedScopeType(event.currentTarget.value as ScopeType | "")
+                      }
                       required
+                      value={selectedScopeType}
                     >
-                      {SCOPE_TYPES.map((scopeType) => (
+                      <option value="">
+                        {selectedRole ? "권한 범위 선택" : "역할을 먼저 선택하세요"}
+                      </option>
+                      {allowedScopeTypes.map((scopeType) => (
                         <option key={scopeType} value={scopeType}>
                           {formatScope(scopeType, null)}
                         </option>
                       ))}
                     </select>
                   </label>
-                  <label className="grid gap-2 lg:col-span-3">
-                    <span className="text-sm font-medium text-slate-700">
-                      권한 범위 ID
-                    </span>
-                    <input
-                      className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
-                      name="scope_id"
-                      placeholder="global이면 비워 둡니다"
-                      type="text"
-                    />
-                  </label>
+                  <ScopeIdField
+                    optionsPayload={payload}
+                    scopeType={selectedScopeType}
+                  />
                 </div>
               </fieldset>
 
