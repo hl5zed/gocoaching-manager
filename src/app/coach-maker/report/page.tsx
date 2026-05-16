@@ -331,7 +331,9 @@ function buildFilterSummary({
     `기준 연도: ${year}년`,
     `팀: ${team ?? "전체"}`,
     `기간: ${from ?? "전체"} ~ ${to ?? "전체"}`,
-    "기간 기준: 관리 액션 메모 작성일",
+    `목실기 기준: ${year}년 선택 연도`,
+    `관리 메모 기준: 작성일 ${from ?? "전체"} ~ ${to ?? "전체"}`,
+    `팀 기준: ${team ?? "전체 팀"}`,
   ];
 }
 
@@ -761,6 +763,10 @@ export default async function CoachMakerReportPage({
           </Link>
           <PrintReportButton />
         </div>
+        <p className="report-controls mb-6 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600 print:hidden">
+          인쇄 전 연도, 팀, 기간 기준을 확인해 주세요. 브라우저 인쇄창에서
+          PDF 저장을 선택할 수 있습니다.
+        </p>
 
         <header className="report-header border-b border-slate-300 pb-6">
           <p className="text-sm font-semibold text-slate-500 print:text-slate-700">
@@ -820,7 +826,7 @@ export default async function CoachMakerReportPage({
                 </p>
               ) : !coachStats ? (
                 <div className="mt-4">
-                  <EmptyState>코치메이커 담당 범위 데이터가 없습니다.</EmptyState>
+                  <EmptyState>선택한 조건에 해당하는 코치메이커 담당 범위 데이터가 없습니다.</EmptyState>
                 </div>
               ) : (
                 <>
@@ -853,7 +859,7 @@ export default async function CoachMakerReportPage({
                 </p>
               ) : !coachStats || coachStats.coaches.length === 0 ? (
                 <div className="mt-4">
-                  <EmptyState>코치별 담당 현황 데이터가 없습니다.</EmptyState>
+                  <EmptyState>선택한 조건에 해당하는 코치별 담당 현황 데이터가 없습니다.</EmptyState>
                 </div>
               ) : (
                 <div className="mt-4 overflow-x-auto print:overflow-visible">
@@ -898,7 +904,7 @@ export default async function CoachMakerReportPage({
               </h2>
               {rows.length === 0 ? (
                 <div className="mt-4">
-                  <EmptyState>목실기 성취 데이터가 없습니다.</EmptyState>
+                  <EmptyState>선택한 조건에 해당하는 목실기 성취 데이터가 없습니다.</EmptyState>
                 </div>
               ) : (
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -928,7 +934,7 @@ export default async function CoachMakerReportPage({
               </div>
               {attention.attentionRows.length === 0 ? (
                 <div className="mt-4">
-                  <EmptyState>관심 필요 대상자가 없습니다.</EmptyState>
+                  <EmptyState>선택한 조건에 해당하는 관심 필요 대상자가 없습니다.</EmptyState>
                 </div>
               ) : (
                 <div className="mt-4 overflow-x-auto print:overflow-visible">
@@ -967,13 +973,18 @@ export default async function CoachMakerReportPage({
               보고서 데이터를 불러오지 못했습니다.
             </p>
           ) : (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              <SummaryBox label="전체 메모 수" value={notes.length} />
-              <SummaryBox label="진행 중" value={noteCounts.inProgress} />
-              <SummaryBox label="완료" value={noteCounts.completed} />
-              <SummaryBox label="높은 우선순위" value={noteCounts.highPriority} />
-              <SummaryBox label="기한 지난 메모" value={noteCounts.overdue} />
-            </div>
+            <>
+              <p className="mt-2 text-sm text-slate-600 print:text-slate-800">
+                진행 전/진행 중/완료/보관됨 상태를 기준으로 집계합니다.
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <SummaryBox label="전체 메모 수" value={notes.length} />
+                <SummaryBox label="진행 중" value={noteCounts.inProgress} />
+                <SummaryBox label="완료" value={noteCounts.completed} />
+                <SummaryBox label="높은 우선순위" value={noteCounts.highPriority} />
+                <SummaryBox label="기한 지난 메모" value={noteCounts.overdue} />
+              </div>
+            </>
           )}
         </section>
 
@@ -986,7 +997,7 @@ export default async function CoachMakerReportPage({
           </p>
           {priorityActionNotes.length === 0 ? (
             <div className="mt-4">
-              <EmptyState>관리 액션 메모가 없습니다.</EmptyState>
+              <EmptyState>선택한 팀/기간에 해당하는 관리 액션 메모가 없습니다.</EmptyState>
             </div>
           ) : (
             <div className="mt-4 overflow-x-auto print:overflow-visible">

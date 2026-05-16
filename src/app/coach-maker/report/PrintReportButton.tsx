@@ -7,7 +7,7 @@ export function PrintReportButton() {
       onClick={() => window.print()}
       type="button"
     >
-      인쇄하기
+      보고서 인쇄/PDF 저장
     </button>
   );
 }

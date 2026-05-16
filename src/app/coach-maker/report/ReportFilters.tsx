@@ -68,6 +68,14 @@ export function ReportFilters({
 
   return (
     <section className="report-controls mt-6 rounded-md border border-slate-200 bg-slate-50 p-4 print:hidden">
+      <div className="mb-4 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
+        <p className="font-semibold text-slate-800">보고서 기준</p>
+        <p className="mt-1">
+          목실기 성취 현황은 선택 연도 기준, 관리 액션 메모는 작성일 기간
+          기준으로 표시합니다. 팀 필터는 목실기 대상자와 관리 메모 모두에
+          공통 적용됩니다.
+        </p>
+      </div>
       <div className="grid gap-3 md:grid-cols-4">
         <label className="text-sm font-medium text-slate-700">
           연도
