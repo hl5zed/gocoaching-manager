@@ -167,9 +167,9 @@ function FilterForm({ filters }: { filters: CoachMakerMoksilgiProgressFilters })
       <CardHeader>
         <CardTitle className="text-lg">데이터 조회 조건</CardTitle>
         <CardDescription>
-          연도와 소속 정보를 조합해 서버에서 불러올 목실기 성취 현황을
-          좁혀 봅니다. 조회 후 표 안에서는 별도 보기 필터를 사용할 수
-          있습니다.
+          상단 조회 조건은 서버에서 새 데이터를 불러오는 기준입니다.
+          연도, 지역, 팀, 직책, 세대, 검색어 조건이 전체 조회 범위를
+          바꿉니다.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -390,9 +390,8 @@ export default async function CoachMakerMoksilgiProgressPage({
             ) : (
               <>
                 <p className="print-hidden mt-6 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
-                  아래 영역의 상세 필터는 이미 조회된 결과 안에서만 화면
-                  표시를 좁히는 보기 필터입니다. 월별 표는 가로로 스크롤해
-                  전체 내용을 확인하세요.
+                  화면 내 보기 필터는 이미 조회된 결과 안에서만 표시를
+                  좁힙니다. 월별 표는 가로로 스크롤해 전체 내용을 확인하세요.
                 </p>
                 <MoksilgiProgressClientTable
                   initialMemberId={initialMemberId}

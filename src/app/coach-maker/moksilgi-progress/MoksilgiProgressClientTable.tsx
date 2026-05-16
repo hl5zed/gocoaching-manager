@@ -820,7 +820,7 @@ function CareNeededTable({
                     type="button"
                     variant="secondary"
                   >
-                    메모
+                    관리 메모 작성
                   </Button>
                 </div>
               </td>
@@ -1124,7 +1124,7 @@ export function MoksilgiProgressClientTable({
             type="button"
             variant="secondary"
           >
-            필터 초기화
+            보기 필터 초기화
           </Button>
         </div>
         </CardContent>

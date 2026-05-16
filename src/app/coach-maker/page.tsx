@@ -162,14 +162,14 @@ function WorkQueueSection({
   const cards = [
     {
       action: "미제출 확인",
-      description: "이번 주 기록을 아직 내지 않았습니다.",
+      description: "주간 기록 목록에서 미제출 상태를 확인합니다.",
       href: "/coach/weekly-logs",
       title: "미제출 인원",
       value: `${coachStats.summary.weeklyMissingThisWeekCount}명`,
     },
     {
       action: "피드백 확인",
-      description: "제출된 기록에 피드백이 필요합니다.",
+      description: "주간 기록 목록에서 피드백이 필요한 기록을 확인합니다.",
       href: "/coach/weekly-logs",
       title: "피드백 대기",
       value: `${coachStats.summary.feedbackPendingCount}개`,
@@ -609,12 +609,17 @@ export default async function CoachMakerPage() {
           </div>
           <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:justify-end">
             <PageNavigationButtons className="justify-start sm:justify-end" />
-            <Link
-              className="inline-flex min-h-10 w-full justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto"
-              href={`/coach-maker/report?year=${currentYear}`}
-            >
-              <I18nText k="common.print" fallback="인쇄용 보고서 보기" />
-            </Link>
+            <div className="w-full sm:w-auto">
+              <Link
+                className="inline-flex min-h-10 w-full justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto"
+                href={`/coach-maker/report?year=${currentYear}`}
+              >
+                <I18nText k="common.print" fallback="인쇄용 보고서 보기" />
+              </Link>
+              <p className="mt-1 text-xs text-slate-500">
+                현재 연도 기준 인쇄용 보고서로 이동합니다.
+              </p>
+            </div>
           </div>
         </div>
 

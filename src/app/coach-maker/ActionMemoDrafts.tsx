@@ -1149,8 +1149,8 @@ export function ActionMemoDrafts({
             후속 액션을 메모로 남기고 진행 상태를 처리합니다.
           </p>
           <p className="mt-1 text-sm leading-6 text-slate-500">
-            완료 처리는 일을 끝낸 표시이고, 보관은 기본 목록에서 숨기는 정리
-            기능입니다.
+            완료: 처리한 메모로 남깁니다. 보관: 현재 목록에서 정리하지만
+            기록은 보관합니다.
           </p>
         </div>
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
@@ -1699,9 +1699,27 @@ export function ActionMemoDrafts({
             관리 액션 메모를 불러오는 중입니다.
           </p>
         ) : sortedNotes.length === 0 ? (
-          <p className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">
-            아직 등록된 관리 액션 메모가 없습니다.
-          </p>
+          <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">
+            {notes.length === 0 ? (
+              <p>아직 등록된 관리 메모가 없습니다.</p>
+            ) : (
+              <>
+                <p>
+                  선택한 필터에 해당하는 관리 메모가 없습니다.
+                </p>
+                <p className="mt-1">
+                  필터를 초기화하거나 다른 조건으로 다시 조회해 주세요.
+                </p>
+                <button
+                  className="mt-4 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  onClick={resetFilters}
+                  type="button"
+                >
+                  필터 초기화
+                </button>
+              </>
+            )}
+          </div>
         ) : (
           <>
             <div className="mt-3 grid gap-3">
