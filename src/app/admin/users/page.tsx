@@ -31,9 +31,6 @@ import { LoginGuideCopyButton } from "./LoginGuideCopyButton";
 export const dynamic = "force-dynamic";
 
 type SearchParams = Record<string, string | string[] | undefined>;
-const MANAGEABLE_USER_ROLES = USER_ROLES.filter(
-  (userRole) => userRole !== "super_admin",
-);
 function formatDateTime(value: string | null) {
   if (!value) {
     return "미지정";
@@ -371,115 +368,6 @@ function DetailValue({
       </dt>
       <dd className="mt-1 break-words text-slate-950">{value}</dd>
     </div>
-  );
-}
-
-function RoleChangeForm({
-  representativeRole,
-  user,
-}: {
-  representativeRole: AdminUserSummary["roles"][number] | null;
-  user: AdminUserSummary;
-}) {
-  if (!representativeRole || representativeRole.role === "super_admin") {
-    return (
-      <p className="text-xs text-slate-500">
-        <I18nText
-          k="adminUsers.protectedRoleNotice"
-          fallback="super_admin 역할은 이 화면에서 변경할 수 없습니다."
-        />
-      </p>
-    );
-  }
-
-  const existingOtherRoles = new Set(
-    user.roles
-      .filter((roleItem) => roleItem.id !== representativeRole.id && isActiveRole(roleItem))
-      .map((roleItem) => roleItem.role),
-  );
-  const roleOptions = MANAGEABLE_USER_ROLES.filter(
-    (userRole) => userRole === representativeRole.role || !existingOtherRoles.has(userRole),
-  );
-
-  return (
-    <form
-      action="/api/admin/users"
-      className="flex flex-wrap items-center gap-2"
-      method="post"
-    >
-      <input name="intent" type="hidden" value="update_role" />
-      <input name="profile_id" type="hidden" value={user.id} />
-      <input name="role_id" type="hidden" value={representativeRole.id} />
-      <select
-        className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
-        defaultValue={representativeRole.role}
-        name="role"
-      >
-        {roleOptions.map((userRole) => (
-          <option key={userRole} value={userRole}>
-            {getRoleLabel(userRole)}
-          </option>
-        ))}
-      </select>
-      <button
-        className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700"
-        type="submit"
-      >
-        <I18nText k="adminUsers.roleChange" fallback="역할 변경" />
-      </button>
-    </form>
-  );
-}
-
-function RoleStatusToggleForm({
-  roleItem,
-  user,
-}: {
-  roleItem: AdminUserSummary["roles"][number];
-  user: AdminUserSummary;
-}) {
-  if (roleItem.role === "super_admin") {
-    return (
-      <span className="text-xs text-slate-500">
-        <I18nText k="members.protectedSuperAdmin" fallback="super_admin 보호" />
-      </span>
-    );
-  }
-
-  const isActive = isActiveRole(roleItem);
-  const targetStatus = isActive ? "inactive" : "active";
-
-  return (
-    <form action="/api/admin/users" method="post">
-      <input name="intent" type="hidden" value="update_role_status" />
-      <input name="profile_id" type="hidden" value={user.id} />
-      <input name="role_id" type="hidden" value={roleItem.id} />
-      <input name="target_role_status" type="hidden" value={targetStatus} />
-      <ConfirmSubmitButton
-        className={`rounded-md border px-2.5 py-1.5 text-xs font-medium ${
-          isActive
-            ? "border-amber-300 text-amber-700"
-            : "border-emerald-300 text-emerald-700"
-        }`}
-        confirmDescription={`${formatEmail(user.email)} 회원의 ${getRoleLabel(
-          roleItem.role,
-        )} 시스템 역할만 ${
-          isActive ? "비활성화" : "활성화"
-        }합니다. 전체 계정 상태는 변경하지 않습니다.`}
-        confirmTitle={
-          isActive
-            ? "시스템 역할을 비활성화하시겠습니까?"
-            : "시스템 역할을 활성화하시겠습니까?"
-        }
-        type="submit"
-      >
-        {isActive ? (
-          <I18nText k="members.disable" fallback="비활성화" />
-        ) : (
-          <I18nText k="members.reactivate" fallback="재활성화" />
-        )}
-      </ConfirmSubmitButton>
-    </form>
   );
 }
 
