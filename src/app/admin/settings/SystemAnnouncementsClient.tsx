@@ -334,12 +334,13 @@ export function SystemAnnouncementsClient({
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone="info">운영 공지</Badge>
+            <Badge tone="success">저장/수정 가능</Badge>
             <Badge tone="success">활성 {activeCount}개</Badge>
           </div>
           <CardTitle className="mt-3 text-xl">시스템 공지 설정</CardTitle>
           <CardDescription className="mt-2 max-w-3xl leading-6">
-            로그인 후 사용자에게 표시할 운영 공지를 작성하고 노출 기간을
-            관리합니다.
+            운영 공지 관리용 설정입니다. 공지 작성, 수정, 활성/비활성, 삭제와
+            노출 기간을 관리합니다.
           </CardDescription>
         </div>
       </CardHeader>

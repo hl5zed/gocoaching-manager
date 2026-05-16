@@ -135,9 +135,10 @@ export function OrganizationDefaultRoleSettings({
             <CardTitle>조직별 기본 권한 설정</CardTitle>
             <CardDescription>
               조직별 신규 사용자 초대 폼에 제안할 기본 권한을 관리합니다.
+              초대 생성 화면에서 조직 선택 시 기본 권한 제안에 사용됩니다.
             </CardDescription>
           </div>
-          <Badge tone="info">저장 가능</Badge>
+          <Badge tone="success">초대 생성에 적용</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-5">

@@ -18,34 +18,48 @@ export const dynamic = "force-dynamic";
 
 const settingCards = [
   {
+    applyInfo: "회원 정보 입력/수정과 초대 수락 화면의 국가 선택값으로 사용됩니다.",
     description:
       "초대 수락과 회원관리에서 사용하는 국가 목록을 확인하고 관리합니다.",
     href: "/admin/settings/countries",
+    status: "실제 적용 중",
+    statusTone: "success" as const,
     title: "국가 관리",
   },
   {
+    applyInfo: "회원 소속과 조직별 기본 권한 설정에서 사용하는 기관/교회 선택값입니다.",
     description:
       "회원 소속 기관/교회 목록을 추가하고, 국가 연결과 사용 여부를 관리합니다.",
     href: "/admin/settings/organizations",
+    status: "실제 적용 중",
+    statusTone: "success" as const,
     title: "기관/교회 관리",
   },
   {
+    applyInfo: "초대 수락과 회원가입에서 표시할 세대 선택값으로 사용됩니다.",
     description:
       "초대 수락과 회원가입에서 표시할 세대 선택 항목을 관리합니다.",
     href: "/admin/settings/generations",
+    status: "실제 적용 중",
+    statusTone: "success" as const,
     title: "세대 관리",
   },
   {
+    applyInfo:
+      "회원 정보 입력/수정 화면의 국가·지역·기관·교회·그룹 선택값으로 사용됩니다.",
     description:
       "회원정보수정에서 사용하는 지역/도시, 세부 교회, 그룹/팀/목장 선택값을 등록하고 수정합니다.",
     href: "/admin/settings/affiliations",
+    status: "실제 적용 중",
+    statusTone: "success" as const,
     title: "소속 선택값 관리",
   },
 ];
 
 const systemSettingSections = [
   {
-    description: "초대, 알림, 안내 메일 발신 기본값을 관리합니다.",
+    description:
+      "초대, 알림, 안내 메일 발신 기본값을 준비 중입니다. 현재 자동 메일 발송은 활성화되어 있지 않습니다.",
     title: "이메일 발신 설정",
   },
 ];
@@ -116,11 +130,19 @@ export default async function AdminSettingsPage() {
               href={card.href}
               key={card.href}
             >
-              <h2 className="text-lg font-semibold text-slate-950">
-                {card.title}
-              </h2>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <h2 className="text-lg font-semibold text-slate-950">
+                  {card.title}
+                </h2>
+                <Badge className="shrink-0" tone={card.statusTone}>
+                  {card.status}
+                </Badge>
+              </div>
               <p className="mt-3 text-sm leading-6 text-slate-600">
                 {card.description}
+              </p>
+              <p className="mt-3 rounded-md border border-slate-100 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">
+                적용 위치: {card.applyInfo}
               </p>
             </Link>
           ))}
@@ -132,8 +154,9 @@ export default async function AdminSettingsPage() {
               운영 기본값 설정
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              기본 언어, 기본 국가, 초대 만료 기간은 바로 저장할 수 있습니다.
-              나머지 항목은 다음 단계에서 저장 기능을 연결합니다.
+              기본 언어, 기본 국가, 초대 만료 기간, 인쇄 옵션, 운영 공지,
+              조직별 기본 권한을 관리합니다. 저장만 되는 항목과 실제 적용 중인
+              항목을 구분해 확인해 주세요.
             </p>
           </div>
           <div className="mt-4">
@@ -157,7 +180,7 @@ export default async function AdminSettingsPage() {
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {systemSettingSections.map((section) => (
-              <Card key={section.title}>
+              <Card className="bg-slate-50" key={section.title}>
                 <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <CardTitle className="text-lg">{section.title}</CardTitle>
                   <Badge className="shrink-0" tone="warning">
@@ -169,7 +192,7 @@ export default async function AdminSettingsPage() {
                     {section.description}
                   </p>
                   <p className="mt-3 text-xs font-medium text-slate-500">
-                    다음 단계에서 저장 기능 연결 예정
+                    다음 단계에서 저장 기능과 메일 서비스 연결 예정
                   </p>
                 </CardContent>
               </Card>

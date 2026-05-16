@@ -144,6 +144,9 @@ export function SystemSettingsForm({
                 <option value="ko">한국어</option>
                 <option value="en">English</option>
               </SelectInput>
+              <p className="text-xs leading-5 text-slate-500">
+                저장되며, 실제 적용 화면은 단계적으로 연결 예정입니다.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -160,6 +163,9 @@ export function SystemSettingsForm({
                   </option>
                 ))}
               </SelectInput>
+              <p className="text-xs leading-5 text-slate-500">
+                저장되며, 실제 적용 화면은 단계적으로 연결 예정입니다.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -175,6 +181,10 @@ export function SystemSettingsForm({
                   </option>
                 ))}
               </SelectInput>
+              <p className="text-xs leading-5 text-slate-500">
+                /admin/invitations/new 초대 생성 화면의 기본 만료일로
+                사용됩니다.
+              </p>
             </div>
           </div>
         </CardContent>
@@ -187,10 +197,10 @@ export function SystemSettingsForm({
               <CardTitle>인쇄 기본 옵션</CardTitle>
               <CardDescription>
                 목실기, 나의 기록, 보고서 출력에 사용할 기본 용지, 방향,
-                여백과 표시 항목을 관리합니다.
+                여백과 표시 항목을 저장합니다.
               </CardDescription>
             </div>
-            <Badge tone="info">저장 가능</Badge>
+            <Badge tone="warning">저장만 됨</Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -266,13 +276,17 @@ export function SystemSettingsForm({
           </div>
 
           <p className="text-xs leading-5 text-slate-500">
-            페이지 번호, 로고, 서명란은 문서별 레이아웃 차이가 있어 1차에서는
-            저장값만 관리하고 실제 출력 적용은 단계적으로 연결합니다.
+            인쇄 옵션은 저장되지만 출력 화면 반영은 단계적으로 연결 예정입니다.
+            페이지 번호, 로고, 서명란은 문서별 레이아웃 차이가 있어 현재는
+            저장값 중심으로 관리합니다.
           </p>
         </CardContent>
       </Card>
 
       <div className="flex flex-wrap items-center justify-end gap-3">
+        <p className="text-xs leading-5 text-slate-500">
+          설정 변경은 전체 운영 기본값에 영향을 줄 수 있습니다.
+        </p>
         <Button type="button" onClick={handleSave} disabled={isSaving}>
           {isSaving ? "저장 중..." : "설정 저장"}
         </Button>

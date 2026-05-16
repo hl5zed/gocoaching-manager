@@ -24,6 +24,10 @@ export default async function AdminAffiliationsPage() {
               그룹/팀/목장 선택값을 관리합니다. 등록한 값은 회원정보수정
               드롭다운에 표시됩니다.
             </p>
+            <p className="mt-3 max-w-3xl rounded-md border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
+              적용 위치: 회원 정보 입력/수정 화면의 국가·지역·기관·교회·그룹
+              선택값으로 사용됩니다.
+            </p>
           </div>
 
           <Link
