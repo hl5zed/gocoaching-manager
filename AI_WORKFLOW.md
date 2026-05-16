@@ -1947,6 +1947,70 @@ Validation:
 - `npm run typecheck`: passed
 - `npm run build`: passed
 
+## LOCK - Performance Optimization Round 1-3 Deployment
+
+Completed date:
+- 2026-05-16
+
+Work:
+- 성능 최적화 1차/2차/3차 완료 및 배포 완료
+- query loading 최적화
+- coach-maker dashboard summary 최적화
+- moksilgi-progress DB prefilter 적용
+- action-notes pagination/report filter 적용
+- my-coaching records limit/grouping 최적화
+- admin users role filter inner join/options cache 적용
+- admin invitations new slim settings 조회 적용
+- report/records 반복 계산 단일 pass 최적화
+- performance indexes migration 0037 추가
+
+Completed details:
+- /coach-maker 메인 대시보드의 첫 화면 summary 조회 구조를 가볍게 정리
+- /coach-maker/moksilgi-progress에서 가능한 필터를 DB query 단계로 이동
+- weekly_logs 이번 주 범위 조회 적용
+- /api/coach-maker/action-notes에 limit/pagination 적용
+- /coach-maker/report에서 action notes report filter를 DB query 단계로 전달
+- /my-coaching/records 기본 최근 3개 조회 및 검색/필터 시 limit 적용
+- /my-coaching/records daily/weekly/monthly split 및 print split grouping 최적화
+- /admin/users role filter inner join 개선
+- /admin/users options 클라이언트 cache/promise 공유 적용
+- /admin/invitations/new 초대 만료일 설정 단일 조회
+- 초대 폼 조직 기본값 slim option 조회 적용
+- /coach-maker/report action notes summary, overdue count, high priority count 단일 pass 계산 적용
+- /coach-maker/report moksilgi rows summary, participant count, status count, attention rows 단일 pass 계산 적용
+
+Migration:
+- supabase/migrations/0037_add_performance_indexes_round1.sql 추가
+- user_roles active role filter용 인덱스 추가
+- profiles 관리자 회원 목록용 인덱스 추가
+- invitations 초대 목록용 인덱스 추가
+- coach_action_notes 목록/보고서용 인덱스 추가
+- weekly_logs 코치메이커 이번 주 범위 조회용 인덱스 추가
+
+Kept unchanged:
+- DB schema 변경 없음
+- RLS 변경 없음
+- role enum 변경 없음
+- API 응답 구조 대규모 변경 없음
+- 인증/권한 로직 변경 없음
+- 기존 URL query 흐름 유지
+- 기존 보고서/인쇄 흐름 유지
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+- git push 완료
+
+Do not regress:
+- /coach-maker dashboard summary performance improvements
+- /coach-maker/moksilgi-progress DB prefilter behavior
+- action-notes pagination and report filter behavior
+- /my-coaching/records recent limit and grouping behavior
+- /admin/users role filter inner join and options cache
+- /admin/invitations/new slim settings loading
+- report/records single pass derived calculations
+- 0037 performance indexes migration
+
 ## LOCK - Performance Optimization Round 1
 
 Completed date:
