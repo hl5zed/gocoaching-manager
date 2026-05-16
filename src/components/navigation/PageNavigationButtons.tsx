@@ -8,16 +8,22 @@ import { useI18n } from "@/lib/i18n/useI18n";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type PageNavigationButtonsProps = {
+  backHref?: string;
+  backLabel?: string;
   className?: string;
   dashboardHref?: string;
+  showForward?: boolean;
 };
 
 const navButtonClassName =
   "h-10 min-h-10 min-w-[112px] rounded-xl px-4 py-2 text-sm";
 
 export function PageNavigationButtons({
+  backHref,
+  backLabel,
   className = "",
   dashboardHref = "/dashboard",
+  showForward = false,
 }: PageNavigationButtonsProps) {
   const router = useRouter();
   const { t } = useI18n();
@@ -56,25 +62,38 @@ export function PageNavigationButtons({
       aria-label="페이지 이동"
       className={`flex flex-wrap items-center gap-2 text-sm ${className}`}
     >
-      <Button
-        className={navButtonClassName}
-        icon="arrow-left"
-        onClick={() => router.back()}
-        size="sm"
-        type="button"
-      >
-        {t("common.previous", "이전 화면")}
-      </Button>
-      <Button
-        className={navButtonClassName}
-        icon="arrow-right"
-        iconPosition="right"
-        onClick={handleForward}
-        size="sm"
-        type="button"
-      >
-        {t("common.next", "다음 화면")}
-      </Button>
+      {backHref ? (
+        <ButtonLink
+          className={navButtonClassName}
+          href={backHref}
+          icon="arrow-left"
+          size="sm"
+        >
+          {backLabel ?? t("common.previous", "이전 화면")}
+        </ButtonLink>
+      ) : (
+        <Button
+          className={navButtonClassName}
+          icon="arrow-left"
+          onClick={() => router.back()}
+          size="sm"
+          type="button"
+        >
+          {backLabel ?? t("common.previous", "이전 화면")}
+        </Button>
+      )}
+      {showForward ? (
+        <Button
+          className={navButtonClassName}
+          icon="arrow-right"
+          iconPosition="right"
+          onClick={handleForward}
+          size="sm"
+          type="button"
+        >
+          {t("common.next", "다음 화면")}
+        </Button>
+      ) : null}
       <ButtonLink
         className={navButtonClassName}
         href={dashboardHref}

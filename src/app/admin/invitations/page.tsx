@@ -160,6 +160,7 @@ export default async function AdminInvitationsPage({
     limit: 50,
   });
   const currentListHref = getPageHref({ q, role, status, page });
+  const hasActiveFilter = q.length > 0 || role !== "all" || status !== "all";
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
@@ -174,6 +175,8 @@ export default async function AdminInvitationsPage({
               초대와 현재 상태를 읽기 전용으로 확인할 수 있습니다.
             </p>
             <PageNavigationButtons
+              backHref="/admin"
+              backLabel="관리자 센터로"
               className="mt-4 min-w-0 justify-start"
               dashboardHref="/admin"
             />
@@ -252,12 +255,40 @@ export default async function AdminInvitationsPage({
 
         {!error && invitations.length === 0 && (
           <div className="mt-6 rounded-md border border-slate-200 bg-white p-6 text-slate-600">
-            초대가 없습니다.
+            <p className="font-medium text-slate-800">
+              {hasActiveFilter
+                ? "검색 조건에 맞는 초대가 없습니다."
+                : "아직 생성된 초대가 없습니다."}
+            </p>
+            <p className="mt-2 text-sm">
+              {hasActiveFilter
+                ? "필터를 초기화하거나 새 초대를 생성해 주세요."
+                : "새 사용자를 초대하려면 초대 생성을 시작해 주세요."}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {hasActiveFilter ? (
+                <Link
+                  className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  href="/admin/invitations"
+                >
+                  필터 초기화
+                </Link>
+              ) : null}
+              <Link
+                className="rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                href="/admin/invitations/new"
+              >
+                초대 생성
+              </Link>
+            </div>
           </div>
         )}
 
         {!error && invitations.length > 0 && (
           <>
+            <p className="mt-6 text-sm text-slate-500 md:hidden">
+              표는 가로로 스크롤해 전체 내용을 확인하세요.
+            </p>
             <div className="mt-6 overflow-x-auto rounded-md border border-slate-200 bg-white">
               <table className="w-full min-w-[1280px] border-collapse text-left text-sm">
                 <thead>

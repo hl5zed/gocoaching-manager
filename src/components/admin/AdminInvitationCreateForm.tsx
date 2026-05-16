@@ -296,6 +296,15 @@ export function AdminInvitationCreateForm({
           )}
         </label>
 
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 md:col-span-2">
+          <p className="font-semibold">고급 권한 직접 설정</p>
+          <p className="mt-1">
+            조직 기본값을 사용하지 않는 경우에만 아래 역할과 범위를 직접
+            조정해 주세요. 관리자 권한은 접근 범위가 넓으므로 신중히
+            선택해야 합니다.
+          </p>
+        </div>
+
         <label className="grid gap-2">
           <span className="text-sm font-medium text-slate-700">초대 역할</span>
           <select

@@ -165,9 +165,11 @@ function FilterForm({ filters }: { filters: CoachMakerMoksilgiProgressFilters })
   return (
     <Card className="print-hidden mt-6">
       <CardHeader>
-        <CardTitle className="text-lg">조회 조건</CardTitle>
+        <CardTitle className="text-lg">데이터 조회 조건</CardTitle>
         <CardDescription>
-          연도와 소속 정보를 조합해 담당 범위의 목실기 성취 현황을 좁혀 봅니다.
+          연도와 소속 정보를 조합해 서버에서 불러올 목실기 성취 현황을
+          좁혀 봅니다. 조회 후 표 안에서는 별도 보기 필터를 사용할 수
+          있습니다.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -317,7 +319,11 @@ export default async function CoachMakerMoksilgiProgressPage({
               </CardDescription>
             </div>
             <div className="flex w-full min-w-0 flex-wrap justify-start gap-2 lg:w-auto lg:justify-end">
-              <PageNavigationButtons className="justify-start sm:justify-end" />
+              <PageNavigationButtons
+                backHref="/coach-maker"
+                backLabel="코치메이커로"
+                className="justify-start sm:justify-end"
+              />
               <PrintPageButton
                 fileName={`moksilgi-team-progress-${filters.year}`}
                 label="출력"
@@ -382,12 +388,19 @@ export default async function CoachMakerMoksilgiProgressPage({
                 </CardContent>
               </Card>
             ) : (
-              <MoksilgiProgressClientTable
-                initialMemberId={initialMemberId}
-                relationshipRows={result.data.relationshipRows}
-                rows={result.data.rows}
-                year={result.data.year}
-              />
+              <>
+                <p className="print-hidden mt-6 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
+                  아래 영역의 상세 필터는 이미 조회된 결과 안에서만 화면
+                  표시를 좁히는 보기 필터입니다. 월별 표는 가로로 스크롤해
+                  전체 내용을 확인하세요.
+                </p>
+                <MoksilgiProgressClientTable
+                  initialMemberId={initialMemberId}
+                  relationshipRows={result.data.relationshipRows}
+                  rows={result.data.rows}
+                  year={result.data.year}
+                />
+              </>
             )}
           </>
         )}

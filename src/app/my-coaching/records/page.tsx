@@ -1315,7 +1315,35 @@ export default async function MyCoachingRecordsPage({
 
           {printRecords.length === 0 ? (
             <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-              선택한 조건 또는 인쇄 범위에 해당하는 기록이 없습니다.
+              <p>선택한 조건 또는 인쇄 범위에 해당하는 기록이 없습니다.</p>
+              <p className="mt-1">
+                필터를 초기화하거나 새 기록을 작성해 주세요.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2 print:hidden">
+                <ButtonLink
+                  href="/my-coaching/records"
+                  icon="filter"
+                  size="sm"
+                  variant="secondary"
+                >
+                  필터 초기화
+                </ButtonLink>
+                <ButtonLink
+                  href="/my-coaching/records/daily"
+                  icon="report"
+                  size="sm"
+                >
+                  하루 기록 작성
+                </ButtonLink>
+                <ButtonLink
+                  href="/my-coaching/weekly-log"
+                  icon="report"
+                  size="sm"
+                  variant="secondary"
+                >
+                  주간 기록 작성
+                </ButtonLink>
+              </div>
             </div>
           ) : (
             <div className="mt-5 grid gap-6">

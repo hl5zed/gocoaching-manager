@@ -237,7 +237,7 @@ function MoksilgiCard({ item }: { item: CoachMoksilgiItem }) {
           <p className="mt-1 text-slate-950">{displayValue(item.author_name)}</p>
         </div>
         <div>
-          <p className="text-sm font-medium text-slate-500">지역/목장</p>
+          <p className="text-sm font-medium text-slate-500">소속/공동체</p>
           <p className="mt-1 text-slate-950">{displayValue(item.region_name)}</p>
         </div>
         <div>
@@ -343,6 +343,11 @@ export default async function CoachMoksilgiPage({
               <p className="text-center text-slate-500">
                 아직 확인할 코치이 목실기가 없습니다.
               </p>
+              <div className="mt-4 flex justify-center print:hidden">
+                <ButtonLink href="/coach" icon="arrow-left" variant="secondary">
+                  코치 홈으로 돌아가기
+                </ButtonLink>
+              </div>
             </CardContent>
           </Card>
         ) : (

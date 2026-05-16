@@ -1093,9 +1093,9 @@ export function ActionMemoDrafts({
   async function archiveNote(id: string) {
     const note = notes.find((currentNote) => currentNote.id === id);
     const confirmed = window.confirm(
-      `관리 액션 메모를 목록에서 제거하시겠습니까?\n\n대상: ${
+      `관리 액션 메모를 보관하시겠습니까?\n\n대상: ${
         note?.target_name ?? id
-      }\n이 작업은 보관 처리되며 목록에서 숨겨질 수 있습니다.`,
+      }\n보관된 메모는 기본 목록에서 숨겨질 수 있습니다.`,
     );
 
     if (!confirmed) {
@@ -1121,7 +1121,7 @@ export function ActionMemoDrafts({
         return;
       }
 
-      setMessage("관리 액션 메모가 목록에서 제거되었습니다.");
+      setMessage("관리 액션 메모가 보관되었습니다.");
       if (selectedNote?.id === id) {
         closeDetail();
       }
@@ -1147,6 +1147,10 @@ export function ActionMemoDrafts({
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
             후속 액션을 메모로 남기고 진행 상태를 처리합니다.
+          </p>
+          <p className="mt-1 text-sm leading-6 text-slate-500">
+            완료 처리는 일을 끝낸 표시이고, 보관은 기본 목록에서 숨기는 정리
+            기능입니다.
           </p>
         </div>
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
@@ -1826,7 +1830,7 @@ export function ActionMemoDrafts({
                         onClick={() => void archiveNote(note.id)}
                         type="button"
                       >
-                        {archivingId === note.id ? "삭제 중..." : "목록에서 제거"}
+                        {archivingId === note.id ? "보관 중..." : "보관"}
                       </button>
                     ) : null}
                   </div>
@@ -2124,8 +2128,8 @@ export function ActionMemoDrafts({
                         type="button"
                       >
                         {archivingId === selectedNote.id
-                          ? "삭제 중..."
-                          : "목록에서 제거"}
+                          ? "보관 중..."
+                          : "보관"}
                       </button>
                     ) : null}
                   </>

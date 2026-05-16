@@ -795,6 +795,10 @@ export default async function CoachMakerReportPage({
           }}
           teamOptions={teamOptions}
         />
+        <p className="report-controls mt-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600 print:hidden">
+          목실기 성취 현황은 선택한 연도 기준으로 표시하고, 관리 액션
+          메모는 작성일 기간 기준으로 필터링합니다.
+        </p>
 
         {moksilgiResult.error ? (
           <section className="report-card mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800 print:border-slate-300 print:bg-white print:text-slate-900">
