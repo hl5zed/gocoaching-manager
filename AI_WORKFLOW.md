@@ -1991,6 +1991,52 @@ Validation:
 - `npm run build`: passed
 - git push 완료
 
+## LOCK - Coach Maker Report Print UX Cleanup Phase 1
+
+Completed date:
+- 2026-05-16
+
+Work:
+- /coach-maker/report 인쇄 UX 1차 정리 완료
+- 출력 버튼 문구를 “보고서 인쇄/PDF 저장”으로 정리
+- 보고서 기준 안내 추가
+- 목실기 성취 현황은 선택 연도 기준으로 안내
+- 관리 액션 메모는 작성일 기간 기준으로 안내
+- 팀 필터는 목실기 대상자와 관리 메모 모두에 공통 적용됨을 안내
+- 인쇄물에 남는 필터 요약에 목실기 기준, 관리 메모 기준, 팀 기준 추가
+- 인쇄 전 확인 안내 추가
+- 브라우저 인쇄창에서 PDF 저장 가능 안내 추가
+- 화면용 인쇄 전 안내는 print:hidden으로 인쇄물에서 제외
+- 빈 상태 문구를 “선택한 조건에 해당하는…” 형태로 정리
+
+Kept unchanged:
+- 보고서 순서 유지
+- 보고서 레이아웃 유지
+- 필터 동작 유지
+- 인쇄 흐름 유지
+- 데이터 계산 기준 유지
+- API 변경 없음
+- DB query 변경 없음
+- DB schema 변경 없음
+- migration 변경 없음
+- RLS 변경 없음
+- 인증/권한 로직 변경 없음
+
+Do not regress:
+- /coach-maker/report year/team/from/to filter flow
+- report print/PDF button wording
+- moksilgi selected-year basis 안내
+- action notes created-at period basis 안내
+- team filter common application 안내
+- printed filter summary basis visibility
+- print-hidden screen-only print notice
+- empty state selected-condition wording
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+- git push 완료
+
 ## LOCK - Admin Users UX Cleanup Phase 1
 
 Completed date:
