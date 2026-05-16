@@ -1947,6 +1947,54 @@ Validation:
 - `npm run typecheck`: passed
 - `npm run build`: passed
 
+## LOCK - Admin Users UX Cleanup Phase 1
+
+Completed date:
+- 2026-05-16
+
+Work:
+- 관리자 회원관리 UX 1차 정리 완료
+- /admin/users 회원 상세 Drawer 권한 설정 UX 개선
+- 직접 회원 등록 패널 role/scope 선택 UX 개선
+- coachee + global처럼 보이던 기본값 제거
+- 역할 선택 전 권한 범위 선택 비활성화
+- role별 허용 scope_type만 표시
+- country / organization / church / group scope는 UUID 직접 입력 대신 select 기반 선택으로 개선
+- scope_id 직접 입력 혼선 완화
+- 권한 범위와 회원 소속 정보가 다를 수 있다는 안내 추가
+- 관리자 권한 선택 주의 안내 추가
+- super_admin은 이 화면에서 새로 추가할 수 없다는 안내 유지
+- 역할 변경 시 기존 권한 범위가 유지된다는 안내 추가
+- legacy RoleAddForm 제거
+- legacy RoleChangeForm 제거
+- legacy RoleStatusToggleForm 제거
+- 실제 사용 중인 StatusChangeForm은 유지
+- 실제 역할 추가/변경/활성/비활성 기능은 AdminUserDetailDrawer에서 유지
+
+Kept unchanged:
+- API 변경 없음
+- DB 변경 없음
+- RLS 변경 없음
+- auth 변경 없음
+- role enum 변경 없음
+- 회원 목록 기능 유지
+- 회원 상세 Drawer 기능 유지
+- 직접 회원 등록 기능 유지
+- 회원 상태 변경 StatusChangeForm 유지
+
+Do not regress:
+- /admin/users role/scope hardening
+- AdminUserDetailDrawer role add/change/status toggle flow
+- non-super_admin global scope 금지
+- super_admin 추가 금지
+- 회원 소속 정보와 권한 범위 분리 안내
+- 직접 회원 등록 role/scope 선택 UX
+- 회원 목록의 StatusChangeForm 빠른 상태 변경
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+
 ## LOCK - Performance Optimization Round 1-3 Deployment
 
 Completed date:
