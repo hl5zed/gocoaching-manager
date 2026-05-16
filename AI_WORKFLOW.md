@@ -1947,6 +1947,50 @@ Validation:
 - `npm run typecheck`: passed
 - `npm run build`: passed
 
+## LOCK - Admin Settings UX Cleanup Phase 1
+
+Completed date:
+- 2026-05-16
+
+Work:
+- /admin/settings UX 1차 정리 완료
+- 설정 카드별 상태 배지 추가
+- 실제 적용 중 / 초대 생성에 적용 / 저장 가능 / 저장만 됨 / 준비 중 상태 구분
+- 초대 만료 기간은 /admin/invitations/new 기본 만료일로 안내
+- 기본 언어와 기본 국가는 저장되지만 단계적 연결 예정으로 안내
+- 인쇄 기본 옵션은 저장되지만 출력 화면 반영은 단계적 연결 예정으로 안내
+- 이메일 발신 설정은 현재 자동 발송 비활성/준비 중으로 명확히 표시
+- 조직별 기본 권한 설정은 초대 생성 화면 기본 권한 제안에 사용됨을 안내
+- 시스템 공지는 저장/수정 가능한 운영 공지 관리 기능으로 안내
+- 소속 선택값 관리는 회원 정보 입력/수정 선택값으로 사용됨을 안내
+
+Kept unchanged:
+- API 변경 없음
+- DB query 변경 없음
+- DB schema 변경 없음
+- migration 변경 없음
+- RLS 변경 없음
+- 인증/권한 로직 변경 없음
+- 설정 데이터 구조 변경 없음
+- 이메일 발신 기능 구현 없음
+- 인쇄 옵션 실제 연결 로직 구현 없음
+- 기본 언어/국가 실제 전역 적용 로직 구현 없음
+
+Do not regress:
+- /admin/settings status badge clarity
+- default locale/default country staged connection 안내
+- invitation expiration /admin/invitations/new 적용 안내
+- print_options staged print connection 안내
+- email sending 준비 중 안내
+- organization default role invitation suggestion 안내
+- system announcements management 안내
+- affiliations selection value 적용 위치 안내
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+- git push 완료
+
 ## LOCK - Admin Users UX Cleanup Phase 1
 
 Completed date:
