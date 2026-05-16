@@ -774,6 +774,7 @@ export default async function MyCoachingRecordsPage({
   const dailyPrintRecords = printRecordGroups.daily;
   const weeklyPrintRecords = printRecordGroups.weekly;
   const monthlyPrintRecords = printRecordGroups.monthly;
+  const printRecordCountSummary = `전체 ${printRecords.length}개 / 하루 ${dailyPrintRecords.length}개 / 주간 ${weeklyPrintRecords.length}개 / 월간 ${monthlyPrintRecords.length}개`;
   const filenameToday = formatLocalDateForFilename();
   const filenameMonth = filenameToday.slice(0, 7);
   const suggestedPrintTitles = {
@@ -902,17 +903,34 @@ export default async function MyCoachingRecordsPage({
             </p>
             <p className="mt-2 hidden text-sm text-slate-600 print:block">
               인쇄 범위:{" "}
-              <span data-print-range-label="all">전체 기록</span>
+              <span data-print-range-label="all">현재 결과 전체</span>
               <span data-print-range-label="daily">하루 기록</span>
               <span data-print-range-label="weekly">주간 기록</span>
               <span data-print-range-label="monthly">월간 회고</span>
             </p>
             <p className="mt-2 hidden text-sm text-slate-600 print:block">
+              출력 기준: 현재 검색/필터/정렬 결과
+              {!hasActiveSearchOrFilter ? " · 필터 없음: 최근 기록 기준 출력" : ""}
+            </p>
+            <p className="mt-2 hidden text-sm text-slate-600 print:block">
               적용된 필터: {filterSummary}
+            </p>
+            <p className="mt-2 hidden text-sm text-slate-600 print:block">
+              기록 수: {printRecordCountSummary}
             </p>
           </div>
           <div className="flex min-w-0 flex-col items-start gap-3 text-sm print:hidden lg:items-end">
             <PrintRecordsButton suggestedTitles={suggestedPrintTitles} />
+            <div className="max-w-md rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600 print:hidden">
+              <p>
+                현재 검색어, 기록 유형, 상태, 공유, 정렬 기준이 인쇄물에
+                반영됩니다.
+              </p>
+              <p className="mt-1">
+                필터가 없으면 최근 하루/주간/월간 기록 중심으로 출력됩니다.
+                브라우저 인쇄창에서 PDF 저장을 선택할 수 있습니다.
+              </p>
+            </div>
             <div className="flex flex-wrap gap-2">
               <ButtonLink href="/my-coaching" icon="arrow-left" size="sm" variant="secondary">
                 내 코칭 공간으로 돌아가기
@@ -1353,7 +1371,7 @@ export default async function MyCoachingRecordsPage({
                 </h3>
                 {dailyPrintRecords.length === 0 ? (
                   <p className="mt-3 text-sm text-slate-600">
-                    선택한 범위에 인쇄할 기록이 없습니다.
+                    선택한 조건에 해당하는 하루 기록이 없습니다.
                   </p>
                 ) : (
                   <div className="mt-3 grid gap-3">
@@ -1370,7 +1388,7 @@ export default async function MyCoachingRecordsPage({
                 </h3>
                 {weeklyPrintRecords.length === 0 ? (
                   <p className="mt-3 text-sm text-slate-600">
-                    선택한 범위에 인쇄할 기록이 없습니다.
+                    선택한 조건에 해당하는 주간 기록이 없습니다.
                   </p>
                 ) : (
                   <div className="mt-3 grid gap-3">
@@ -1387,7 +1405,7 @@ export default async function MyCoachingRecordsPage({
                 </h3>
                 {monthlyPrintRecords.length === 0 ? (
                   <p className="mt-3 text-sm text-slate-600">
-                    선택한 범위에 인쇄할 기록이 없습니다.
+                    선택한 조건에 해당하는 월간 회고가 없습니다.
                   </p>
                 ) : (
                   <div className="mt-3 grid gap-3">

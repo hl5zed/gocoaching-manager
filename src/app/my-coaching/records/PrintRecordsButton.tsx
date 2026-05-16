@@ -14,19 +14,19 @@ const printRangeButtons: Array<{
   value: PrintRange;
 }> = [
   {
-    label: "전체 기록 인쇄",
+    label: "현재 결과 전체 인쇄/PDF 저장",
     value: "all",
   },
   {
-    label: "하루 기록 인쇄",
+    label: "하루 기록 인쇄/PDF 저장",
     value: "daily",
   },
   {
-    label: "주간 기록 인쇄",
+    label: "주간 기록 인쇄/PDF 저장",
     value: "weekly",
   },
   {
-    label: "월간 회고 인쇄",
+    label: "월간 회고 인쇄/PDF 저장",
     value: "monthly",
   },
 ];
