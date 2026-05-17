@@ -1947,6 +1947,44 @@ Validation:
 - `npm run typecheck`: passed
 - `npm run build`: passed
 
+## LOCK - Global Timezone Phase 1
+
+Completed date:
+- 2026-05-17
+
+Work:
+- 글로벌 timezone 적용 1차 완료
+- 공통 timezone helper 추가
+- DEFAULT_TIMEZONE = Asia/Bangkok
+- profiles.timezone 우선 사용
+- fallback timezone은 Asia/Bangkok
+- 잘못된 timezone 값에 대한 fallback 처리
+- 하루 기록 기본 record_date를 timezone 기준 오늘 날짜로 변경
+- 주간 기록 week_start/week_end를 timezone 기준 월요일~일요일로 계산
+- 월간 회고 기본 year/month를 timezone 기준 현재 연월로 계산
+- 코치메이커 이번 주, 현재 월, 현재 연도 계산을 timezone 기준으로 통일
+- /coach-maker/report 기준 시간대 표시
+- /coach-maker/moksilgi-progress 기준 시간대 표시
+- /coach/moksilgi 목록/상세 출력 기준 시간대 표시
+- /my-coaching/records 출력 기준 시간대 표시
+
+Kept unchanged:
+- created_at, updated_at, submitted_at, expires_at 등 timestamp UTC 저장 흐름 유지
+- DB schema 변경 없음
+- migration 변경 없음
+- RLS 변경 없음
+- Supabase/Postgres timezone 변경 없음
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+
+Deferred:
+- 조직 timezone 정책
+- system settings timezone
+- 초대 만료일 timezone 세분화
+- 기존 date 데이터 재해석
+
 ## LOCK - Admin Settings UX Cleanup Phase 1
 
 Completed date:
@@ -1985,6 +2023,34 @@ Do not regress:
 - organization default role invitation suggestion 안내
 - system announcements management 안내
 - affiliations selection value 적용 위치 안내
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+- git push 완료
+
+## LOCK - Mobile Output/PDF Save Guidance Update
+
+Completed date:
+- 2026-05-17
+
+Work:
+- 모바일 출력/PDF 저장 안내 보완 완료
+- Safari에서 모바일 출력 기능 정상 작동 확인
+- 인앱 브라우저 또는 일부 모바일 브라우저에서 인쇄창이 열리지 않을 수 있음을 고려
+- /coach/moksilgi 목록 출력 안내 보완
+- /coach/moksilgi 상세 출력 안내 보완
+- /my-coaching/records 인쇄 안내 보완
+- /coach-maker/report 인쇄 안내 보완
+- “인쇄창이 열리지 않으면 Safari 또는 Chrome에서 다시 열어 주세요.” 안내 추가
+- 안내 문구는 화면용으로만 표시하고 인쇄물에는 제외
+
+Kept unchanged:
+- window.print() 호출 로직 변경 없음
+- document.title 파일명 힌트/복원 흐름 변경 없음
+- 출력 범위 계산 로직 변경 없음
+- print CSS 변경 없음
+- 데이터 조회, 권한, API, DB, RLS 변경 없음
 
 Validation:
 - `npm run typecheck`: passed
