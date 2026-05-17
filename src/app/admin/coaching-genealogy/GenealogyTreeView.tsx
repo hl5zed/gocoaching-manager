@@ -12,6 +12,7 @@ type GenealogyTreeViewProps = {
   edges: GenealogyEdge[];
   filterCountryId?: string | null;
   filterGenerationNumber?: number | null;
+  relationshipStatus?: string | null;
   nodes: GenealogyNode[];
   onSelectNode: (nodeId: string) => void;
   selectedNodeId: string | null;
@@ -119,6 +120,22 @@ function generationLabel(generationNumber: number | null) {
 
 function generationName(generation: GenerationKey) {
   return generation === 1 ? "G1 루트코치" : `G${generation}`;
+}
+
+function statusLabel(status: string | null | undefined) {
+  if (status === "paused") {
+    return "일시중지";
+  }
+
+  if (status === "ended") {
+    return "종료";
+  }
+
+  if (status === "archived") {
+    return "보관";
+  }
+
+  return "활성";
 }
 
 function roleSummary(node: GenealogyNode) {
@@ -380,6 +397,7 @@ export function GenealogyTreeView({
   edges,
   filterCountryId,
   filterGenerationNumber,
+  relationshipStatus,
   nodes,
   onSelectNode,
   selectedNodeId,
@@ -390,6 +408,10 @@ export function GenealogyTreeView({
     [edges, selectedNodeId],
   );
   const hasActiveFilter = Boolean(filterCountryId) || filterGenerationNumber !== null;
+  const mismatchWarnings = diagnostics.generationMismatchWarnings;
+  const visibleMismatchWarnings = mismatchWarnings.slice(0, 5);
+  const hiddenMismatchCount = Math.max(0, mismatchWarnings.length - visibleMismatchWarnings.length);
+  const isNonActiveStatus = relationshipStatus ? relationshipStatus !== "active" : false;
 
   return (
     <div className="space-y-4">
@@ -401,19 +423,62 @@ export function GenealogyTreeView({
               순환 관계가 감지되었습니다. 배정 관계를 확인하세요.
             </div>
           )}
-          {diagnostics.generationMismatchWarnings.length > 0 && (
+          {mismatchWarnings.length > 0 && (
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-              일부 회원의 세대 값이 계보 흐름과 다릅니다. 세대 배정 관리에서
-              확인하세요.
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <p className="font-semibold">
+                    세대 불일치 {mismatchWarnings.length}건이 있습니다.
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-amber-800">
+                    코치 세대 + 1이 코치이 세대와 맞지 않는 관계입니다.
+                    {isNonActiveStatus
+                      ? ` 현재 선택한 관계 상태(${statusLabel(relationshipStatus)}) 기준으로 확인했습니다.`
+                      : null}
+                  </p>
+                </div>
+                <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900">
+                  세대 배정 관리에서 수동 확인
+                </span>
+              </div>
+              <ul className="mt-3 space-y-2">
+                {visibleMismatchWarnings.map((warning) => (
+                  <li
+                    className="rounded-md border border-amber-200 bg-white/70 px-3 py-2 text-xs leading-5 text-amber-950"
+                    key={warning.relationshipId}
+                  >
+                    <span className="font-semibold">
+                      {warning.coachLabel || "확인 필요"}
+                    </span>
+                    <span> {generationLabel(warning.coachGenerationNumber)} → </span>
+                    <span className="font-semibold">
+                      {warning.coacheeLabel || "확인 필요"}
+                    </span>
+                    <span> {generationLabel(warning.coacheeGenerationNumber)}</span>
+                    <span className="ml-2 text-amber-800">
+                      기대 세대: {generationLabel(warning.expectedCoacheeGenerationNumber)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {hiddenMismatchCount > 0 ? (
+                <p className="mt-2 text-xs text-amber-800">
+                  외 {hiddenMismatchCount}건은 세대 배정 관리에서 함께 확인하세요.
+                </p>
+              ) : null}
+              <p className="mt-3 text-xs leading-5 text-amber-800">
+                자동 수정하지 않고, 세대 배정 관리에서 관계와 세대 값을 확인한 뒤
+                필요한 경우 수동으로 조정하세요.
+              </p>
             </div>
           )}
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-md border border-slate-200 bg-slate-50">
+      <div className="genealogy-tree-svg-shell overflow-x-auto rounded-md border border-slate-200 bg-slate-50">
         <svg
           aria-label="피라미드형 세대별 코칭 계보도"
-          className="min-w-[640px]"
+          className="genealogy-tree-svg min-w-[640px]"
           role="img"
           viewBox="0 0 500 420"
           width="100%"

@@ -428,6 +428,25 @@ export function CoachingGenealogyClient({
             background: white !important;
           }
 
+          body.printing-genealogy-tree main {
+            min-height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: white !important;
+          }
+
+          body.printing-genealogy-tree main > section {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+
+          body.printing-genealogy-tree main > section > div {
+            margin-top: 0 !important;
+            gap: 0 !important;
+          }
+
           body.printing-genealogy-tree #genealogy-tree-print-area,
           body.printing-genealogy-map #genealogy-map-print-area {
             display: block !important;
@@ -480,7 +499,9 @@ export function CoachingGenealogyClient({
 
           body.printing-genealogy-tree .genealogy-print-content {
             grid-template-columns: minmax(0, 70%) minmax(0, 30%) !important;
-            gap: 4mm !important;
+            gap: 3mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
 
           body.printing-genealogy-map #genealogy-map-print-area > .grid {
@@ -604,7 +625,8 @@ export function CoachingGenealogyClient({
           body.printing-genealogy-tree .genealogy-print-main {
             min-width: 0 !important;
             min-height: 0 !important;
-            padding: 2mm !important;
+            padding: 1.5mm !important;
+            margin: 0 !important;
             break-before: auto !important;
             page-break-before: auto !important;
             break-after: auto !important;
@@ -619,7 +641,9 @@ export function CoachingGenealogyClient({
           }
 
           body.printing-genealogy-tree .genealogy-print-main > div:first-child {
-            margin: 0 0 2mm 0 !important;
+            display: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
 
           body.printing-genealogy-tree .genealogy-print-main > div:first-child h2 {
@@ -654,6 +678,23 @@ export function CoachingGenealogyClient({
             background: white !important;
           }
 
+          body.printing-genealogy-tree #genealogy-tree-print-area .genealogy-tree-svg-shell {
+            display: block !important;
+            overflow: visible !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            break-before: auto !important;
+            page-break-before: auto !important;
+            break-after: auto !important;
+            page-break-after: auto !important;
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+          }
+
           body.printing-genealogy-tree #genealogy-tree-print-area svg,
           body.printing-genealogy-map #genealogy-map-print-area svg {
             width: 100% !important;
@@ -665,7 +706,8 @@ export function CoachingGenealogyClient({
           }
 
           body.printing-genealogy-tree #genealogy-tree-print-area svg {
-            max-height: 132mm !important;
+            height: 122mm !important;
+            max-height: 122mm !important;
           }
 
           body.printing-genealogy-map .leaflet-container {
@@ -780,8 +822,8 @@ export function CoachingGenealogyClient({
           body.printing-genealogy-tree .genealogy-print-header,
           body.printing-genealogy-map .genealogy-print-header {
             display: block !important;
-            margin: 0 0 2mm 0 !important;
-            padding: 0 0 2mm 0 !important;
+            margin: 0 0 1.5mm 0 !important;
+            padding: 0 0 1mm 0 !important;
             border-bottom: 1px solid #d4d4d8 !important;
             break-after: avoid !important;
             page-break-after: avoid !important;
@@ -796,7 +838,7 @@ export function CoachingGenealogyClient({
           }
 
           body.printing-genealogy-tree .genealogy-print-header h1 {
-            font-size: 14pt !important;
+            font-size: 12pt !important;
             line-height: 1.15 !important;
             margin: 0 !important;
           }
@@ -809,7 +851,7 @@ export function CoachingGenealogyClient({
           }
 
           body.printing-genealogy-tree .genealogy-print-header > div p {
-            font-size: 8pt !important;
+            font-size: 7.5pt !important;
             line-height: 1.2 !important;
             margin: 0 !important;
           }
@@ -1121,6 +1163,7 @@ export function CoachingGenealogyClient({
                   filterGenerationNumber={data.filters.generationNumber}
                   nodes={data.nodes}
                   onSelectNode={selectNode}
+                  relationshipStatus={data.filters.status}
                   selectedNodeId={selectedNode?.id ?? null}
                 />
               </section>
