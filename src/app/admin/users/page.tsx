@@ -879,6 +879,9 @@ export default async function AdminUsersPage({
                     fallback="검색, 필터, 정렬, 페이지네이션을 사용해 현재 목록을 확인합니다."
                   />
                 </CardDescription>
+                <p className="text-sm text-slate-500 lg:hidden">
+                  표는 가로로 스크롤해 전체 내용을 확인하세요.
+                </p>
               </CardHeader>
               <CardContent className="p-3 pt-0 lg:p-0">
                 <div className="overflow-x-auto">

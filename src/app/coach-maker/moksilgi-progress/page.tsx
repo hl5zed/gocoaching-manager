@@ -391,7 +391,8 @@ export default async function CoachMakerMoksilgiProgressPage({
               <>
                 <p className="print-hidden mt-6 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
                   화면 내 보기 필터는 이미 조회된 결과 안에서만 표시를
-                  좁힙니다. 월별 표는 가로로 스크롤해 전체 내용을 확인하세요.
+                  좁힙니다. 관심 필요 대상자 표와 월별 표는 가로로 스크롤해
+                  전체 내용을 확인하세요.
                 </p>
                 <MoksilgiProgressClientTable
                   initialMemberId={initialMemberId}

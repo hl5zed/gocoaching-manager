@@ -260,8 +260,12 @@ function QuickCheckSection({
           <I18nText k="moksilgi.noAttentionUsers" fallback="관심 필요 대상자가 없습니다." />
         </p>
       ) : (
-        <div className="mt-5 overflow-x-auto">
-          <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+        <>
+          <p className="mt-5 text-sm text-slate-500 md:hidden">
+            표는 가로로 스크롤해 전체 내용을 확인하세요.
+          </p>
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full min-w-[720px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-slate-600">
                 <th className="px-3 py-2 font-semibold">
@@ -300,8 +304,9 @@ function QuickCheckSection({
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        </>
       )}
     </section>
   );
@@ -347,8 +352,12 @@ function CoachStatsSection({
           />
         </p>
       ) : (
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[760px] border-collapse text-left text-sm">
+        <>
+          <p className="mt-6 text-sm text-slate-500 md:hidden">
+            표는 가로로 스크롤해 전체 내용을 확인하세요.
+          </p>
+          <div className="mt-6 overflow-x-auto">
+            <table className="w-full min-w-[760px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-slate-600">
                 <th className="px-3 py-2 font-semibold"><I18nText k="roles.coach" fallback="코치" /></th>
@@ -411,8 +420,9 @@ function CoachStatsSection({
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        </>
       )}
     </section>
   );

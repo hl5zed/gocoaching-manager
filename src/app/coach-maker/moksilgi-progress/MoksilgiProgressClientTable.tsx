@@ -1091,6 +1091,7 @@ export function MoksilgiProgressClientTable({
           <CardTitle className="text-lg">화면 내 상세 필터</CardTitle>
           <CardDescription>
             조회된 결과 안에서 국가, 소속 기관/교회, 그룹/팀/목장, 담당 코치 기준으로 다시 좁힙니다.
+            모바일에서는 필요한 조건만 선택한 뒤 표로 이동해 확인하세요.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-4">
