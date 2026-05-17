@@ -1947,6 +1947,58 @@ Validation:
 - `npm run typecheck`: passed
 - `npm run build`: passed
 
+## LOCK - Global Timezone Phase 2 Main Merge and Production Verification
+
+Completed date:
+- 2026-05-17
+
+Work:
+- 글로벌 timezone 2차 main merge 및 운영 확인 완료
+- feature/timezone-phase-2 PR merge 완료
+- Production main 배포 확인
+- /profile/edit 개인 시간대 UI 운영 반영 확인
+- /admin/settings 시스템 기본 시간대 UI 운영 확인
+- /admin/settings/organizations 기관/조직 기본 시간대 UI 운영 확인
+- organizations.default_timezone 컬럼 추가
+- system_settings global default_timezone 추가
+- timezone fallback 순서 확장:
+  - profile timezone
+  - organization timezone
+  - system default timezone
+  - Asia/Bangkok
+- /profile/edit에서 개인 timezone 선택/저장 흐름 연결
+- /profile 보기 화면에 개인 timezone 표시
+- UTC timestamp 저장 흐름 유지
+- 기존 record_date, week_start/week_end, year/month 데이터 변환 없음
+- RLS policy 변경 없음
+- Supabase/Postgres timezone 설정 변경 없음
+
+Kept unchanged:
+- 기존 timestamp UTC 저장 정책 유지
+- 기존 daily record_date 데이터 변환 없음
+- 기존 weekly week_start/week_end 데이터 변환 없음
+- 기존 monthly year/month 데이터 변환 없음
+- 기존 인증/권한 흐름 유지
+- RLS policy 변경 없음
+- Supabase/Postgres timezone 설정 변경 없음
+
+Do not regress:
+- profile timezone should remain the first fallback source
+- organization default_timezone should remain the second fallback source
+- system_settings global default_timezone should remain the third fallback source
+- Asia/Bangkok should remain the final application fallback
+- /profile/edit personal timezone selection and save flow
+- /profile read-only personal timezone display
+- /admin/settings system default timezone save flow
+- /admin/settings/organizations organization default timezone save flow
+- UTC timestamp storage behavior
+- existing record_date, week_start/week_end, year/month data interpretation
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+- Vercel Production 배포 정상 확인
+
 ## LOCK - Global Timezone Phase 1
 
 Completed date:
