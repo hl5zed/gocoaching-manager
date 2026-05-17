@@ -1947,6 +1947,58 @@ Validation:
 - `npm run typecheck`: passed
 - `npm run build`: passed
 
+## LOCK - Admin Coaching Genealogy Print and Generation Mismatch UX
+
+Completed date:
+- 2026-05-17
+
+Work:
+- /admin/coaching-genealogy 계보트리 인쇄 및 세대 불일치 UX 개선 완료
+- 계보트리 인쇄 시 첫 페이지에 글씨만 나오고 트리 디자인이 2페이지로 밀리던 문제 개선
+- print 전용 레이아웃에서 main/wrapper padding, margin, max-width 보정
+- genealogy-print-content, genealogy-print-main 여백 축소
+- 트리 SVG wrapper에 print 전용 class 적용
+- print에서 SVG wrapper overflow, height, page-break 보정
+- 계보트리 SVG가 제목 바로 아래 첫 페이지에서 시작되도록 조정
+- 화면용 header/navigation/filter/print button 숨김 흐름 유지
+- 계보트리 표시, 노드 선택, 필터, 탭, 인쇄 버튼 흐름 유지
+- 세대 불일치 경고 UX 개선
+- 기존 단순 경고 문구를 상세 카드로 확장
+- “코치 세대 + 1이 코치이 세대와 맞지 않는 관계”이라는 판단 기준 표시
+- 세대 불일치 건수 표시
+- 코치 이름/세대, 코치이 이름/세대, 기대 세대 목록 표시
+- 최대 5건 compact 표시 및 5건 초과 시 외 N건 표시
+- active 외 관계 상태 필터 사용 시 현재 선택한 관계 상태 기준임을 안내
+- 세대 배정 관리에서 수동 확인 및 수정하도록 안내
+
+Kept unchanged:
+- 자동 세대 동기화 기능은 추가하지 않음
+- profiles.generation_number 값 자동 변경 없음
+- coaching_relationships 데이터 변경 없음
+- API 변경 없음
+- DB query 변경 없음
+- DB schema 변경 없음
+- migration 변경 없음
+- RLS 변경 없음
+- 인증/권한 로직 변경 없음
+
+Do not regress:
+- /admin/coaching-genealogy genealogy tree print layout starts on first page
+- genealogy tree screen display
+- node selection
+- filters and tabs
+- print button flow
+- generation mismatch warning count and compact detail list
+- manual generation assignment flow
+- no automatic generation synchronization
+- no automatic profiles.generation_number update
+- no coaching_relationships data mutation
+
+Validation:
+- `npm run typecheck`: passed
+- `npm run build`: passed
+- 수동 확인 결과 정상 작동 확인
+
 ## LOCK - Global Timezone Phase 2 Main Merge and Production Verification
 
 Completed date:
