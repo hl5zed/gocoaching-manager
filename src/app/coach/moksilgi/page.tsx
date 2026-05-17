@@ -332,8 +332,12 @@ export default async function CoachMoksilgiPage({
             </div>
             <PrintPageButton
               fileName={`moksilgi-coach-list-${year}`}
-              label="코치이 목실기 목록 출력"
+              label="코치이 목실기 목록 인쇄/PDF 저장"
             />
+            <p className="print-hidden text-sm leading-6 text-slate-500 sm:max-w-xs sm:text-right">
+              모바일 브라우저에서는 PDF 저장 옵션이 기기와 브라우저에 따라
+              다르게 표시될 수 있습니다.
+            </p>
           </CardHeader>
         </Card>
 
