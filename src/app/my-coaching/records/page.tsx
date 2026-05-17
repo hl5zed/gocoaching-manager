@@ -930,7 +930,8 @@ export default async function MyCoachingRecordsPage({
                 필터가 없으면 최근 하루/주간/월간 기록 중심으로 출력됩니다.
                 브라우저 인쇄창에서 PDF 저장을 선택할 수 있습니다.
                 모바일 브라우저에서는 PDF 저장 옵션이 기기와 브라우저에 따라
-                다르게 표시될 수 있습니다.
+                다르게 표시될 수 있습니다. 인쇄창이 열리지 않으면 Safari 또는
+                Chrome에서 다시 열어 주세요.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
