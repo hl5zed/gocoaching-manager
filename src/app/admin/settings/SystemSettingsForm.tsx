@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, FieldLabel, FieldText, SelectInput } from "@/components/ui";
 import type { GlobalSystemSettings, SystemDefaultLocale } from "@/lib/api/admin/system-settings";
 import type { PrintOptions } from "@/lib/print/print-options";
+import { TIMEZONE_OPTIONS } from "@/lib/timezone";
 
 type CountryOption = {
   id: string;
@@ -45,6 +46,9 @@ export function SystemSettingsForm({
   const [defaultCountryId, setDefaultCountryId] = useState(
     initialSettings.default_country_id ?? "",
   );
+  const [defaultTimezone, setDefaultTimezone] = useState(
+    initialSettings.default_timezone,
+  );
   const [invitationExpiresInDays, setInvitationExpiresInDays] = useState(
     String(initialSettings.invitation_expires_in_days),
   );
@@ -78,6 +82,7 @@ export function SystemSettingsForm({
         body: JSON.stringify({
           default_locale: defaultLocale,
           default_country_id: defaultCountryId || null,
+          default_timezone: defaultTimezone,
           invitation_expires_in_days: Number(invitationExpiresInDays),
           print_options: printOptions,
         }),
@@ -92,6 +97,7 @@ export function SystemSettingsForm({
       if (payload?.settings) {
         setDefaultLocale(payload.settings.default_locale);
         setDefaultCountryId(payload.settings.default_country_id ?? "");
+        setDefaultTimezone(payload.settings.default_timezone);
         setInvitationExpiresInDays(String(payload.settings.invitation_expires_in_days));
         setPrintOptions(payload.settings.print_options);
       }
@@ -114,7 +120,8 @@ export function SystemSettingsForm({
             <div className="min-w-0">
               <CardTitle>기본 운영 설정</CardTitle>
               <CardDescription>
-                기본 언어, 기본 국가, 초대 만료 기간을 저장합니다.
+                기본 언어, 기본 국가, 시스템 기본 시간대, 초대 만료 기간을
+                저장합니다.
               </CardDescription>
             </div>
             <Badge tone="info">저장 가능</Badge>
@@ -133,7 +140,7 @@ export function SystemSettingsForm({
             </div>
           ) : null}
 
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 lg:grid-cols-4">
             <div className="space-y-2">
               <FieldLabel htmlFor="default_locale">기본 언어</FieldLabel>
               <SelectInput
@@ -165,6 +172,25 @@ export function SystemSettingsForm({
               </SelectInput>
               <p className="text-xs leading-5 text-slate-500">
                 저장되며, 실제 적용 화면은 단계적으로 연결 예정입니다.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <FieldLabel htmlFor="default_timezone">시스템 기본 시간대</FieldLabel>
+              <SelectInput
+                id="default_timezone"
+                value={defaultTimezone}
+                onChange={(event) => setDefaultTimezone(event.target.value)}
+              >
+                {TIMEZONE_OPTIONS.map((timezone) => (
+                  <option key={timezone} value={timezone}>
+                    {timezone}
+                  </option>
+                ))}
+              </SelectInput>
+              <p className="text-xs leading-5 text-slate-500">
+                사용자 또는 조직 시간대가 없을 때 적용되는 시스템 기본
+                시간대입니다.
               </p>
             </div>
 

@@ -8,10 +8,12 @@ import {
 import { requireAdminProfile } from "@/lib/auth/require-admin-profile";
 import { validatePrintOptionsInput } from "@/lib/print/print-options";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { normalizeTimezone } from "@/lib/timezone";
 
 const ALLOWED_SETTING_KEYS = [
   "default_locale",
   "default_country_id",
+  "default_timezone",
   "invitation_expires_in_days",
   "print_options",
 ] as const;
@@ -167,6 +169,25 @@ export async function PATCH(request: NextRequest) {
     }
 
     input.default_country_id = countryId;
+  }
+
+  if ("default_timezone" in body) {
+    if (typeof body.default_timezone !== "string") {
+      return NextResponse.json(
+        { error: "시스템 기본 시간대를 확인해 주세요." },
+        { status: 400 },
+      );
+    }
+
+    const timezone = normalizeTimezone(body.default_timezone);
+    if (!timezone) {
+      return NextResponse.json(
+        { error: "시스템 기본 시간대는 올바른 IANA timezone이어야 합니다." },
+        { status: 400 },
+      );
+    }
+
+    input.default_timezone = timezone;
   }
 
   if ("invitation_expires_in_days" in body) {

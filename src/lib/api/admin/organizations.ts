@@ -21,6 +21,7 @@ export type AdminOrganizationSummary = {
   organization_type: OrganizationType;
   organization_type_label: string;
   name: string;
+  default_timezone: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -39,6 +40,7 @@ type RawOrganizationRow = {
   country_id: string;
   organization_type: OrganizationType;
   name: string;
+  default_timezone: string | null;
   is_active: boolean | null;
   created_at: string;
   updated_at: string;
@@ -106,7 +108,7 @@ export async function getAdminOrganizations(
   let query = client
     .from("organizations")
     .select(
-      "id, country_id, organization_type, name, is_active, created_at, updated_at, deleted_at",
+      "id, country_id, organization_type, name, default_timezone, is_active, created_at, updated_at, deleted_at",
     )
     .is("deleted_at", null)
     .order("name", { ascending: true });
@@ -155,6 +157,7 @@ export async function getAdminOrganizations(
           organization.organization_type,
         ),
         name: organization.name,
+        default_timezone: organization.default_timezone,
         is_active: organization.is_active !== false,
         created_at: organization.created_at,
         updated_at: organization.updated_at,

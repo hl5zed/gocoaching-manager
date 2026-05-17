@@ -1,4 +1,12 @@
 export const DEFAULT_TIMEZONE = "Asia/Bangkok";
+export const TIMEZONE_OPTIONS = [
+  "Asia/Bangkok",
+  "Asia/Seoul",
+  "UTC",
+  "America/Los_Angeles",
+  "America/New_York",
+  "Europe/London",
+] as const;
 
 type DateParts = {
   day: number;
@@ -6,7 +14,7 @@ type DateParts = {
   year: number;
 };
 
-function isValidTimezone(timezone: string) {
+export function isValidTimezone(timezone: string) {
   try {
     new Intl.DateTimeFormat("en-US", { timeZone: timezone }).format();
     return true;
@@ -15,9 +23,26 @@ function isValidTimezone(timezone: string) {
   }
 }
 
+export function normalizeTimezone(timezone?: string | null) {
+  const trimmed = timezone?.trim();
+  return trimmed && isValidTimezone(trimmed) ? trimmed : null;
+}
+
 export function getEffectiveTimezone(profileTimezone?: string | null) {
-  const timezone = profileTimezone?.trim();
-  return timezone && isValidTimezone(timezone) ? timezone : DEFAULT_TIMEZONE;
+  return normalizeTimezone(profileTimezone) ?? DEFAULT_TIMEZONE;
+}
+
+export function resolveTimezoneFallback(
+  profileTimezone?: string | null,
+  organizationTimezone?: string | null,
+  systemTimezone?: string | null,
+) {
+  return (
+    normalizeTimezone(profileTimezone) ??
+    normalizeTimezone(organizationTimezone) ??
+    normalizeTimezone(systemTimezone) ??
+    DEFAULT_TIMEZONE
+  );
 }
 
 export function getClientTimezone() {
