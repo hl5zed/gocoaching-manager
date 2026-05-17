@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { getSession } from "@/lib/auth/getSession";
 import { getMyProfile } from "@/lib/api/profile/me";
 import { updateMyProfile } from "@/lib/api/profile/update-me";
+import { DEFAULT_TIMEZONE, TIMEZONE_OPTIONS } from "@/lib/timezone";
 import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
 
 export const dynamic = "force-dynamic";
@@ -91,6 +92,7 @@ export default async function EditProfilePage({
       display_name: formData.get("display_name"),
       phone: formData.get("phone"),
       ministry_position: formData.get("ministry_position"),
+      timezone: formData.get("timezone"),
     });
 
     if (!updateResult.ok) {
@@ -109,7 +111,7 @@ export default async function EditProfilePage({
         </p>
         <h1 className="mt-3 text-3xl font-semibold">프로필 수정</h1>
         <p className="mt-4 leading-7 text-slate-600">
-          표시 이름, 전화번호, 소속 직분만 직접 수정할 수 있습니다.
+          표시 이름, 전화번호, 소속 직분, 개인 시간대를 직접 수정할 수 있습니다.
           소속/역할/세대 정보 변경은 관리자에게 요청해 주세요.
         </p>
 
@@ -253,6 +255,34 @@ export default async function EditProfilePage({
                     placeholder="예: 목회자, 선교사, 장로, 집사"
                     type="text"
                   />
+                </div>
+              </section>
+
+              <section className="space-y-4 border-t border-slate-200 pt-5">
+                <h2 className="text-lg font-semibold">시간대 설정</h2>
+                <div>
+                  <label
+                    className="block text-sm font-medium text-slate-700"
+                    htmlFor="timezone"
+                  >
+                    개인 시간대
+                  </label>
+                  <select
+                    className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                    defaultValue={result.data.profile.timezone ?? DEFAULT_TIMEZONE}
+                    id="timezone"
+                    name="timezone"
+                  >
+                    {TIMEZONE_OPTIONS.map((timezone) => (
+                      <option key={timezone} value={timezone}>
+                        {timezone}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    개인 시간대는 하루 기록, 주간 기록, 월간 회고, 보고서
+                    기준 날짜 계산에 우선 적용됩니다.
+                  </p>
                 </div>
               </section>
 

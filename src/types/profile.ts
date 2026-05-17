@@ -31,8 +31,10 @@ export type SafeProfile = Pick<
 
 export type SelfUpdatePayload = {
   display_name?: string | null;
+  preferred_language?: string | null;
   phone?: string | null;
   ministry_position?: string | null;
+  timezone?: string | null;
 };
 
 export type ActiveRoleSlim = {

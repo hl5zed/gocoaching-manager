@@ -227,6 +227,10 @@ export default async function ProfilePage() {
                       label="소속 직분"
                       value={displayValue(result.data.profile.ministry_position)}
                     />
+                    <DetailItem
+                      label="개인 시간대"
+                      value={displayValue(result.data.profile.timezone)}
+                    />
                   </dl>
                 </section>
 

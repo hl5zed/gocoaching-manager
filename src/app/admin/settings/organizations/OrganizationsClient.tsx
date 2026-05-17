@@ -6,6 +6,7 @@ import type {
   AdminOrganizationCountryOption,
   AdminOrganizationSummary,
 } from "@/lib/api/admin/organizations";
+import { TIMEZONE_OPTIONS } from "@/lib/timezone";
 import { ORGANIZATION_TYPES, type OrganizationType } from "@/types/database";
 
 const ORGANIZATION_TYPE_LABELS: Record<OrganizationType, string> = {
@@ -102,6 +103,7 @@ function validateOrganizationInput(
   name: string,
   countryId: string,
   organizationType: string,
+  defaultTimezone: string,
 ) {
   const normalizedName = name.trim();
 
@@ -126,9 +128,20 @@ function validateOrganizationInput(
     };
   }
 
+  if (
+    defaultTimezone &&
+    !TIMEZONE_OPTIONS.includes(defaultTimezone as (typeof TIMEZONE_OPTIONS)[number])
+  ) {
+    return {
+      ok: false as const,
+      message: "기관/조직 기본 시간대를 확인해 주세요.",
+    };
+  }
+
   return {
     ok: true as const,
     countryId,
+    defaultTimezone: defaultTimezone || null,
     name: normalizedName,
     organizationType,
   };
@@ -145,11 +158,13 @@ export function OrganizationsClient({
   const [countryId, setCountryId] = useState("");
   const [organizationType, setOrganizationType] =
     useState<OrganizationType>("mission_body");
+  const [defaultTimezone, setDefaultTimezone] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editCountryId, setEditCountryId] = useState("");
   const [editOrganizationType, setEditOrganizationType] =
     useState<OrganizationType>("mission_body");
+  const [editDefaultTimezone, setEditDefaultTimezone] = useState("");
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(loadError);
@@ -194,6 +209,7 @@ export function OrganizationsClient({
       name,
       countryId,
       organizationType,
+      defaultTimezone,
     );
 
     if (!validation.ok) {
@@ -211,6 +227,7 @@ export function OrganizationsClient({
         },
         body: JSON.stringify({
           country_id: validation.countryId,
+          default_timezone: validation.defaultTimezone,
           name: validation.name,
           organization_type: validation.organizationType,
         }),
@@ -226,6 +243,7 @@ export function OrganizationsClient({
       setName("");
       setCountryId("");
       setOrganizationType("mission_body");
+      setDefaultTimezone("");
       setMessage(data.message ?? "기관 및 단체가 추가되었습니다.");
       router.refresh();
     } catch (error) {
@@ -244,6 +262,7 @@ export function OrganizationsClient({
     setEditName(organization.name);
     setEditCountryId(organization.country_id);
     setEditOrganizationType(organization.organization_type);
+    setEditDefaultTimezone(organization.default_timezone ?? "");
     setMessage(null);
     setErrorMessage(null);
   }
@@ -253,6 +272,7 @@ export function OrganizationsClient({
     setEditName("");
     setEditCountryId("");
     setEditOrganizationType("mission_body");
+    setEditDefaultTimezone("");
   }
 
   async function handleUpdate(organizationId: string) {
@@ -263,6 +283,7 @@ export function OrganizationsClient({
       editName,
       editCountryId,
       editOrganizationType,
+      editDefaultTimezone,
     );
 
     if (!validation.ok) {
@@ -280,6 +301,7 @@ export function OrganizationsClient({
         },
         body: JSON.stringify({
           country_id: validation.countryId,
+          default_timezone: validation.defaultTimezone,
           id: organizationId,
           name: validation.name,
           organization_type: validation.organizationType,
@@ -399,7 +421,7 @@ export function OrganizationsClient({
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_220px_240px_auto] lg:items-end">
+        <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_180px_220px_220px_auto] lg:items-end">
           <label className="grid gap-2">
             <span className="text-sm font-medium text-slate-700">
               기관 및 단체명
@@ -446,6 +468,26 @@ export function OrganizationsClient({
               ))}
             </select>
           </label>
+          <label className="grid gap-2">
+            <span className="text-sm font-medium text-slate-700">
+              기관/조직 기본 시간대
+            </span>
+            <select
+              className="rounded-md border border-slate-300 px-3 py-2"
+              onChange={(event) => setDefaultTimezone(event.target.value)}
+              value={defaultTimezone}
+            >
+              <option value="">선택 안 함</option>
+              {TIMEZONE_OPTIONS.map((timezone) => (
+                <option key={timezone} value={timezone}>
+                  {timezone}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs leading-5 text-slate-500">
+              개인 시간대가 없을 때 이 조직 기본값을 사용합니다.
+            </span>
+          </label>
           <button
             className="rounded-md bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
             disabled={pendingAction !== null}
@@ -474,12 +516,13 @@ export function OrganizationsClient({
         </div>
       ) : (
         <div className="mt-8 overflow-x-auto rounded-md border border-slate-200 bg-white">
-          <table className="w-full min-w-[1120px] border-collapse text-left text-sm">
+          <table className="w-full min-w-[1280px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
                 <th className="px-4 py-3 font-medium">기관명</th>
                 <th className="px-4 py-3 font-medium">기관 유형</th>
                 <th className="px-4 py-3 font-medium">소속 국가</th>
+                <th className="px-4 py-3 font-medium">기본 시간대</th>
                 <th className="px-4 py-3 font-medium">사용 여부</th>
                 <th className="px-4 py-3 font-medium">생성일</th>
                 <th className="px-4 py-3 font-medium">최근 수정일</th>
@@ -545,6 +588,26 @@ export function OrganizationsClient({
                         </select>
                       ) : (
                         formatCountry(countryMap.get(organization.country_id))
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {isEditing ? (
+                        <select
+                          className="w-full rounded-md border border-slate-300 px-3 py-2"
+                          onChange={(event) =>
+                            setEditDefaultTimezone(event.target.value)
+                          }
+                          value={editDefaultTimezone}
+                        >
+                          <option value="">선택 안 함</option>
+                          {TIMEZONE_OPTIONS.map((timezone) => (
+                            <option key={timezone} value={timezone}>
+                              {timezone}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        organization.default_timezone ?? "시스템 기본값"
                       )}
                     </td>
                     <td className="px-4 py-3">

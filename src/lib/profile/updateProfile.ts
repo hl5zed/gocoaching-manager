@@ -1,20 +1,27 @@
 import { getSession } from "@/lib/auth/getSession";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { normalizeTimezone } from "@/lib/timezone";
 import type { SafeProfile, SelfUpdatePayload } from "@/types/profile";
 import type { User } from "@/types/auth";
 
 const allowedProfileFields = [
   "display_name",
+  "preferred_language",
   "phone",
   "ministry_position",
+  "timezone",
 ] as const;
 
 type AllowedProfileField = (typeof allowedProfileFields)[number];
 
 type AuditProfileValues = Pick<
   SafeProfile,
-  "display_name" | "phone" | "ministry_position"
+  | "display_name"
+  | "preferred_language"
+  | "phone"
+  | "ministry_position"
+  | "timezone"
 >;
 
 export type UpdateProfileErrorCode =
@@ -79,6 +86,26 @@ function isAllowedProfileField(field: string): field is AllowedProfileField {
 
 function validateUpdateValue(field: string, value: unknown) {
   if (value === null || typeof value === "string") {
+    if (field === "preferred_language") {
+      if (value === null || value === "ko" || value === "en" || value === "th") {
+        return null;
+      }
+
+      return {
+        code: "INVALID_LANGUAGE" as const,
+        message: "기본 언어는 ko, en, th 중에서 선택해 주세요.",
+      };
+    }
+
+    if (field === "timezone" && typeof value === "string" && value.trim()) {
+      if (!normalizeTimezone(value)) {
+        return {
+          code: "INVALID_PROFILE_FIELD_VALUE" as const,
+          message: "시간대는 올바른 IANA timezone으로 입력해 주세요.",
+        };
+      }
+    }
+
     if (
       field === "ministry_position" &&
       typeof value === "string" &&
@@ -132,12 +159,14 @@ function buildUpdatePayload(body: Record<string, unknown>) {
     }
 
     const value = body[field];
-    payload[field] =
-      typeof value === "string"
-        ? value.trim().length > 0
+    const normalizedValue =
+      field === "timezone" && typeof value === "string"
+        ? normalizeTimezone(value)
+        : typeof value === "string" && value.trim().length > 0
           ? value.trim()
-          : null
-        : null;
+          : null;
+
+    payload[field] = normalizedValue;
   }
 
   return { payload, error: null };
@@ -146,8 +175,10 @@ function buildUpdatePayload(body: Record<string, unknown>) {
 function getAuditValues(profile: SafeProfile): AuditProfileValues {
   return {
     display_name: profile.display_name,
+    preferred_language: profile.preferred_language,
     phone: profile.phone,
     ministry_position: profile.ministry_position,
+    timezone: profile.timezone,
   };
 }
 
@@ -193,7 +224,7 @@ export async function updateProfile(body: unknown): Promise<UpdateProfileResult>
       error: {
         code: "INVALID_BODY",
         message:
-          "수정할 필드가 없습니다. display_name, phone, ministry_position 중 하나를 보내 주세요.",
+          "수정할 필드가 없습니다. display_name, preferred_language, phone, ministry_position, timezone 중 하나를 보내 주세요.",
       },
     };
   }

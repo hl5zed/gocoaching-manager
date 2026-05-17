@@ -1,11 +1,13 @@
 import { getSession } from "@/lib/auth/getSession";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { normalizeTimezone } from "@/lib/timezone";
 import type { ProfileUpdate } from "@/types/database";
 
 export type UpdateMyProfileInput = {
   display_name?: unknown;
   phone?: unknown;
   ministry_position?: unknown;
+  timezone?: unknown;
 };
 
 export type UpdateMyProfileResult =
@@ -21,6 +23,7 @@ export type UpdateMyProfileResult =
           | "INVALID_DISPLAY_NAME"
           | "INVALID_PHONE"
           | "INVALID_MINISTRY_POSITION"
+          | "INVALID_TIMEZONE"
           | "PROFILE_UPDATE_FAILED";
         message: string;
       };
@@ -33,6 +36,10 @@ type NormalizedTextField =
 type ProfileIdRecord = {
   id: string;
 };
+
+type NormalizedTimezoneField =
+  | { ok: true; value: string | null }
+  | { ok: false };
 
 function normalizeTextField(value: unknown, maxLength: number) {
   if (value === undefined || value === null) {
@@ -62,6 +69,38 @@ function normalizeTextField(value: unknown, maxLength: number) {
   } satisfies NormalizedTextField;
 }
 
+function normalizeTimezoneField(value: unknown) {
+  if (value === undefined || value === null) {
+    return {
+      ok: true as const,
+      value: null,
+    } satisfies NormalizedTimezoneField;
+  }
+
+  if (typeof value !== "string") {
+    return { ok: false as const } satisfies NormalizedTimezoneField;
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return {
+      ok: true as const,
+      value: null,
+    } satisfies NormalizedTimezoneField;
+  }
+
+  const timezone = normalizeTimezone(trimmed);
+  if (!timezone) {
+    return { ok: false as const } satisfies NormalizedTimezoneField;
+  }
+
+  return {
+    ok: true as const,
+    value: timezone,
+  } satisfies NormalizedTimezoneField;
+}
+
 export async function updateMyProfile(
   input: UpdateMyProfileInput,
 ): Promise<UpdateMyProfileResult> {
@@ -83,6 +122,7 @@ export async function updateMyProfile(
     input.ministry_position,
     100,
   );
+  const normalizedTimezone = normalizeTimezoneField(input.timezone);
 
   if (!normalizedDisplayName.ok) {
     return {
@@ -110,6 +150,16 @@ export async function updateMyProfile(
       error: {
         code: "INVALID_MINISTRY_POSITION",
         message: "소속 직분은 100자 이하로 입력해 주세요.",
+      },
+    };
+  }
+
+  if (!normalizedTimezone.ok) {
+    return {
+      ok: false,
+      error: {
+        code: "INVALID_TIMEZONE",
+        message: "개인 시간대는 올바른 IANA timezone으로 선택해 주세요.",
       },
     };
   }
@@ -143,7 +193,11 @@ export async function updateMyProfile(
       update: (
         values: Pick<
           ProfileUpdate,
-          "display_name" | "phone" | "ministry_position" | "updated_at"
+          | "display_name"
+          | "phone"
+          | "ministry_position"
+          | "timezone"
+          | "updated_at"
         >,
       ) => {
         eq: (
@@ -199,11 +253,16 @@ export async function updateMyProfile(
 
     const payload: Pick<
       ProfileUpdate,
-      "display_name" | "phone" | "ministry_position" | "updated_at"
+      | "display_name"
+      | "phone"
+      | "ministry_position"
+      | "timezone"
+      | "updated_at"
     > = {
       display_name: normalizedDisplayName.value,
       phone: normalizedPhone.value,
       ministry_position: normalizedMinistryPosition.value,
+      timezone: normalizedTimezone.value,
       updated_at: new Date().toISOString(),
     };
 

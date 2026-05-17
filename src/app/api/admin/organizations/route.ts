@@ -8,10 +8,12 @@ import {
   type AdminOrganizationSummary,
 } from "@/lib/api/admin/organizations";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { normalizeTimezone } from "@/lib/timezone";
 import type { OrganizationType } from "@/types/database";
 
 type OrganizationBody = {
   country_id?: unknown;
+  default_timezone?: unknown;
   id?: unknown;
   is_active?: unknown;
   name?: unknown;
@@ -32,6 +34,7 @@ type CountryRow = {
 type OrganizationMutationRow = {
   id: string;
   country_id: string;
+  default_timezone: string | null;
   organization_type: OrganizationType;
   name: string;
   is_active: boolean;
@@ -42,6 +45,7 @@ type OrganizationMutationRow = {
 
 type OrganizationInsertValues = {
   country_id: string;
+  default_timezone: string | null;
   is_active: boolean;
   name: string;
   organization_type: OrganizationType;
@@ -49,6 +53,7 @@ type OrganizationInsertValues = {
 
 type OrganizationUpdateValues = {
   country_id?: string;
+  default_timezone?: string | null;
   is_active?: boolean;
   name?: string;
   organization_type?: OrganizationType;
@@ -134,6 +139,29 @@ function normalizeOrganizationType(value: unknown) {
 
   const normalized = value.trim();
   return isOrganizationType(normalized) ? normalized : null;
+}
+
+function normalizeOptionalTimezone(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return { ok: true as const, value: null };
+  }
+
+  if (typeof value !== "string") {
+    return {
+      ok: false as const,
+      message: "기관/조직 기본 시간대를 확인해 주세요.",
+    };
+  }
+
+  const timezone = normalizeTimezone(value);
+  if (!timezone) {
+    return {
+      ok: false as const,
+      message: "기관/조직 기본 시간대는 올바른 IANA timezone이어야 합니다.",
+    };
+  }
+
+  return { ok: true as const, value: timezone };
 }
 
 async function loadExistingOrganizations() {
@@ -256,6 +284,7 @@ function toOrganizationSummary(
       organization_type: row.organization_type,
       organization_type_label: getOrganizationTypeLabel(row.organization_type),
       name: row.name,
+      default_timezone: row.default_timezone,
       is_active: row.is_active,
       created_at: row.created_at,
       updated_at: row.updated_at,
@@ -275,6 +304,7 @@ function toOrganizationSummary(
     organization_type: row.organization_type,
     organization_type_label: getOrganizationTypeLabel(row.organization_type),
     name: row.name,
+    default_timezone: row.default_timezone,
     is_active: row.is_active,
     created_at: row.created_at,
     updated_at: row.updated_at,
@@ -330,6 +360,7 @@ export async function POST(request: Request) {
   const name = normalizeRequiredText(body.name);
   const countryId = normalizeUuid(body.country_id);
   const organizationType = normalizeOrganizationType(body.organization_type);
+  const defaultTimezone = normalizeOptionalTimezone(body.default_timezone);
 
   if (!name) {
     return jsonError(400, "INVALID_NAME", "기관 및 단체명을 입력해 주세요.");
@@ -341,6 +372,10 @@ export async function POST(request: Request) {
 
   if (!organizationType) {
     return jsonError(400, "INVALID_ORGANIZATION_TYPE", "기관 유형을 확인해 주세요.");
+  }
+
+  if (!defaultTimezone.ok) {
+    return jsonError(400, "INVALID_TIMEZONE", defaultTimezone.message);
   }
 
   const countryCheck = await verifyCountry(countryId);
@@ -379,12 +414,13 @@ export async function POST(request: Request) {
   const { data, error } = await organizationsTable
     .insert({
       country_id: countryId,
+      default_timezone: defaultTimezone.value,
       organization_type: organizationType,
       name,
       is_active: true,
     })
     .select(
-      "id, country_id, organization_type, name, is_active, created_at, updated_at, deleted_at",
+      "id, country_id, organization_type, name, default_timezone, is_active, created_at, updated_at, deleted_at",
     )
     .single();
 
@@ -446,6 +482,7 @@ export async function PATCH(request: Request) {
 
   const hasName = Object.hasOwn(body, "name");
   const hasCountryId = Object.hasOwn(body, "country_id");
+  const hasDefaultTimezone = Object.hasOwn(body, "default_timezone");
   const hasOrganizationType = Object.hasOwn(body, "organization_type");
   const hasIsActive = Object.hasOwn(body, "is_active");
   let nextName = "";
@@ -499,6 +536,16 @@ export async function PATCH(request: Request) {
     updateValues.organization_type = organizationType;
   }
 
+  if (hasDefaultTimezone) {
+    const defaultTimezone = normalizeOptionalTimezone(body.default_timezone);
+
+    if (!defaultTimezone.ok) {
+      return jsonError(400, "INVALID_TIMEZONE", defaultTimezone.message);
+    }
+
+    updateValues.default_timezone = defaultTimezone.value;
+  }
+
   if (hasIsActive) {
     if (typeof body.is_active !== "boolean") {
       return jsonError(400, "INVALID_STATUS", "사용 여부 값을 확인해 주세요.");
@@ -507,7 +554,13 @@ export async function PATCH(request: Request) {
     updateValues.is_active = body.is_active;
   }
 
-  if (!hasName && !hasCountryId && !hasOrganizationType && !hasIsActive) {
+  if (
+    !hasName &&
+    !hasCountryId &&
+    !hasDefaultTimezone &&
+    !hasOrganizationType &&
+    !hasIsActive
+  ) {
     return jsonError(400, "EMPTY_UPDATE", "수정할 내용이 없습니다.");
   }
 
@@ -566,7 +619,7 @@ export async function PATCH(request: Request) {
     .update(updateValues)
     .eq("id", id)
     .select(
-      "id, country_id, organization_type, name, is_active, created_at, updated_at, deleted_at",
+      "id, country_id, organization_type, name, default_timezone, is_active, created_at, updated_at, deleted_at",
     )
     .single();
 

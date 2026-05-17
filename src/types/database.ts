@@ -1558,6 +1558,7 @@ type TablesMap = {
       country_id: string;
       organization_type: OrganizationType;
       name: string;
+      default_timezone: string | null;
       is_active: boolean;
       created_at: string;
       updated_at: string;
@@ -1568,6 +1569,7 @@ type TablesMap = {
       country_id: string;
       organization_type: OrganizationType;
       name: string;
+      default_timezone?: string | null;
       is_active?: boolean;
       created_at?: string;
       updated_at?: string;
@@ -1578,6 +1580,7 @@ type TablesMap = {
       country_id?: string;
       organization_type?: OrganizationType;
       name?: string;
+      default_timezone?: string | null;
       is_active?: boolean;
       created_at?: string;
       updated_at?: string;

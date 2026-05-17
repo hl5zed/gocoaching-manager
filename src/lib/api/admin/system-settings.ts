@@ -4,6 +4,7 @@ import {
   normalizePrintOptions,
   type PrintOptions,
 } from "@/lib/print/print-options";
+import { DEFAULT_TIMEZONE, normalizeTimezone } from "@/lib/timezone";
 import type { OrganizationType } from "@/types/database";
 import { getOrganizationTypeLabel } from "@/lib/api/admin/organizations";
 
@@ -35,6 +36,7 @@ export type InvitationOrganizationDefaultRoleOption = Pick<
 export type GlobalSystemSettings = {
   default_locale: SystemDefaultLocale;
   default_country_id: string | null;
+  default_timezone: string;
   invitation_expires_in_days: number;
   print_options: PrintOptions;
 };
@@ -79,6 +81,7 @@ type RawCountry = {
 const DEFAULT_GLOBAL_SYSTEM_SETTINGS: GlobalSystemSettings = {
   default_locale: "ko",
   default_country_id: null,
+  default_timezone: DEFAULT_TIMEZONE,
   invitation_expires_in_days: 7,
   print_options: DEFAULT_PRINT_OPTIONS,
 };
@@ -104,6 +107,11 @@ const SETTING_META: Record<
   default_country_id: {
     value_type: "uuid",
     description: "Global default country used by administrative forms.",
+  },
+  default_timezone: {
+    value_type: "timezone",
+    description:
+      "Global default timezone used when profile and organization timezone are not set.",
   },
   invitation_expires_in_days: {
     value_type: "number",
@@ -173,6 +181,14 @@ function parseSettings(rows: RawSystemSetting[] | null): GlobalSystemSettings {
           : null;
     }
 
+    if (row.key === "default_timezone") {
+      const timezone = row.value.timezone;
+      if (typeof timezone === "string") {
+        settings.default_timezone =
+          normalizeTimezone(timezone) ?? DEFAULT_TIMEZONE;
+      }
+    }
+
     if (row.key === "invitation_expires_in_days") {
       const days = row.value.days;
       if (
@@ -200,6 +216,10 @@ function toSettingValue(key: keyof GlobalSystemSettings, value: GlobalSystemSett
 
   if (key === "default_country_id") {
     return { country_id: value };
+  }
+
+  if (key === "default_timezone") {
+    return { timezone: value };
   }
 
   if (key === "print_options") {
