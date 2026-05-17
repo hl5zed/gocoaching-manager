@@ -25,6 +25,7 @@ export type MyProfileData = {
         | "organization_id"
         | "church_id"
         | "ministry_position"
+        | "timezone"
         | "generation_number"
         | "status"
         | "created_at"
@@ -64,6 +65,7 @@ type ProfileRecord = Pick<
   | "organization_id"
   | "church_id"
   | "ministry_position"
+  | "timezone"
   | "generation_number"
   | "status"
   | "created_at"
@@ -105,7 +107,7 @@ export async function getMyProfile(): Promise<MyProfileResult> {
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select(
-        "id, email, full_name, display_name, phone, primary_role, country_id, organization_id, church_id, ministry_position, generation_number, status, created_at, updated_at",
+        "id, email, full_name, display_name, phone, primary_role, country_id, organization_id, church_id, ministry_position, timezone, generation_number, status, created_at, updated_at",
       )
       .eq("auth_user_id", session.user.id)
       .is("deleted_at", null)
