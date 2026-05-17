@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  getClientTimezone,
+  getCurrentMonthInTimezone,
+  getCurrentYearInTimezone,
+} from "@/lib/timezone";
 import { isValidNumberInRange } from "@/lib/validation/common";
 
 type MonthlyReflectionStatus = "draft" | "submitted" | "reviewed";
@@ -39,24 +44,29 @@ type FormState = {
   status: MonthlyReflectionStatus;
 };
 
-const currentDate = new Date();
-const initialFormState: FormState = {
-  year: String(currentDate.getFullYear()),
-  month: String(currentDate.getMonth() + 1),
-  summary: "",
-  growth_points: "",
-  difficulty: "",
-  next_month_plan: "",
-  visibility: "private",
-  shared_with_coach: false,
-  status: "draft",
-};
+function createInitialFormState(): FormState {
+  const timezone = getClientTimezone();
 
-const emptyFormState: FormState = {
-  ...initialFormState,
-  year: "",
-  month: "",
-};
+  return {
+    year: String(getCurrentYearInTimezone(timezone)),
+    month: String(getCurrentMonthInTimezone(timezone)),
+    summary: "",
+    growth_points: "",
+    difficulty: "",
+    next_month_plan: "",
+    visibility: "private",
+    shared_with_coach: false,
+    status: "draft",
+  };
+}
+
+function createEmptyFormState(): FormState {
+  return {
+    ...createInitialFormState(),
+    year: "",
+    month: "",
+  };
+}
 
 const statusLabels: Record<MonthlyReflectionStatus, string> = {
   draft: "임시저장",
@@ -196,7 +206,7 @@ function getSafeStatus(value: string): MonthlyReflectionStatus {
 
 export function MonthlyReflectionsClient() {
   const [records, setRecords] = useState<MonthlyReflection[]>([]);
-  const [form, setForm] = useState<FormState>(initialFormState);
+  const [form, setForm] = useState<FormState>(() => createInitialFormState());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -316,12 +326,12 @@ export function MonthlyReflectionsClient() {
   }, []);
 
   function resetForm() {
-    setForm(initialFormState);
+    setForm(createInitialFormState());
     setEditingId(null);
   }
 
   function resetFormAfterSave() {
-    setForm(emptyFormState);
+    setForm(createEmptyFormState());
     setEditingId(null);
   }
 

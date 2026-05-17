@@ -21,6 +21,12 @@ import {
   TextInput,
 } from "@/components/ui";
 import { I18nText } from "@/lib/i18n/I18nProvider";
+import {
+  DEFAULT_TIMEZONE,
+  formatDateInTimezone,
+  getCurrentMonthInTimezone,
+  getCurrentYearInTimezone,
+} from "@/lib/timezone";
 import { MoksilgiProgressClientTable } from "./MoksilgiProgressClientTable";
 
 export const dynamic = "force-dynamic";
@@ -37,12 +43,12 @@ function textParam(value: string | string[] | undefined) {
 }
 
 function parseYear(params: Record<string, string | string[] | undefined>) {
-  const today = new Date();
-  const year = Number(firstParam(params.year) ?? today.getFullYear());
+  const currentYear = getCurrentYearInTimezone(DEFAULT_TIMEZONE);
+  const year = Number(firstParam(params.year) ?? currentYear);
 
   return Number.isInteger(year) && year >= 2000 && year <= 2100
     ? year
-    : today.getFullYear();
+    : currentYear;
 }
 
 function parseFilters(
@@ -78,16 +84,16 @@ function monthRate(row: CoachMakerMoksilgiProgressRow, month: number) {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-function currentMonthCutoff(year: number) {
-  const today = new Date();
+function currentMonthCutoff(year: number, timezone: string) {
+  const currentYear = getCurrentYearInTimezone(timezone);
 
-  if (year < today.getFullYear()) return 12;
-  if (year > today.getFullYear()) return 0;
-  return today.getMonth() + 1;
+  if (year < currentYear) return 12;
+  if (year > currentYear) return 0;
+  return getCurrentMonthInTimezone(timezone);
 }
 
-function upToCurrentRate(row: CoachMakerMoksilgiProgressRow, year: number) {
-  const cutoff = currentMonthCutoff(year);
+function upToCurrentRate(row: CoachMakerMoksilgiProgressRow, year: number, timezone: string) {
+  const cutoff = currentMonthCutoff(year, timezone);
   if (cutoff <= 0) return 0;
 
   return average(MONTHS.slice(0, cutoff).map((month) => monthRate(row, month)));
@@ -98,14 +104,18 @@ function hasProgressInput(row: CoachMakerMoksilgiProgressRow) {
     || safeNumber(row.cumulative_rate) > 0;
 }
 
-function attentionCounts(rows: CoachMakerMoksilgiProgressRow[], year: number) {
+function attentionCounts(
+  rows: CoachMakerMoksilgiProgressRow[],
+  year: number,
+  timezone: string,
+) {
   return rows.reduce(
     (counts, row) => {
       if (!hasProgressInput(row)) {
         return { ...counts, missing: counts.missing + 1 };
       }
 
-      if (upToCurrentRate(row, year) < 50) {
+      if (upToCurrentRate(row, year, timezone) < 50) {
         return { ...counts, attention: counts.attention + 1 };
       }
 
@@ -280,11 +290,12 @@ export default async function CoachMakerMoksilgiProgressPage({
   const filters = parseFilters(params);
   const initialMemberId = textParam(params.memberId);
   const result = await getCoachMakerMoksilgiProgress(filters);
+  const timezone = result.data?.timezone ?? DEFAULT_TIMEZONE;
   const statusCounts = result.data
     ? progressStatusCounts(result.data.rows)
     : { completed: 0, inProgress: 0, notStarted: 0 };
   const careCounts = result.data
-    ? attentionCounts(result.data.rows, result.data.year)
+    ? attentionCounts(result.data.rows, result.data.year, timezone)
     : { attention: 0, missing: 0 };
 
   if (result.error?.code === "UNAUTHORIZED") {
@@ -302,7 +313,10 @@ export default async function CoachMakerMoksilgiProgressPage({
             <I18nText k="moksilgi.reportYear" fallback="출력 연도" />: {filters.year}
           </p>
           <p>
-            <I18nText k="moksilgi.generatedAt" fallback="생성일" />: {new Date().toLocaleDateString("ko-KR")}
+            <I18nText k="moksilgi.generatedAt" fallback="생성일" />: {formatDateInTimezone(new Date(), timezone)}
+          </p>
+          <p>
+            기준 시간대: {timezone}
           </p>
         </div>
         <Card>

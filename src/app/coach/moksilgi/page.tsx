@@ -18,6 +18,11 @@ import {
   getCoachMoksilgi,
   type CoachMoksilgiItem,
 } from "@/lib/api/coach/moksilgi";
+import {
+  DEFAULT_TIMEZONE,
+  formatDateInTimezone,
+  getCurrentYearInTimezone,
+} from "@/lib/timezone";
 
 export const dynamic = "force-dynamic";
 
@@ -39,12 +44,12 @@ function firstParam(value: string | string[] | undefined) {
 }
 
 function parseYear(params: Record<string, string | string[] | undefined>) {
-  const today = new Date();
-  const year = Number(firstParam(params.year) ?? today.getFullYear());
+  const currentYear = getCurrentYearInTimezone(DEFAULT_TIMEZONE);
+  const year = Number(firstParam(params.year) ?? currentYear);
 
   return Number.isInteger(year) && year >= 2000 && year <= 2100
     ? year
-    : today.getFullYear();
+    : currentYear;
 }
 
 function formatPercent(value: number | null | undefined) {
@@ -53,7 +58,7 @@ function formatPercent(value: number | null | undefined) {
 }
 
 function formatDate(value: string | null) {
-  return value ? value.slice(0, 10) : "-";
+  return value ? formatDateInTimezone(value, DEFAULT_TIMEZONE) : "-";
 }
 
 function displayValue(value: string | number | null) {
@@ -315,7 +320,8 @@ export default async function CoachMoksilgiPage({
         <div className="print-report-title print-only">
           <h1>코치이 목실기 목록 보고서</h1>
           <p>출력 연도: {year}년</p>
-          <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
+          <p>생성일: {formatDateInTimezone(new Date(), DEFAULT_TIMEZONE)}</p>
+          <p>기준 시간대: {DEFAULT_TIMEZONE}</p>
         </div>
         <Card className="print-section mt-6">
           <CardHeader className="flex flex-col gap-4 border-b-0 sm:flex-row sm:items-start sm:justify-between">

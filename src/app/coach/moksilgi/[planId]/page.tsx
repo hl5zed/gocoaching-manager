@@ -21,6 +21,12 @@ import {
   type CoachMoksilgiGoalArea,
   type CoachMoksilgiSummaryRow,
 } from "@/lib/api/coach/moksilgi-detail";
+import {
+  DEFAULT_TIMEZONE,
+  formatDateInTimezone,
+  getCurrentMonthInTimezone,
+  getCurrentYearInTimezone,
+} from "@/lib/timezone";
 import type { Json } from "@/types/database";
 
 export const dynamic = "force-dynamic";
@@ -56,12 +62,12 @@ function firstParam(value: string | string[] | undefined) {
 }
 
 function parseYear(params: Record<string, string | string[] | undefined>) {
-  const today = new Date();
-  const year = Number(firstParam(params.year) ?? today.getFullYear());
+  const currentYear = getCurrentYearInTimezone(DEFAULT_TIMEZONE);
+  const year = Number(firstParam(params.year) ?? currentYear);
 
   return Number.isInteger(year) && year >= 2000 && year <= 2100
     ? year
-    : today.getFullYear();
+    : currentYear;
 }
 
 function formatPercent(value: number | null | undefined) {
@@ -70,7 +76,7 @@ function formatPercent(value: number | null | undefined) {
 }
 
 function formatDate(value: string | null) {
-  return value ? value.slice(0, 10) : "-";
+  return value ? formatDateInTimezone(value, DEFAULT_TIMEZONE) : "-";
 }
 
 function displayValue(value: string | number | null) {
@@ -362,9 +368,10 @@ function SummaryTable({
   rows: CoachMoksilgiSummaryRow[];
   year: number;
 }) {
-  const today = new Date();
   const currentMonth =
-    today.getFullYear() === year ? today.getMonth() + 1 : null;
+    getCurrentYearInTimezone(DEFAULT_TIMEZONE) === year
+      ? getCurrentMonthInTimezone(DEFAULT_TIMEZONE)
+      : null;
   const allRows = [...rows, cumulativeRow];
 
   return (
@@ -493,7 +500,8 @@ export default async function CoachMoksilgiDetailPage({
           <h1>코치이 목실기 상세 보고서</h1>
           <p>코치이: {coacheeName(data)}</p>
           <p>출력 연도: {year}년</p>
-          <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
+          <p>생성일: {formatDateInTimezone(new Date(), DEFAULT_TIMEZONE)}</p>
+          <p>기준 시간대: {DEFAULT_TIMEZONE}</p>
         </div>
         <Card className="print-section mt-6">
           <CardHeader className="flex flex-col gap-4 border-b-0 lg:flex-row lg:items-start lg:justify-between">

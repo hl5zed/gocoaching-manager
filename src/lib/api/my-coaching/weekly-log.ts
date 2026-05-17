@@ -1,6 +1,10 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/auth/getSession";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import {
+  getCurrentWeekRangeInTimezone,
+  getEffectiveTimezone,
+} from "@/lib/timezone";
 import type {
   ProfileRow,
   RelationshipType,
@@ -23,7 +27,7 @@ type WeeklyLogRole = {
 
 type WeeklyLogProfile = Pick<
   ProfileRow,
-  "id" | "email" | "full_name" | "display_name" | "status"
+  "id" | "email" | "full_name" | "display_name" | "status" | "timezone"
 >;
 
 type RelationshipRow = {
@@ -364,30 +368,11 @@ function buildIlikePattern(value: string | null | undefined) {
   return `%${trimmed.replace(/[\\%_]/g, (match) => `\\${match}`)}%`;
 }
 
-function createDateOnlyString(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-export function getCurrentWeekRange(referenceDate = new Date()) {
-  const date = new Date(referenceDate);
-  const day = date.getDay();
-  const diffToMonday = day === 0 ? -6 : 1 - day;
-
-  const weekStart = new Date(date);
-  weekStart.setHours(0, 0, 0, 0);
-  weekStart.setDate(weekStart.getDate() + diffToMonday);
-
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-
-  return {
-    weekStart: createDateOnlyString(weekStart),
-    weekEnd: createDateOnlyString(weekEnd),
-  };
+export function getCurrentWeekRange(
+  timezone = getEffectiveTimezone(),
+  referenceDate = new Date(),
+) {
+  return getCurrentWeekRangeInTimezone(timezone, referenceDate);
 }
 
 function mapRelationship(
@@ -448,7 +433,7 @@ async function getCurrentProfileAndRoles() {
   const supabase = await createSupabaseServerClient();
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, email, full_name, display_name, status")
+    .select("id, email, full_name, display_name, status, timezone")
     .eq("auth_user_id", session.user.id)
     .is("deleted_at", null)
     .neq("status", "anonymized")
@@ -617,9 +602,8 @@ export async function getMyWeeklyLogPageData({
     return me;
   }
 
-  const currentWeek = getCurrentWeekRange();
-
   if (me.data.profile === null) {
+    const currentWeek = getCurrentWeekRange();
     return {
       ok: true,
       data: {
@@ -637,6 +621,8 @@ export async function getMyWeeklyLogPageData({
 
   const { client: serviceClient, error: serviceClientError } =
     createSupabaseServiceClient();
+  const effectiveTimezone = getEffectiveTimezone(me.data.profile.timezone);
+  const currentWeek = getCurrentWeekRange(effectiveTimezone);
 
   if (!serviceClient) {
     logServerError(
@@ -937,7 +923,8 @@ export async function saveMyWeeklyLog(input: {
     };
   }
 
-  const currentWeek = getCurrentWeekRange();
+  const effectiveTimezone = getEffectiveTimezone(me.data.profile.timezone);
+  const currentWeek = getCurrentWeekRange(effectiveTimezone);
   const weeklyLogsTable = createWeeklyLogsTable(serviceClient);
   const { data: existingLog, error: existingLogError } = await weeklyLogsTable
     .select(

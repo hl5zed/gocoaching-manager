@@ -1,5 +1,12 @@
 import { getSession } from "@/lib/auth/getSession";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import {
+  DEFAULT_TIMEZONE,
+  getCurrentMonthInTimezone,
+  getCurrentWeekRangeInTimezone,
+  getCurrentYearInTimezone,
+  getEffectiveTimezone,
+} from "@/lib/timezone";
 import type {
   CoachingRelationshipStatus,
   ProfileRow,
@@ -20,7 +27,10 @@ type CoachMakerRoleRow = {
   status: "active";
 };
 
-type CurrentProfileRow = Pick<ProfileRow, "id" | "display_name" | "full_name" | "email">;
+type CurrentProfileRow = Pick<
+  ProfileRow,
+  "id" | "display_name" | "full_name" | "email" | "timezone"
+>;
 
 type ScopedProfileRow = Pick<
   ProfileRow,
@@ -197,25 +207,11 @@ function logServerError(code: string, message: string) {
   console.error(`[${code}] ${message}`);
 }
 
-function toDateKey(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function getCurrentWeekRange() {
-  const now = new Date();
-  const day = now.getUTCDay();
-  const daysFromMonday = day === 0 ? 6 : day - 1;
-  const start = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-  );
-  start.setUTCDate(start.getUTCDate() - daysFromMonday);
-
-  const end = new Date(start);
-  end.setUTCDate(start.getUTCDate() + 6);
-
+function getCurrentWeekRange(timezone: string) {
+  const weekRange = getCurrentWeekRangeInTimezone(timezone);
   return {
-    start: toDateKey(start),
-    end: toDateKey(end),
+    end: weekRange.weekEnd,
+    start: weekRange.weekStart,
   };
 }
 
@@ -337,12 +333,12 @@ function average(values: number[]) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-function getCurrentMonthCutoff(year: number) {
-  const today = new Date();
+function getCurrentMonthCutoff(year: number, timezone: string) {
+  const currentYear = getCurrentYearInTimezone(timezone);
 
-  if (year < today.getFullYear()) return 12;
-  if (year > today.getFullYear()) return 0;
-  return today.getMonth() + 1;
+  if (year < currentYear) return 12;
+  if (year > currentYear) return 0;
+  return getCurrentMonthInTimezone(timezone);
 }
 
 function mapById<TRow extends { id: string }>(rows: TRow[]) {
@@ -384,7 +380,6 @@ async function getServiceClient():
 }
 
 export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStatsResult> {
-  const weekRange = getCurrentWeekRange();
   const session = await getSession();
 
   if (!session.user) {
@@ -406,7 +401,7 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
   const { serviceClient } = serviceClientResult;
   const { data: profile, error: profileError } = await serviceClient
     .from("profiles")
-    .select("id, display_name, full_name, email")
+    .select("id, display_name, full_name, email, timezone")
     .eq("auth_user_id", session.user.id)
     .is("deleted_at", null)
     .eq("status", "active")
@@ -437,6 +432,8 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
   }
 
   const currentProfile = profile as CurrentProfileRow;
+  const effectiveTimezone = getEffectiveTimezone(currentProfile.timezone);
+  const weekRange = getCurrentWeekRange(effectiveTimezone);
   const { data: roles, error: rolesError } = await serviceClient
     .from("user_roles")
     .select("role, scope_type, scope_id, status")
@@ -794,12 +791,12 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
 }
 
 export async function getCoachMakerMoksilgiDashboardSummary(
-  year = new Date().getFullYear(),
+  year = getCurrentYearInTimezone(DEFAULT_TIMEZONE),
 ): Promise<GetCoachMakerMoksilgiDashboardSummaryResult> {
   const selectedYear =
     Number.isInteger(year) && year >= 2000 && year <= 2100
       ? year
-      : new Date().getFullYear();
+      : getCurrentYearInTimezone(DEFAULT_TIMEZONE);
   const session = await getSession();
 
   if (!session.user) {
@@ -821,7 +818,7 @@ export async function getCoachMakerMoksilgiDashboardSummary(
   const { serviceClient } = serviceClientResult;
   const { data: profile, error: profileError } = await serviceClient
     .from("profiles")
-    .select("id, display_name, full_name, email")
+    .select("id, display_name, full_name, email, timezone")
     .eq("auth_user_id", session.user.id)
     .is("deleted_at", null)
     .eq("status", "active")
@@ -852,6 +849,7 @@ export async function getCoachMakerMoksilgiDashboardSummary(
   }
 
   const currentProfile = profile as CurrentProfileRow;
+  const effectiveTimezone = getEffectiveTimezone(currentProfile.timezone);
   const { data: roles, error: rolesError } = await serviceClient
     .from("user_roles")
     .select("role, scope_type, scope_id, status")
@@ -1028,7 +1026,7 @@ export async function getCoachMakerMoksilgiDashboardSummary(
     summariesByPlanId.set(summary.plan_id, current);
   }
 
-  const cutoff = getCurrentMonthCutoff(selectedYear);
+  const cutoff = getCurrentMonthCutoff(selectedYear, effectiveTimezone);
   const rows = planRows.map((plan) => {
     const profile = profilesById.get(plan.profile_id);
     const summaries = summariesByPlanId.get(plan.id) ?? [];

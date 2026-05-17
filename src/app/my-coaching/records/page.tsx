@@ -3,6 +3,14 @@ import { getSession } from "@/lib/auth/getSession";
 import { getDailyRecords } from "@/lib/api/my-coaching/daily-records";
 import { getMonthlyReflections } from "@/lib/api/my-coaching/monthly-reflections";
 import { getRecentMyWeeklyLogs } from "@/lib/api/my-coaching/weekly-log";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  DEFAULT_TIMEZONE,
+  formatDateInTimezone,
+  formatDateTimeInTimezone,
+  getEffectiveTimezone,
+  getTodayDateInTimezone,
+} from "@/lib/timezone";
 import {
   Badge,
   Button,
@@ -117,54 +125,20 @@ function normalizeSort(value: string): SortOption {
     : "newest";
 }
 
-function formatDate(value: string | null) {
-  if (!value) {
-    return "-";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(date);
+function formatDate(value: string | null, timezone = DEFAULT_TIMEZONE) {
+  return value ? formatDateInTimezone(value, timezone) : "-";
 }
 
-function formatDateTime(value: string | null) {
-  if (!value) {
-    return "-";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+function formatDateTime(value: string | null, timezone = DEFAULT_TIMEZONE) {
+  return value ? formatDateTimeInTimezone(value, timezone) : "-";
 }
 
-function formatWeekRange(weekStart: string, weekEnd: string) {
-  return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
+function formatWeekRange(weekStart: string, weekEnd: string, timezone = DEFAULT_TIMEZONE) {
+  return `${formatDate(weekStart, timezone)} - ${formatDate(weekEnd, timezone)}`;
 }
 
-function formatLocalDateForFilename(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+function formatLocalDateForFilename(timezone = DEFAULT_TIMEZONE) {
+  return getTodayDateInTimezone(timezone);
 }
 
 function getFilenameDate(value: string | null, fallback: string) {
@@ -548,6 +522,15 @@ export default async function MyCoachingRecordsPage({
     redirect("/login?redirectTo=%2Fmy-coaching%2Frecords");
   }
 
+  const supabase = await createSupabaseServerClient();
+  const { data: profileTimezone } = await supabase
+    .from("profiles")
+    .select("timezone")
+    .eq("auth_user_id", session.user.id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  const profileTimezoneRow = profileTimezone as { timezone: string | null } | null;
+  const effectiveTimezone = getEffectiveTimezone(profileTimezoneRow?.timezone);
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const query = normalizeParam(resolvedSearchParams.q);
   const typeFilter = normalizeRecordType(
@@ -615,20 +598,14 @@ export default async function MyCoachingRecordsPage({
   const recentDailyRecords = dailyRecords.slice(0, 3);
   const recentWeeklyLogs = weeklyLogs.slice(0, 3);
   const recentMonthlyReflections = monthlyReflections.slice(0, 3);
-  const generatedAt = new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date());
+  const generatedAt = formatDateTimeInTimezone(new Date(), effectiveTimezone);
 
   const combinedRecords: CombinedRecord[] = [
     ...dailyRecords.map((record): CombinedRecord => ({
       id: record.id,
       type: "daily",
       title: displayText(record.title, "제목 없음"),
-      dateLabel: `기록 날짜: ${formatDate(record.record_date)}`,
+      dateLabel: `기록 날짜: ${formatDate(record.record_date, effectiveTimezone)}`,
       sortDate: `${record.record_date}T00:00:00.000Z`,
       printDate: record.record_date,
       printEndDate: null,
@@ -655,10 +632,11 @@ export default async function MyCoachingRecordsPage({
     ...weeklyLogs.map((weeklyLog): CombinedRecord => ({
       id: weeklyLog.id,
       type: "weekly",
-      title: formatWeekRange(weeklyLog.weekStart, weeklyLog.weekEnd),
+      title: formatWeekRange(weeklyLog.weekStart, weeklyLog.weekEnd, effectiveTimezone),
       dateLabel: `주간 기간: ${formatWeekRange(
         weeklyLog.weekStart,
         weeklyLog.weekEnd,
+        effectiveTimezone,
       )}`,
       sortDate: `${weeklyLog.weekStart}T00:00:00.000Z`,
       printDate: weeklyLog.weekStart,
@@ -682,7 +660,7 @@ export default async function MyCoachingRecordsPage({
       secondaryLabel: "감사 내용",
       secondaryText: weeklyLog.gratitude,
       metaLabel: "제출일",
-      metaText: formatDateTime(weeklyLog.submittedAt),
+      metaText: formatDateTime(weeklyLog.submittedAt, effectiveTimezone),
     })),
     ...monthlyReflections.map((reflection): CombinedRecord => ({
       id: reflection.id,
@@ -775,7 +753,7 @@ export default async function MyCoachingRecordsPage({
   const weeklyPrintRecords = printRecordGroups.weekly;
   const monthlyPrintRecords = printRecordGroups.monthly;
   const printRecordCountSummary = `전체 ${printRecords.length}개 / 하루 ${dailyPrintRecords.length}개 / 주간 ${weeklyPrintRecords.length}개 / 월간 ${monthlyPrintRecords.length}개`;
-  const filenameToday = formatLocalDateForFilename();
+  const filenameToday = formatLocalDateForFilename(effectiveTimezone);
   const filenameMonth = filenameToday.slice(0, 7);
   const suggestedPrintTitles = {
     all: `all-records-${filenameToday}`,
@@ -900,6 +878,9 @@ export default async function MyCoachingRecordsPage({
             </CardDescription>
             <p className="mt-3 hidden text-sm text-slate-600 print:block">
               생성일: {generatedAt}
+            </p>
+            <p className="mt-2 hidden text-sm text-slate-600 print:block">
+              기준 시간대: {effectiveTimezone}
             </p>
             <p className="mt-2 hidden text-sm text-slate-600 print:block">
               인쇄 범위:{" "}
@@ -1159,7 +1140,7 @@ export default async function MyCoachingRecordsPage({
                     <RecordCard
                       key={record.id}
                       record={{
-                        dateLabel: `기록 날짜: ${formatDate(record.record_date)}`,
+                        dateLabel: `기록 날짜: ${formatDate(record.record_date, effectiveTimezone)}`,
                         href: "/my-coaching/records/daily",
                         id: record.id,
                         metaLabel: "기도제목",
@@ -1222,11 +1203,12 @@ export default async function MyCoachingRecordsPage({
                         dateLabel: `주간 기간: ${formatWeekRange(
                           weeklyLog.weekStart,
                           weeklyLog.weekEnd,
+                          effectiveTimezone,
                         )}`,
                         href: "/my-coaching/weekly-log",
                         id: weeklyLog.id,
                         metaLabel: "제출일",
-                        metaText: formatDateTime(weeklyLog.submittedAt),
+                        metaText: formatDateTime(weeklyLog.submittedAt, effectiveTimezone),
                         primaryLabel: "진행 요약",
                         primaryText: weeklyLog.progressSummary,
                         printDate: weeklyLog.weekStart,
@@ -1241,6 +1223,7 @@ export default async function MyCoachingRecordsPage({
                         title: formatWeekRange(
                           weeklyLog.weekStart,
                           weeklyLog.weekEnd,
+                          effectiveTimezone,
                         ),
                         type: "weekly",
                         visibility: null,

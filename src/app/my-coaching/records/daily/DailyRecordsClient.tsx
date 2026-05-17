@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getClientTimezone, getTodayDateInTimezone } from "@/lib/timezone";
 import { isValidDate } from "@/lib/validation/common";
 
 type DailyRecordStatus = "draft" | "submitted" | "reviewed";
@@ -36,16 +37,20 @@ type FormState = {
   status: DailyRecordStatus;
 };
 
-const initialFormState: FormState = {
-  record_date: new Date().toISOString().slice(0, 10),
-  title: "",
-  reflection: "",
-  practice: "",
-  prayer_request: "",
-  visibility: "private",
-  shared_with_coach: false,
-  status: "draft",
-};
+function createInitialFormState(): FormState {
+  const timezone = getClientTimezone();
+
+  return {
+    record_date: getTodayDateInTimezone(timezone),
+    title: "",
+    reflection: "",
+    practice: "",
+    prayer_request: "",
+    visibility: "private",
+    shared_with_coach: false,
+    status: "draft",
+  };
+}
 
 const statusLabels: Record<DailyRecordStatus, string> = {
   draft: "임시저장",
@@ -182,7 +187,7 @@ function toFormState(record: DailyRecord): FormState {
 
 export function DailyRecordsClient() {
   const [records, setRecords] = useState<DailyRecord[]>([]);
-  const [form, setForm] = useState<FormState>(initialFormState);
+  const [form, setForm] = useState<FormState>(() => createInitialFormState());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -278,7 +283,7 @@ export function DailyRecordsClient() {
   }, []);
 
   function resetForm() {
-    setForm(initialFormState);
+    setForm(createInitialFormState());
     setEditingId(null);
   }
 

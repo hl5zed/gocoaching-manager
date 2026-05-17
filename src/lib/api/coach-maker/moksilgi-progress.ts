@@ -1,6 +1,12 @@
 import { getSession } from "@/lib/auth/getSession";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import {
+  DEFAULT_TIMEZONE,
+  getCurrentMonthInTimezone,
+  getCurrentYearInTimezone,
+  getEffectiveTimezone,
+} from "@/lib/timezone";
 import type { Tables, UserRole } from "@/types/database";
 import type { ActiveRoleSlim } from "@/types/profile";
 
@@ -22,6 +28,7 @@ type ServiceSupabaseClient = NonNullable<
   ReturnType<typeof createSupabaseServiceClient>["client"]
 >;
 type ProfileIdRow = { id: string };
+type CurrentProfileRow = { id: string; timezone: string | null };
 type RelationshipRow = {
   id: string;
   coach_profile_id: string;
@@ -182,6 +189,7 @@ export type GetCoachMakerMoksilgiProgressResult =
         averageRow: CoachMakerMoksilgiProgressAverageRow;
         upToCurrentRate: number;
         year: number;
+        timezone: string;
         scopeMode: "all" | "direct_coaching_relationships";
       };
       error: null;
@@ -444,19 +452,20 @@ function calculateAverageRow(rows: CoachMakerMoksilgiProgressRow[]) {
   return averageRow;
 }
 
-function getCurrentMonthCutoff(year: number) {
-  const today = new Date();
+function getCurrentMonthCutoff(year: number, timezone: string) {
+  const currentYear = getCurrentYearInTimezone(timezone);
 
-  if (year < today.getFullYear()) return 12;
-  if (year > today.getFullYear()) return 0;
-  return today.getMonth() + 1;
+  if (year < currentYear) return 12;
+  if (year > currentYear) return 0;
+  return getCurrentMonthInTimezone(timezone);
 }
 
 function calculateUpToCurrentRate(
   averageRow: CoachMakerMoksilgiProgressAverageRow,
   year: number,
+  timezone: string,
 ) {
-  const cutoff = getCurrentMonthCutoff(year);
+  const cutoff = getCurrentMonthCutoff(year, timezone);
   if (cutoff === 0) return 0;
 
   return average(
@@ -670,7 +679,9 @@ function buildRelationshipProgressRows({
 export async function getCoachMakerMoksilgiProgress(
   filters: CoachMakerMoksilgiProgressFilters,
 ): Promise<GetCoachMakerMoksilgiProgressResult> {
-  const selectedYear = validateYear(filters.year) ? filters.year : new Date().getFullYear();
+  const selectedYear = validateYear(filters.year)
+    ? filters.year
+    : getCurrentYearInTimezone(DEFAULT_TIMEZONE);
   const session = await getSession();
 
   if (!session.user) {
@@ -683,7 +694,7 @@ export async function getCoachMakerMoksilgiProgress(
   const supabase = await createSupabaseServerClient();
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id")
+    .select("id, timezone")
     .eq("auth_user_id", session.user.id)
     .is("deleted_at", null)
     .eq("status", "active")
@@ -709,7 +720,9 @@ export async function getCoachMakerMoksilgiProgress(
     };
   }
 
-  const profileId = (profile as ProfileIdRow).id;
+  const profileRecord = profile as CurrentProfileRow;
+  const profileId = profileRecord.id;
+  const effectiveTimezone = getEffectiveTimezone(profileRecord.timezone);
   const { data: roles, error: rolesError } = await supabase
     .from("user_roles")
     .select("id, role, scope_type, scope_id, granted_at, expires_at")
@@ -789,6 +802,7 @@ export async function getCoachMakerMoksilgiProgress(
           averageRow,
           upToCurrentRate: 0,
           year: selectedYear,
+          timezone: effectiveTimezone,
           scopeMode: "direct_coaching_relationships",
         },
         error: null,
@@ -1037,8 +1051,13 @@ export async function getCoachMakerMoksilgiProgress(
       rows,
       relationshipRows,
       averageRow,
-      upToCurrentRate: calculateUpToCurrentRate(averageRow, selectedYear),
+      upToCurrentRate: calculateUpToCurrentRate(
+        averageRow,
+        selectedYear,
+        effectiveTimezone,
+      ),
       year: selectedYear,
+      timezone: effectiveTimezone,
       scopeMode: hasBroadAccess ? "all" : "direct_coaching_relationships",
     },
     error: null,

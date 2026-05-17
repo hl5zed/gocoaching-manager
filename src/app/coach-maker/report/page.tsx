@@ -17,6 +17,15 @@ import {
   type ActionNoteTargetType,
   type CoachActionNoteReportItem,
 } from "@/lib/api/coach/action-notes";
+import {
+  DEFAULT_TIMEZONE,
+  formatDateInTimezone,
+  formatDateTimeInTimezone,
+  getCurrentMonthInTimezone,
+  getCurrentYearInTimezone,
+  getEffectiveTimezone,
+  getTodayDateInTimezone,
+} from "@/lib/timezone";
 import { PrintReportButton } from "./PrintReportButton";
 import { ReportFilters } from "./ReportFilters";
 
@@ -94,7 +103,7 @@ function normalizeYear(value: string | string[] | undefined) {
     return numeric;
   }
 
-  return new Date().getFullYear();
+  return getCurrentYearInTimezone(DEFAULT_TIMEZONE);
 }
 
 function formatPercent(value: number | null | undefined) {
@@ -163,12 +172,12 @@ function monthRate(row: CoachMakerMoksilgiProgressRow, month: number) {
   }
 }
 
-function getCurrentMonthCutoff(year: number) {
-  const today = new Date();
+function getCurrentMonthCutoff(year: number, timezone: string) {
+  const currentYear = getCurrentYearInTimezone(timezone);
 
-  if (year < today.getFullYear()) return 12;
-  if (year > today.getFullYear()) return 0;
-  return today.getMonth() + 1;
+  if (year < currentYear) return 12;
+  if (year > currentYear) return 0;
+  return getCurrentMonthInTimezone(timezone);
 }
 
 function hasProgressInput(row: CoachMakerMoksilgiProgressRow) {
@@ -176,8 +185,8 @@ function hasProgressInput(row: CoachMakerMoksilgiProgressRow) {
     || safeNumber(row.cumulative_rate) > 0;
 }
 
-function upToCurrentRate(row: CoachMakerMoksilgiProgressRow, year: number) {
-  const cutoff = getCurrentMonthCutoff(year);
+function upToCurrentRate(row: CoachMakerMoksilgiProgressRow, year: number, timezone: string) {
+  const cutoff = getCurrentMonthCutoff(year, timezone);
   if (cutoff === 0) return null;
 
   return average(
@@ -195,6 +204,10 @@ function parseDueDate(value: string | null) {
   if (!value) return null;
   const date = new Date(`${value}T00:00:00`);
   return Number.isNaN(date.getTime()) ? null : dateOnly(date);
+}
+
+function todayDateOnly(timezone: string) {
+  return parseDueDate(getTodayDateInTimezone(timezone)) ?? dateOnly(new Date());
 }
 
 function parseReportDate(value: string | null) {
@@ -253,6 +266,7 @@ function buildRowsReportSummary(
   allRows: CoachMakerMoksilgiProgressRow[],
   team: string | null,
   year: number,
+  timezone: string,
 ) {
   const rows: CoachMakerMoksilgiProgressRow[] = [];
   const attentionRows: {
@@ -271,7 +285,7 @@ function buildRowsReportSummary(
     rows.push(row);
 
     const cumulativeRate = safeNumber(row.cumulative_rate);
-    const currentRate = upToCurrentRate(row, year);
+    const currentRate = upToCurrentRate(row, year, timezone);
     cumulativeRateTotal += cumulativeRate;
     upToCurrentRateTotal += currentRate ?? 0;
 
@@ -319,11 +333,13 @@ function buildRowsReportSummary(
 function buildFilterSummary({
   from,
   team,
+  timezone,
   to,
   year,
 }: {
   from: string | null;
   team: string | null;
+  timezone: string;
   to: string | null;
   year: number;
 }) {
@@ -334,6 +350,7 @@ function buildFilterSummary({
     `목실기 기준: ${year}년 선택 연도`,
     `관리 메모 기준: 작성일 ${from ?? "전체"} ~ ${to ?? "전체"}`,
     `팀 기준: ${team ?? "전체 팀"}`,
+    `기준 시간대: ${timezone}`,
   ];
 }
 
@@ -408,21 +425,21 @@ function isIncomplete(note: CoachActionNoteReportItem) {
   return note.status !== "completed" && note.status !== "archived";
 }
 
-function isOverdue(note: CoachActionNoteReportItem) {
+function isOverdue(note: CoachActionNoteReportItem, timezone: string) {
   const dueDate = parseDueDate(note.due_date);
-  return isIncomplete(note) && dueDate !== null && dueDate.getTime() < dateOnly(new Date()).getTime();
+  return isIncomplete(note) && dueDate !== null && dueDate.getTime() < todayDateOnly(timezone).getTime();
 }
 
-function isDueToday(note: CoachActionNoteReportItem) {
+function isDueToday(note: CoachActionNoteReportItem, timezone: string) {
   const dueDate = parseDueDate(note.due_date);
-  return isIncomplete(note) && dueDate !== null && dueDate.getTime() === dateOnly(new Date()).getTime();
+  return isIncomplete(note) && dueDate !== null && dueDate.getTime() === todayDateOnly(timezone).getTime();
 }
 
-function isDueThisWeek(note: CoachActionNoteReportItem) {
+function isDueThisWeek(note: CoachActionNoteReportItem, timezone: string) {
   const dueDate = parseDueDate(note.due_date);
   if (!isIncomplete(note) || dueDate === null) return false;
 
-  const today = dateOnly(new Date());
+  const today = todayDateOnly(timezone);
   const weekEnd = new Date(today);
   weekEnd.setDate(today.getDate() + 6);
 
@@ -434,6 +451,7 @@ function buildNotesReportSummary(
   team: string | null,
   from: string | null,
   to: string | null,
+  timezone: string,
 ) {
   const notes: CoachActionNoteReportItem[] = [];
   const highPriorityIncompleteNotes: CoachActionNoteReportItem[] = [];
@@ -459,7 +477,7 @@ function buildNotesReportSummary(
     if (note.status === "completed") counts.completed += 1;
     if (note.priority === "high") counts.highPriority += 1;
 
-    const overdue = isOverdue(note);
+    const overdue = isOverdue(note, timezone);
     if (overdue) {
       counts.overdue += 1;
       if (overdueIncompleteNotes.length < 10) {
@@ -491,22 +509,12 @@ function buildNotesReportSummary(
   };
 }
 
-function formatDate(value: string | null | undefined) {
-  if (!value) return "미입력";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "미입력";
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "medium",
-  }).format(date);
+function formatDate(value: string | null | undefined, timezone = DEFAULT_TIMEZONE) {
+  return value ? formatDateInTimezone(value, timezone) : "미입력";
 }
 
-function formatGeneratedAt(value: Date) {
-  return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "full",
-    timeStyle: "short",
-  }).format(value);
+function formatGeneratedAt(value: Date, timezone: string) {
+  return formatDateTimeInTimezone(value, timezone);
 }
 
 function truncateText(value: string, maxLength = 120) {
@@ -615,17 +623,22 @@ export default async function CoachMakerReportPage({
   const allRows = moksilgiResult.data?.rows ?? [];
   const allNotes = actionNotesResult.ok ? actionNotesResult.data : [];
   const coachStats = coachStatsResult.data;
+  const effectiveTimezone = getEffectiveTimezone(
+    coachStats?.profile?.timezone ?? moksilgiResult.data?.timezone,
+  );
   const teamOptions = collectTeamOptions(allRows, allNotes);
   const rowsSummary = buildRowsReportSummary(
     allRows,
     selectedTeam,
     selectedYear,
+    effectiveTimezone,
   );
   const notesSummary = buildNotesReportSummary(
     allNotes,
     selectedTeam,
     selectedFrom,
     selectedTo,
+    effectiveTimezone,
   );
   const { attention, averageCumulativeRate, averageUpToCurrentRate, participantCount, rows, statusCounts } =
     rowsSummary;
@@ -633,6 +646,7 @@ export default async function CoachMakerReportPage({
   const filterSummary = buildFilterSummary({
     from: selectedFrom,
     team: selectedTeam,
+    timezone: effectiveTimezone,
     to: selectedTo,
     year: selectedYear,
   });
@@ -778,8 +792,9 @@ export default async function CoachMakerReportPage({
             코치메이커 운영 보고서
           </h1>
           <div className="mt-4 grid gap-2 text-sm text-slate-600 print:text-slate-800 sm:grid-cols-2">
-            <p>생성일: {formatGeneratedAt(generatedAt)}</p>
+            <p>생성일: {formatGeneratedAt(generatedAt, effectiveTimezone)}</p>
             <p>기준 연도: {selectedYear}년</p>
+            <p>기준 시간대: {effectiveTimezone}</p>
           </div>
           <p className="mt-3 text-sm leading-6 text-slate-600 print:text-slate-800">
             목실기 성취 현황, 관심 필요 대상자, 관리 액션 메모의 핵심 운영 지표를 인쇄용으로 정리합니다.
@@ -1028,7 +1043,7 @@ export default async function CoachMakerReportPage({
                       <td className="py-2 pr-3">{ACTION_TYPE_LABELS[note.action_type]}</td>
                       <td className="py-2 pr-3">{PRIORITY_LABELS[note.priority]}</td>
                       <td className="py-2 pr-3">{STATUS_LABELS[note.status]}</td>
-                      <td className="py-2 pr-3">{formatDate(note.due_date)}</td>
+                      <td className="py-2 pr-3">{formatDate(note.due_date, effectiveTimezone)}</td>
                       <td className="report-note-cell max-w-[260px] py-2 pr-3 leading-5 print:max-w-none">
                         {truncateText(note.note)}
                       </td>
