@@ -68,6 +68,9 @@ type MutationValues = {
 
 const SELECT_COLUMNS =
   "id,audience,placement,title,body,is_active,starts_at,ends_at,priority,created_by,updated_by,created_at,updated_at,deleted_at";
+const ACTIVE_SELECT_COLUMNS =
+  "id,audience,placement,title,body,priority,created_at";
+const ACTIVE_ANNOUNCEMENTS_CACHE_TTL_MS = 3 * 60 * 1000;
 
 const MUTATION_KEYS = [
   "audience",
@@ -79,6 +82,13 @@ const MUTATION_KEYS = [
   "starts_at",
   "title",
 ] as const;
+
+type ActiveAnnouncementCacheEntry = {
+  announcements: SystemAnnouncement[];
+  expiresAt: number;
+};
+
+const activeAnnouncementsCache = new Map<string, ActiveAnnouncementCacheEntry>();
 
 function getServiceClient(): DynamicSupabaseClient {
   const { client, error } = createSupabaseServiceClient();
@@ -264,6 +274,30 @@ function mapAnnouncement(row: Record<string, unknown>): SystemAnnouncement {
     created_at: String(row.created_at ?? ""),
     updated_at: String(row.updated_at ?? ""),
     deleted_at: typeof row.deleted_at === "string" ? row.deleted_at : null,
+  };
+}
+
+function mapActiveAnnouncement(row: Record<string, unknown>): SystemAnnouncement {
+  const createdAt = String(row.created_at ?? "");
+
+  return {
+    id: String(row.id),
+    audience: row.audience as SystemAnnouncementAudience,
+    placement: row.placement as SystemAnnouncementPlacement,
+    title: String(row.title ?? ""),
+    body: String(row.body ?? ""),
+    is_active: true,
+    starts_at: null,
+    ends_at: null,
+    priority:
+      typeof row.priority === "number" && Number.isInteger(row.priority)
+        ? row.priority
+        : 0,
+    created_by: null,
+    updated_by: null,
+    created_at: createdAt,
+    updated_at: createdAt,
+    deleted_at: null,
   };
 }
 
@@ -509,31 +543,42 @@ export async function requireActiveSuperAdminForAnnouncements() {
 
 export async function getActiveAnnouncementsForCurrentUser({
   placement,
+  roles: existingRoles,
 }: {
   placement: SystemAnnouncementPlacement;
+  roles?: UserRole[];
 }): Promise<SystemAnnouncement[]> {
-  const session = await getSession();
-
-  if (!session.user) {
-    return [];
-  }
-
   const supabase = await createSupabaseServerClient();
-  let roles: UserRole[] = [];
+  let roles = existingRoles;
 
-  try {
-    roles = await getUserRoles(supabase, session.user.id);
-  } catch {
-    return [];
+  if (!roles) {
+    const session = await getSession();
+
+    if (!session.user) {
+      return [];
+    }
+
+    try {
+      roles = await getUserRoles(supabase, session.user.id);
+    } catch {
+      return [];
+    }
   }
 
   const isAdmin = hasRole(roles, ADMIN_WRITE_ROLES);
   const audiences: SystemAnnouncementAudience[] = isAdmin ? ["all", "admin"] : ["all"];
   const now = new Date().toISOString();
+  const cacheKey = `${placement}:${audiences.join(",")}`;
+  const cached = activeAnnouncementsCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.announcements;
+  }
+
   const client = supabase as unknown as DynamicSupabaseClient;
   const { data, error } = await client
     .from("system_announcements")
-    .select(SELECT_COLUMNS)
+    .select(ACTIVE_SELECT_COLUMNS)
     .eq("placement", placement)
     .eq("is_active", true)
     .is("deleted_at", null)
@@ -550,5 +595,15 @@ export async function getActiveAnnouncementsForCurrentUser({
     return [];
   }
 
-  return ((data ?? []) as Record<string, unknown>[]).map(mapAnnouncement);
+  const announcements = ((data ?? []) as Record<string, unknown>[]).map(
+    mapActiveAnnouncement,
+  );
+
+  // 공지 변경 후 최대 3분 반영 지연 가능.
+  activeAnnouncementsCache.set(cacheKey, {
+    announcements,
+    expiresAt: Date.now() + ACTIVE_ANNOUNCEMENTS_CACHE_TTL_MS,
+  });
+
+  return announcements;
 }

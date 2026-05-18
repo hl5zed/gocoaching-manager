@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireAdminProfile } from "@/lib/auth/require-admin-profile";
+import {
+  createApiPerformanceLogger,
+  logApiPerformance,
+} from "@/lib/performance";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   SCOPE_TYPES,
@@ -18,6 +22,15 @@ export const dynamic = "force-dynamic";
 const noStoreHeaders = {
   "Cache-Control": "no-store",
 };
+const PATCH_PERFORMANCE_ROUTE = "/api/admin/users:PATCH";
+const performanceIntentStages = new Set([
+  "add_role",
+  "create_profile",
+  "update_profile",
+  "update_role",
+  "update_role_status",
+  "update_status",
+]);
 const allowedRoles = new Set<UserRole>(USER_ROLES);
 const allowedScopes = new Set<ScopeType>(SCOPE_TYPES);
 const ROLE_SCOPE_RULES: Partial<Record<UserRole, ScopeType[]>> = {
@@ -70,6 +83,9 @@ type UserRolesUpdateTable = {
   };
 };
 type AdminClient = NonNullable<ReturnType<typeof createSupabaseAdminClient>["client"]>;
+type ApiPerformanceLogger = {
+  mark: (stage: string, resultCount?: number) => void;
+};
 type ExistingProfileLookup = {
   id: string;
 };
@@ -107,6 +123,11 @@ type CreateUserStage =
   | "profile"
   | "role"
   | "service";
+
+type AffiliationLookupResult = {
+  exists: boolean;
+  ok: boolean;
+};
 
 function normalizeText(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -273,6 +294,38 @@ async function lookupExists(
     ok: true as const,
     exists: (data as ExistingLookup | null) !== null,
   };
+}
+
+async function measureAffiliationLookup<TLookup extends AffiliationLookupResult>(
+  stage: string,
+  hasValue: boolean,
+  lookup: () => Promise<TLookup>,
+) {
+  if (!hasValue) {
+    logApiPerformance({
+      deltaMs: 0,
+      durationMs: 0,
+      resultCount: 0,
+      route: PATCH_PERFORMANCE_ROUTE,
+      stage,
+    });
+
+    return null;
+  }
+
+  const startedAt = performance.now();
+  const result = await lookup();
+  const durationMs = performance.now() - startedAt;
+
+  logApiPerformance({
+    deltaMs: durationMs,
+    durationMs,
+    resultCount: result.exists ? 1 : 0,
+    route: PATCH_PERFORMANCE_ROUTE,
+    stage,
+  });
+
+  return result;
 }
 
 function isProbablyEmail(email: string) {
@@ -850,11 +903,13 @@ async function handleProfileUpdate({
   adminClient,
   adminRoles,
   formData,
+  perf,
 }: {
   request: Request;
   adminClient: AdminClient;
   adminRoles: UserRole[];
   formData: FormData;
+  perf?: ApiPerformanceLogger;
 }) {
   if (!adminRoles.includes("super_admin")) {
     return redirectWithProfileUpdateError(request, "permission_denied");
@@ -933,9 +988,54 @@ async function handleProfileUpdate({
     return redirectWithProfileUpdateError(request, "invalid_status");
   }
 
-  if (countryId.value) {
-    const countryLookup = await countryExists(adminClient, countryId.value);
+  perf?.mark("payload.validate", 1);
 
+  const [
+    countryLookup,
+    organizationLookup,
+    regionLookup,
+    churchLookup,
+    groupLookup,
+  ] = await Promise.all([
+    measureAffiliationLookup(
+      "update.affiliations.country_lookup",
+      Boolean(countryId.value),
+      () => countryExists(adminClient, countryId.value ?? ""),
+    ),
+    measureAffiliationLookup(
+      "update.affiliations.organization_lookup",
+      Boolean(organizationId.value),
+      () => organizationExists(adminClient, organizationId.value ?? ""),
+    ),
+    measureAffiliationLookup(
+      "update.affiliations.region_lookup",
+      Boolean(regionId.value),
+      () => lookupExists(adminClient, "regions", regionId.value ?? ""),
+    ),
+    measureAffiliationLookup(
+      "update.affiliations.church_lookup",
+      Boolean(churchId.value),
+      () => lookupExists(adminClient, "churches", churchId.value ?? ""),
+    ),
+    measureAffiliationLookup(
+      "update.affiliations.group_lookup",
+      Boolean(groupId.value),
+      () => lookupExists(adminClient, "groups", groupId.value ?? ""),
+    ),
+  ]);
+
+  perf?.mark(
+    "update.affiliations.lookup_complete",
+    [
+      countryId.value,
+      regionId.value,
+      organizationId.value,
+      churchId.value,
+      groupId.value,
+    ].filter(Boolean).length,
+  );
+
+  if (countryLookup) {
     if (!countryLookup.ok) {
       return redirectWithProfileUpdateError(request, "country_lookup_failed");
     }
@@ -949,12 +1049,7 @@ async function handleProfileUpdate({
     }
   }
 
-  if (organizationId.value) {
-    const organizationLookup = await organizationExists(
-      adminClient,
-      organizationId.value,
-    );
-
+  if (organizationLookup) {
     if (!organizationLookup.ok) {
       return redirectWithProfileUpdateError(request, "organization_lookup_failed");
     }
@@ -964,9 +1059,7 @@ async function handleProfileUpdate({
     }
   }
 
-  if (regionId.value) {
-    const regionLookup = await lookupExists(adminClient, "regions", regionId.value);
-
+  if (regionLookup) {
     if (!regionLookup.ok) {
       return redirectWithProfileUpdateError(request, "region_lookup_failed");
     }
@@ -976,9 +1069,7 @@ async function handleProfileUpdate({
     }
   }
 
-  if (churchId.value) {
-    const churchLookup = await lookupExists(adminClient, "churches", churchId.value);
-
+  if (churchLookup) {
     if (!churchLookup.ok) {
       return redirectWithProfileUpdateError(request, "church_lookup_failed");
     }
@@ -988,9 +1079,7 @@ async function handleProfileUpdate({
     }
   }
 
-  if (groupId.value) {
-    const groupLookup = await lookupExists(adminClient, "groups", groupId.value);
-
+  if (groupLookup) {
     if (!groupLookup.ok) {
       return redirectWithProfileUpdateError(request, "group_lookup_failed");
     }
@@ -1000,12 +1089,25 @@ async function handleProfileUpdate({
     }
   }
 
+  perf?.mark(
+    "update.affiliations",
+    [
+      countryId.value,
+      regionId.value,
+      organizationId.value,
+      churchId.value,
+      groupId.value,
+    ].filter(Boolean).length,
+  );
+
   const { data: profile, error: profileError } = await adminClient
     .from("profiles")
     .select("id")
     .eq("id", profileId.value)
     .is("deleted_at", null)
     .maybeSingle();
+
+  perf?.mark("target.profile_lookup", profile ? 1 : 0);
 
   if (profileError) {
     console.error("[ADMIN_USER_PROFILE_UPDATE_LOOKUP_FAILED]", profileError.message);
@@ -1034,6 +1136,8 @@ async function handleProfileUpdate({
   const { error: updateError } = await profilesTable
     .update(updatePayload)
     .eq("id", profileId.value);
+
+  perf?.mark("update.profile_update", updateError ? 0 : 1);
 
   if (updateError) {
     console.error("[ADMIN_USER_PROFILE_UPDATE_FAILED]", updateError.message);
@@ -1158,9 +1262,11 @@ function profilePatchJsonResponseFromRedirect(response: NextResponse) {
 }
 
 export async function POST(request: Request) {
+  const perf = createApiPerformanceLogger("/api/admin/users:POST");
   const admin = await requireAdminProfile();
 
   if (!admin.ok) {
+    perf.mark("auth_denied");
     return NextResponse.json(
       { error: "관리자 권한이 필요합니다." },
       {
@@ -1175,6 +1281,7 @@ export async function POST(request: Request) {
   try {
     formData = await request.formData();
   } catch {
+    perf.mark("invalid_body");
     return redirectWithError(request, "validation", "invalid_body");
   }
 
@@ -1190,10 +1297,17 @@ export async function POST(request: Request) {
 
   if (!adminClient) {
     console.error("[ADMIN_DIRECT_USER_CREATE_SERVICE_UNAVAILABLE]", adminClientError);
+    perf.mark("service_client_unavailable");
     return redirectWithError(request, "service", "service_unavailable");
   }
 
   const typedAdminClient = adminClient as AdminClient;
+  const performanceIntent = intent || "create_profile";
+  perf.mark(
+    performanceIntentStages.has(performanceIntent)
+      ? `intent:${performanceIntent}`
+      : "intent:unknown",
+  );
 
   if (intent === "update_role") {
     return handleRoleUpdate({
@@ -1514,6 +1628,8 @@ export async function POST(request: Request) {
     return redirectWithError(request, "role", "role_create_failed");
   }
 
+  perf.mark("complete", 1);
+
   return getAdminUsersRedirect(request, {
     created: "1",
     created_email: email,
@@ -1521,9 +1637,11 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const perf = createApiPerformanceLogger(PATCH_PERFORMANCE_ROUTE);
   const admin = await requireAdminProfile();
 
   if (!admin.ok) {
+    perf.mark("auth.permissions_query");
     return NextResponse.json(
       { ok: false, error: "관리자 권한이 필요합니다." },
       {
@@ -1532,12 +1650,14 @@ export async function PATCH(request: Request) {
       },
     );
   }
+  perf.mark("auth.permissions_query", admin.roles.length);
 
   const { client: adminClient, error: adminClientError } =
     createSupabaseAdminClient();
 
   if (!adminClient) {
     console.error("[ADMIN_USER_PROFILE_PATCH_SERVICE_UNAVAILABLE]", adminClientError);
+    perf.mark("service_client_unavailable");
     return NextResponse.json(
       { ok: false, error: "관리자 서비스 준비에 실패했습니다." },
       {
@@ -1551,7 +1671,9 @@ export async function PATCH(request: Request) {
 
   try {
     body = await request.json();
+    perf.mark("payload.parse", 1);
   } catch {
+    perf.mark("payload.parse", 0);
     return NextResponse.json(
       { ok: false, error: "요청 본문을 확인해 주세요." },
       {
@@ -1566,7 +1688,10 @@ export async function PATCH(request: Request) {
     adminClient: adminClient as AdminClient,
     adminRoles: admin.roles,
     formData: formDataFromProfilePatch(body),
+    perf,
   });
+
+  perf.mark("complete", 1);
 
   return profilePatchJsonResponseFromRedirect(redirectResponse);
 }

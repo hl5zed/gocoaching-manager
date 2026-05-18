@@ -26,6 +26,8 @@ import {
   TextInput,
 } from "@/components/ui";
 import { PrintRecordsButton } from "./PrintRecordsButton";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { I18nText } from "@/lib/i18n/I18nProvider";
 
 export const dynamic = "force-dynamic";
 const RECENT_RECORDS_LIMIT = 3;
@@ -365,31 +367,76 @@ function getFilterSummary({
   type: RecordTypeFilter;
   visibility: VisibilityFilter;
 }) {
-  const items = [
-    `검색어: ${query || "전체"}`,
-    `기록 유형: ${
-      type === "all" ? "전체" : getRecordTypeLabel(type)
-    }`,
-    `상태: ${status === "all" ? "전체" : getStatusLabel(status)}`,
-    `공유: ${
-      visibility === "all"
-        ? "전체"
-        : visibility === "coach"
-          ? "코치에게 공유"
-          : "나만 보기"
-    }`,
-    `정렬: ${
-      sort === "newest"
-        ? "최신순"
-        : sort === "oldest"
-          ? "오래된순"
-          : sort === "type"
-            ? "기록 유형순"
-            : "상태순"
-    }`,
-  ];
+  return (
+    <>
+      <I18nText k="myCoaching.records.filters.searchLabel" fallback="검색어" />:{" "}
+      {query || <I18nText k="myCoaching.records.filters.all" fallback="전체" />}
+      {" / "}
+      <I18nText k="myCoaching.records.filters.recordType" fallback="기록 유형" />:{" "}
+      {recordTypeFilterLabel(type)}
+      {" / "}
+      <I18nText k="myCoaching.records.filters.status" fallback="상태" />:{" "}
+      {statusFilterLabel(status)}
+      {" / "}
+      <I18nText k="myCoaching.records.filters.visibility" fallback="공유" />:{" "}
+      {visibilityFilterLabel(visibility)}
+      {" / "}
+      <I18nText k="myCoaching.records.filters.sort" fallback="정렬" />:{" "}
+      {sortFilterLabel(sort)}
+    </>
+  );
+}
 
-  return items.join(" / ");
+function recordTypeFilterLabel(type: RecordTypeFilter) {
+  if (type === "daily") {
+    return <I18nText k="myCoaching.records.daily" fallback="하루 기록" />;
+  }
+  if (type === "weekly") {
+    return <I18nText k="myCoaching.records.weekly" fallback="주간 기록" />;
+  }
+  if (type === "monthly") {
+    return <I18nText k="myCoaching.records.monthlyReflection" fallback="월간 회고" />;
+  }
+  return <I18nText k="myCoaching.records.filters.all" fallback="전체" />;
+}
+
+function statusFilterLabel(status: StatusFilter) {
+  if (status === "draft") {
+    return <I18nText k="myCoaching.records.filters.draft" fallback="임시저장" />;
+  }
+  if (status === "submitted") {
+    return <I18nText k="myCoaching.records.filters.submitted" fallback="제출완료" />;
+  }
+  if (status === "reviewed") {
+    return <I18nText k="myCoaching.records.filters.reviewed" fallback="검토완료" />;
+  }
+  if (status === "unknown") {
+    return <I18nText k="myCoaching.records.filters.unknown" fallback="확인 필요" />;
+  }
+  return <I18nText k="myCoaching.records.filters.all" fallback="전체" />;
+}
+
+function visibilityFilterLabel(visibility: VisibilityFilter) {
+  if (visibility === "coach") {
+    return <I18nText k="myCoaching.records.filters.coachShared" fallback="코치에게 공유" />;
+  }
+  if (visibility === "private") {
+    return <I18nText k="myCoaching.records.filters.private" fallback="나만 보기" />;
+  }
+  return <I18nText k="myCoaching.records.filters.all" fallback="전체" />;
+}
+
+function sortFilterLabel(sort: SortOption) {
+  if (sort === "oldest") {
+    return <I18nText k="myCoaching.records.filters.oldest" fallback="오래된순" />;
+  }
+  if (sort === "type") {
+    return <I18nText k="myCoaching.records.filters.typeSort" fallback="기록 유형순" />;
+  }
+  if (sort === "status") {
+    return <I18nText k="myCoaching.records.filters.statusSort" fallback="상태순" />;
+  }
+  return <I18nText k="myCoaching.records.filters.newest" fallback="최신순" />;
 }
 
 function getRecordsResultSectionClass(hasActiveSearchOrFilter: boolean) {
@@ -399,6 +446,24 @@ function getRecordsResultSectionClass(hasActiveSearchOrFilter: boolean) {
   ]
     .filter(Boolean)
     .join(" ");
+}
+
+function ResultCountText({
+  shown,
+  total,
+}: {
+  shown: number;
+  total: number;
+}) {
+  return (
+    <>
+      <I18nText k="myCoaching.records.filters.resultCountPrefix" fallback="전체" />{" "}
+      {total}
+      <I18nText k="myCoaching.records.filters.totalSuffix" fallback="개 중" />{" "}
+      {shown}
+      <I18nText k="myCoaching.records.filters.shownSuffix" fallback="개 표시" />
+    </>
+  );
 }
 
 function compareRecords(
@@ -861,80 +926,118 @@ export default async function MyCoachingRecordsPage({
       `}</style>
       <section className="mx-auto w-full max-w-6xl print:max-w-none">
         <Card className="print:border-0 print:shadow-none">
-          <CardHeader className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <CardHeader className="space-y-5">
           <div className="min-w-0">
             <Badge className="print:hidden" icon="report" tone="info">
-              코칭 기록
+              <I18nText k="myCoaching.records.badge" fallback="코칭 기록" />
             </Badge>
             <CardTitle className="mt-3 text-2xl print:hidden sm:text-3xl">
-              나의 기록
+              <I18nText k="myCoaching.records.title" fallback="나의 기록" />
             </CardTitle>
             <h1 className="hidden text-3xl font-semibold print:block">
-              나의 기록 보고서
+              <I18nText k="myCoaching.records.reportTitle" fallback="나의 기록 보고서" />
             </h1>
             <CardDescription className="mt-3 max-w-3xl">
-              하루, 주간, 월간 단위로 나의 코칭 여정과 실천 내용을
-              기록합니다.
+              <I18nText
+                k="myCoaching.records.description"
+                fallback="하루, 주간, 월간 단위로 나의 코칭 여정과 실천 내용을 기록합니다."
+              />
             </CardDescription>
             <p className="mt-3 hidden text-sm text-slate-600 print:block">
-              생성일: {generatedAt}
+              <I18nText k="myCoaching.records.generatedAt" fallback="생성일" />: {generatedAt}
             </p>
             <p className="mt-2 hidden text-sm text-slate-600 print:block">
-              기준 시간대: {effectiveTimezone}
+              <I18nText k="myCoaching.records.timezone" fallback="기준 시간대" />: {effectiveTimezone}
             </p>
             <p className="mt-2 hidden text-sm text-slate-600 print:block">
-              인쇄 범위:{" "}
-              <span data-print-range-label="all">현재 결과 전체</span>
-              <span data-print-range-label="daily">하루 기록</span>
-              <span data-print-range-label="weekly">주간 기록</span>
-              <span data-print-range-label="monthly">월간 회고</span>
+              <I18nText k="myCoaching.records.printRange" fallback="인쇄 범위" />:{" "}
+              <span data-print-range-label="all">
+                <I18nText k="myCoaching.records.currentResults" fallback="현재 결과 전체" />
+              </span>
+              <span data-print-range-label="daily">
+                <I18nText k="myCoaching.records.daily" fallback="하루 기록" />
+              </span>
+              <span data-print-range-label="weekly">
+                <I18nText k="myCoaching.records.weekly" fallback="주간 기록" />
+              </span>
+              <span data-print-range-label="monthly">
+                <I18nText k="myCoaching.records.monthlyReflection" fallback="월간 회고" />
+              </span>
             </p>
             <p className="mt-2 hidden text-sm text-slate-600 print:block">
-              출력 기준: 현재 검색/필터/정렬 결과
-              {!hasActiveSearchOrFilter ? " · 필터 없음: 최근 기록 기준 출력" : ""}
+              <I18nText
+                k="myCoaching.records.printBasis"
+                fallback="출력 기준: 현재 검색/필터/정렬 결과"
+              />
+              {!hasActiveSearchOrFilter ? (
+                <>
+                  {" · "}
+                  <I18nText
+                    k="myCoaching.records.noFilterRecentPrint"
+                    fallback="필터 없음: 최근 기록 기준 출력"
+                  />
+                </>
+              ) : null}
             </p>
             <p className="mt-2 hidden text-sm text-slate-600 print:block">
-              적용된 필터: {filterSummary}
+              <I18nText k="myCoaching.records.appliedFilters" fallback="적용된 필터" />: {filterSummary}
             </p>
             <p className="mt-2 hidden text-sm text-slate-600 print:block">
-              기록 수: {printRecordCountSummary}
+              <I18nText k="myCoaching.records.recordCount" fallback="기록 수" />: {printRecordCountSummary}
             </p>
           </div>
-          <div className="flex min-w-0 flex-col items-start gap-3 text-sm print:hidden lg:items-end">
-            <PrintRecordsButton suggestedTitles={suggestedPrintTitles} />
-            <div className="max-w-md rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600 print:hidden">
+          <div className="print:hidden">
+            <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="shrink-0">
+                  <LanguageSwitcher />
+                </div>
+                <div className="flex min-w-0 justify-start lg:justify-end">
+                  <PrintRecordsButton suggestedTitles={suggestedPrintTitles} />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600">
               <p>
-                현재 검색어, 기록 유형, 상태, 공유, 정렬 기준이 인쇄물에
-                반영됩니다.
+                <I18nText
+                  k="myCoaching.records.printNotice"
+                  fallback="현재 검색어, 기록 유형, 상태, 공유, 정렬 기준이 인쇄물에 반영됩니다."
+                />
               </p>
               <p className="mt-1">
-                필터가 없으면 최근 하루/주간/월간 기록 중심으로 출력됩니다.
-                브라우저 인쇄창에서 PDF 저장을 선택할 수 있습니다.
-                모바일 브라우저에서는 PDF 저장 옵션이 기기와 브라우저에 따라
-                다르게 표시될 수 있습니다. 인쇄창이 열리지 않으면 Safari 또는
-                Chrome에서 다시 열어 주세요.
+                <I18nText
+                  k="myCoaching.records.printNoticeDetail"
+                  fallback="필터가 없으면 최근 하루/주간/월간 기록 중심으로 출력됩니다. 브라우저 인쇄창에서 PDF 저장을 선택할 수 있습니다. 모바일 브라우저에서는 PDF 저장 옵션이 기기와 브라우저에 따라 다르게 표시될 수 있습니다. 인쇄창이 열리지 않으면 Safari 또는 Chrome에서 다시 열어 주세요."
+                />
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
+
+            <nav className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:flex-wrap">
               <ButtonLink href="/my-coaching" icon="arrow-left" size="sm" variant="secondary">
-                내 코칭 공간으로 돌아가기
+                <I18nText k="myCoaching.records.backToMyCoaching" fallback="내 코칭 공간으로 돌아가기" />
               </ButtonLink>
               <ButtonLink href="/my-coaching/moksilgi" icon="report" size="sm" variant="secondary">
-                나의 목실기
+                <I18nText k="myCoaching.myMoksilgi" fallback="나의 목실기" />
               </ButtonLink>
               <ButtonLink href="/dashboard" icon="dashboard" size="sm" variant="secondary">
-                대시보드로 돌아가기
+                <I18nText k="myCoaching.backToDashboard" fallback="대시보드로 돌아가기" />
               </ButtonLink>
-            </div>
+            </nav>
           </div>
           </CardHeader>
         </Card>
 
         <Card className="mt-8 print:hidden">
           <CardHeader>
-            <CardTitle>기록 방식 선택</CardTitle>
+            <CardTitle>
+              <I18nText k="myCoaching.records.chooseType" fallback="기록 방식 선택" />
+            </CardTitle>
             <CardDescription>
-              하루, 주간, 월간 기록 중 필요한 기록 방식을 선택해 주세요.
+              <I18nText
+                k="myCoaching.records.chooseTypeDescription"
+                fallback="하루, 주간, 월간 기록 중 필요한 기록 방식을 선택해 주세요."
+              />
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -945,12 +1048,17 @@ export default async function MyCoachingRecordsPage({
               icon="report"
               variant="secondary"
             >
-              <p className="font-medium text-slate-950">하루 기록</p>
+              <p className="font-medium text-slate-950">
+                <I18nText k="myCoaching.records.daily" fallback="하루 기록" />
+              </p>
               <p className="mt-2 text-sm text-slate-600">
-                오늘의 묵상, 실천, 적용, 기도제목을 간단히 기록합니다.
+                <I18nText
+                  k="myCoaching.records.dailyDescription"
+                  fallback="오늘의 묵상, 실천, 적용, 기도제목을 간단히 기록합니다."
+                />
               </p>
               <p className="mt-4 text-sm font-medium text-slate-700 underline">
-                하루 기록 작성
+                <I18nText k="myCoaching.records.writeDaily" fallback="하루 기록 작성" />
               </p>
             </ButtonLink>
 
@@ -960,12 +1068,17 @@ export default async function MyCoachingRecordsPage({
               icon="report"
               variant="secondary"
             >
-              <p className="font-medium text-slate-950">주간 기록</p>
+              <p className="font-medium text-slate-950">
+                <I18nText k="myCoaching.records.weekly" fallback="주간 기록" />
+              </p>
               <p className="mt-2 text-sm text-slate-600">
-                한 주간의 목표 실행과 목실기 실천을 정리합니다.
+                <I18nText
+                  k="myCoaching.records.weeklyDescription"
+                  fallback="한 주간의 목표 실행과 목실기 실천을 정리합니다."
+                />
               </p>
               <p className="mt-4 text-sm font-medium text-slate-700 underline">
-                주간 기록 작성
+                <I18nText k="myCoaching.records.writeWeekly" fallback="주간 기록 작성" />
               </p>
             </ButtonLink>
 
@@ -975,12 +1088,17 @@ export default async function MyCoachingRecordsPage({
               icon="report"
               variant="secondary"
             >
-              <p className="font-medium text-slate-950">월간 기록</p>
+              <p className="font-medium text-slate-950">
+                <I18nText k="myCoaching.records.monthly" fallback="월간 기록" />
+              </p>
               <p className="mt-2 text-sm text-slate-600">
-                한 달 동안의 성장과 다음 달 계획을 정리합니다.
+                <I18nText
+                  k="myCoaching.records.monthlyDescription"
+                  fallback="한 달 동안의 성장과 다음 달 계획을 정리합니다."
+                />
               </p>
               <p className="mt-4 text-sm font-medium text-slate-700 underline">
-                월간 회고 작성
+                <I18nText k="myCoaching.records.writeMonthly" fallback="월간 회고 작성" />
               </p>
             </ButtonLink>
           </div>
@@ -989,96 +1107,140 @@ export default async function MyCoachingRecordsPage({
 
         <Card className="mt-8 print:hidden">
           <CardHeader>
-            <CardTitle>나의 기록 검색/필터</CardTitle>
+            <CardTitle>
+              <I18nText k="myCoaching.records.searchFilterTitle" fallback="나의 기록 검색/필터" />
+            </CardTitle>
             <CardDescription>
-              하루, 주간, 월간 기록을 함께 검색하고 필요한 조건으로
-              정리합니다.
+              <I18nText
+                k="myCoaching.records.searchFilterDescription"
+                fallback="하루, 주간, 월간 기록을 함께 검색하고 필요한 조건으로 정리합니다."
+              />
             </CardDescription>
           </CardHeader>
           <CardContent>
           <form className="mt-5 grid gap-4" method="get">
             <FieldLabel htmlFor="q">
               <FieldText>
-                검색어
+                <I18nText k="myCoaching.records.filters.searchLabel" fallback="검색어" />
               </FieldText>
               <TextInput
                 defaultValue={query}
                 id="q"
                 name="q"
-                placeholder="제목, 돌아봄, 기도제목, 진행요약, 회고 내용 검색"
                 type="search"
               />
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                <I18nText
+                  k="myCoaching.records.filters.searchPlaceholder"
+                  fallback="제목, 돌아봄, 기도제목, 진행요약, 회고 내용 검색"
+                />
+              </p>
             </FieldLabel>
 
             <div className="grid gap-4 md:grid-cols-4">
               <FieldLabel htmlFor="type">
                 <FieldText>
-                  기록 유형
+                  <I18nText k="myCoaching.records.filters.recordType" fallback="기록 유형" />
                 </FieldText>
                 <SelectInput
                   defaultValue={typeFilter}
                   id="type"
                   name="type"
                 >
-                  <option value="all">전체</option>
-                  <option value="daily">하루 기록</option>
-                  <option value="weekly">주간 기록</option>
-                  <option value="monthly">월간 회고</option>
+                  <option value="all">
+                    <I18nText k="myCoaching.records.filters.all" fallback="전체" />
+                  </option>
+                  <option value="daily">
+                    <I18nText k="myCoaching.records.daily" fallback="하루 기록" />
+                  </option>
+                  <option value="weekly">
+                    <I18nText k="myCoaching.records.weekly" fallback="주간 기록" />
+                  </option>
+                  <option value="monthly">
+                    <I18nText k="myCoaching.records.monthlyReflection" fallback="월간 회고" />
+                  </option>
                 </SelectInput>
               </FieldLabel>
 
               <FieldLabel htmlFor="status">
                 <FieldText>
-                  상태
+                  <I18nText k="myCoaching.records.filters.status" fallback="상태" />
                 </FieldText>
                 <SelectInput
                   defaultValue={statusFilter}
                   id="status"
                   name="status"
                 >
-                  <option value="all">전체</option>
-                  <option value="draft">임시저장</option>
-                  <option value="submitted">제출완료</option>
-                  <option value="reviewed">검토완료</option>
-                  <option value="unknown">확인 필요</option>
+                  <option value="all">
+                    <I18nText k="myCoaching.records.filters.all" fallback="전체" />
+                  </option>
+                  <option value="draft">
+                    <I18nText k="myCoaching.records.filters.draft" fallback="임시저장" />
+                  </option>
+                  <option value="submitted">
+                    <I18nText k="myCoaching.records.filters.submitted" fallback="제출완료" />
+                  </option>
+                  <option value="reviewed">
+                    <I18nText k="myCoaching.records.filters.reviewed" fallback="검토완료" />
+                  </option>
+                  <option value="unknown">
+                    <I18nText k="myCoaching.records.filters.unknown" fallback="확인 필요" />
+                  </option>
                 </SelectInput>
               </FieldLabel>
 
               <FieldLabel htmlFor="visibility">
                 <FieldText>
-                  공유
+                  <I18nText k="myCoaching.records.filters.visibility" fallback="공유" />
                 </FieldText>
                 <SelectInput
                   defaultValue={visibilityFilter}
                   id="visibility"
                   name="visibility"
                 >
-                  <option value="all">전체</option>
-                  <option value="private">나만 보기</option>
-                  <option value="coach">코치에게 공유</option>
+                  <option value="all">
+                    <I18nText k="myCoaching.records.filters.all" fallback="전체" />
+                  </option>
+                  <option value="private">
+                    <I18nText k="myCoaching.records.filters.private" fallback="나만 보기" />
+                  </option>
+                  <option value="coach">
+                    <I18nText k="myCoaching.records.filters.coachShared" fallback="코치에게 공유" />
+                  </option>
                 </SelectInput>
               </FieldLabel>
 
               <FieldLabel htmlFor="sort">
                 <FieldText>
-                  정렬
+                  <I18nText k="myCoaching.records.filters.sort" fallback="정렬" />
                 </FieldText>
                 <SelectInput
                   defaultValue={sortOption}
                   id="sort"
                   name="sort"
                 >
-                  <option value="newest">최신순</option>
-                  <option value="oldest">오래된순</option>
-                  <option value="type">기록 유형순</option>
-                  <option value="status">상태순</option>
+                  <option value="newest">
+                    <I18nText k="myCoaching.records.filters.newest" fallback="최신순" />
+                  </option>
+                  <option value="oldest">
+                    <I18nText k="myCoaching.records.filters.oldest" fallback="오래된순" />
+                  </option>
+                  <option value="type">
+                    <I18nText k="myCoaching.records.filters.typeSort" fallback="기록 유형순" />
+                  </option>
+                  <option value="status">
+                    <I18nText k="myCoaching.records.filters.statusSort" fallback="상태순" />
+                  </option>
                 </SelectInput>
               </FieldLabel>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-slate-600">
-                전체 {combinedRecords.length}개 중 {filteredRecords.length}개 표시
+                <ResultCountText
+                  shown={filteredRecords.length}
+                  total={combinedRecords.length}
+                />
               </p>
               <div className="flex flex-wrap gap-2">
                 <ButtonLink
@@ -1086,10 +1248,10 @@ export default async function MyCoachingRecordsPage({
                   icon="filter"
                   variant="secondary"
                 >
-                  필터 초기화
+                  <I18nText k="myCoaching.records.resetFilters" fallback="필터 초기화" />
                 </ButtonLink>
                 <Button icon="search" type="submit">
-                  필터 적용
+                  <I18nText k="myCoaching.records.applyFilters" fallback="필터 적용" />
                 </Button>
               </div>
             </div>
@@ -1099,9 +1261,14 @@ export default async function MyCoachingRecordsPage({
 
         <Card className="mt-8 print:hidden">
           <CardHeader>
-            <CardTitle>최근 나의 기록</CardTitle>
+            <CardTitle>
+              <I18nText k="myCoaching.records.recentTitle" fallback="최근 나의 기록" />
+            </CardTitle>
             <CardDescription>
-                하루, 주간, 월간 기록의 최근 내용을 한눈에 확인합니다.
+              <I18nText
+                k="myCoaching.records.recentDescription"
+                fallback="하루, 주간, 월간 기록의 최근 내용을 한눈에 확인합니다."
+              />
             </CardDescription>
           </CardHeader>
 
@@ -1111,9 +1278,11 @@ export default async function MyCoachingRecordsPage({
               <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="font-semibold text-slate-950">최근 하루 기록</h3>
+                  <h3 className="font-semibold text-slate-950">
+                    <I18nText k="myCoaching.records.recentDaily" fallback="최근 하루 기록" />
+                  </h3>
                   <p className="mt-1 text-sm text-slate-600">
-                    최신 기록 날짜순 3개
+                    <I18nText k="myCoaching.records.latestDailyThree" fallback="최신 기록 날짜순 3개" />
                   </p>
                 </div>
                 <ButtonLink
@@ -1122,17 +1291,17 @@ export default async function MyCoachingRecordsPage({
                   size="sm"
                   variant="secondary"
                 >
-                  하루 기록으로 이동
+                  <I18nText k="myCoaching.records.goDaily" fallback="하루 기록으로 이동" />
                 </ButtonLink>
               </div>
 
               {!dailyResult.ok ? (
                 <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-                  하루 기록을 불러오지 못했습니다.
+                  <I18nText k="myCoaching.records.dailyLoadFailed" fallback="하루 기록을 불러오지 못했습니다." />
                 </div>
               ) : recentDailyRecords.length === 0 ? (
                 <div className="mt-4 rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-600">
-                  아직 작성한 하루 기록이 없습니다.
+                  <I18nText k="myCoaching.records.noDaily" fallback="아직 작성한 하루 기록이 없습니다." />
                 </div>
               ) : (
                 <div className="mt-4 space-y-3">
@@ -1171,9 +1340,11 @@ export default async function MyCoachingRecordsPage({
               <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="font-semibold text-slate-950">최근 주간 기록</h3>
+                  <h3 className="font-semibold text-slate-950">
+                    <I18nText k="myCoaching.records.recentWeekly" fallback="최근 주간 기록" />
+                  </h3>
                   <p className="mt-1 text-sm text-slate-600">
-                    최신 주간 기간순 3개
+                    <I18nText k="myCoaching.records.latestWeeklyThree" fallback="최신 주간 기간순 3개" />
                   </p>
                 </div>
                 <ButtonLink
@@ -1182,17 +1353,17 @@ export default async function MyCoachingRecordsPage({
                   size="sm"
                   variant="secondary"
                 >
-                  주간 기록으로 이동
+                  <I18nText k="myCoaching.records.goWeekly" fallback="주간 기록으로 이동" />
                 </ButtonLink>
               </div>
 
               {!weeklyResult.ok ? (
                 <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-                  주간 기록을 불러오지 못했습니다.
+                  <I18nText k="myCoaching.records.weeklyLoadFailed" fallback="주간 기록을 불러오지 못했습니다." />
                 </div>
               ) : recentWeeklyLogs.length === 0 ? (
                 <div className="mt-4 rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-600">
-                  아직 작성한 주간 기록이 없습니다.
+                  <I18nText k="myCoaching.records.noWeekly" fallback="아직 작성한 주간 기록이 없습니다." />
                 </div>
               ) : (
                 <div className="mt-4 space-y-3">
@@ -1239,9 +1410,11 @@ export default async function MyCoachingRecordsPage({
               <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="font-semibold text-slate-950">최근 월간 회고</h3>
+                  <h3 className="font-semibold text-slate-950">
+                    <I18nText k="myCoaching.records.recentMonthly" fallback="최근 월간 회고" />
+                  </h3>
                   <p className="mt-1 text-sm text-slate-600">
-                    최신 연도/월순 3개
+                    <I18nText k="myCoaching.records.latestMonthlyThree" fallback="최신 연도/월순 3개" />
                   </p>
                 </div>
                 <ButtonLink
@@ -1250,17 +1423,17 @@ export default async function MyCoachingRecordsPage({
                   size="sm"
                   variant="secondary"
                 >
-                  월간 회고로 이동
+                  <I18nText k="myCoaching.records.goMonthly" fallback="월간 회고로 이동" />
                 </ButtonLink>
               </div>
 
               {!monthlyResult.ok ? (
                 <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-                  월간 회고를 불러오지 못했습니다.
+                  <I18nText k="myCoaching.records.monthlyLoadFailed" fallback="월간 회고를 불러오지 못했습니다." />
                 </div>
               ) : recentMonthlyReflections.length === 0 ? (
                 <div className="mt-4 rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-600">
-                  아직 작성한 월간 회고가 없습니다.
+                  <I18nText k="myCoaching.records.noMonthly" fallback="아직 작성한 월간 회고가 없습니다." />
                 </div>
               ) : (
                 <div className="mt-4 space-y-3">
@@ -1307,21 +1480,34 @@ export default async function MyCoachingRecordsPage({
         <section className={getRecordsResultSectionClass(hasActiveSearchOrFilter)}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold">검색 결과</h2>
+              <h2 className="text-lg font-semibold">
+                <I18nText k="myCoaching.records.searchResults" fallback="검색 결과" />
+              </h2>
               <p className="mt-2 text-sm text-slate-600">
-                전체 {combinedRecords.length}개 중 {printRecords.length}개 표시
+                <ResultCountText
+                  shown={printRecords.length}
+                  total={combinedRecords.length}
+                />
               </p>
               <p className="mt-2 text-sm text-slate-500">
-                적용된 필터: {filterSummary}
+                <I18nText k="myCoaching.records.appliedFilters" fallback="적용된 필터" />: {filterSummary}
               </p>
             </div>
           </div>
 
           {printRecords.length === 0 ? (
             <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-              <p>선택한 조건 또는 인쇄 범위에 해당하는 기록이 없습니다.</p>
+              <p>
+                <I18nText
+                  k="myCoaching.records.noRecordsForConditions"
+                  fallback="선택한 조건 또는 인쇄 범위에 해당하는 기록이 없습니다."
+                />
+              </p>
               <p className="mt-1">
-                필터를 초기화하거나 새 기록을 작성해 주세요.
+                <I18nText
+                  k="myCoaching.records.resetOrCreate"
+                  fallback="필터를 초기화하거나 새 기록을 작성해 주세요."
+                />
               </p>
               <div className="mt-4 flex flex-wrap gap-2 print:hidden">
                 <ButtonLink
@@ -1330,14 +1516,14 @@ export default async function MyCoachingRecordsPage({
                   size="sm"
                   variant="secondary"
                 >
-                  필터 초기화
+                  <I18nText k="myCoaching.records.resetFilters" fallback="필터 초기화" />
                 </ButtonLink>
                 <ButtonLink
                   href="/my-coaching/records/daily"
                   icon="report"
                   size="sm"
                 >
-                  하루 기록 작성
+                  <I18nText k="myCoaching.records.writeDaily" fallback="하루 기록 작성" />
                 </ButtonLink>
                 <ButtonLink
                   href="/my-coaching/weekly-log"
@@ -1345,7 +1531,7 @@ export default async function MyCoachingRecordsPage({
                   size="sm"
                   variant="secondary"
                 >
-                  주간 기록 작성
+                  <I18nText k="myCoaching.records.writeWeekly" fallback="주간 기록 작성" />
                 </ButtonLink>
               </div>
             </div>
@@ -1353,11 +1539,14 @@ export default async function MyCoachingRecordsPage({
             <div className="mt-5 grid gap-6">
               <section data-print-section="daily">
                 <h3 className="border-b border-slate-200 pb-2 font-semibold">
-                  하루 기록 결과
+                  <I18nText k="myCoaching.records.dailyResults" fallback="하루 기록 결과" />
                 </h3>
                 {dailyPrintRecords.length === 0 ? (
                   <p className="mt-3 text-sm text-slate-600">
-                    선택한 조건에 해당하는 하루 기록이 없습니다.
+                    <I18nText
+                      k="myCoaching.records.noDailyResults"
+                      fallback="선택한 조건에 해당하는 하루 기록이 없습니다."
+                    />
                   </p>
                 ) : (
                   <div className="mt-3 grid gap-3">
@@ -1370,11 +1559,14 @@ export default async function MyCoachingRecordsPage({
 
               <section data-print-section="weekly">
                 <h3 className="border-b border-slate-200 pb-2 font-semibold">
-                  주간 기록 결과
+                  <I18nText k="myCoaching.records.weeklyResults" fallback="주간 기록 결과" />
                 </h3>
                 {weeklyPrintRecords.length === 0 ? (
                   <p className="mt-3 text-sm text-slate-600">
-                    선택한 조건에 해당하는 주간 기록이 없습니다.
+                    <I18nText
+                      k="myCoaching.records.noWeeklyResults"
+                      fallback="선택한 조건에 해당하는 주간 기록이 없습니다."
+                    />
                   </p>
                 ) : (
                   <div className="mt-3 grid gap-3">
@@ -1387,11 +1579,14 @@ export default async function MyCoachingRecordsPage({
 
               <section data-print-section="monthly">
                 <h3 className="border-b border-slate-200 pb-2 font-semibold">
-                  월간 회고 결과
+                  <I18nText k="myCoaching.records.monthlyResults" fallback="월간 회고 결과" />
                 </h3>
                 {monthlyPrintRecords.length === 0 ? (
                   <p className="mt-3 text-sm text-slate-600">
-                    선택한 조건에 해당하는 월간 회고가 없습니다.
+                    <I18nText
+                      k="myCoaching.records.noMonthlyResults"
+                      fallback="선택한 조건에 해당하는 월간 회고가 없습니다."
+                    />
                   </p>
                 ) : (
                   <div className="mt-3 grid gap-3">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useI18n } from "@/lib/i18n/useI18n";
 import { getClientTimezone, getTodayDateInTimezone } from "@/lib/timezone";
 import { isValidDate } from "@/lib/validation/common";
 
@@ -52,15 +53,30 @@ function createInitialFormState(): FormState {
   };
 }
 
-const statusLabels: Record<DailyRecordStatus, string> = {
-  draft: "임시저장",
-  submitted: "제출",
-  reviewed: "검토완료",
+const statusLabelMeta: Record<DailyRecordStatus, { fallback: string; key: string }> = {
+  draft: {
+    fallback: "임시저장",
+    key: "myCoaching.records.dailyPage.form.status.draft",
+  },
+  reviewed: {
+    fallback: "검토완료",
+    key: "myCoaching.records.dailyPage.form.status.reviewed",
+  },
+  submitted: {
+    fallback: "제출",
+    key: "myCoaching.records.dailyPage.form.status.submitted",
+  },
 };
 
-const visibilityLabels: Record<DailyRecordVisibility, string> = {
-  private: "나만 보기",
-  coach: "코치에게 공유",
+const visibilityLabelMeta: Record<DailyRecordVisibility, { fallback: string; key: string }> = {
+  coach: {
+    fallback: "코치에게 공유",
+    key: "myCoaching.records.dailyPage.form.visibility.coach",
+  },
+  private: {
+    fallback: "나만 보기",
+    key: "myCoaching.records.dailyPage.form.visibility.private",
+  },
 };
 
 function formatDate(value: string | null) {
@@ -118,16 +134,33 @@ function getDateTimeValue(value: string | null) {
   return Number.isNaN(time) ? 0 : time;
 }
 
-function getStatusLabel(status: string) {
-  return status in statusLabels
-    ? statusLabels[status as DailyRecordStatus]
-    : "확인 필요";
+function getStatusLabel(status: string, t: (key: string, fallback?: string) => string) {
+  if (status in statusLabelMeta) {
+    const label = statusLabelMeta[status as DailyRecordStatus];
+    return t(label.key, label.fallback);
+  }
+
+  return t("myCoaching.records.dailyPage.form.status.unknown", "확인 필요");
 }
 
-function getVisibilityLabel(visibility: string) {
-  return visibility in visibilityLabels
-    ? visibilityLabels[visibility as DailyRecordVisibility]
-    : "미지정";
+function getVisibilityLabel(
+  visibility: string,
+  t: (key: string, fallback?: string) => string,
+) {
+  if (visibility in visibilityLabelMeta) {
+    const label = visibilityLabelMeta[visibility as DailyRecordVisibility];
+    return t(label.key, label.fallback);
+  }
+
+  return t("myCoaching.records.dailyPage.form.visibility.unknown", "미지정");
+}
+
+function getStatusSortLabel(status: string) {
+  if (status in statusLabelMeta) {
+    return statusLabelMeta[status as DailyRecordStatus].fallback;
+  }
+
+  return "확인 필요";
 }
 
 function toNullableText(value: string) {
@@ -148,28 +181,32 @@ function getErrorMessage(payload: unknown, fallback: string) {
   return fallback;
 }
 
-function getDeleteErrorMessage(status: number, payload: unknown) {
+function getDeleteErrorMessage(
+  status: number,
+  payload: unknown,
+  t: (key: string, fallback?: string) => string,
+) {
   if (status === 400) {
-    return "하루 기록 ID를 확인할 수 없습니다.";
+    return t("myCoaching.records.dailyPage.form.errors.invalidId", "하루 기록 ID를 확인할 수 없습니다.");
   }
 
   if (status === 401) {
-    return "로그인이 필요합니다.";
+    return t("myCoaching.records.dailyPage.form.errors.loginRequired", "로그인이 필요합니다.");
   }
 
   if (status === 403) {
-    return "이 하루 기록에 접근할 권한이 없습니다.";
+    return t("myCoaching.records.dailyPage.form.errors.forbidden", "이 하루 기록에 접근할 권한이 없습니다.");
   }
 
   if (status === 404) {
-    return "하루 기록을 찾을 수 없습니다.";
+    return t("myCoaching.records.dailyPage.form.errors.notFound", "하루 기록을 찾을 수 없습니다.");
   }
 
   if (status === 500) {
-    return "하루 기록 처리에 실패했습니다.";
+    return t("myCoaching.records.dailyPage.form.errors.processFailed", "하루 기록 처리에 실패했습니다.");
   }
 
-  return getErrorMessage(payload, "하루 기록 처리에 실패했습니다.");
+  return getErrorMessage(payload, t("myCoaching.records.dailyPage.form.errors.processFailed", "하루 기록 처리에 실패했습니다."));
 }
 
 function toFormState(record: DailyRecord): FormState {
@@ -186,6 +223,7 @@ function toFormState(record: DailyRecord): FormState {
 }
 
 export function DailyRecordsClient() {
+  const { t } = useI18n();
   const [records, setRecords] = useState<DailyRecord[]>([]);
   const [form, setForm] = useState<FormState>(() => createInitialFormState());
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -230,8 +268,8 @@ export function DailyRecordsClient() {
       let comparison = 0;
 
       if (sortKey === "status") {
-        comparison = getStatusLabel(first.status).localeCompare(
-          getStatusLabel(second.status),
+        comparison = getStatusSortLabel(first.status).localeCompare(
+          getStatusSortLabel(second.status),
           "ko-KR",
         );
       } else {
@@ -255,7 +293,7 @@ export function DailyRecordsClient() {
 
       if (!response.ok) {
         throw new Error(
-          getErrorMessage(payload, "하루 기록 목록을 불러오지 못했습니다."),
+          getErrorMessage(payload, t("myCoaching.records.dailyPage.form.errors.loadFailed", "하루 기록 목록을 불러오지 못했습니다.")),
         );
       }
 
@@ -271,7 +309,7 @@ export function DailyRecordsClient() {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "하루 기록 목록을 불러오지 못했습니다.",
+          : t("myCoaching.records.dailyPage.form.errors.loadFailed", "하루 기록 목록을 불러오지 못했습니다."),
       );
     } finally {
       setIsLoading(false);
@@ -301,7 +339,7 @@ export function DailyRecordsClient() {
     setErrorMessage(null);
 
     if (!isValidDate(form.record_date)) {
-      setErrorMessage("올바른 기록 날짜를 선택해 주세요.");
+      setErrorMessage(t("myCoaching.records.dailyPage.form.errors.invalidDate", "올바른 기록 날짜를 선택해 주세요."));
       return;
     }
 
@@ -336,16 +374,16 @@ export function DailyRecordsClient() {
           getErrorMessage(
             responsePayload,
             editingId
-              ? "하루 기록 수정에 실패했습니다."
-              : "하루 기록 저장에 실패했습니다.",
+              ? t("myCoaching.records.dailyPage.form.errors.updateFailed", "하루 기록 수정에 실패했습니다.")
+              : t("myCoaching.records.dailyPage.form.errors.saveFailed", "하루 기록 저장에 실패했습니다."),
           ),
         );
       }
 
       setMessage(
         editingId
-          ? "하루 기록이 수정되었습니다."
-          : "하루 기록이 저장되었습니다.",
+          ? t("myCoaching.records.dailyPage.form.updated", "하루 기록이 수정되었습니다.")
+          : t("myCoaching.records.dailyPage.form.saved", "하루 기록이 저장되었습니다."),
       );
       resetForm();
       await loadRecords();
@@ -354,8 +392,8 @@ export function DailyRecordsClient() {
         error instanceof Error
           ? error.message
           : editingId
-            ? "하루 기록 수정에 실패했습니다."
-            : "하루 기록 저장에 실패했습니다.",
+            ? t("myCoaching.records.dailyPage.form.errors.updateFailed", "하루 기록 수정에 실패했습니다.")
+            : t("myCoaching.records.dailyPage.form.errors.saveFailed", "하루 기록 저장에 실패했습니다."),
       );
     } finally {
       setIsSaving(false);
@@ -374,14 +412,14 @@ export function DailyRecordsClient() {
     setErrorMessage(null);
 
     if (!record.id || record.id.trim().length === 0) {
-      setErrorMessage("하루 기록을 찾을 수 없습니다.");
+      setErrorMessage(t("myCoaching.records.dailyPage.form.errors.notFound", "하루 기록을 찾을 수 없습니다."));
       return;
     }
 
     const confirmed = window.confirm(
-      `하루 기록을 삭제하시겠습니까?\n\n기록 날짜: ${formatDate(
+      `${t("myCoaching.records.dailyPage.form.deleteConfirm", "하루 기록을 삭제하시겠습니까?")}\n\n${t("myCoaching.records.dailyPage.form.recordDate", "기록 날짜")}: ${formatDate(
         record.record_date,
-      )}\n이 작업은 되돌릴 수 없습니다.`,
+      )}\n${t("myCoaching.records.dailyPage.form.deleteIrreversible", "이 작업은 되돌릴 수 없습니다.")}`,
     );
 
     if (!confirmed) {
@@ -400,7 +438,7 @@ export function DailyRecordsClient() {
       const payload: unknown = await response.json();
 
       if (!response.ok) {
-        throw new Error(getDeleteErrorMessage(response.status, payload));
+        throw new Error(getDeleteErrorMessage(response.status, payload, t));
       }
 
       if (editingId === record.id) {
@@ -411,14 +449,14 @@ export function DailyRecordsClient() {
         currentRecords.filter((currentRecord) => currentRecord.id !== record.id),
       );
       setErrorMessage(null);
-      setMessage("하루 기록이 목록에서 제거되었습니다.");
+      setMessage(t("myCoaching.records.dailyPage.form.removed", "하루 기록이 목록에서 제거되었습니다."));
       void loadRecords();
     } catch (error) {
       setMessage(null);
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "하루 기록 처리에 실패했습니다.",
+          : t("myCoaching.records.dailyPage.form.errors.processFailed", "하루 기록 처리에 실패했습니다."),
       );
     } finally {
       setDeletingId(null);
@@ -431,19 +469,24 @@ export function DailyRecordsClient() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold">
-              {editingRecord ? "하루 기록 수정" : "하루 기록 작성"}
+              {editingRecord
+                ? t("myCoaching.records.dailyPage.form.editTitle", "하루 기록 수정")
+                : t("myCoaching.records.dailyPage.form.createTitle", "하루 기록 작성")}
             </h2>
             <p className="mt-2 text-sm text-slate-600">
-              기록 날짜와 오늘의 돌아봄을 남겨 주세요.
+              {t(
+                "myCoaching.records.dailyPage.form.description",
+                "기록 날짜와 오늘의 돌아봄을 남겨 주세요.",
+              )}
             </p>
           </div>
           {editingRecord ? (
             <button
               className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
-              onClick={resetForm}
-              type="button"
-            >
-              수정 취소
+            onClick={resetForm}
+            type="button"
+          >
+              {t("myCoaching.records.dailyPage.form.cancelEdit", "수정 취소")}
             </button>
           ) : null}
         </div>
@@ -465,7 +508,7 @@ export function DailyRecordsClient() {
               className="text-sm font-medium text-slate-700"
               htmlFor="record_date"
             >
-              기록 날짜
+              {t("myCoaching.records.dailyPage.form.recordDate", "기록 날짜")}
             </label>
             <input
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -486,7 +529,7 @@ export function DailyRecordsClient() {
               className="text-sm font-medium text-slate-700"
               htmlFor="title"
             >
-              제목
+              {t("myCoaching.records.dailyPage.form.title", "제목")}
             </label>
             <input
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -497,7 +540,10 @@ export function DailyRecordsClient() {
                   title: event.target.value,
                 }))
               }
-              placeholder="오늘 기록의 제목"
+              placeholder={t(
+                "myCoaching.records.dailyPage.form.titlePlaceholder",
+                "오늘 기록의 제목",
+              )}
               type="text"
               value={form.title}
             />
@@ -508,7 +554,7 @@ export function DailyRecordsClient() {
               className="text-sm font-medium text-slate-700"
               htmlFor="reflection"
             >
-              오늘의 돌아봄
+              {t("myCoaching.records.dailyPage.form.reflection", "오늘의 돌아봄")}
             </label>
             <textarea
               className="mt-1 min-h-28 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -528,7 +574,7 @@ export function DailyRecordsClient() {
               className="text-sm font-medium text-slate-700"
               htmlFor="practice"
             >
-              실천/적용
+              {t("myCoaching.records.dailyPage.form.practice", "실천/적용")}
             </label>
             <textarea
               className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -548,7 +594,7 @@ export function DailyRecordsClient() {
               className="text-sm font-medium text-slate-700"
               htmlFor="prayer_request"
             >
-              기도제목
+              {t("myCoaching.records.dailyPage.form.prayerRequest", "기도제목")}
             </label>
             <textarea
               className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -569,7 +615,7 @@ export function DailyRecordsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="visibility"
               >
-                공유 옵션
+                {t("myCoaching.records.dailyPage.form.visibility.label", "공유 옵션")}
               </label>
               <select
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -583,8 +629,12 @@ export function DailyRecordsClient() {
                 }
                 value={form.visibility}
               >
-                <option value="private">나만 보기</option>
-                <option value="coach">코치에게 공유</option>
+                <option value="private">
+                  {t("myCoaching.records.dailyPage.form.visibility.private", "나만 보기")}
+                </option>
+                <option value="coach">
+                  {t("myCoaching.records.dailyPage.form.visibility.coach", "코치에게 공유")}
+                </option>
               </select>
             </div>
 
@@ -593,7 +643,7 @@ export function DailyRecordsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="status"
               >
-                상태
+                {t("myCoaching.records.dailyPage.form.status.label", "상태")}
               </label>
               <select
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -606,10 +656,14 @@ export function DailyRecordsClient() {
                 }
                 value={form.status}
               >
-                <option value="draft">임시저장</option>
-                <option value="submitted">제출</option>
+                <option value="draft">
+                  {t("myCoaching.records.dailyPage.form.status.draft", "임시저장")}
+                </option>
+                <option value="submitted">
+                  {t("myCoaching.records.dailyPage.form.status.submitted", "제출")}
+                </option>
                 <option disabled value="reviewed">
-                  검토완료
+                  {t("myCoaching.records.dailyPage.form.status.reviewed", "검토완료")}
                 </option>
               </select>
             </div>
@@ -628,7 +682,7 @@ export function DailyRecordsClient() {
               }
               type="checkbox"
             />
-            코치에게 공유
+            {t("myCoaching.records.dailyPage.form.shareWithCoach", "코치에게 공유")}
           </label>
 
           <button
@@ -637,19 +691,24 @@ export function DailyRecordsClient() {
             type="submit"
           >
             {isSaving
-              ? "저장 중..."
+              ? t("myCoaching.records.dailyPage.form.saving", "저장 중...")
               : editingRecord
-                ? "하루 기록 수정"
-                : "하루 기록 저장"}
+                ? t("myCoaching.records.dailyPage.form.update", "하루 기록 수정")
+                : t("myCoaching.records.dailyPage.form.save", "하루 기록 저장")}
           </button>
         </form>
       </section>
 
       <section className="rounded-md border border-slate-200 bg-white p-6">
         <div>
-          <h2 className="text-lg font-semibold">나의 하루 기록 목록</h2>
+          <h2 className="text-lg font-semibold">
+            {t("myCoaching.records.dailyPage.form.listTitle", "나의 하루 기록 목록")}
+          </h2>
           <p className="mt-2 text-sm text-slate-600">
-            최신 기록 날짜순으로 표시됩니다.
+            {t(
+              "myCoaching.records.dailyPage.form.listDescription",
+              "최신 기록 날짜순으로 표시됩니다.",
+            )}
           </p>
         </div>
 
@@ -659,13 +718,16 @@ export function DailyRecordsClient() {
               className="text-sm font-medium text-slate-700"
               htmlFor="daily-search"
             >
-              검색
+              {t("myCoaching.records.dailyPage.form.search", "검색")}
             </label>
             <input
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               id="daily-search"
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="제목, 돌아봄, 실천/적용, 기도제목 검색"
+              placeholder={t(
+                "myCoaching.records.dailyPage.form.searchPlaceholder",
+                "제목, 돌아봄, 실천/적용, 기도제목 검색",
+              )}
               type="search"
               value={searchQuery}
             />
@@ -677,7 +739,7 @@ export function DailyRecordsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="daily-status-filter"
               >
-                상태
+                {t("myCoaching.records.dailyPage.form.status.label", "상태")}
               </label>
               <select
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -687,10 +749,18 @@ export function DailyRecordsClient() {
                 }
                 value={statusFilter}
               >
-                <option value="all">전체</option>
-                <option value="draft">임시저장</option>
-                <option value="submitted">제출</option>
-                <option value="reviewed">검토완료</option>
+                <option value="all">
+                  {t("myCoaching.records.dailyPage.form.all", "전체")}
+                </option>
+                <option value="draft">
+                  {t("myCoaching.records.dailyPage.form.status.draft", "임시저장")}
+                </option>
+                <option value="submitted">
+                  {t("myCoaching.records.dailyPage.form.status.submitted", "제출")}
+                </option>
+                <option value="reviewed">
+                  {t("myCoaching.records.dailyPage.form.status.reviewed", "검토완료")}
+                </option>
               </select>
             </div>
 
@@ -699,7 +769,7 @@ export function DailyRecordsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="daily-visibility-filter"
               >
-                공유
+                {t("myCoaching.records.dailyPage.form.visibility.filterLabel", "공유")}
               </label>
               <select
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -709,9 +779,15 @@ export function DailyRecordsClient() {
                 }
                 value={visibilityFilter}
               >
-                <option value="all">전체</option>
-                <option value="private">나만 보기</option>
-                <option value="coach">코치에게 공유</option>
+                <option value="all">
+                  {t("myCoaching.records.dailyPage.form.all", "전체")}
+                </option>
+                <option value="private">
+                  {t("myCoaching.records.dailyPage.form.visibility.private", "나만 보기")}
+                </option>
+                <option value="coach">
+                  {t("myCoaching.records.dailyPage.form.visibility.coach", "코치에게 공유")}
+                </option>
               </select>
             </div>
 
@@ -720,7 +796,7 @@ export function DailyRecordsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="daily-sort-key"
               >
-                정렬 기준
+                {t("myCoaching.records.dailyPage.form.sortBy", "정렬 기준")}
               </label>
               <select
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -730,10 +806,18 @@ export function DailyRecordsClient() {
                 }
                 value={sortKey}
               >
-                <option value="record_date">기록 날짜</option>
-                <option value="created_at">작성일</option>
-                <option value="updated_at">수정일</option>
-                <option value="status">상태</option>
+                <option value="record_date">
+                  {t("myCoaching.records.dailyPage.form.recordDate", "기록 날짜")}
+                </option>
+                <option value="created_at">
+                  {t("myCoaching.records.dailyPage.form.createdAt", "작성일")}
+                </option>
+                <option value="updated_at">
+                  {t("myCoaching.records.dailyPage.form.updatedAt", "수정일")}
+                </option>
+                <option value="status">
+                  {t("myCoaching.records.dailyPage.form.status.label", "상태")}
+                </option>
               </select>
             </div>
 
@@ -742,7 +826,7 @@ export function DailyRecordsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="daily-sort-direction"
               >
-                정렬 방향
+                {t("myCoaching.records.dailyPage.form.sortDirection", "정렬 방향")}
               </label>
               <select
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -752,38 +836,49 @@ export function DailyRecordsClient() {
                 }
                 value={sortDirection}
               >
-                <option value="desc">내림차순</option>
-                <option value="asc">오름차순</option>
+                <option value="desc">
+                  {t("myCoaching.records.dailyPage.form.desc", "내림차순")}
+                </option>
+                <option value="asc">
+                  {t("myCoaching.records.dailyPage.form.asc", "오름차순")}
+                </option>
               </select>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-slate-600">
-              하루 기록: 전체 {records.length}개 중 {visibleRecords.length}개
-              표시
+              {t("myCoaching.records.dailyPage.form.resultLabel", "하루 기록")}:{" "}
+              {t("myCoaching.records.dailyPage.form.resultCountPrefix", "전체")}{" "}
+              {records.length}
+              {t("myCoaching.records.dailyPage.form.resultCountMiddle", "개 중")}{" "}
+              {visibleRecords.length}
+              {t("myCoaching.records.dailyPage.form.resultCountSuffix", "개 표시")}
             </p>
             <button
               className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700"
               onClick={resetListFilters}
               type="button"
             >
-              필터 초기화
+              {t("myCoaching.records.dailyPage.form.resetFilters", "필터 초기화")}
             </button>
           </div>
         </div>
 
         {isLoading ? (
           <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            하루 기록을 불러오는 중입니다.
+            {t("myCoaching.records.dailyPage.form.loading", "하루 기록을 불러오는 중입니다.")}
           </div>
         ) : records.length === 0 ? (
           <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            아직 작성한 하루 기록이 없습니다.
+            {t("myCoaching.records.dailyPage.form.empty", "아직 작성한 하루 기록이 없습니다.")}
           </div>
         ) : visibleRecords.length === 0 ? (
           <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            선택한 조건에 해당하는 하루 기록이 없습니다.
+            {t(
+              "myCoaching.records.dailyPage.form.noResults",
+              "선택한 조건에 해당하는 하루 기록이 없습니다.",
+            )}
           </div>
         ) : (
           <div className="mt-5 space-y-4">
@@ -803,10 +898,10 @@ export function DailyRecordsClient() {
                   </div>
                   <div className="flex flex-wrap gap-2 text-xs">
                     <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 font-medium text-sky-800">
-                      {getVisibilityLabel(record.visibility)}
+                      {getVisibilityLabel(record.visibility, t)}
                     </span>
                     <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-medium text-emerald-800">
-                      {getStatusLabel(record.status)}
+                      {getStatusLabel(record.status, t)}
                     </span>
                   </div>
                 </div>
@@ -814,20 +909,24 @@ export function DailyRecordsClient() {
                 <dl className="mt-4 grid gap-4 text-sm">
                   <div>
                     <dt className="font-medium text-slate-500">
-                      오늘의 돌아봄
+                      {t("myCoaching.records.dailyPage.form.reflection", "오늘의 돌아봄")}
                     </dt>
                     <dd className="mt-1 whitespace-pre-wrap text-slate-800">
                       {displayText(record.reflection)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-slate-500">실천/적용</dt>
+                    <dt className="font-medium text-slate-500">
+                      {t("myCoaching.records.dailyPage.form.practice", "실천/적용")}
+                    </dt>
                     <dd className="mt-1 whitespace-pre-wrap text-slate-800">
                       {displayText(record.practice)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-slate-500">기도제목</dt>
+                    <dt className="font-medium text-slate-500">
+                      {t("myCoaching.records.dailyPage.form.prayerRequest", "기도제목")}
+                    </dt>
                     <dd className="mt-1 whitespace-pre-wrap text-slate-800">
                       {displayText(record.prayer_request)}
                     </dd>
@@ -836,11 +935,15 @@ export function DailyRecordsClient() {
 
                 <dl className="mt-4 grid gap-3 border-t border-slate-200 pt-4 text-xs text-slate-600 sm:grid-cols-2">
                   <div>
-                    <dt className="font-medium">작성일</dt>
+                    <dt className="font-medium">
+                      {t("myCoaching.records.dailyPage.form.createdAt", "작성일")}
+                    </dt>
                     <dd className="mt-1">{formatDateTime(record.created_at)}</dd>
                   </div>
                   <div>
-                    <dt className="font-medium">수정일</dt>
+                    <dt className="font-medium">
+                      {t("myCoaching.records.dailyPage.form.updatedAt", "수정일")}
+                    </dt>
                     <dd className="mt-1">{formatDateTime(record.updated_at)}</dd>
                   </div>
                 </dl>
@@ -851,7 +954,7 @@ export function DailyRecordsClient() {
                     onClick={() => startEdit(record)}
                     type="button"
                   >
-                    수정
+                    {t("myCoaching.records.dailyPage.form.edit", "수정")}
                   </button>
                   <button
                     className="rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700"
@@ -859,7 +962,9 @@ export function DailyRecordsClient() {
                     onClick={() => void removeRecord(record)}
                     type="button"
                   >
-                    {deletingId === record.id ? "삭제 중..." : "목록에서 제거"}
+                    {deletingId === record.id
+                      ? t("myCoaching.records.dailyPage.form.deleting", "삭제 중...")
+                      : t("myCoaching.records.dailyPage.form.removeFromList", "목록에서 제거")}
                   </button>
                 </div>
               </article>

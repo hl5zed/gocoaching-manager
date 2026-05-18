@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useI18n } from "@/lib/i18n/useI18n";
 import {
   getClientTimezone,
   getCurrentMonthInTimezone,
@@ -68,15 +69,33 @@ function createEmptyFormState(): FormState {
   };
 }
 
-const statusLabels: Record<MonthlyReflectionStatus, string> = {
-  draft: "임시저장",
-  submitted: "제출",
-  reviewed: "검토완료",
+const statusLabelMeta: Record<MonthlyReflectionStatus, { fallback: string; key: string }> = {
+  draft: {
+    fallback: "임시저장",
+    key: "myCoaching.records.monthlyPage.form.status.draft",
+  },
+  submitted: {
+    fallback: "제출",
+    key: "myCoaching.records.monthlyPage.form.status.submitted",
+  },
+  reviewed: {
+    fallback: "검토완료",
+    key: "myCoaching.records.monthlyPage.form.status.reviewed",
+  },
 };
 
-const visibilityLabels: Record<MonthlyReflectionVisibility, string> = {
-  private: "나만 보기",
-  coach: "코치에게 공유",
+const visibilityLabelMeta: Record<
+  MonthlyReflectionVisibility,
+  { fallback: string; key: string }
+> = {
+  private: {
+    fallback: "나만 보기",
+    key: "myCoaching.records.monthlyPage.form.visibility.private",
+  },
+  coach: {
+    fallback: "코치에게 공유",
+    key: "myCoaching.records.monthlyPage.form.visibility.coach",
+  },
 };
 
 const monthOptions = Array.from({ length: 12 }, (_, index) => index + 1);
@@ -118,16 +137,33 @@ function getDateTimeValue(value: string | null) {
   return Number.isNaN(time) ? 0 : time;
 }
 
-function getStatusLabel(status: string) {
-  return status in statusLabels
-    ? statusLabels[status as MonthlyReflectionStatus]
-    : "확인 필요";
+function getStatusLabel(status: string, t: (key: string, fallback?: string) => string) {
+  if (status in statusLabelMeta) {
+    const label = statusLabelMeta[status as MonthlyReflectionStatus];
+    return t(label.key, label.fallback);
+  }
+
+  return t("myCoaching.records.monthlyPage.form.status.unknown", "확인 필요");
 }
 
-function getVisibilityLabel(visibility: string) {
-  return visibility in visibilityLabels
-    ? visibilityLabels[visibility as MonthlyReflectionVisibility]
-    : "미지정";
+function getStatusSortLabel(status: string) {
+  if (status in statusLabelMeta) {
+    return statusLabelMeta[status as MonthlyReflectionStatus].fallback;
+  }
+
+  return "확인 필요";
+}
+
+function getVisibilityLabel(
+  visibility: string,
+  t: (key: string, fallback?: string) => string,
+) {
+  if (visibility in visibilityLabelMeta) {
+    const label = visibilityLabelMeta[visibility as MonthlyReflectionVisibility];
+    return t(label.key, label.fallback);
+  }
+
+  return t("myCoaching.records.monthlyPage.form.visibility.unknown", "미지정");
 }
 
 function toNullableText(value: string) {
@@ -148,24 +184,28 @@ function getErrorMessage(payload: unknown, fallback: string) {
   return fallback;
 }
 
-function getDeleteErrorMessage(status: number, payload: unknown) {
+function getDeleteErrorMessage(
+  status: number,
+  payload: unknown,
+  t: (key: string, fallback?: string) => string,
+) {
   if (status === 401) {
-    return "로그인이 필요합니다.";
+    return t("myCoaching.records.monthlyPage.form.errors.loginRequired", "로그인이 필요합니다.");
   }
 
   if (status === 403) {
-    return "이 월간 회고에 접근할 권한이 없습니다.";
+    return t("myCoaching.records.monthlyPage.form.errors.forbidden", "이 월간 회고에 접근할 권한이 없습니다.");
   }
 
   if (status === 404) {
-    return "월간 회고를 찾을 수 없습니다.";
+    return t("myCoaching.records.monthlyPage.form.errors.notFound", "월간 회고를 찾을 수 없습니다.");
   }
 
   if (status === 500) {
-    return "월간 회고 처리에 실패했습니다.";
+    return t("myCoaching.records.monthlyPage.form.errors.processFailed", "월간 회고 처리에 실패했습니다.");
   }
 
-  return getErrorMessage(payload, "월간 회고 처리에 실패했습니다.");
+  return getErrorMessage(payload, t("myCoaching.records.monthlyPage.form.errors.processFailed", "월간 회고 처리에 실패했습니다."));
 }
 
 function toFormState(record: MonthlyReflection): FormState {
@@ -205,6 +245,7 @@ function getSafeStatus(value: string): MonthlyReflectionStatus {
 }
 
 export function MonthlyReflectionsClient() {
+  const { t } = useI18n();
   const [records, setRecords] = useState<MonthlyReflection[]>([]);
   const [form, setForm] = useState<FormState>(() => createInitialFormState());
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -254,8 +295,8 @@ export function MonthlyReflectionsClient() {
         comparison =
           first.year * 100 + first.month - (second.year * 100 + second.month);
       } else if (sortKey === "status") {
-        comparison = getStatusLabel(first.status).localeCompare(
-          getStatusLabel(second.status),
+        comparison = getStatusSortLabel(first.status).localeCompare(
+          getStatusSortLabel(second.status),
           "ko-KR",
         );
       } else {
@@ -295,7 +336,10 @@ export function MonthlyReflectionsClient() {
 
       if (!response.ok) {
         throw new Error(
-          getErrorMessage(payload, "월간 회고 목록을 불러오지 못했습니다."),
+          getErrorMessage(
+            payload,
+            t("myCoaching.records.monthlyPage.form.errors.loadFailed", "월간 회고 목록을 불러오지 못했습니다."),
+          ),
         );
       }
 
@@ -313,7 +357,7 @@ export function MonthlyReflectionsClient() {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "월간 회고 목록을 불러오지 못했습니다.",
+          : t("myCoaching.records.monthlyPage.form.errors.loadFailed", "월간 회고 목록을 불러오지 못했습니다."),
       );
       return false;
     } finally {
@@ -362,7 +406,7 @@ export function MonthlyReflectionsClient() {
       !isValidNumberInRange(yearNumber, 2000, 2100) ||
       !isValidYear(form.year)
     ) {
-      setErrorMessage("연도를 선택해 주세요.");
+      setErrorMessage(t("myCoaching.records.monthlyPage.form.errors.yearRequired", "연도를 선택해 주세요."));
       return;
     }
 
@@ -372,7 +416,7 @@ export function MonthlyReflectionsClient() {
       !isValidNumberInRange(monthNumber, 1, 12) ||
       !isValidMonth(form.month)
     ) {
-      setErrorMessage("월을 선택해 주세요.");
+      setErrorMessage(t("myCoaching.records.monthlyPage.form.errors.monthRequired", "월을 선택해 주세요."));
       return;
     }
 
@@ -385,7 +429,10 @@ export function MonthlyReflectionsClient() {
 
     if (duplicateRecord) {
       setErrorMessage(
-        "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
+        t(
+          "myCoaching.records.monthlyPage.form.errors.duplicate",
+          "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
+        ),
       );
       return;
     }
@@ -421,20 +468,23 @@ export function MonthlyReflectionsClient() {
         const serverMessage = getErrorMessage(
           responsePayload,
           editingId
-            ? "월간 회고 수정에 실패했습니다."
-            : "월간 회고 저장에 실패했습니다.",
+            ? t("myCoaching.records.monthlyPage.form.errors.updateFailed", "월간 회고 수정에 실패했습니다.")
+            : t("myCoaching.records.monthlyPage.form.errors.saveFailed", "월간 회고 저장에 실패했습니다."),
         );
 
         throw new Error(
           response.status === 409
-            ? "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요."
+            ? t(
+                "myCoaching.records.monthlyPage.form.errors.duplicate",
+                "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
+              )
             : serverMessage,
         );
       }
 
       const successMessage = editingId
-        ? "월간 회고가 수정되었습니다."
-        : "월간 회고가 저장되었습니다.";
+        ? t("myCoaching.records.monthlyPage.form.updated", "월간 회고가 수정되었습니다.")
+        : t("myCoaching.records.monthlyPage.form.saved", "월간 회고가 저장되었습니다.");
       resetFormAfterSave();
       const loaded = await loadRecords();
 
@@ -448,8 +498,8 @@ export function MonthlyReflectionsClient() {
         error instanceof Error
           ? error.message
           : editingId
-            ? "월간 회고 수정에 실패했습니다."
-            : "월간 회고 저장에 실패했습니다.",
+            ? t("myCoaching.records.monthlyPage.form.errors.updateFailed", "월간 회고 수정에 실패했습니다.")
+            : t("myCoaching.records.monthlyPage.form.errors.saveFailed", "월간 회고 저장에 실패했습니다."),
       );
     } finally {
       setIsSaving(false);
@@ -468,12 +518,12 @@ export function MonthlyReflectionsClient() {
     setErrorMessage(null);
 
     if (!record.id || record.id.trim().length === 0) {
-      setErrorMessage("월간 회고를 찾을 수 없습니다.");
+      setErrorMessage(t("myCoaching.records.monthlyPage.form.errors.notFound", "월간 회고를 찾을 수 없습니다."));
       return;
     }
 
     const confirmed = window.confirm(
-      `월간 회고를 삭제하시겠습니까?\n\n대상: ${record.year}년 ${record.month}월\n이 작업은 되돌릴 수 없습니다.`,
+      `${t("myCoaching.records.monthlyPage.form.deleteConfirm", "월간 회고를 삭제하시겠습니까?")}\n\n${t("myCoaching.records.monthlyPage.form.targetMonth", "대상")}: ${record.year}${t("myCoaching.records.monthlyPage.form.yearSuffix", "년")} ${record.month}${t("myCoaching.records.monthlyPage.form.monthSuffix", "월")}\n${t("myCoaching.records.monthlyPage.form.deleteIrreversible", "이 작업은 되돌릴 수 없습니다.")}`,
     );
 
     if (!confirmed) {
@@ -492,7 +542,7 @@ export function MonthlyReflectionsClient() {
       const payload: unknown = await response.json();
 
       if (!response.ok) {
-        throw new Error(getDeleteErrorMessage(response.status, payload));
+        throw new Error(getDeleteErrorMessage(response.status, payload, t));
       }
 
       if (editingId === record.id) {
@@ -503,14 +553,14 @@ export function MonthlyReflectionsClient() {
         currentRecords.filter((currentRecord) => currentRecord.id !== record.id),
       );
       setErrorMessage(null);
-      setMessage("월간 회고가 목록에서 제거되었습니다.");
+      setMessage(t("myCoaching.records.monthlyPage.form.removed", "월간 회고가 목록에서 제거되었습니다."));
       void loadRecords();
     } catch (error) {
       setMessage(null);
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "월간 회고 처리에 실패했습니다.",
+          : t("myCoaching.records.monthlyPage.form.errors.processFailed", "월간 회고 처리에 실패했습니다."),
       );
     } finally {
       setDeletingId(null);
@@ -523,10 +573,15 @@ export function MonthlyReflectionsClient() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold">
-              {editingRecord ? "월간 회고 수정" : "월간 회고 작성"}
+              {editingRecord
+                ? t("myCoaching.records.monthlyPage.form.editTitle", "월간 회고 수정")
+                : t("myCoaching.records.monthlyPage.form.createTitle", "월간 회고 작성")}
             </h2>
             <p className="mt-2 text-sm text-slate-600">
-              한 달의 성장과 다음 달 계획을 정리해 주세요.
+              {t(
+                "myCoaching.records.monthlyPage.form.description",
+                "한 달의 성장과 다음 달 계획을 정리해 주세요.",
+              )}
             </p>
           </div>
           {editingRecord ? (
@@ -535,7 +590,7 @@ export function MonthlyReflectionsClient() {
               onClick={resetForm}
               type="button"
             >
-              수정 취소
+              {t("myCoaching.records.monthlyPage.form.cancelEdit", "수정 취소")}
             </button>
           ) : null}
         </div>
@@ -558,7 +613,7 @@ export function MonthlyReflectionsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="year"
               >
-                연도
+                {t("myCoaching.records.monthlyPage.form.year", "연도")}
               </label>
               <input
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -580,7 +635,7 @@ export function MonthlyReflectionsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="month"
               >
-                월
+                {t("myCoaching.records.monthlyPage.form.month", "월")}
               </label>
               <select
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -593,10 +648,13 @@ export function MonthlyReflectionsClient() {
                 }
                 value={form.month}
               >
-                <option value="">월 선택</option>
+                <option value="">
+                  {t("myCoaching.records.monthlyPage.form.selectMonth", "월 선택")}
+                </option>
                 {monthOptions.map((month) => (
                   <option key={month} value={month}>
-                    {month}월
+                    {month}
+                    {t("myCoaching.records.monthlyPage.form.monthSuffix", "월")}
                   </option>
                 ))}
               </select>
@@ -608,7 +666,7 @@ export function MonthlyReflectionsClient() {
               className="text-sm font-medium text-slate-700"
               htmlFor="summary"
             >
-              한 달 요약
+              {t("myCoaching.records.monthlyPage.form.summary", "한 달 요약")}
             </label>
             <textarea
               className="mt-1 min-h-28 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -628,7 +686,7 @@ export function MonthlyReflectionsClient() {
               className="text-sm font-medium text-slate-700"
               htmlFor="growth_points"
             >
-              성장한 점
+              {t("myCoaching.records.monthlyPage.form.growthPoints", "성장한 점")}
             </label>
             <textarea
               className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -648,7 +706,7 @@ export function MonthlyReflectionsClient() {
               className="text-sm font-medium text-slate-700"
               htmlFor="difficulty"
             >
-              어려웠던 점
+              {t("myCoaching.records.monthlyPage.form.difficulty", "어려웠던 점")}
             </label>
             <textarea
               className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -668,7 +726,7 @@ export function MonthlyReflectionsClient() {
               className="text-sm font-medium text-slate-700"
               htmlFor="next_month_plan"
             >
-              다음 달 계획
+              {t("myCoaching.records.monthlyPage.form.nextMonthPlan", "다음 달 계획")}
             </label>
             <textarea
               className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -689,7 +747,7 @@ export function MonthlyReflectionsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="visibility"
               >
-                공유 옵션
+                {t("myCoaching.records.monthlyPage.form.visibility.label", "공유 옵션")}
               </label>
               <select
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -704,8 +762,12 @@ export function MonthlyReflectionsClient() {
                 }
                 value={form.visibility}
               >
-                <option value="private">나만 보기</option>
-                <option value="coach">코치에게 공유</option>
+                <option value="private">
+                  {t("myCoaching.records.monthlyPage.form.visibility.private", "나만 보기")}
+                </option>
+                <option value="coach">
+                  {t("myCoaching.records.monthlyPage.form.visibility.coach", "코치에게 공유")}
+                </option>
               </select>
             </div>
 
@@ -714,7 +776,7 @@ export function MonthlyReflectionsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="status"
               >
-                상태
+                {t("myCoaching.records.monthlyPage.form.status.label", "상태")}
               </label>
               <select
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -727,10 +789,14 @@ export function MonthlyReflectionsClient() {
                 }
                 value={form.status}
               >
-                <option value="draft">임시저장</option>
-                <option value="submitted">제출</option>
+                <option value="draft">
+                  {t("myCoaching.records.monthlyPage.form.status.draft", "임시저장")}
+                </option>
+                <option value="submitted">
+                  {t("myCoaching.records.monthlyPage.form.status.submitted", "제출")}
+                </option>
                 <option disabled value="reviewed">
-                  검토완료
+                  {t("myCoaching.records.monthlyPage.form.status.reviewed", "검토완료")}
                 </option>
               </select>
             </div>
@@ -749,7 +815,7 @@ export function MonthlyReflectionsClient() {
               }
               type="checkbox"
             />
-            코치에게 공유
+            {t("myCoaching.records.monthlyPage.form.shareWithCoach", "코치에게 공유")}
           </label>
 
           <button
@@ -758,19 +824,24 @@ export function MonthlyReflectionsClient() {
             type="submit"
           >
             {isSaving
-              ? "저장 중..."
+              ? t("myCoaching.records.monthlyPage.form.saving", "저장 중...")
               : editingRecord
-                ? "월간 회고 수정"
-                : "월간 회고 저장"}
+                ? t("myCoaching.records.monthlyPage.form.update", "월간 회고 수정")
+                : t("myCoaching.records.monthlyPage.form.save", "월간 회고 저장")}
           </button>
         </form>
       </section>
 
       <section className="rounded-md border border-slate-200 bg-white p-6">
         <div>
-          <h2 className="text-lg font-semibold">나의 월간 회고 목록</h2>
+          <h2 className="text-lg font-semibold">
+            {t("myCoaching.records.monthlyPage.form.listTitle", "나의 월간 회고 목록")}
+          </h2>
           <p className="mt-2 text-sm text-slate-600">
-            최신 연도와 월 순서로 표시됩니다.
+            {t(
+              "myCoaching.records.monthlyPage.form.listDescription",
+              "최신 연도와 월 순서로 표시됩니다.",
+            )}
           </p>
         </div>
 
@@ -781,21 +852,28 @@ export function MonthlyReflectionsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="monthly-search"
               >
-                검색
+                {t("myCoaching.records.monthlyPage.form.search", "검색")}
               </label>
               <input
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 id="monthly-search"
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="한 달 요약, 성장한 점, 어려웠던 점, 다음 달 계획 검색"
+                placeholder={t(
+                  "myCoaching.records.monthlyPage.form.searchPlaceholder",
+                  "한 달 요약, 성장한 점, 어려웠던 점, 다음 달 계획 검색",
+                )}
                 type="search"
                 value={searchQuery}
               />
             </div>
             <div className="flex items-end">
               <p className="text-sm text-slate-600">
-                월간 회고: 전체 {records.length}개 중 {visibleRecords.length}개
-                표시
+                {t("myCoaching.records.monthlyPage.form.resultLabel", "월간 회고")}:{" "}
+                {t("myCoaching.records.monthlyPage.form.resultCountPrefix", "전체")}{" "}
+                {records.length}
+                {t("myCoaching.records.monthlyPage.form.resultCountMiddle", "개 중")}{" "}
+                {visibleRecords.length}
+                {t("myCoaching.records.monthlyPage.form.resultCountSuffix", "개 표시")}
               </p>
             </div>
           </div>
@@ -806,7 +884,7 @@ export function MonthlyReflectionsClient() {
               className="text-sm font-medium text-slate-700"
               htmlFor="filter-year"
             >
-              연도 필터
+              {t("myCoaching.records.monthlyPage.form.yearFilter", "연도 필터")}
             </label>
             <input
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -814,7 +892,7 @@ export function MonthlyReflectionsClient() {
               max="2100"
               min="2000"
               onChange={(event) => setFilterYear(event.target.value)}
-              placeholder="예: 2026"
+              placeholder={t("myCoaching.records.monthlyPage.form.yearPlaceholder", "예: 2026")}
               type="number"
               value={filterYear}
             />
@@ -824,7 +902,7 @@ export function MonthlyReflectionsClient() {
               className="text-sm font-medium text-slate-700"
               htmlFor="filter-month"
             >
-              월 필터
+              {t("myCoaching.records.monthlyPage.form.monthFilter", "월 필터")}
             </label>
             <select
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -832,10 +910,13 @@ export function MonthlyReflectionsClient() {
               onChange={(event) => setFilterMonth(event.target.value)}
               value={filterMonth}
             >
-              <option value="">전체</option>
+              <option value="">
+                {t("myCoaching.records.monthlyPage.form.all", "전체")}
+              </option>
               {monthOptions.map((month) => (
                 <option key={month} value={month}>
-                  {month}월
+                  {month}
+                  {t("myCoaching.records.monthlyPage.form.monthSuffix", "월")}
                 </option>
               ))}
             </select>
@@ -845,7 +926,7 @@ export function MonthlyReflectionsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="monthly-status-filter"
               >
-                상태
+                {t("myCoaching.records.monthlyPage.form.status.label", "상태")}
               </label>
               <select
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -855,10 +936,18 @@ export function MonthlyReflectionsClient() {
                 }
                 value={statusFilter}
               >
-                <option value="all">전체</option>
-                <option value="draft">임시저장</option>
-                <option value="submitted">제출</option>
-                <option value="reviewed">검토완료</option>
+                <option value="all">
+                  {t("myCoaching.records.monthlyPage.form.all", "전체")}
+                </option>
+                <option value="draft">
+                  {t("myCoaching.records.monthlyPage.form.status.draft", "임시저장")}
+                </option>
+                <option value="submitted">
+                  {t("myCoaching.records.monthlyPage.form.status.submitted", "제출")}
+                </option>
+                <option value="reviewed">
+                  {t("myCoaching.records.monthlyPage.form.status.reviewed", "검토완료")}
+                </option>
               </select>
             </div>
             <div>
@@ -866,7 +955,7 @@ export function MonthlyReflectionsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="monthly-visibility-filter"
               >
-                공유
+                {t("myCoaching.records.monthlyPage.form.visibility.filterLabel", "공유")}
               </label>
               <select
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -876,9 +965,15 @@ export function MonthlyReflectionsClient() {
                 }
                 value={visibilityFilter}
               >
-                <option value="all">전체</option>
-                <option value="private">나만 보기</option>
-                <option value="coach">코치에게 공유</option>
+                <option value="all">
+                  {t("myCoaching.records.monthlyPage.form.all", "전체")}
+                </option>
+                <option value="private">
+                  {t("myCoaching.records.monthlyPage.form.visibility.private", "나만 보기")}
+                </option>
+                <option value="coach">
+                  {t("myCoaching.records.monthlyPage.form.visibility.coach", "코치에게 공유")}
+                </option>
               </select>
             </div>
           </div>
@@ -889,7 +984,7 @@ export function MonthlyReflectionsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="monthly-sort-key"
               >
-                정렬 기준
+                {t("myCoaching.records.monthlyPage.form.sortBy", "정렬 기준")}
               </label>
               <select
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -899,10 +994,18 @@ export function MonthlyReflectionsClient() {
                 }
                 value={sortKey}
               >
-                <option value="year_month">연도/월</option>
-                <option value="created_at">작성일</option>
-                <option value="updated_at">수정일</option>
-                <option value="status">상태</option>
+                <option value="year_month">
+                  {t("myCoaching.records.monthlyPage.form.yearMonth", "연도/월")}
+                </option>
+                <option value="created_at">
+                  {t("myCoaching.records.monthlyPage.form.createdAt", "작성일")}
+                </option>
+                <option value="updated_at">
+                  {t("myCoaching.records.monthlyPage.form.updatedAt", "수정일")}
+                </option>
+                <option value="status">
+                  {t("myCoaching.records.monthlyPage.form.status.label", "상태")}
+                </option>
               </select>
             </div>
             <div>
@@ -910,7 +1013,7 @@ export function MonthlyReflectionsClient() {
                 className="text-sm font-medium text-slate-700"
                 htmlFor="monthly-sort-direction"
               >
-                정렬 방향
+                {t("myCoaching.records.monthlyPage.form.sortDirection", "정렬 방향")}
               </label>
               <select
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -920,8 +1023,12 @@ export function MonthlyReflectionsClient() {
                 }
                 value={sortDirection}
               >
-                <option value="desc">내림차순</option>
-                <option value="asc">오름차순</option>
+                <option value="desc">
+                  {t("myCoaching.records.monthlyPage.form.desc", "내림차순")}
+                </option>
+                <option value="asc">
+                  {t("myCoaching.records.monthlyPage.form.asc", "오름차순")}
+                </option>
               </select>
             </div>
             <div className="flex items-end gap-2">
@@ -930,14 +1037,14 @@ export function MonthlyReflectionsClient() {
               onClick={() => void loadRecords()}
               type="button"
             >
-              필터 적용
+              {t("myCoaching.records.monthlyPage.form.applyFilters", "필터 적용")}
             </button>
             <button
               className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700"
               onClick={resetFilters}
               type="button"
             >
-              초기화
+              {t("myCoaching.records.monthlyPage.form.resetFilters", "초기화")}
             </button>
             </div>
           </div>
@@ -945,15 +1052,18 @@ export function MonthlyReflectionsClient() {
 
         {isLoading ? (
           <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            월간 회고를 불러오는 중입니다.
+            {t("myCoaching.records.monthlyPage.form.loading", "월간 회고를 불러오는 중입니다.")}
           </div>
         ) : records.length === 0 ? (
           <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            아직 작성한 월간 회고가 없습니다.
+            {t("myCoaching.records.monthlyPage.form.empty", "아직 작성한 월간 회고가 없습니다.")}
           </div>
         ) : visibleRecords.length === 0 ? (
           <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            선택한 조건에 해당하는 월간 회고가 없습니다.
+            {t(
+              "myCoaching.records.monthlyPage.form.noResults",
+              "선택한 조건에 해당하는 월간 회고가 없습니다.",
+            )}
           </div>
         ) : (
           <div className="mt-5 space-y-4">
@@ -965,43 +1075,54 @@ export function MonthlyReflectionsClient() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-medium text-slate-500">
-                      {record.year}년 {record.month}월
+                      {record.year}
+                      {t("myCoaching.records.monthlyPage.form.yearSuffix", "년")}{" "}
+                      {record.month}
+                      {t("myCoaching.records.monthlyPage.form.monthSuffix", "월")}
                     </p>
                     <h3 className="mt-1 font-semibold text-slate-950">
-                      월간 회고
+                      {t("myCoaching.records.monthlyPage.form.cardTitle", "월간 회고")}
                     </h3>
                   </div>
                   <div className="flex flex-wrap gap-2 text-xs">
                     <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 font-medium text-sky-800">
-                      {getVisibilityLabel(record.visibility)}
+                      {getVisibilityLabel(record.visibility, t)}
                     </span>
                     <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-medium text-emerald-800">
-                      {getStatusLabel(record.status)}
+                      {getStatusLabel(record.status, t)}
                     </span>
                   </div>
                 </div>
 
                 <dl className="mt-4 grid gap-4 text-sm">
                   <div>
-                    <dt className="font-medium text-slate-500">한 달 요약</dt>
+                    <dt className="font-medium text-slate-500">
+                      {t("myCoaching.records.monthlyPage.form.summary", "한 달 요약")}
+                    </dt>
                     <dd className="mt-1 whitespace-pre-wrap text-slate-800">
                       {displayText(record.summary)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-slate-500">성장한 점</dt>
+                    <dt className="font-medium text-slate-500">
+                      {t("myCoaching.records.monthlyPage.form.growthPoints", "성장한 점")}
+                    </dt>
                     <dd className="mt-1 whitespace-pre-wrap text-slate-800">
                       {displayText(record.growth_points)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-slate-500">어려웠던 점</dt>
+                    <dt className="font-medium text-slate-500">
+                      {t("myCoaching.records.monthlyPage.form.difficulty", "어려웠던 점")}
+                    </dt>
                     <dd className="mt-1 whitespace-pre-wrap text-slate-800">
                       {displayText(record.difficulty)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-slate-500">다음 달 계획</dt>
+                    <dt className="font-medium text-slate-500">
+                      {t("myCoaching.records.monthlyPage.form.nextMonthPlan", "다음 달 계획")}
+                    </dt>
                     <dd className="mt-1 whitespace-pre-wrap text-slate-800">
                       {displayText(record.next_month_plan)}
                     </dd>
@@ -1010,21 +1131,29 @@ export function MonthlyReflectionsClient() {
 
                 <dl className="mt-4 grid gap-3 border-t border-slate-200 pt-4 text-xs text-slate-600 sm:grid-cols-2">
                   <div>
-                    <dt className="font-medium">작성일</dt>
+                    <dt className="font-medium">
+                      {t("myCoaching.records.monthlyPage.form.createdAt", "작성일")}
+                    </dt>
                     <dd className="mt-1">{formatDateTime(record.created_at)}</dd>
                   </div>
                   <div>
-                    <dt className="font-medium">수정일</dt>
+                    <dt className="font-medium">
+                      {t("myCoaching.records.monthlyPage.form.updatedAt", "수정일")}
+                    </dt>
                     <dd className="mt-1">{formatDateTime(record.updated_at)}</dd>
                   </div>
                   <div>
-                    <dt className="font-medium">제출일</dt>
+                    <dt className="font-medium">
+                      {t("myCoaching.records.monthlyPage.form.submittedAt", "제출일")}
+                    </dt>
                     <dd className="mt-1">
                       {formatDateTime(record.submitted_at)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-medium">검토일</dt>
+                    <dt className="font-medium">
+                      {t("myCoaching.records.monthlyPage.form.reviewedAt", "검토일")}
+                    </dt>
                     <dd className="mt-1">{formatDateTime(record.reviewed_at)}</dd>
                   </div>
                 </dl>
@@ -1035,7 +1164,7 @@ export function MonthlyReflectionsClient() {
                     onClick={() => startEdit(record)}
                     type="button"
                   >
-                    수정
+                    {t("myCoaching.records.monthlyPage.form.edit", "수정")}
                   </button>
                   <button
                     className="rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700"
@@ -1043,7 +1172,9 @@ export function MonthlyReflectionsClient() {
                     onClick={() => void removeRecord(record)}
                     type="button"
                   >
-                    {deletingId === record.id ? "삭제 중..." : "목록에서 제거"}
+                    {deletingId === record.id
+                      ? t("myCoaching.records.monthlyPage.form.deleting", "삭제 중...")
+                      : t("myCoaching.records.monthlyPage.form.removeFromList", "목록에서 제거")}
                   </button>
                 </div>
               </article>

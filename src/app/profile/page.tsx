@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { getSession } from "@/lib/auth/getSession";
 import { getMyProfile } from "@/lib/api/profile/me";
+import { createApiPerformanceLogger } from "@/lib/performance";
 import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
 
 export const dynamic = "force-dynamic";
@@ -99,17 +100,22 @@ function DetailItem({
 }
 
 export default async function ProfilePage() {
+  const perf = createApiPerformanceLogger("/profile");
   const session = await getSession();
+  perf.mark("auth.session_check", session.user ? 1 : 0);
 
   if (!session.user) {
     redirect("/login?redirectTo=%2Fprofile");
   }
 
-  const result = await getMyProfile();
+  const result = await getMyProfile(perf);
 
   if (!result.ok && result.error.code === "UNAUTHORIZED") {
+    perf.mark("profile.complete", 0);
     redirect("/login?redirectTo=%2Fprofile");
   }
+
+  perf.mark("profile.complete", result.ok && result.data.profile ? 1 : 0);
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">

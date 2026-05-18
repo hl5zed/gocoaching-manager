@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { PrintPageButton } from "@/components/print/PrintPageButton";
+import { I18nText } from "@/lib/i18n/I18nProvider";
 import {
   getMyMoksilgiMonthly,
   saveMyMoksilgiMonthlyRecord,
@@ -12,19 +14,30 @@ import type { Json, MoksilgiAreaKey } from "@/types/database";
 
 export const dynamic = "force-dynamic";
 
-const AREA_LABELS: Record<MoksilgiAreaKey, string> = {
-  spiritual: "영적 성장",
-  intellectual: "지적 성장",
-  physical: "육체적 성장",
-  social: "사회적 성장",
-  other: "기타",
-};
-
-const MEASUREMENT_LABELS: Record<string, string> = {
-  daily_check: "매일 실행 확인",
-  weekly_count: "매주 실행 확인",
-  monthly_number: "월간 수치 입력",
-  monthly_comment: "COMMENT",
+const AREA_TRANSLATION_KEY_BY_AREA_KEY: Record<
+  MoksilgiAreaKey,
+  { subtitle: string; title: string }
+> = {
+  intellectual: {
+    subtitle: "myCoaching.moksilgi.goal.intellectual.subtitle",
+    title: "myCoaching.moksilgi.goal.intellectual.title",
+  },
+  other: {
+    subtitle: "myCoaching.moksilgi.goal.other.subtitle",
+    title: "myCoaching.moksilgi.goal.other.title",
+  },
+  physical: {
+    subtitle: "myCoaching.moksilgi.goal.physical.subtitle",
+    title: "myCoaching.moksilgi.goal.physical.title",
+  },
+  social: {
+    subtitle: "myCoaching.moksilgi.goal.social.subtitle",
+    title: "myCoaching.moksilgi.goal.social.title",
+  },
+  spiritual: {
+    subtitle: "myCoaching.moksilgi.goal.spiritual.subtitle",
+    title: "myCoaching.moksilgi.goal.spiritual.title",
+  },
 };
 
 function firstParam(value: string | string[] | undefined) {
@@ -94,6 +107,31 @@ function displayValue(value: string | number | null | undefined) {
   return value.trim().length > 0 ? value : "-";
 }
 
+function MonthLabel({ month }: { month: number }) {
+  return (
+    <>
+      <I18nText k="myCoaching.moksilgi.monthly.monthOptionPrefix" fallback="" />
+      {month}
+      <I18nText k="myCoaching.moksilgi.monthly.monthOptionSuffix" fallback="월" />
+    </>
+  );
+}
+
+function MeasurementLabel({ type }: { type: string }) {
+  switch (type) {
+    case "daily_check":
+      return <I18nText k="myCoaching.moksilgi.measurement.dailyCheck" fallback="매일 실행 확인" />;
+    case "weekly_count":
+      return <I18nText k="myCoaching.moksilgi.measurement.weeklyCount" fallback="매주 실행 확인" />;
+    case "monthly_number":
+      return <I18nText k="myCoaching.moksilgi.measurement.monthlyNumber" fallback="월간 수치 입력" />;
+    case "monthly_comment":
+      return <I18nText k="myCoaching.moksilgi.measurement.monthlyComment" fallback="COMMENT" />;
+    default:
+      return type;
+  }
+}
+
 function unitLabel(unit: string | null) {
   const normalized = unit?.trim();
 
@@ -109,9 +147,9 @@ function unitLabel(unit: string | null) {
 function checkLabel(measurementType: string) {
   switch (measurementType) {
     case "daily_check":
-      return "매일 실행 확인 V";
+      return <I18nText k="myCoaching.moksilgi.monthly.dailyCheckHeader" fallback="매일 실행 확인 V" />;
     case "weekly_count":
-      return "매주 실행 확인 V";
+      return <I18nText k="myCoaching.moksilgi.monthly.weeklyCheckHeader" fallback="매주 실행 확인 V" />;
     case "monthly_number":
     case "monthly_comment":
       return "COMMENT";
@@ -169,7 +207,9 @@ function MonthSelector({ year, month }: { year: number; month: number }) {
   return (
     <form className="print-hidden mt-5 flex flex-wrap items-end gap-3" method="get">
       <label className="block">
-        <span className="text-sm font-medium text-slate-700">연도</span>
+        <span className="text-sm font-medium text-slate-700">
+          <I18nText k="myCoaching.moksilgi.monthly.year" fallback="연도" />
+        </span>
         <input
           className="mt-2 w-32 rounded-md border border-slate-300 bg-white px-3 py-2"
           defaultValue={year}
@@ -180,7 +220,9 @@ function MonthSelector({ year, month }: { year: number; month: number }) {
         />
       </label>
       <label className="block">
-        <span className="text-sm font-medium text-slate-700">월</span>
+        <span className="text-sm font-medium text-slate-700">
+          <I18nText k="myCoaching.moksilgi.monthly.month" fallback="월" />
+        </span>
         <select
           className="mt-2 w-32 rounded-md border border-slate-300 bg-white px-3 py-2"
           defaultValue={month}
@@ -188,7 +230,7 @@ function MonthSelector({ year, month }: { year: number; month: number }) {
         >
           {Array.from({ length: 12 }, (_, index) => index + 1).map((value) => (
             <option key={value} value={value}>
-              {value}월
+              <MonthLabel month={value} />
             </option>
           ))}
         </select>
@@ -197,7 +239,7 @@ function MonthSelector({ year, month }: { year: number; month: number }) {
         className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
         type="submit"
       >
-        조회
+        <I18nText k="myCoaching.moksilgi.monthly.search" fallback="조회" />
       </button>
     </form>
   );
@@ -217,7 +259,7 @@ function MonthlyRecordForm({
   const dailyChecks = boolMap(record?.daily_checks_json ?? {});
   const weeklyCounts = numberMap(record?.weekly_counts_json ?? {});
   const strategies = strategyList(detailGoal.strategies_json);
-  const selectedMonthLabel = `${month}월`;
+  const selectedMonthLabel = <MonthLabel month={month} />;
   const unitHeader = unitLabel(detailGoal.unit);
   const actionHeader = checkLabel(detailGoal.measurement_type);
   const currentActualDisplay = actualDisplay({
@@ -237,30 +279,42 @@ function MonthlyRecordForm({
         <div>
           <h3 className="font-semibold text-slate-950">{detailGoal.title}</h3>
           <p className="mt-1 text-sm text-slate-600">
-            월 목표량: {displayValue(detailGoal.monthly_target)} / 연간 목표량:{" "}
-            {displayValue(detailGoal.annual_target)} / 단위:{" "}
+            <I18nText k="myCoaching.moksilgi.detailGoal.monthlyTarget" fallback="월 목표량" />:{" "}
+            {displayValue(detailGoal.monthly_target)} /{" "}
+            <I18nText k="myCoaching.moksilgi.detailGoal.yearlyTarget" fallback="연간 목표량" />:{" "}
+            {displayValue(detailGoal.annual_target)} /{" "}
+            <I18nText k="myCoaching.moksilgi.detailGoal.unit" fallback="단위" />:{" "}
             {displayValue(detailGoal.unit)}
           </p>
           <p className="mt-1 text-sm text-slate-600">
-            측정 방식: {MEASUREMENT_LABELS[detailGoal.measurement_type]}
+            <I18nText k="myCoaching.moksilgi.detailGoal.measurementMethod" fallback="측정 방식" />:{" "}
+            <MeasurementLabel type={detailGoal.measurement_type} />
           </p>
           {strategies.length > 0 ? (
             <p className="mt-1 text-sm text-slate-600">
-              실행전략: {strategies.join(", ")}
+              <I18nText k="myCoaching.moksilgi.monthly.actionStrategies" fallback="실행전략" />:{" "}
+              {strategies.join(", ")}
             </p>
           ) : null}
         </div>
         <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-700">
-          현재 달성률 {formatPercent(record?.achievement_rate)}
+          <I18nText k="myCoaching.moksilgi.monthly.currentAchievement" fallback="현재 달성률" />{" "}
+          {formatPercent(record?.achievement_rate)}
         </span>
       </div>
 
       <div className="mt-4 rounded-md border border-slate-200">
         <div className="grid grid-cols-[72px_100px_88px_72px_minmax(0,1fr)] border-b border-slate-200 bg-slate-100 text-xs font-semibold text-slate-600">
-          <div className="border-r border-slate-200 px-3 py-2">월 별</div>
+          <div className="border-r border-slate-200 px-3 py-2">
+            <I18nText k="myCoaching.moksilgi.monthly.monthColumn" fallback="월 별" />
+          </div>
           <div className="border-r border-slate-200 px-3 py-2">{unitHeader}</div>
-          <div className="border-r border-slate-200 px-3 py-2">달성률</div>
-          <div className="border-r border-slate-200 px-3 py-2">월 별</div>
+          <div className="border-r border-slate-200 px-3 py-2">
+            <I18nText k="myCoaching.moksilgi.monthly.achievementRate" fallback="달성률" />
+          </div>
+          <div className="border-r border-slate-200 px-3 py-2">
+            <I18nText k="myCoaching.moksilgi.monthly.monthColumn" fallback="월 별" />
+          </div>
           <div className="px-3 py-2">{actionHeader}</div>
         </div>
         <div className="grid grid-cols-[72px_100px_88px_72px_minmax(0,1fr)] text-sm">
@@ -309,14 +363,16 @@ function MonthlyRecordForm({
             {detailGoal.measurement_type === "weekly_count" ? (
               <div className="grid gap-2 sm:grid-cols-5">
                 {[
-                  "첫주",
-                  "둘째주",
-                  "셋째주",
-                  "넷째주",
-                  "다섯째주",
+                  { fallback: "첫주", key: "myCoaching.moksilgi.monthly.week1" },
+                  { fallback: "둘째주", key: "myCoaching.moksilgi.monthly.week2" },
+                  { fallback: "셋째주", key: "myCoaching.moksilgi.monthly.week3" },
+                  { fallback: "넷째주", key: "myCoaching.moksilgi.monthly.week4" },
+                  { fallback: "다섯째주", key: "myCoaching.moksilgi.monthly.week5" },
                 ].map((label, index) => (
-                  <label className="block" key={label}>
-                    <span className="text-xs font-medium text-slate-600">{label}</span>
+                  <label className="block" key={label.key}>
+                    <span className="text-xs font-medium text-slate-600">
+                      <I18nText k={label.key} fallback={label.fallback} />
+                    </span>
                     <input
                       className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1"
                       defaultValue={weeklyCounts.get(`week${index + 1}`) ?? 0}
@@ -347,7 +403,10 @@ function MonthlyRecordForm({
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="block">
           <span className="text-sm font-medium text-slate-700">
-            월 목표량 / 현재 목표량 수정
+            <I18nText
+              k="myCoaching.moksilgi.monthly.targetValue"
+              fallback="월 목표량 / 현재 목표량 수정"
+            />
           </span>
           <input
             className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2"
@@ -360,7 +419,9 @@ function MonthlyRecordForm({
         {detailGoal.measurement_type === "daily_check" ||
         detailGoal.measurement_type === "weekly_count" ? (
           <label className="block">
-            <span className="text-sm font-medium text-slate-700">코멘트</span>
+            <span className="text-sm font-medium text-slate-700">
+              <I18nText k="myCoaching.moksilgi.monthly.comment" fallback="코멘트" />
+            </span>
             <textarea
               className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2"
               defaultValue={record?.comment ?? ""}
@@ -376,7 +437,7 @@ function MonthlyRecordForm({
         className="mt-4 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
         type="submit"
       >
-        저장
+        <I18nText k="myCoaching.moksilgi.monthly.save" fallback="저장" />
       </button>
     </form>
   );
@@ -423,19 +484,37 @@ function Summary({
 
   return (
     <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-      <h2 className="text-lg font-semibold">월별 요약</h2>
+      <h2 className="text-lg font-semibold">
+        <I18nText k="myCoaching.moksilgi.monthly.summaryTitle" fallback="월별 요약" />
+      </h2>
       <div className="mt-4 overflow-x-auto">
         <table className="min-w-[760px] w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-100 text-left text-slate-600">
-              <th className="px-3 py-2 font-semibold">월</th>
-              <th className="px-3 py-2 font-semibold">영적 성장</th>
-              <th className="px-3 py-2 font-semibold">지적 성장</th>
-              <th className="px-3 py-2 font-semibold">육체적 성장</th>
-              <th className="px-3 py-2 font-semibold">사회적 성장</th>
-              <th className="px-3 py-2 font-semibold">기타</th>
-              <th className="px-3 py-2 font-semibold">종합</th>
-              <th className="px-3 py-2 font-semibold">평균</th>
+              <th className="px-3 py-2 font-semibold">
+                <I18nText k="myCoaching.moksilgi.monthly.month" fallback="월" />
+              </th>
+              <th className="px-3 py-2 font-semibold">
+                <I18nText k="myCoaching.moksilgi.goal.spiritual.title" fallback="목표 1: 영적 성장" />
+              </th>
+              <th className="px-3 py-2 font-semibold">
+                <I18nText k="myCoaching.moksilgi.goal.intellectual.title" fallback="목표 2: 지적 성장" />
+              </th>
+              <th className="px-3 py-2 font-semibold">
+                <I18nText k="myCoaching.moksilgi.goal.physical.title" fallback="목표 3: 육체적 성장" />
+              </th>
+              <th className="px-3 py-2 font-semibold">
+                <I18nText k="myCoaching.moksilgi.goal.social.title" fallback="목표 4: 사회적 성장" />
+              </th>
+              <th className="px-3 py-2 font-semibold">
+                <I18nText k="myCoaching.moksilgi.goal.other.title" fallback="목표 5: 기타" />
+              </th>
+              <th className="px-3 py-2 font-semibold">
+                <I18nText k="myCoaching.moksilgi.monthly.total" fallback="종합" />
+              </th>
+              <th className="px-3 py-2 font-semibold">
+                <I18nText k="myCoaching.moksilgi.monthly.average" fallback="평균" />
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -453,10 +532,10 @@ function Summary({
                   key={month}
                 >
                   <th className="whitespace-nowrap px-3 py-2 text-left font-medium">
-                    {month}월
+                    <MonthLabel month={month} />
                     {isSelected ? (
                       <span className="ml-2 rounded-full bg-slate-900 px-2 py-0.5 text-xs font-medium text-white">
-                        현재 선택
+                        <I18nText k="myCoaching.moksilgi.monthly.currentSelection" fallback="현재 선택" />
                       </span>
                     ) : null}
                   </th>
@@ -471,7 +550,9 @@ function Summary({
               );
             })}
             <tr className="bg-slate-950 text-white">
-              <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">누적</th>
+              <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">
+                <I18nText k="myCoaching.moksilgi.monthly.cumulative" fallback="누적" />
+              </th>
               <td className="px-3 py-2">{formatPercent(cumulative.spiritual_rate)}</td>
               <td className="px-3 py-2">{formatPercent(cumulative.intellectual_rate)}</td>
               <td className="px-3 py-2">{formatPercent(cumulative.physical_rate)}</td>
@@ -506,77 +587,110 @@ export default async function MoksilgiMonthlyPage({
     <main className="print-root min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
       <section className="mx-auto w-full max-w-6xl">
         <div className="print-report-title print-only">
-          <h1>월별 목실기 기록 보고서</h1>
+          <h1>
+            <I18nText k="myCoaching.moksilgi.monthly.reportTitle" fallback="월별 목실기 기록 보고서" />
+          </h1>
           <p>
-            출력 기간: {year}년 {month}월
+            <I18nText k="myCoaching.moksilgi.monthly.printPeriod" fallback="출력 기간" />: {year}
+            <I18nText k="myCoaching.moksilgi.monthly.yearSuffix" fallback="년" />{" "}
+            <MonthLabel month={month} />
           </p>
-          <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
+          <p>
+            <I18nText k="myCoaching.moksilgi.generatedAt" fallback="생성일" />: {new Date().toLocaleDateString("ko-KR")}
+          </p>
         </div>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-              목실기 월별 체크리스트
+              <I18nText k="myCoaching.moksilgi.monthly.title" fallback="목실기 월별 체크리스트" />
             </p>
             <h1 className="mt-3 text-3xl font-semibold">
-              월별 실행 기록과 달성률 자동 계산
+              <I18nText
+                k="myCoaching.moksilgi.monthly.subtitle"
+                fallback="월별 실행 기록과 달성률 자동 계산"
+              />
             </h1>
             <p className="mt-3 max-w-3xl text-slate-600">
-              세부 목표별 실행 상황을 기록하면 달성률이 자동 계산됩니다.
+              <I18nText
+                k="myCoaching.moksilgi.monthly.description"
+                fallback="세부 목표별 실행 상황을 기록하면 달성률이 자동 계산됩니다."
+              />
             </p>
             <MonthSelector month={month} year={year} />
           </div>
           <div className="flex flex-col items-start gap-2 text-sm">
+            <div className="print:hidden">
+              <LanguageSwitcher />
+            </div>
             <PrintPageButton
               fileName={`moksilgi-monthly-record-${year}-${String(month).padStart(2, "0")}`}
-              label="월별 목실기 출력"
+              label={<I18nText k="myCoaching.moksilgi.monthly.print" fallback="월별 목실기 출력" /> as unknown as string}
             />
             <Link className="font-medium text-slate-700 underline" href="/my-coaching/moksilgi">
-              목실기 작성으로 돌아가기
+              <I18nText k="myCoaching.moksilgi.monthly.backToMoksilgi" fallback="목실기 작성으로 돌아가기" />
             </Link>
             <Link className="font-medium text-slate-700 underline" href="/my-coaching">
-              내 코칭 공간으로 돌아가기
+              <I18nText k="myCoaching.moksilgi.monthly.backToMyCoaching" fallback="내 코칭 공간으로 돌아가기" />
             </Link>
             <Link className="font-medium text-slate-700 underline" href="/dashboard">
-              대시보드
+              <I18nText k="myCoaching.moksilgi.monthly.dashboard" fallback="대시보드" />
             </Link>
           </div>
         </div>
 
         {!result.ok && result.error.code === "PROFILE_NOT_FOUND" ? (
           <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
-            <p className="text-slate-700">아직 프로필이 생성되지 않았습니다.</p>
+            <p className="text-slate-700">
+              <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
+            </p>
             <Link className="mt-4 inline-block text-sm font-medium text-slate-700 underline" href="/profile">
-              프로필 보기
+              <I18nText k="myCoaching.viewProfile" fallback="프로필 보기" />
             </Link>
           </section>
         ) : !result.ok ? (
           <section className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
-            지금 월별 체크리스트를 불러올 수 없습니다.
+            <I18nText
+              k="myCoaching.moksilgi.monthly.loadFailed"
+              fallback="지금 월별 체크리스트를 불러올 수 없습니다."
+            />
           </section>
         ) : !result.data.plan ? (
           <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
-            <p className="text-slate-700">먼저 목실기 기본 작성 폼을 저장해 주세요.</p>
+            <p className="text-slate-700">
+              <I18nText
+                k="myCoaching.moksilgi.monthly.needBasicForm"
+                fallback="먼저 목실기 기본 작성 폼을 저장해 주세요."
+              />
+            </p>
             <Link className="mt-4 inline-block text-sm font-medium text-slate-700 underline" href="/my-coaching/moksilgi">
-              목실기 작성
+              <I18nText k="myCoaching.moksilgi.monthly.writeMoksilgi" fallback="목실기 작성" />
             </Link>
           </section>
         ) : result.data.detailGoals.length === 0 ? (
           <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
-            <p className="text-slate-700">먼저 세부 목표와 실행전략을 등록해 주세요.</p>
+            <p className="text-slate-700">
+              <I18nText
+                k="myCoaching.moksilgi.monthly.needDetailGoals"
+                fallback="먼저 세부 목표와 실행전략을 등록해 주세요."
+              />
+            </p>
             <Link className="mt-4 inline-block text-sm font-medium text-slate-700 underline" href="/my-coaching/moksilgi">
-              목실기 작성
+              <I18nText k="myCoaching.moksilgi.monthly.writeMoksilgi" fallback="목실기 작성" />
             </Link>
           </section>
         ) : (
           <div className="mt-8">
             {saved ? (
               <div className="mb-5 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
-                저장되었습니다.
+                <I18nText k="myCoaching.moksilgi.saved" fallback="저장되었습니다." />
               </div>
             ) : null}
             {error ? (
               <div className="mb-5 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
-                저장할 수 없습니다. 입력값을 확인해 주세요.
+                <I18nText
+                  k="myCoaching.moksilgi.saveFailed"
+                  fallback="저장할 수 없습니다. 입력값을 확인해 주세요."
+                />
               </div>
             ) : null}
 
@@ -603,20 +717,30 @@ export default async function MoksilgiMonthlyPage({
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <h2 className="text-xl font-semibold">
-                          목표 {area.sort_order}: {area.area_title}
+                          <I18nText
+                            k={AREA_TRANSLATION_KEY_BY_AREA_KEY[area.area_key].title}
+                            fallback={`목표 ${area.sort_order}: ${area.area_title}`}
+                          />
                         </h2>
                         <p className="mt-1 text-sm text-slate-600">
-                          {area.area_subtitle}
+                          <I18nText
+                            k={AREA_TRANSLATION_KEY_BY_AREA_KEY[area.area_key].subtitle}
+                            fallback={area.area_subtitle ?? ""}
+                          />
                         </p>
                       </div>
                       <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
-                        영역 평균 {formatPercent(areaAverage)}
+                        <I18nText k="myCoaching.moksilgi.monthly.areaAverage" fallback="영역 평균" />{" "}
+                        {formatPercent(areaAverage)}
                       </span>
                     </div>
 
                     {areaGoals.length === 0 ? (
                       <p className="mt-4 text-sm text-slate-600">
-                        이 영역에는 세부 목표가 없습니다.
+                        <I18nText
+                          k="myCoaching.moksilgi.monthly.noAreaDetailGoals"
+                          fallback="이 영역에는 세부 목표가 없습니다."
+                        />
                       </p>
                     ) : (
                       <div className="mt-4 grid gap-4">

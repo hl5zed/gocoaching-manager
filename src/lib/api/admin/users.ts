@@ -1,5 +1,6 @@
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createApiPerformanceLogger } from "@/lib/performance";
 import {
   requireAdminProfile,
 } from "@/lib/auth/require-admin-profile";
@@ -27,6 +28,10 @@ const MAX_LIMIT = 100;
 type AdminSupabaseClient = NonNullable<
   ReturnType<typeof createSupabaseServiceClient>["client"]
 >;
+
+type AdminUserPerformanceLogger = {
+  mark: (stage: string, resultCount?: number) => void;
+};
 
 type AdminProfileRow = Pick<
   ProfileRow,
@@ -206,6 +211,64 @@ function uniqueStrings(values: Array<string | null | undefined>) {
   );
 }
 
+function normalizeLookupIds(ids: string[]) {
+  return Array.from(new Set(ids.filter((id) => id.trim().length > 0))).sort();
+}
+
+const LOOKUP_CACHE_TTL_MS = 3 * 60 * 1000;
+
+type LookupNameTable = "organizations" | "churches" | "groups" | "regions";
+
+type LookupNameCacheEntry = {
+  expiresAt: number;
+  value: Map<string, string>;
+};
+
+type CountryLookupCacheEntry = {
+  expiresAt: number;
+  value: Map<string, { code: string | null; name: string }>;
+};
+
+type AdminUserRoleSummaryCacheEntry = {
+  expiresAt: number;
+  value: AdminUserRoleSummaryCounts;
+};
+
+const lookupNameCache = new Map<string, LookupNameCacheEntry>();
+const countryLookupCache = new Map<string, CountryLookupCacheEntry>();
+const adminUserRoleSummaryCache = new Map<
+  string,
+  AdminUserRoleSummaryCacheEntry
+>();
+
+const USER_ROLE_SUMMARY_CACHE_TTL_MS = 60 * 1000;
+const USER_ROLE_SUMMARY_CACHE_KEY = "global";
+
+function createLookupCacheKey(kind: string, ids: string[]) {
+  return `${kind}:${ids.join(",")}`;
+}
+
+function cloneNameMap(value: Map<string, string>) {
+  return new Map(value);
+}
+
+function cloneCountryMap(
+  value: Map<string, { code: string | null; name: string }>,
+) {
+  return new Map(
+    Array.from(value.entries()).map(([id, country]) => [
+      id,
+      { code: country.code, name: country.name },
+    ]),
+  );
+}
+
+function cloneUserRoleSummary(value: AdminUserRoleSummaryCounts) {
+  return {
+    ...value,
+  };
+}
+
 function buildProfileSearchFilter(q: string) {
   const escapedQuery = q.replace(/[%_]/g, (match) => `\\${match}`);
 
@@ -244,16 +307,24 @@ async function createAdminLookupClient(label: string) {
 
 async function loadLookupNames(
   client: AdminSupabaseClient,
-  table: "organizations" | "churches" | "groups" | "regions",
+  table: LookupNameTable,
   ids: string[],
 ) {
   const nameMap = new Map<string, string>();
+  const lookupIds = normalizeLookupIds(ids);
 
-  if (ids.length === 0) {
+  if (lookupIds.length === 0) {
     return nameMap;
   }
 
-  let query = client.from(table).select("id, name").in("id", ids);
+  const cacheKey = createLookupCacheKey(table, lookupIds);
+  const cached = lookupNameCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cloneNameMap(cached.value);
+  }
+
+  let query = client.from(table).select("id, name").in("id", lookupIds);
 
   if (table === "groups") {
     query = query.is("deleted_at", null);
@@ -269,6 +340,12 @@ async function loadLookupNames(
   for (const row of (data ?? []) as LookupRow[]) {
     nameMap.set(row.id, getLookupLabel(row));
   }
+
+  // 소속/lookup 정보 변경 후 최대 3분 반영 지연 가능.
+  lookupNameCache.set(cacheKey, {
+    expiresAt: Date.now() + LOOKUP_CACHE_TTL_MS,
+    value: cloneNameMap(nameMap),
+  });
 
   return nameMap;
 }
@@ -500,15 +577,23 @@ async function loadCountryLookups(
   ids: string[],
 ) {
   const countryMap = new Map<string, { code: string | null; name: string }>();
+  const lookupIds = normalizeLookupIds(ids);
 
-  if (ids.length === 0) {
+  if (lookupIds.length === 0) {
     return countryMap;
+  }
+
+  const cacheKey = createLookupCacheKey("countries", lookupIds);
+  const cached = countryLookupCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cloneCountryMap(cached.value);
   }
 
   const { data, error } = await client
     .from("countries")
     .select("id, name, code")
-    .in("id", ids);
+    .in("id", lookupIds);
 
   if (error) {
     console.error("[ADMIN_USERS_COUNTRIES_LOOKUP] lookup failed");
@@ -521,6 +606,12 @@ async function loadCountryLookups(
       name: row.name,
     });
   }
+
+  // 소속/lookup 정보 변경 후 최대 3분 반영 지연 가능.
+  countryLookupCache.set(cacheKey, {
+    expiresAt: Date.now() + LOOKUP_CACHE_TTL_MS,
+    value: cloneCountryMap(countryMap),
+  });
 
   return countryMap;
 }
@@ -543,13 +634,31 @@ async function countActiveUserRole(
   };
 }
 
-export async function getAdminUserRoleSummary(): Promise<{
+export async function getAdminUserRoleSummary(
+  perf?: AdminUserPerformanceLogger,
+): Promise<{
   summary: AdminUserRoleSummaryCounts;
   error: string | null;
 }> {
+  const cachedSummary = adminUserRoleSummaryCache.get(
+    USER_ROLE_SUMMARY_CACHE_KEY,
+  );
+
+  if (cachedSummary && cachedSummary.expiresAt > Date.now()) {
+    const summary = cloneUserRoleSummary(cachedSummary.value);
+    perf?.mark("summary.cache_hit", summary.totalProfiles);
+    perf?.mark("summary.complete", summary.totalProfiles);
+
+    return {
+      summary,
+      error: null,
+    };
+  }
+
   const { client: serviceClient } = createSupabaseServiceClient();
 
   if (!serviceClient) {
+    perf?.mark("summary.service_client_unavailable");
     return {
       summary: createEmptyRoleSummaryCounts(),
       error: "Unable to load user summary right now.",
@@ -577,6 +686,12 @@ export async function getAdminUserRoleSummary(): Promise<{
     ...roleTargets.map((target) => countActiveUserRole(client, target.role)),
   ]);
 
+  perf?.mark("summary.profiles_count_query", profileCountResult.count ?? 0);
+  perf?.mark(
+    "summary.roles_count_query",
+    roleCountResults.reduce((total, result) => total + result.count, 0),
+  );
+
   if (profileCountResult.error) {
     return {
       summary: createEmptyRoleSummaryCounts(),
@@ -602,20 +717,31 @@ export async function getAdminUserRoleSummary(): Promise<{
     summary[roleTargets[index].key] = result.count;
   });
 
+  // 회원 생성/수정/역할 변경 직후 최대 1분 반영 지연 가능.
+  adminUserRoleSummaryCache.set(USER_ROLE_SUMMARY_CACHE_KEY, {
+    expiresAt: Date.now() + USER_ROLE_SUMMARY_CACHE_TTL_MS,
+    value: cloneUserRoleSummary(summary),
+  });
+
   return {
     summary,
     error: null,
   };
 }
 
-export async function getAdminUserDetail(profileId: string): Promise<{
+export async function getAdminUserDetail(
+  profileId: string,
+  detailPerf?: AdminUserPerformanceLogger,
+): Promise<{
   user: AdminUserSummary | null;
   error: string | null;
 }> {
+  const perf = createApiPerformanceLogger("/api/admin/users/[profileId]");
   const { client: serviceClient } = createSupabaseServiceClient();
 
   if (!serviceClient) {
     console.error("[ADMIN_USER_DETAIL_CLIENT] service client unavailable");
+    perf.mark("service_client_unavailable");
     return {
       user: null,
       error: "Unable to load user detail right now.",
@@ -631,6 +757,9 @@ export async function getAdminUserDetail(profileId: string): Promise<{
     .eq("id", profileId)
     .is("deleted_at", null)
     .maybeSingle();
+
+  detailPerf?.mark("detail.profile_query", profile ? 1 : 0);
+  perf.mark("profile_lookup", profile ? 1 : 0);
 
   if (profileError) {
     console.error("[ADMIN_USER_DETAIL_PROFILE] profile lookup failed");
@@ -662,12 +791,25 @@ export async function getAdminUserDetail(profileId: string): Promise<{
       loadLookupNames(client, "groups", uniqueStrings([profileRow.group_id])),
     ]);
 
+  detailPerf?.mark(
+    "detail.affiliations_query",
+    countryLookups.size +
+      regionNames.size +
+      organizationNames.size +
+      churchNames.size +
+      groupNames.size,
+  );
+  perf.mark("lookup_names");
+
   const { data: roles, error: rolesError } = await client
     .from("user_roles")
     .select("id, profile_id, role, scope_type, scope_id, status, is_active, granted_at")
     .eq("profile_id", profileRow.id)
     .is("deleted_at", null)
-    .order("granted_at", { ascending: false });
+      .order("granted_at", { ascending: false });
+
+  detailPerf?.mark("detail.roles_query", roles?.length ?? 0);
+  perf.mark("roles_lookup", roles?.length ?? 0);
 
   if (rolesError) {
     console.error("[ADMIN_USER_DETAIL_ROLES] role lookup failed");
@@ -677,53 +819,58 @@ export async function getAdminUserDetail(profileId: string): Promise<{
     };
   }
 
+  const user = {
+    id: profileRow.id,
+    auth_user_id: profileRow.auth_user_id,
+    full_name: profileRow.full_name,
+    display_name: profileRow.display_name,
+    email: profileRow.email,
+    phone: profileRow.phone,
+    country_id: profileRow.country_id,
+    country_code: profileRow.country_id
+      ? countryLookups.get(profileRow.country_id)?.code ?? null
+      : null,
+    country_name: profileRow.country_id
+      ? countryLookups.get(profileRow.country_id)?.name ?? null
+      : null,
+    region_id: profileRow.region_id,
+    region_name: profileRow.region_id
+      ? regionNames.get(profileRow.region_id) ?? null
+      : null,
+    organization_id: profileRow.organization_id,
+    organization_name: profileRow.organization_id
+      ? organizationNames.get(profileRow.organization_id) ?? null
+      : null,
+    church_id: profileRow.church_id,
+    church_name: profileRow.church_id
+      ? churchNames.get(profileRow.church_id) ?? null
+      : null,
+    group_id: profileRow.group_id,
+    group_name: profileRow.group_id
+      ? groupNames.get(profileRow.group_id) ?? null
+      : null,
+    ministry_position: profileRow.ministry_position,
+    primary_role: profileRow.primary_role,
+    generation_number: profileRow.generation_number,
+    status: profileRow.status,
+    created_at: profileRow.created_at,
+    updated_at: profileRow.updated_at,
+    roles: ((roles ?? []) as AdminRoleRow[]).map((roleRow) => ({
+      id: roleRow.id,
+      role: roleRow.role,
+      scope_type: roleRow.scope_type,
+      scope_id: roleRow.scope_id,
+      status: roleRow.status,
+      is_active: roleRow.is_active,
+      assigned_at: roleRow.granted_at,
+    })),
+  };
+
+  detailPerf?.mark("detail.complete", 1);
+  perf.mark("complete", 1);
+
   return {
-    user: {
-      id: profileRow.id,
-      auth_user_id: profileRow.auth_user_id,
-      full_name: profileRow.full_name,
-      display_name: profileRow.display_name,
-      email: profileRow.email,
-      phone: profileRow.phone,
-      country_id: profileRow.country_id,
-      country_code: profileRow.country_id
-        ? countryLookups.get(profileRow.country_id)?.code ?? null
-        : null,
-      country_name: profileRow.country_id
-        ? countryLookups.get(profileRow.country_id)?.name ?? null
-        : null,
-      region_id: profileRow.region_id,
-      region_name: profileRow.region_id
-        ? regionNames.get(profileRow.region_id) ?? null
-        : null,
-      organization_id: profileRow.organization_id,
-      organization_name: profileRow.organization_id
-        ? organizationNames.get(profileRow.organization_id) ?? null
-        : null,
-      church_id: profileRow.church_id,
-      church_name: profileRow.church_id
-        ? churchNames.get(profileRow.church_id) ?? null
-        : null,
-      group_id: profileRow.group_id,
-      group_name: profileRow.group_id
-        ? groupNames.get(profileRow.group_id) ?? null
-        : null,
-      ministry_position: profileRow.ministry_position,
-      primary_role: profileRow.primary_role,
-      generation_number: profileRow.generation_number,
-      status: profileRow.status,
-      created_at: profileRow.created_at,
-      updated_at: profileRow.updated_at,
-      roles: ((roles ?? []) as AdminRoleRow[]).map((roleRow) => ({
-        id: roleRow.id,
-        role: roleRow.role,
-        scope_type: roleRow.scope_type,
-        scope_id: roleRow.scope_id,
-        status: roleRow.status,
-        is_active: roleRow.is_active,
-        assigned_at: roleRow.granted_at,
-      })),
-    },
+    user,
     error: null,
   };
 }
@@ -789,11 +936,13 @@ export async function getAdminUsers({
   page: number;
   limit?: number;
 }): Promise<AdminUsersResult> {
+  const perf = createApiPerformanceLogger("/admin/users");
   const admin = authorizedAdmin ?? (await requireAdminProfile());
   const safeLimit = Math.min(Math.max(limit, 1), MAX_LIMIT);
   const safePage = Math.max(page, 1);
 
   if (!admin.ok) {
+    perf.mark("auth_denied");
     return {
       users: [],
       summary: createEmptySummary(),
@@ -808,6 +957,7 @@ export async function getAdminUsers({
 
   if (!serviceClient) {
     console.error("[ADMIN_USERS_CLIENT] service client unavailable");
+    perf.mark("service_client_unavailable");
     return {
       users: [],
       summary: createEmptySummary(),
@@ -852,6 +1002,8 @@ export async function getAdminUsers({
     .order("created_at", { ascending: false })
     .range(from, to);
 
+  perf.mark("profiles_query", profiles?.length ?? 0);
+
   if (profilesError) {
     console.error("[ADMIN_USERS_PROFILES] profile lookup failed");
     return {
@@ -868,6 +1020,7 @@ export async function getAdminUsers({
   const hasNext = (profiles?.length ?? 0) > safeLimit;
 
   if (profileRows.length === 0) {
+    perf.mark("complete", 0);
     return {
       users: [],
       summary,
@@ -899,13 +1052,19 @@ export async function getAdminUsers({
     loadLookupNames(client, "groups", uniqueStrings(profileRows.map((profile) => profile.group_id))),
   ]);
 
+  perf.mark("lookup_names", profileRows.length);
+
   // Existing project convention: profiles.id -> user_roles.profile_id.
   const { data: roles, error: rolesError } = await client
     .from("user_roles")
     .select("id, profile_id, role, scope_type, scope_id, status, is_active, granted_at")
     .in("profile_id", profileIds)
+    .eq("status", "active")
+    .eq("is_active", true)
     .is("deleted_at", null)
     .order("granted_at", { ascending: false });
+
+  perf.mark("roles_query", roles?.length ?? 0);
 
   if (rolesError) {
     console.error("[ADMIN_USERS_ROLES] role lookup failed");
@@ -935,39 +1094,43 @@ export async function getAdminUsers({
     rolesByProfileId.set(roleRow.profile_id, current);
   }
 
+  const users = profileRows.map((profile) => ({
+    id: profile.id,
+    auth_user_id: profile.auth_user_id,
+    full_name: profile.full_name,
+    display_name: profile.display_name,
+    email: profile.email,
+    phone: profile.phone,
+    country_id: profile.country_id,
+    country_code: profile.country_id
+      ? countryLookups.get(profile.country_id)?.code ?? null
+      : null,
+    country_name: profile.country_id
+      ? countryLookups.get(profile.country_id)?.name ?? null
+      : null,
+    region_id: profile.region_id,
+    region_name: profile.region_id ? regionNames.get(profile.region_id) ?? null : null,
+    organization_id: profile.organization_id,
+    organization_name: profile.organization_id
+      ? organizationNames.get(profile.organization_id) ?? null
+      : null,
+    church_id: profile.church_id,
+    church_name: profile.church_id ? churchNames.get(profile.church_id) ?? null : null,
+    group_id: profile.group_id,
+    group_name: profile.group_id ? groupNames.get(profile.group_id) ?? null : null,
+    ministry_position: profile.ministry_position,
+    primary_role: profile.primary_role,
+    generation_number: profile.generation_number,
+    status: profile.status,
+    created_at: profile.created_at,
+    updated_at: profile.updated_at,
+    roles: rolesByProfileId.get(profile.id) ?? [],
+  }));
+
+  perf.mark("complete", users.length);
+
   return {
-    users: profileRows.map((profile) => ({
-      id: profile.id,
-      auth_user_id: profile.auth_user_id,
-      full_name: profile.full_name,
-      display_name: profile.display_name,
-      email: profile.email,
-      phone: profile.phone,
-      country_id: profile.country_id,
-      country_code: profile.country_id
-        ? countryLookups.get(profile.country_id)?.code ?? null
-        : null,
-      country_name: profile.country_id
-        ? countryLookups.get(profile.country_id)?.name ?? null
-        : null,
-      region_id: profile.region_id,
-      region_name: profile.region_id ? regionNames.get(profile.region_id) ?? null : null,
-      organization_id: profile.organization_id,
-      organization_name: profile.organization_id
-        ? organizationNames.get(profile.organization_id) ?? null
-        : null,
-      church_id: profile.church_id,
-      church_name: profile.church_id ? churchNames.get(profile.church_id) ?? null : null,
-      group_id: profile.group_id,
-      group_name: profile.group_id ? groupNames.get(profile.group_id) ?? null : null,
-      ministry_position: profile.ministry_position,
-      primary_role: profile.primary_role,
-      generation_number: profile.generation_number,
-      status: profile.status,
-      created_at: profile.created_at,
-      updated_at: profile.updated_at,
-      roles: rolesByProfileId.get(profile.id) ?? [],
-    })),
+    users,
     summary,
     error: null,
     page: safePage,

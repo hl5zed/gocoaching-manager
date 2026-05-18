@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { I18nText } from "@/lib/i18n/I18nProvider";
 import {
   getCoachMakerMoksilgiProgress,
   type CoachMakerMoksilgiProgressRow,
@@ -34,34 +36,93 @@ export const dynamic = "force-dynamic";
 const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
 const UNASSIGNED_LABEL = "미지정";
 
-const ACTION_TYPE_LABELS: Record<ActionNoteActionType, string> = {
-  coaching_encouragement: "코칭 권면",
-  contact_line: "LINE/전화 연락",
-  next_meeting_check: "다음 모임 점검",
-  other: "기타",
-  team_leader_check: "팀장 확인",
+type ReportLabel = {
+  fallback: string;
+  key: string;
 };
 
-const PRIORITY_LABELS: Record<ActionNotePriority, string> = {
-  high: "높음",
-  low: "낮음",
-  normal: "보통",
+const ACTION_TYPE_LABELS: Record<ActionNoteActionType, ReportLabel> = {
+  coaching_encouragement: {
+    fallback: "코칭 권면",
+    key: "coachMaker.report.actionType.coaching_encouragement",
+  },
+  contact_line: {
+    fallback: "LINE/전화 연락",
+    key: "coachMaker.report.actionType.contact_line",
+  },
+  next_meeting_check: {
+    fallback: "다음 모임 점검",
+    key: "coachMaker.report.actionType.next_meeting_check",
+  },
+  other: {
+    fallback: "기타",
+    key: "coachMaker.report.actionType.other",
+  },
+  team_leader_check: {
+    fallback: "팀장 확인",
+    key: "coachMaker.report.actionType.team_leader_check",
+  },
 };
 
-const STATUS_LABELS: Record<ActionNoteStatus, string> = {
-  archived: "보관됨",
-  completed: "완료",
-  in_progress: "진행 중",
-  open: "진행 전",
+const PRIORITY_LABELS: Record<ActionNotePriority, ReportLabel> = {
+  high: {
+    fallback: "높음",
+    key: "coachMaker.report.priority.high",
+  },
+  low: {
+    fallback: "낮음",
+    key: "coachMaker.report.priority.low",
+  },
+  normal: {
+    fallback: "보통",
+    key: "coachMaker.report.priority.normal",
+  },
 };
 
-const TARGET_TYPE_LABELS: Record<ActionNoteTargetType, string> = {
-  attention_target: "관심 필요 대상자",
-  church: "교회",
-  coach: "코치",
-  coachee: "코칭 대상자",
-  organization: "기관",
-  team: "팀",
+const STATUS_LABELS: Record<ActionNoteStatus, ReportLabel> = {
+  archived: {
+    fallback: "보관됨",
+    key: "coachMaker.report.actionStatus.archived",
+  },
+  completed: {
+    fallback: "완료",
+    key: "coachMaker.report.actionStatus.completed",
+  },
+  in_progress: {
+    fallback: "진행 중",
+    key: "coachMaker.report.actionStatus.in_progress",
+  },
+  open: {
+    fallback: "진행 전",
+    key: "coachMaker.report.actionStatus.open",
+  },
+};
+
+const TARGET_TYPE_LABELS: Record<ActionNoteTargetType, ReportLabel> = {
+  attention_target: {
+    fallback: "관심 필요 대상자",
+    key: "coachMaker.report.targetType.attention_target",
+  },
+  church: {
+    fallback: "교회",
+    key: "coachMaker.report.targetType.church",
+  },
+  coach: {
+    fallback: "코치",
+    key: "coachMaker.report.targetType.coach",
+  },
+  coachee: {
+    fallback: "코칭 대상자",
+    key: "coachMaker.report.targetType.coachee",
+  },
+  organization: {
+    fallback: "기관",
+    key: "coachMaker.report.targetType.organization",
+  },
+  team: {
+    fallback: "팀",
+    key: "coachMaker.report.targetType.team",
+  },
 };
 
 type ReportPageProps = {
@@ -344,13 +405,91 @@ function buildFilterSummary({
   year: number;
 }) {
   return [
-    `기준 연도: ${year}년`,
-    `팀: ${team ?? "전체"}`,
-    `기간: ${from ?? "전체"} ~ ${to ?? "전체"}`,
-    `목실기 기준: ${year}년 선택 연도`,
-    `관리 메모 기준: 작성일 ${from ?? "전체"} ~ ${to ?? "전체"}`,
-    `팀 기준: ${team ?? "전체 팀"}`,
-    `기준 시간대: ${timezone}`,
+    {
+      fallback: "기준 연도",
+      key: "coachMaker.report.filterSummary.year",
+      value: (
+        <>
+          {year}
+          <I18nText k="coachMaker.report.filters.yearSuffix" fallback="년" />
+        </>
+      ),
+    },
+    {
+      fallback: "팀",
+      key: "coachMaker.report.filterSummary.team",
+      value: team ?? (
+        <I18nText k="coachMaker.report.filterSummary.all" fallback="전체" />
+      ),
+    },
+    {
+      fallback: "기간",
+      key: "coachMaker.report.filterSummary.period",
+      value: from || to ? (
+        <>
+          {from ?? (
+            <I18nText k="coachMaker.report.filterSummary.all" fallback="전체" />
+          )}{" "}
+          ~{" "}
+          {to ?? (
+            <I18nText k="coachMaker.report.filterSummary.all" fallback="전체" />
+          )}
+        </>
+      ) : (
+        <I18nText
+          k="coachMaker.report.filterSummary.allPeriod"
+          fallback="전체 기간"
+        />
+      ),
+    },
+    {
+      fallback: "목실기 기준",
+      key: "coachMaker.report.filterSummary.moksilgiBasis",
+      value: (
+        <>
+          {year}
+          <I18nText k="coachMaker.report.filters.yearSuffix" fallback="년" />{" "}
+          <I18nText
+            k="coachMaker.report.filterSummary.selectedYear"
+            fallback="선택 연도"
+          />
+        </>
+      ),
+    },
+    {
+      fallback: "관리 메모 기준",
+      key: "coachMaker.report.filterSummary.actionMemoBasis",
+      value: (
+        <>
+          <I18nText
+            k="coachMaker.report.filterSummary.createdAt"
+            fallback="작성일"
+          />{" "}
+          {from ?? (
+            <I18nText k="coachMaker.report.filterSummary.all" fallback="전체" />
+          )}{" "}
+          ~{" "}
+          {to ?? (
+            <I18nText k="coachMaker.report.filterSummary.all" fallback="전체" />
+          )}
+        </>
+      ),
+    },
+    {
+      fallback: "팀 기준",
+      key: "coachMaker.report.filterSummary.teamBasis",
+      value: team ?? (
+        <I18nText
+          k="coachMaker.report.filterSummary.allTeams"
+          fallback="전체 팀"
+        />
+      ),
+    },
+    {
+      fallback: "기준 시간대",
+      key: "coachMaker.report.timezone",
+      value: timezone,
+    },
   ];
 }
 
@@ -373,18 +512,48 @@ function buildReportPeriodLabel({
   const toMonth = reportMonthLabel(to);
 
   if (fromMonth && toMonth) {
-    return `${year}년 ${fromMonth}~${toMonth} 기준`;
+    return (
+      <>
+        {year}
+        <I18nText k="coachMaker.report.filters.yearSuffix" fallback="년" />{" "}
+        {fromMonth}~{toMonth}{" "}
+        <I18nText k="coachMaker.report.autoSummary.period.range" fallback="기준" />
+      </>
+    );
   }
 
   if (fromMonth) {
-    return `${year}년 ${fromMonth} 이후 기준`;
+    return (
+      <>
+        {year}
+        <I18nText k="coachMaker.report.filters.yearSuffix" fallback="년" />{" "}
+        {fromMonth}{" "}
+        <I18nText k="coachMaker.report.autoSummary.period.from" fallback="이후 기준" />
+      </>
+    );
   }
 
   if (toMonth) {
-    return `${year}년 ${toMonth}까지 기준`;
+    return (
+      <>
+        {year}
+        <I18nText k="coachMaker.report.filters.yearSuffix" fallback="년" />{" "}
+        {toMonth}{" "}
+        <I18nText k="coachMaker.report.autoSummary.period.to" fallback="까지 기준" />
+      </>
+    );
   }
 
-  return `${year}년 전체 기간 기준`;
+  return (
+    <>
+      {year}
+      <I18nText k="coachMaker.report.filters.yearSuffix" fallback="년" />{" "}
+      <I18nText
+        k="coachMaker.report.autoSummary.period.allYear"
+        fallback="전체 기간 기준"
+      />
+    </>
+  );
 }
 
 function buildReportAutoSummary({
@@ -409,16 +578,60 @@ function buildReportAutoSummary({
   year: number;
 }) {
   if (totalCount === 0 && noteCount === 0) {
-    return "선택한 조건에 해당하는 보고서 데이터가 없습니다.";
+    return (
+      <I18nText
+        k="coachMaker.report.autoSummary.noData"
+        fallback="선택한 조건에 해당하는 보고서 데이터가 없습니다."
+      />
+    );
   }
 
   const safeAverage = Number.isFinite(averageAchievementRate)
     ? averageAchievementRate
     : 0;
-  const teamLabel = team ? `${team} 기준` : "전체 팀 기준";
+  const teamLabel = team ? (
+    <>
+      {team}{" "}
+      <I18nText k="coachMaker.report.autoSummary.team.selected" fallback="기준" />
+    </>
+  ) : (
+    <I18nText k="coachMaker.report.autoSummary.team.all" fallback="전체 팀 기준" />
+  );
   const periodLabel = buildReportPeriodLabel({ from, to, year });
 
-  return `${periodLabel}, ${teamLabel}으로 전체 ${totalCount}명 중 ${participantCount}명이 목실기 기록에 참여했으며, 평균 성취율은 ${formatPercent(safeAverage)}입니다. 현재 관심이 필요한 대상자는 ${attentionCount}명이며, 코치의 후속 관리가 필요합니다.`;
+  return (
+    <>
+      <I18nText k="coachMaker.report.autoSummary.body" fallback="보고서 요약" />:{" "}
+      {periodLabel}. {teamLabel}.{" "}
+      <I18nText k="coachMaker.report.autoSummary.totalTargets" fallback="전체 대상자" />{" "}
+      {totalCount}
+      <I18nText k="coachMaker.report.checkNeeded.peopleSuffix" fallback="명" />
+      ,{" "}
+      <I18nText
+        k="coachMaker.report.autoSummary.participants"
+        fallback="목실기 기록 참여"
+      />{" "}
+      {participantCount}
+      <I18nText k="coachMaker.report.checkNeeded.peopleSuffix" fallback="명" />
+      ,{" "}
+      <I18nText
+        k="coachMaker.report.autoSummary.averageAchievement"
+        fallback="평균 성취율"
+      />{" "}
+      {formatPercent(safeAverage)}.{" "}
+      <I18nText
+        k="coachMaker.report.autoSummary.attentionTargets"
+        fallback="관심 필요 대상자"
+      />{" "}
+      {attentionCount}
+      <I18nText k="coachMaker.report.checkNeeded.peopleSuffix" fallback="명" />
+      .{" "}
+      <I18nText
+        k="coachMaker.report.autoSummary.followUpNeeded"
+        fallback="코치의 후속 관리가 필요합니다."
+      />
+    </>
+  );
 }
 
 function isIncomplete(note: CoachActionNoteReportItem) {
@@ -560,7 +773,7 @@ function SummaryBox({
   );
 }
 
-function EmptyState({ children }: { children: string }) {
+function EmptyState({ children }: { children: React.ReactNode }) {
   return (
     <p className="report-card rounded-md border border-slate-200 px-4 py-5 text-center text-sm text-slate-500 print:border-slate-300">
       {children}
@@ -581,8 +794,24 @@ function coachStatsErrorMessage(code: string) {
 function checkNeededLabel(coach: CoachMakerCoachStatsRow) {
   const total = coach.weeklyMissingThisWeekCount + coach.feedbackPendingCount;
 
-  if (total === 0) return "없음";
-  return `미제출 ${coach.weeklyMissingThisWeekCount}명 / 피드백 ${coach.feedbackPendingCount}건`;
+  if (total === 0) {
+    return <I18nText k="coachMaker.report.checkNeeded.none" fallback="없음" />;
+  }
+
+  return (
+    <>
+      <I18nText k="coachMaker.report.checkNeeded.missing" fallback="미제출" />{" "}
+      {coach.weeklyMissingThisWeekCount}
+      <I18nText k="coachMaker.report.checkNeeded.peopleSuffix" fallback="명" />{" / "}
+      <I18nText k="coachMaker.report.checkNeeded.feedback" fallback="피드백" />{" "}
+      {coach.feedbackPendingCount}
+      <I18nText k="coachMaker.report.checkNeeded.itemsSuffix" fallback="건" />
+    </>
+  );
+}
+
+function reportLabelText(label: ReportLabel) {
+  return <I18nText k={label.key} fallback={label.fallback} />;
 }
 
 export default async function CoachMakerReportPage({
@@ -773,9 +1002,15 @@ export default async function CoachMakerReportPage({
             className="inline-flex min-h-10 w-full justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
             href="/coach-maker"
           >
-            대시보드로 돌아가기
+            <I18nText
+              k="coachMaker.report.backToDashboard"
+              fallback="대시보드로 돌아가기"
+            />
           </Link>
-          <PrintReportButton />
+          <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+            <LanguageSwitcher />
+            <PrintReportButton />
+          </div>
         </div>
         <p className="report-controls mb-6 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600 print:hidden">
           인쇄 전 연도, 팀, 기간 기준을 확인해 주세요. 브라우저 인쇄창에서
@@ -786,25 +1021,45 @@ export default async function CoachMakerReportPage({
 
         <header className="report-header border-b border-slate-300 pb-6">
           <p className="text-sm font-semibold text-slate-500 print:text-slate-700">
-            코치메이커 보고서
+            <I18nText
+              k="coachMaker.report.badge"
+              fallback="코치메이커 보고서"
+            />
           </p>
           <h1 className="mt-2 text-3xl font-bold text-slate-950 print:text-2xl">
-            코치메이커 운영 보고서
+            <I18nText
+              k="coachMaker.report.title"
+              fallback="코치메이커 운영 보고서"
+            />
           </h1>
           <div className="mt-4 grid gap-2 text-sm text-slate-600 print:text-slate-800 sm:grid-cols-2">
-            <p>생성일: {formatGeneratedAt(generatedAt, effectiveTimezone)}</p>
-            <p>기준 연도: {selectedYear}년</p>
-            <p>기준 시간대: {effectiveTimezone}</p>
+            <p>
+              <I18nText k="coachMaker.report.generatedAt" fallback="생성일" />:{" "}
+              {formatGeneratedAt(generatedAt, effectiveTimezone)}
+            </p>
+            <p>
+              <I18nText k="coachMaker.report.year" fallback="기준 연도" />:{" "}
+              {selectedYear}년
+            </p>
+            <p>
+              <I18nText k="coachMaker.report.timezone" fallback="기준 시간대" />:{" "}
+              {effectiveTimezone}
+            </p>
           </div>
           <p className="mt-3 text-sm leading-6 text-slate-600 print:text-slate-800">
-            목실기 성취 현황, 관심 필요 대상자, 관리 액션 메모의 핵심 운영 지표를 인쇄용으로 정리합니다.
+            <I18nText
+              k="coachMaker.report.description"
+              fallback="목실기 성취 현황, 관심 필요 대상자, 관리 액션 메모의 핵심 운영 지표를 인쇄용으로 정리합니다."
+            />
           </p>
           <p className="mt-4 rounded-md border border-slate-200 bg-white p-4 text-sm leading-7 text-slate-800 print:border-slate-300 print:p-3">
             {autoSummary}
           </p>
           <div className="report-card mt-4 grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 print:bg-white print:text-slate-900 sm:grid-cols-2">
             {filterSummary.map((item) => (
-              <p key={item}>{item}</p>
+              <p key={item.key}>
+                <I18nText k={item.key} fallback={item.fallback} />: {item.value}
+              </p>
             ))}
           </div>
         </header>
@@ -837,7 +1092,10 @@ export default async function CoachMakerReportPage({
           <>
             <section className="report-section report-section-first mt-8 print:break-inside-auto">
               <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
-                코치메이커 담당 범위 요약
+                <I18nText
+                  k="coachMaker.report.scopeSummary"
+                  fallback="코치메이커 담당 범위 요약"
+                />
               </h2>
               {coachStatsResult.error ? (
                 <p className="report-card mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-5 text-center text-sm text-red-800 print:border-slate-300 print:bg-white print:text-slate-900">
@@ -845,7 +1103,12 @@ export default async function CoachMakerReportPage({
                 </p>
               ) : !coachStats ? (
                 <div className="mt-4">
-                  <EmptyState>선택한 조건에 해당하는 코치메이커 담당 범위 데이터가 없습니다.</EmptyState>
+                  <EmptyState>
+                    <I18nText
+                      k="coachMaker.report.noScopeData"
+                      fallback="선택한 조건에 해당하는 코치메이커 담당 범위 데이터가 없습니다."
+                    />
+                  </EmptyState>
                 </div>
               ) : (
                 <>
@@ -867,7 +1130,10 @@ export default async function CoachMakerReportPage({
 
             <section className="report-section mt-8 print:break-inside-auto">
               <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
-                코치별 담당 코치이 현황
+                <I18nText
+                  k="coachMaker.report.coachAssignmentStatus"
+                  fallback="코치별 담당 코치이 현황"
+                />
               </h2>
               <p className="mt-2 text-sm text-slate-600 print:text-slate-800">
                 이번 주 제출, 미제출, 피드백 대기 현황을 코치별로 요약합니다.
@@ -878,7 +1144,12 @@ export default async function CoachMakerReportPage({
                 </p>
               ) : !coachStats || coachStats.coaches.length === 0 ? (
                 <div className="mt-4">
-                  <EmptyState>선택한 조건에 해당하는 코치별 담당 현황 데이터가 없습니다.</EmptyState>
+                  <EmptyState>
+                    <I18nText
+                      k="coachMaker.report.noCoachAssignmentData"
+                      fallback="선택한 조건에 해당하는 코치별 담당 현황 데이터가 없습니다."
+                    />
+                  </EmptyState>
                 </div>
               ) : (
                 <div className="mt-4 overflow-x-auto print:overflow-visible">
@@ -919,11 +1190,19 @@ export default async function CoachMakerReportPage({
 
             <section className="report-section mt-8 print:break-inside-auto">
               <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
-                목실기 성취 요약
+                <I18nText
+                  k="coachMaker.report.moksilgiSummary"
+                  fallback="목실기 성취 요약"
+                />
               </h2>
               {rows.length === 0 ? (
                 <div className="mt-4">
-                  <EmptyState>선택한 조건에 해당하는 목실기 성취 데이터가 없습니다.</EmptyState>
+                  <EmptyState>
+                    <I18nText
+                      k="coachMaker.report.noMoksilgiData"
+                      fallback="선택한 조건에 해당하는 목실기 성취 데이터가 없습니다."
+                    />
+                  </EmptyState>
                 </div>
               ) : (
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -945,7 +1224,10 @@ export default async function CoachMakerReportPage({
 
             <section className="report-section mt-8 print:break-inside-auto">
               <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
-                관심 필요 대상자
+                <I18nText
+                  k="coachMaker.report.attentionTargets"
+                  fallback="관심 필요 대상자"
+                />
               </h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <SummaryBox label="관심 필요 대상자 수" value={attention.attentionCount} />
@@ -953,7 +1235,12 @@ export default async function CoachMakerReportPage({
               </div>
               {attention.attentionRows.length === 0 ? (
                 <div className="mt-4">
-                  <EmptyState>선택한 조건에 해당하는 관심 필요 대상자가 없습니다.</EmptyState>
+                  <EmptyState>
+                    <I18nText
+                      k="coachMaker.report.noAttentionTargets"
+                      fallback="선택한 조건에 해당하는 관심 필요 대상자가 없습니다."
+                    />
+                  </EmptyState>
                 </div>
               ) : (
                 <div className="mt-4 overflow-x-auto print:overflow-visible">
@@ -985,7 +1272,10 @@ export default async function CoachMakerReportPage({
 
         <section className="report-section mt-8 print:break-inside-auto">
           <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
-            관리 액션 메모 요약
+            <I18nText
+              k="coachMaker.report.actionMemoSummary"
+              fallback="관리 액션 메모 요약"
+            />
           </h2>
           {!actionNotesResult.ok ? (
             <p className="report-card mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-5 text-center text-sm text-red-800 print:border-slate-300 print:bg-white print:text-slate-900">
@@ -1009,14 +1299,22 @@ export default async function CoachMakerReportPage({
 
         <section className="report-section mt-8">
           <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
-            우선 조치 목록
+            <I18nText
+              k="coachMaker.report.priorityActionList"
+              fallback="우선 조치 목록"
+            />
           </h2>
           <p className="mt-2 text-sm text-slate-600 print:text-slate-800">
             높은 우선순위 미완료 메모와 기한 지난 미완료 메모를 최대 10개까지 표시합니다.
           </p>
           {priorityActionNotes.length === 0 ? (
             <div className="mt-4">
-              <EmptyState>선택한 팀/기간에 해당하는 관리 액션 메모가 없습니다.</EmptyState>
+              <EmptyState>
+                <I18nText
+                  k="coachMaker.report.noActionMemos"
+                  fallback="선택한 팀/기간에 해당하는 관리 액션 메모가 없습니다."
+                />
+              </EmptyState>
             </div>
           ) : (
             <div className="mt-4 overflow-x-auto print:overflow-visible">
@@ -1037,12 +1335,18 @@ export default async function CoachMakerReportPage({
                       <td className="py-2 pr-3">
                         <p className="font-medium">{note.target_name}</p>
                         <p className="text-slate-500">
-                          {TARGET_TYPE_LABELS[note.target_type]}
+                          {reportLabelText(TARGET_TYPE_LABELS[note.target_type])}
                         </p>
                       </td>
-                      <td className="py-2 pr-3">{ACTION_TYPE_LABELS[note.action_type]}</td>
-                      <td className="py-2 pr-3">{PRIORITY_LABELS[note.priority]}</td>
-                      <td className="py-2 pr-3">{STATUS_LABELS[note.status]}</td>
+                      <td className="py-2 pr-3">
+                        {reportLabelText(ACTION_TYPE_LABELS[note.action_type])}
+                      </td>
+                      <td className="py-2 pr-3">
+                        {reportLabelText(PRIORITY_LABELS[note.priority])}
+                      </td>
+                      <td className="py-2 pr-3">
+                        {reportLabelText(STATUS_LABELS[note.status])}
+                      </td>
                       <td className="py-2 pr-3">{formatDate(note.due_date, effectiveTimezone)}</td>
                       <td className="report-note-cell max-w-[260px] py-2 pr-3 leading-5 print:max-w-none">
                         {truncateText(note.note)}

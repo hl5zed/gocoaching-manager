@@ -32,6 +32,10 @@ type UserRoleScopeRow = AuthRoleScope & {
   expires_at: string | null;
 };
 
+type GenealogyPerformanceLogger = {
+  mark: (stage: string, resultCount?: number) => void;
+};
+
 type RelationshipRow = {
   id: string;
   coach_profile_id: string;
@@ -697,6 +701,10 @@ function uniqueValues(values: Array<string | null>) {
   return Array.from(new Set(values.filter((value): value is string => Boolean(value))));
 }
 
+function sortedUniqueValues(values: Array<string | null>) {
+  return uniqueValues(values).sort((a, b) => a.localeCompare(b));
+}
+
 function labelForProfile(profile: ProfileRow) {
   return (
     normalizeText(profile.display_name) ??
@@ -963,8 +971,9 @@ function detectCircularRelationships(edges: GenealogyEdge[]) {
     }));
 }
 
-async function resolveGenealogyAccess() {
+async function resolveGenealogyAccess(perf?: GenealogyPerformanceLogger) {
   const session = await getSession();
+  perf?.mark("auth.session_check", session.user ? 1 : 0);
 
   if (!session.user) {
     return {
@@ -983,6 +992,7 @@ async function resolveGenealogyAccess() {
     .neq("status", "anonymized")
     .is("deleted_at", null)
     .maybeSingle();
+  perf?.mark("auth.profile_lookup", profile ? 1 : 0);
 
   if (profileError || !profile) {
     return {
@@ -1002,6 +1012,7 @@ async function resolveGenealogyAccess() {
     .eq("is_active", true)
     .is("deleted_at", null)
     .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+  perf?.mark("auth.roles_lookup", roles?.length ?? 0);
 
   if (roleError) {
     return {
@@ -1159,17 +1170,147 @@ type ServiceClient = NonNullable<
   ReturnType<typeof createSupabaseServiceClient>["client"]
 >;
 
-async function loadAssignData({
-  accessScopes,
-  activeRelationships,
-  client,
-  filters,
+type AssignLookupData = {
+  candidateRoles: CandidateRoleRow[];
+  churches: NameRow[];
+  countries: CountryRow[];
+  generationOptions: AssignGenerationOption[];
+  organizations: NameRow[];
+  profiles: ProfileRow[];
+};
+
+type AffiliationLookupData = {
+  churches: NameRow[];
+  countries: CountryRow[];
+  organizations: NameRow[];
+  regions: RegionRow[];
+};
+
+const ASSIGN_LOOKUP_CACHE_TTL_MS = 3 * 60 * 1000;
+const AFFILIATION_LOOKUP_CACHE_TTL_MS = 3 * 60 * 1000;
+let assignLookupCache:
+  | {
+      data: AssignLookupData;
+      expiresAt: number;
+    }
+  | null = null;
+const affiliationLookupCache = new Map<
+  string,
+  {
+    data: AffiliationLookupData;
+    expiresAt: number;
+  }
+>();
+
+function buildAffiliationLookupCacheKey({
+  churchIds,
+  countryIds,
+  organizationIds,
+  regionIds,
 }: {
-  accessScopes: AuthRoleScope[];
-  activeRelationships: RelationshipRow[];
+  churchIds: string[];
+  countryIds: string[];
+  organizationIds: string[];
+  regionIds: string[];
+}) {
+  return JSON.stringify({
+    churches: churchIds,
+    countries: countryIds,
+    organizations: organizationIds,
+    regions: regionIds,
+  });
+}
+
+async function loadAffiliationLookupData({
+  churchIds,
+  client,
+  countryIds,
+  organizationIds,
+  regionIds,
+}: {
+  churchIds: string[];
   client: ServiceClient;
-  filters: GenealogyFilters;
-}): Promise<GenealogyAssignData> {
+  countryIds: string[];
+  organizationIds: string[];
+  regionIds: string[];
+}): Promise<{
+  data: AffiliationLookupData | null;
+  errors: {
+    church?: string;
+    country?: string;
+    organization?: string;
+    region?: string;
+  };
+}> {
+  const now = Date.now();
+  const cacheKey = buildAffiliationLookupCacheKey({
+    churchIds,
+    countryIds,
+    organizationIds,
+    regionIds,
+  });
+  const cached = affiliationLookupCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > now) {
+    return { data: cached.data, errors: {} };
+  }
+
+  const [countryResult, regionResult, organizationResult, churchResult] =
+    await Promise.all([
+      countryIds.length > 0
+        ? client.from("countries").select("id, name, code").in("id", countryIds)
+        : Promise.resolve({ data: [], error: null }),
+      regionIds.length > 0
+        ? client.from("regions").select("id, name").in("id", regionIds)
+        : Promise.resolve({ data: [], error: null }),
+      organizationIds.length > 0
+        ? client.from("organizations").select("id, name").in("id", organizationIds)
+        : Promise.resolve({ data: [], error: null }),
+      churchIds.length > 0
+        ? client.from("churches").select("id, name").in("id", churchIds)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+  const errors = {
+    church: churchResult.error?.message,
+    country: countryResult.error?.message,
+    organization: organizationResult.error?.message,
+    region: regionResult.error?.message,
+  };
+
+  if (
+    countryResult.error ||
+    regionResult.error ||
+    organizationResult.error ||
+    churchResult.error
+  ) {
+    return { data: null, errors };
+  }
+
+  const data: AffiliationLookupData = {
+    churches: (churchResult.data ?? []) as NameRow[],
+    countries: (countryResult.data ?? []) as CountryRow[],
+    organizations: (organizationResult.data ?? []) as NameRow[],
+    regions: (regionResult.data ?? []) as RegionRow[],
+  };
+
+  // 소속 정보 변경 후 최대 3분 반영 지연 가능.
+  affiliationLookupCache.set(cacheKey, {
+    data,
+    expiresAt: now + AFFILIATION_LOOKUP_CACHE_TTL_MS,
+  });
+
+  return { data, errors: {} };
+}
+
+async function loadAssignLookupData(client: ServiceClient): Promise<{
+  data: AssignLookupData | null;
+}> {
+  const now = Date.now();
+
+  if (assignLookupCache && assignLookupCache.expiresAt > now) {
+    return { data: assignLookupCache.data };
+  }
+
   const [{ data: roleData, error: roleError }, { data: optionData, error: optionError }] =
     await Promise.all([
       client
@@ -1194,19 +1335,13 @@ async function loadAssignData({
       generationOptions: optionError?.message,
       roles: roleError?.message,
     });
-    return {
-      coaches: [],
-      coachees: [],
-      relationships: [],
-      generationOptions: [],
-    };
+    return { data: null };
   }
 
   const candidateRoles = (roleData ?? []) as CandidateRoleRow[];
   const candidateProfileIds = uniqueValues(
     candidateRoles.map((role) => role.profile_id),
   );
-
   const generationOptions = ((optionData ?? []) as GenerationOptionRow[]).map(
     (option) => ({
       generationNumber: option.generation_number,
@@ -1215,12 +1350,19 @@ async function loadAssignData({
   );
 
   if (candidateProfileIds.length === 0) {
-    return {
-      coaches: [],
-      coachees: [],
-      relationships: [],
+    const data: AssignLookupData = {
+      candidateRoles,
+      churches: [],
+      countries: [],
       generationOptions,
+      organizations: [],
+      profiles: [],
     };
+    assignLookupCache = {
+      data,
+      expiresAt: now + ASSIGN_LOOKUP_CACHE_TTL_MS,
+    };
+    return { data };
   }
 
   const { data: profileData, error: profileError } = await client
@@ -1236,16 +1378,10 @@ async function loadAssignData({
     console.error("[COACHING_GENEALOGY_ASSIGN_PROFILE_QUERY_FAILED]", {
       message: profileError.message,
     });
-    return {
-      coaches: [],
-      coachees: [],
-      relationships: [],
-      generationOptions,
-    };
+    return { data: null };
   }
 
   const profiles = (profileData ?? []) as ProfileRow[];
-  const profileMap = new Map(profiles.map((profile) => [profile.id, profile]));
   const countryIds = uniqueValues(profiles.map((profile) => profile.country_id));
   const organizationIds = uniqueValues(
     profiles.map((profile) => profile.organization_id),
@@ -1263,7 +1399,12 @@ async function loadAssignData({
       : Promise.resolve({ data: [], error: null }),
   ]);
 
-  if (countryResult.error || organizationResult.error || churchResult.error) {
+  const hasLookupError =
+    Boolean(countryResult.error) ||
+    Boolean(organizationResult.error) ||
+    Boolean(churchResult.error);
+
+  if (hasLookupError) {
     console.error("[COACHING_GENEALOGY_ASSIGN_LOOKUP_QUERY_FAILED]", {
       church: churchResult.error?.message,
       country: countryResult.error?.message,
@@ -1271,10 +1412,70 @@ async function loadAssignData({
     });
   }
 
+  const data: AssignLookupData = {
+    candidateRoles,
+    churches: (churchResult.data ?? []) as NameRow[],
+    countries: (countryResult.data ?? []) as CountryRow[],
+    generationOptions,
+    organizations: (organizationResult.data ?? []) as NameRow[],
+    profiles,
+  };
+
+  if (!hasLookupError) {
+    // Assignment lookup data can lag behind affiliation/profile/generation changes by up to 3 minutes.
+    assignLookupCache = {
+      data,
+      expiresAt: now + ASSIGN_LOOKUP_CACHE_TTL_MS,
+    };
+  }
+
+  return { data };
+}
+
+async function loadAssignData({
+  accessScopes,
+  activeRelationships,
+  client,
+  filters,
+}: {
+  accessScopes: AuthRoleScope[];
+  activeRelationships: RelationshipRow[];
+  client: ServiceClient;
+  filters: GenealogyFilters;
+}): Promise<GenealogyAssignData> {
+  const { data: lookupData } = await loadAssignLookupData(client);
+
+  if (!lookupData) {
+    return {
+      coaches: [],
+      coachees: [],
+      relationships: [],
+      generationOptions: [],
+    };
+  }
+
+  const candidateRoles = lookupData.candidateRoles;
+  const candidateProfileIds = uniqueValues(
+    candidateRoles.map((role) => role.profile_id),
+  );
+  const generationOptions = lookupData.generationOptions;
+
+  if (candidateProfileIds.length === 0) {
+    return {
+      coaches: [],
+      coachees: [],
+      relationships: [],
+      generationOptions,
+    };
+  }
+
+  const profiles = lookupData.profiles;
+  const profileMap = new Map(profiles.map((profile) => [profile.id, profile]));
+
   const { countryMap, organizationMap, churchMap } = getLookupMaps(
-    (countryResult.data ?? []) as CountryRow[],
-    (organizationResult.data ?? []) as NameRow[],
-    (churchResult.data ?? []) as NameRow[],
+    lookupData.countries,
+    lookupData.organizations,
+    lookupData.churches,
   );
   const rolesByProfile = new Map<string, UserRole[]>();
 
@@ -1731,10 +1932,12 @@ export async function assignCoachingGenealogy(
 
 export async function getAdminCoachingGenealogy(
   filters: GenealogyFilters,
+  perf?: GenealogyPerformanceLogger,
 ): Promise<CoachingGenealogyResult> {
-  const access = await resolveGenealogyAccess();
+  const access = await resolveGenealogyAccess(perf);
 
   if (!access.ok) {
+    perf?.mark("build.complete", 0);
     return {
       ok: false,
       status: access.status,
@@ -1778,6 +1981,7 @@ export async function getAdminCoachingGenealogy(
 
     const { data: relationshipData, error: relationshipError } =
       await relationshipQuery;
+    perf?.mark("data.relationships_query", relationshipData?.length ?? 0);
 
     if (relationshipError) {
       console.error("[COACHING_GENEALOGY_RELATIONSHIP_QUERY_FAILED]", {
@@ -1800,6 +2004,12 @@ export async function getAdminCoachingGenealogy(
       client,
       filters,
     });
+    perf?.mark(
+      "data.assign_data",
+      assignData.coaches.length +
+        assignData.coachees.length +
+        assignData.relationships.length,
+    );
     const profileIds = uniqueValues(
       relationships.flatMap((relationship) => [
         relationship.coach_profile_id,
@@ -1809,6 +2019,7 @@ export async function getAdminCoachingGenealogy(
 
     if (profileIds.length === 0) {
       const data = emptyData(filters);
+      perf?.mark("build.complete", 0);
 
       return {
         ok: true,
@@ -1827,6 +2038,7 @@ export async function getAdminCoachingGenealogy(
       .in("id", profileIds)
       .neq("status", "anonymized")
       .is("deleted_at", null);
+    perf?.mark("data.profiles_query", profileData?.length ?? 0);
 
     if (profileError) {
       console.error("[COACHING_GENEALOGY_PROFILE_QUERY_FAILED]", {
@@ -1844,40 +2056,34 @@ export async function getAdminCoachingGenealogy(
 
     const profiles = (profileData ?? []) as ProfileRow[];
     const profileMap = new Map(profiles.map((profile) => [profile.id, profile]));
-    const countryIds = uniqueValues(profiles.map((profile) => profile.country_id));
-    const regionIds = uniqueValues(profiles.map((profile) => profile.region_id));
-    const organizationIds = uniqueValues(
+    const countryIds = sortedUniqueValues(profiles.map((profile) => profile.country_id));
+    const regionIds = sortedUniqueValues(profiles.map((profile) => profile.region_id));
+    const organizationIds = sortedUniqueValues(
       profiles.map((profile) => profile.organization_id),
     );
-    const churchIds = uniqueValues(profiles.map((profile) => profile.church_id));
+    const churchIds = sortedUniqueValues(profiles.map((profile) => profile.church_id));
+    const { data: affiliationData, errors: affiliationErrors } =
+      await loadAffiliationLookupData({
+        churchIds,
+        client,
+        countryIds,
+        organizationIds,
+        regionIds,
+      });
+    perf?.mark(
+      "data.affiliations_query",
+      (affiliationData?.countries.length ?? 0) +
+        (affiliationData?.regions.length ?? 0) +
+        (affiliationData?.organizations.length ?? 0) +
+        (affiliationData?.churches.length ?? 0),
+    );
 
-    const [countryResult, regionResult, organizationResult, churchResult] =
-      await Promise.all([
-        countryIds.length > 0
-          ? client.from("countries").select("id, name, code").in("id", countryIds)
-          : Promise.resolve({ data: [], error: null }),
-        regionIds.length > 0
-          ? client.from("regions").select("id, name, country_id").in("id", regionIds)
-          : Promise.resolve({ data: [], error: null }),
-        organizationIds.length > 0
-          ? client.from("organizations").select("id, name").in("id", organizationIds)
-          : Promise.resolve({ data: [], error: null }),
-        churchIds.length > 0
-          ? client.from("churches").select("id, name").in("id", churchIds)
-          : Promise.resolve({ data: [], error: null }),
-      ]);
-
-    if (
-      countryResult.error ||
-      regionResult.error ||
-      organizationResult.error ||
-      churchResult.error
-    ) {
+    if (!affiliationData) {
       console.error("[COACHING_GENEALOGY_LOOKUP_QUERY_FAILED]", {
-        country: countryResult.error?.message,
-        region: regionResult.error?.message,
-        organization: organizationResult.error?.message,
-        church: churchResult.error?.message,
+        country: affiliationErrors.country,
+        region: affiliationErrors.region,
+        organization: affiliationErrors.organization,
+        church: affiliationErrors.church,
       });
       return {
         ok: false,
@@ -1890,22 +2096,19 @@ export async function getAdminCoachingGenealogy(
     }
 
     const countryMap = new Map(
-      ((countryResult.data ?? []) as CountryRow[]).map((country) => [
-        country.id,
-        country,
-      ]),
+      affiliationData.countries.map((country) => [country.id, country]),
     );
     const regionMap = new Map(
-      ((regionResult.data ?? []) as RegionRow[]).map((region) => [region.id, region]),
+      affiliationData.regions.map((region) => [region.id, region]),
     );
     const organizationMap = new Map(
-      ((organizationResult.data ?? []) as NameRow[]).map((organization) => [
+      affiliationData.organizations.map((organization) => [
         organization.id,
         organization,
       ]),
     );
     const churchMap = new Map(
-      ((churchResult.data ?? []) as NameRow[]).map((church) => [church.id, church]),
+      affiliationData.churches.map((church) => [church.id, church]),
     );
 
     const scopedRelationships = relationships.filter((relationship) => {
@@ -1965,6 +2168,7 @@ export async function getAdminCoachingGenealogy(
         activeCoacheeCount: outgoingCounts.get(profile.id) ?? 0,
       };
     });
+    perf?.mark("build.nodes", nodes.length);
     const nodeMap = new Map(nodes.map((node) => [node.id, node]));
 
     const edges = scopedRelationships.map<GenealogyEdge>((relationship) => ({
@@ -1976,6 +2180,7 @@ export async function getAdminCoachingGenealogy(
       scopeType: relationship.scope_type,
       scopeId: relationship.scope_id,
     }));
+    perf?.mark("build.edges", edges.length);
 
     const coachIds = new Set(edges.map((edge) => edge.source));
     const coacheeIds = new Set(edges.map((edge) => edge.target));
@@ -2157,6 +2362,11 @@ export async function getAdminCoachingGenealogy(
         ];
       }),
     };
+    perf?.mark(
+      "build.generation_mismatch",
+      diagnostics.generationMismatchWarnings.length,
+    );
+    perf?.mark("build.complete", nodes.length);
 
     return {
       ok: true,

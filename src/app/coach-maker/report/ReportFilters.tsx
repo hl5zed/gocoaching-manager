@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useI18n } from "@/lib/i18n/useI18n";
 
 type ReportFiltersProps = {
   selectedFilters: {
@@ -30,6 +31,7 @@ export function ReportFilters({
   teamOptions,
 }: ReportFiltersProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const [year, setYear] = useState(String(selectedFilters.year));
   const [team, setTeam] = useState(selectedFilters.team ?? "");
   const [from, setFrom] = useState(selectedFilters.from ?? "");
@@ -69,16 +71,19 @@ export function ReportFilters({
   return (
     <section className="report-controls mt-6 rounded-md border border-slate-200 bg-slate-50 p-4 print:hidden">
       <div className="mb-4 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
-        <p className="font-semibold text-slate-800">보고서 기준</p>
+        <p className="font-semibold text-slate-800">
+          {t("coachMaker.report.filters.title", "보고서 기준")}
+        </p>
         <p className="mt-1">
-          목실기 성취 현황은 선택 연도 기준, 관리 액션 메모는 작성일 기간
-          기준으로 표시합니다. 팀 필터는 목실기 대상자와 관리 메모 모두에
-          공통 적용됩니다.
+          {t(
+            "coachMaker.report.filters.description",
+            "목실기 성취 현황은 선택 연도 기준, 관리 액션 메모는 작성일 기간 기준으로 표시합니다. 팀 필터는 목실기 대상자와 관리 메모 모두에 공통 적용됩니다.",
+          )}
         </p>
       </div>
       <div className="grid gap-3 md:grid-cols-4">
         <label className="text-sm font-medium text-slate-700">
-          연도
+          {t("coachMaker.report.filters.year", "연도")}
           <select
             className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
             onChange={(event) => setYear(event.target.value)}
@@ -86,19 +91,23 @@ export function ReportFilters({
           >
             {yearOptions(selectedFilters.year).map((optionYear) => (
               <option key={optionYear} value={optionYear}>
-                {optionYear}년
+                {optionYear}
+                {t("coachMaker.report.filters.yearSuffix", "년")}
               </option>
             ))}
           </select>
         </label>
 
         <label className="text-sm font-medium text-slate-700">
-          팀
+          {t("coachMaker.report.filters.team", "팀")}
           <input
             className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
             list="report-team-options"
             onChange={(event) => setTeam(event.target.value)}
-            placeholder="전체 또는 팀명 입력"
+            placeholder={t(
+              "coachMaker.report.filters.teamPlaceholder",
+              "전체 또는 팀명 입력",
+            )}
             value={team}
           />
           <datalist id="report-team-options">
@@ -109,7 +118,7 @@ export function ReportFilters({
         </label>
 
         <label className="text-sm font-medium text-slate-700">
-          시작일
+          {t("coachMaker.report.filters.from", "시작일")}
           <input
             className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
             onChange={(event) => setFrom(event.target.value)}
@@ -119,7 +128,7 @@ export function ReportFilters({
         </label>
 
         <label className="text-sm font-medium text-slate-700">
-          종료일
+          {t("coachMaker.report.filters.to", "종료일")}
           <input
             className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
             onChange={(event) => setTo(event.target.value)}
@@ -135,14 +144,14 @@ export function ReportFilters({
           onClick={applyFilters}
           type="button"
         >
-          필터 적용
+          {t("coachMaker.report.filters.apply", "필터 적용")}
         </button>
         <button
           className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
           onClick={resetFilters}
           type="button"
         >
-          필터 초기화
+          {t("coachMaker.report.filters.reset", "필터 초기화")}
         </button>
       </div>
     </section>

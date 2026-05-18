@@ -1,4 +1,5 @@
 import { LoginForm, type AuthLoginTranslations } from "./LoginForm";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   DEFAULT_LOCALE,
   isActiveLocale,
@@ -43,9 +44,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
       <section className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md flex-col justify-center">
-        <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-          GoCoaching Manager
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+            GoCoaching Manager
+          </p>
+          <LanguageSwitcher />
+        </div>
 
         <LoginForm translations={authTranslations} />
       </section>

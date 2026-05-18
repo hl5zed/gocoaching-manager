@@ -17,6 +17,7 @@ import {
   isValidUuid,
   normalizeText,
 } from "@/lib/validation/common";
+import { useI18n } from "@/lib/i18n/useI18n";
 import type { InvitationOrganizationDefaultRoleOption } from "@/lib/api/admin/system-settings";
 
 type CreateInvitationSuccess = {
@@ -87,6 +88,7 @@ export function AdminInvitationCreateForm({
   defaultExpiresInDays?: number;
   organizations?: InvitationOrganizationDefaultRoleOption[];
 }) {
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [invitedRole, setInvitedRole] = useState<UserRole>("coachee");
   const [scopeType, setScopeType] = useState<ScopeType>("global");
@@ -150,8 +152,14 @@ export function AdminInvitationCreateForm({
       setError({
         code: "INVALID_EMAIL",
         message: isNonEmptyString(normalizedEmail)
-          ? "올바른 이메일 형식이 아닙니다."
-          : "이메일을 입력해 주세요.",
+          ? t(
+              "admin.invitations.new.form.invalidEmail",
+              "올바른 이메일 형식이 아닙니다.",
+            )
+          : t(
+              "admin.invitations.new.form.emailRequired",
+              "이메일을 입력해 주세요.",
+            ),
       });
       return;
     }
@@ -160,7 +168,10 @@ export function AdminInvitationCreateForm({
       setSuccess(null);
       setError({
         code: "INVALID_SCOPE_ID",
-        message: "범위 ID는 올바른 UUID여야 합니다.",
+        message: t(
+          "admin.invitations.new.form.invalidScopeId",
+          "범위 ID는 올바른 UUID여야 합니다.",
+        ),
       });
       return;
     }
@@ -169,7 +180,10 @@ export function AdminInvitationCreateForm({
       setSuccess(null);
       setError({
         code: "INVALID_EXPIRES_IN_DAYS",
-        message: "만료 기간은 1일부터 30일 사이로 선택해 주세요.",
+        message: t(
+          "admin.invitations.new.form.invalidExpiresInDays",
+          "만료 기간은 1일부터 30일 사이로 선택해 주세요.",
+        ),
       });
       return;
     }
@@ -211,7 +225,10 @@ export function AdminInvitationCreateForm({
         message:
           caughtError instanceof Error
             ? caughtError.message
-            : "지금 초대를 생성할 수 없습니다.",
+            : t(
+                "admin.invitations.new.form.unavailable",
+                "지금 초대를 생성할 수 없습니다.",
+              ),
       });
     } finally {
       setIsSubmitting(false);
@@ -225,9 +242,14 @@ export function AdminInvitationCreateForm({
 
     try {
       await navigator.clipboard.writeText(success.invitationUrl);
-      setCopyMessage("복사했습니다.");
+      setCopyMessage(t("admin.invitations.new.form.copied", "복사했습니다."));
     } catch {
-      setCopyMessage("복사하지 못했습니다. 링크를 직접 복사해 주세요.");
+      setCopyMessage(
+        t(
+          "admin.invitations.new.form.copyFailed",
+          "복사하지 못했습니다. 링크를 직접 복사해 주세요.",
+        ),
+      );
     }
   }
 
@@ -248,7 +270,9 @@ export function AdminInvitationCreateForm({
     <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2 md:col-span-2">
-          <span className="text-sm font-medium text-slate-700">이메일</span>
+          <span className="text-sm font-medium text-slate-700">
+            {t("admin.invitations.new.form.email", "이메일")}
+          </span>
           <input
             className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
             onChange={(event) => setEmail(event.target.value)}
@@ -260,14 +284,22 @@ export function AdminInvitationCreateForm({
 
         <label className="grid gap-2 md:col-span-2">
           <span className="text-sm font-medium text-slate-700">
-            조직 기본값 제안
+            {t(
+              "admin.invitations.new.form.organizationDefaults",
+              "조직 기본값 제안",
+            )}
           </span>
           <select
             className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
             onChange={(event) => handleSelectOrganization(event.target.value)}
             value={selectedOrganizationId}
           >
-            <option value="">직접 권한 설정</option>
+            <option value="">
+              {t(
+                "admin.invitations.new.form.manualPermission",
+                "직접 권한 설정",
+              )}
+            </option>
             {uniqueOrganizations.map((organization) => (
               <option
                 key={organization.organization_id}
@@ -280,33 +312,48 @@ export function AdminInvitationCreateForm({
           {selectedOrganization ? (
             isOrganizationPolicyActive ? (
               <span className="text-xs leading-5 text-slate-600">
-                이 조직의 기본 초대 권한이 적용됩니다. 역할: 코칭 대상자 /
-                범위: 선택한 조직
+                {t(
+                  "admin.invitations.new.form.organizationPolicyApplied",
+                  "이 조직의 기본 초대 권한이 적용됩니다. 역할: 코칭 대상자 / 범위: 선택한 조직",
+                )}
               </span>
             ) : (
               <span className="text-xs leading-5 text-slate-600">
-                이 조직에는 아직 기본 권한 정책이 없습니다. 직접 권한과
-                범위를 선택해 주세요.
+                {t(
+                  "admin.invitations.new.form.organizationPolicyMissing",
+                  "이 조직에는 아직 기본 권한 정책이 없습니다. 직접 권한과 범위를 선택해 주세요.",
+                )}
               </span>
             )
           ) : (
             <span className="text-xs leading-5 text-slate-500">
-              조직 기본값을 사용하지 않고 직접 권한과 범위를 선택합니다.
+              {t(
+                "admin.invitations.new.form.manualPermissionHelp",
+                "조직 기본값을 사용하지 않고 직접 권한과 범위를 선택합니다.",
+              )}
             </span>
           )}
         </label>
 
         <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 md:col-span-2">
-          <p className="font-semibold">고급 권한 직접 설정</p>
+          <p className="font-semibold">
+            {t(
+              "admin.invitations.new.form.advancedPermission",
+              "고급 권한 직접 설정",
+            )}
+          </p>
           <p className="mt-1">
-            조직 기본값을 사용하지 않는 경우에만 아래 역할과 범위를 직접
-            조정해 주세요. 관리자 권한은 접근 범위가 넓으므로 신중히
-            선택해야 합니다.
+            {t(
+              "admin.invitations.new.form.advancedPermissionHelp",
+              "조직 기본값을 사용하지 않는 경우에만 아래 역할과 범위를 직접 조정해 주세요. 관리자 권한은 접근 범위가 넓으므로 신중히 선택해야 합니다.",
+            )}
           </p>
         </div>
 
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-slate-700">초대 역할</span>
+          <span className="text-sm font-medium text-slate-700">
+            {t("admin.invitations.new.form.role", "초대 역할")}
+          </span>
           <select
             className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
             disabled={isOrganizationPolicyActive}
@@ -322,7 +369,9 @@ export function AdminInvitationCreateForm({
         </label>
 
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-slate-700">범위 유형</span>
+          <span className="text-sm font-medium text-slate-700">
+            {t("admin.invitations.new.form.scopeType", "범위 유형")}
+          </span>
           <select
             className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
             disabled={isOrganizationPolicyActive}
@@ -345,15 +394,23 @@ export function AdminInvitationCreateForm({
         </label>
 
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-slate-700">범위 ID</span>
+          <span className="text-sm font-medium text-slate-700">
+            {t("admin.invitations.new.form.scopeId", "범위 ID")}
+          </span>
           <input
             className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
             disabled={scopeType === "global" || isOrganizationPolicyActive}
             onChange={(event) => setScopeId(event.target.value)}
             placeholder={
               scopeType === "global"
-                ? "전체 범위에서는 사용하지 않습니다"
-                : "범위 UUID"
+                ? t(
+                    "admin.invitations.new.form.globalScopePlaceholder",
+                    "전체 범위에서는 사용하지 않습니다",
+                  )
+                : t(
+                    "admin.invitations.new.form.scopeUuidPlaceholder",
+                    "범위 UUID",
+                  )
             }
             type="text"
             value={scopeType === "global" ? "" : scopeId}
@@ -361,7 +418,9 @@ export function AdminInvitationCreateForm({
         </label>
 
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-slate-700">만료 기간</span>
+          <span className="text-sm font-medium text-slate-700">
+            {t("admin.invitations.new.form.expiresInDays", "만료 기간")}
+          </span>
           <select
             className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
             onChange={(event) => setExpiresInDays(event.target.value)}
@@ -369,7 +428,8 @@ export function AdminInvitationCreateForm({
           >
             {invitationExpireOptions.map((days) => (
               <option key={days} value={days}>
-                {days}일
+                {days}
+                {t("admin.invitations.new.form.daySuffix", "일")}
               </option>
             ))}
           </select>
@@ -383,7 +443,10 @@ export function AdminInvitationCreateForm({
             type="checkbox"
           />
           <span className="text-sm font-medium text-slate-700">
-            지금 초대 이메일 보내기
+            {t(
+              "admin.invitations.new.form.sendEmailNow",
+              "지금 초대 이메일 보내기",
+            )}
           </span>
         </label>
       </div>
@@ -393,7 +456,7 @@ export function AdminInvitationCreateForm({
           className="rounded-md border border-slate-300 px-4 py-2 font-medium text-slate-700 hover:bg-slate-100"
           href="/admin/invitations"
         >
-          취소
+          {t("admin.invitations.new.form.cancel", "취소")}
         </Link>
         <button
           className="rounded-md bg-slate-950 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
@@ -401,16 +464,22 @@ export function AdminInvitationCreateForm({
           onClick={handleSubmit}
           type="button"
         >
-          {isSubmitting ? "생성 중..." : "초대 생성"}
+          {isSubmitting
+            ? t("admin.invitations.new.form.creating", "생성 중...")
+            : t("admin.invitations.new.form.create", "초대 생성")}
         </button>
       </div>
 
       {success && (
         <div className="mt-6 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
-          <p className="font-semibold">초대를 생성했습니다.</p>
+          <p className="font-semibold">
+            {t("admin.invitations.new.form.created", "초대를 생성했습니다.")}
+          </p>
           <p className="mt-2 text-sm">
-            지금 이 링크를 복사해 주세요. 보안을 위해 원본 토큰은 다시
-            표시되지 않습니다.
+            {t(
+              "admin.invitations.new.form.copyLinkNotice",
+              "지금 이 링크를 복사해 주세요. 보안을 위해 원본 토큰은 다시 표시되지 않습니다.",
+            )}
           </p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
             <a
@@ -424,7 +493,7 @@ export function AdminInvitationCreateForm({
               onClick={copyInvitationUrl}
               type="button"
             >
-              복사
+              {t("admin.invitations.new.form.copy", "복사")}
             </button>
           </div>
           {copyMessage && <p className="mt-2 text-sm">{copyMessage}</p>}
@@ -433,29 +502,43 @@ export function AdminInvitationCreateForm({
               className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-100"
               href="/admin/invitations"
             >
-              초대 목록으로 이동
+              {t(
+                "admin.invitations.new.form.goToList",
+                "초대 목록으로 이동",
+              )}
             </Link>
             <button
               className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-100"
               onClick={resetFormForNextInvitation}
               type="button"
             >
-              새 초대 계속 만들기
+              {t(
+                "admin.invitations.new.form.createAnother",
+                "새 초대 계속 만들기",
+              )}
             </button>
           </div>
           {success.emailDelivery?.sent === true && (
-            <p className="mt-2 text-sm">이메일을 보냈습니다.</p>
+            <p className="mt-2 text-sm">
+              {t("admin.invitations.new.form.emailSent", "이메일을 보냈습니다.")}
+            </p>
           )}
           {success.emailDelivery?.sent === false &&
             success.emailDelivery.code === "EMAIL_NOT_CONFIGURED" && (
               <p className="mt-2 text-sm">
-                이메일 설정이 없습니다. 링크를 직접 복사해 주세요.
+                {t(
+                  "admin.invitations.new.form.emailNotConfigured",
+                  "이메일 설정이 없습니다. 링크를 직접 복사해 주세요.",
+                )}
               </p>
             )}
           {success.emailDelivery?.sent === false &&
             success.emailDelivery.code === "EMAIL_SEND_FAILED" && (
               <p className="mt-2 text-sm">
-                이메일 전송에 실패했습니다. 링크를 직접 복사해 주세요.
+                {t(
+                  "admin.invitations.new.form.emailSendFailed",
+                  "이메일 전송에 실패했습니다. 링크를 직접 복사해 주세요.",
+                )}
               </p>
             )}
         </div>
@@ -463,7 +546,12 @@ export function AdminInvitationCreateForm({
 
       {error && (
         <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
-          <p className="font-semibold">초대 생성에 실패했습니다.</p>
+          <p className="font-semibold">
+            {t(
+              "admin.invitations.new.form.createFailed",
+              "초대 생성에 실패했습니다.",
+            )}
+          </p>
           <p className="mt-2 text-sm">{error.message}</p>
         </div>
       )}

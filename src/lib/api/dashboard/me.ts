@@ -3,6 +3,10 @@ import { getSession } from "@/lib/auth/getSession";
 import type { GetSessionResult } from "@/types/auth";
 import type { ProfileRow, ScopeType, UserRole } from "@/types/database";
 
+type DashboardPerformanceLogger = {
+  mark: (stage: string, resultCount?: number) => void;
+};
+
 export type DashboardRole = {
   role: UserRole;
   scope_type: ScopeType;
@@ -41,6 +45,7 @@ type RoleRecord = {
 
 export async function getDashboardMe(
   existingSession?: GetSessionResult,
+  perf?: DashboardPerformanceLogger,
 ): Promise<DashboardMeResult> {
   const session = existingSession ?? (await getSession());
 
@@ -63,6 +68,8 @@ export async function getDashboardMe(
       .is("deleted_at", null)
       .neq("status", "anonymized")
       .maybeSingle();
+
+    perf?.mark("auth.profile_lookup", profile ? 1 : 0);
 
     if (profileError) {
       return {
@@ -95,6 +102,8 @@ export async function getDashboardMe(
       .eq("is_active", true)
       .is("deleted_at", null)
       .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+
+    perf?.mark("auth.roles_lookup", roles?.length ?? 0);
 
     if (rolesError) {
       return {

@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import {
+  type CoachMakerMoksilgiProgressPagination,
   type CoachMakerMoksilgiProgressRow,
   type CoachMakerMoksilgiRelationshipProgressRow,
 } from "@/lib/api/coach-maker/moksilgi-progress";
@@ -29,6 +31,7 @@ const MISSING_LABEL = "-";
 type ViewMode = "team" | "relationship" | "care";
 type SortKey = "name" | "country" | "region" | "coach" | "achievement" | "care";
 type SortDirection = "asc" | "desc";
+type SortableHeader = SortKey | null;
 
 type CareAssessment = {
   averageRate: number | null;
@@ -834,13 +837,217 @@ function CareNeededTable({
   );
 }
 
+function ProgressRowsTable({
+  coachNameByCoacheeId,
+  detailHrefBuilder,
+  onSort,
+  onViewDetail,
+  rows,
+  year,
+}: {
+  coachNameByCoacheeId: Map<string, string>;
+  detailHrefBuilder?: (row: CoachMakerMoksilgiProgressRow) => string;
+  onSort?: (key: SortKey) => void;
+  onViewDetail?: (row: CoachMakerMoksilgiProgressRow) => void;
+  rows: CoachMakerMoksilgiProgressRow[];
+  year: number;
+}) {
+  const renderHeader = (label: string, sortKey: SortableHeader = null) =>
+    sortKey && onSort ? (
+      <SortButton onClick={() => onSort(sortKey)}>{label}</SortButton>
+    ) : (
+      label
+    );
+
+  return (
+    <Card className="print-card min-w-0 overflow-hidden">
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1540px] border-collapse text-sm">
+            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <tr>
+                <th className="sticky left-0 z-10 bg-slate-50 px-3 py-3 shadow-[1px_0_0_#e2e8f0]">
+                  {renderHeader("이름", "name")}
+                </th>
+                <th className="px-3 py-3">소속</th>
+                <th className="px-3 py-3">{renderHeader("지역", "region")}</th>
+                {MONTHS.map((month) => (
+                  <th className="px-3 py-3 text-right" key={month}>
+                    {month}월
+                  </th>
+                ))}
+                <th className="px-3 py-3 text-right">
+                  {renderHeader("현재 월까지 평균", "achievement")}
+                </th>
+                <th className="px-3 py-3 text-right">12개월 평균</th>
+                <th className="px-3 py-3">{renderHeader("상태", "care")}</th>
+                {onViewDetail || detailHrefBuilder ? <th className="px-3 py-3">상세보기</th> : null}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {rows.map((row) => {
+                const assessment = assessCare(row, year);
+
+                return (
+                  <tr className="align-top hover:bg-slate-50/70" key={row.plan_id}>
+                    <td className="sticky left-0 z-10 bg-white px-3 py-3 shadow-[1px_0_0_#e2e8f0]">
+                      <p className="font-medium text-slate-900">{profileName(row)}</p>
+                      <p className="mt-1 text-xs text-slate-500">{displayText(row.email)}</p>
+                    </td>
+                    <td className="px-3 py-3">
+                      <p>{displayText(rowOrganizationChurch(row))}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {displayText(countryLabel(row))} · {displayText(rowGroup(row))}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        담당 코치: {displayText(coachNameByCoacheeId.get(row.profile_id))}
+                      </p>
+                    </td>
+                    <td className="px-3 py-3">{displayText(rowRegion(row))}</td>
+                    {MONTHS.map((month) => (
+                      <td className="px-3 py-3 text-right tabular-nums" key={month}>
+                        {formatPercent(monthRate(row, month))}
+                      </td>
+                    ))}
+                    <td className="min-w-32 px-3 py-3 text-right font-semibold tabular-nums">
+                      <ProgressBar
+                        label={formatPercent(upToCurrentRate(row, year))}
+                        showValue={false}
+                        value={upToCurrentRate(row, year)}
+                      />
+                    </td>
+                    <td className="px-3 py-3 text-right font-semibold tabular-nums">
+                      {formatPercent(row.cumulative_rate)}
+                    </td>
+                    <td className="px-3 py-3">
+                      <StatusBadge assessment={assessment} row={row} />
+                    </td>
+                    {onViewDetail || detailHrefBuilder ? (
+                      <td className="px-3 py-3">
+                        <div className="flex flex-wrap gap-2">
+                          {onViewDetail ? (
+                            <Button
+                              className="w-full justify-center sm:w-auto"
+                              icon="search"
+                              onClick={() => onViewDetail(row)}
+                              size="sm"
+                              type="button"
+                              variant="secondary"
+                            >
+                              상세보기
+                            </Button>
+                          ) : null}
+                          {detailHrefBuilder ? (
+                            <ButtonLink
+                              className="w-full justify-center sm:w-auto"
+                              href={detailHrefBuilder(row)}
+                              size="sm"
+                              variant="secondary"
+                            >
+                              기록 보기
+                            </ButtonLink>
+                          ) : null}
+                        </div>
+                      </td>
+                    ) : null}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function PaginationControls({
+  pagination,
+}: {
+  pagination: CoachMakerMoksilgiProgressPagination;
+}) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  function buildHref(page: number, pageSize = pagination.pageSize) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
+    params.delete("pageSize");
+    params.set("page", String(page));
+    params.set("pageSize", String(pageSize));
+    return `${pathname}?${params.toString()}`;
+  }
+
+  function handlePageSizeChange(event: ChangeEvent<HTMLSelectElement>) {
+    router.push(buildHref(1, Number(event.target.value)));
+  }
+
+  return (
+    <Card className="print-hidden">
+      <CardContent className="flex flex-col gap-3 p-4 text-sm text-slate-600 lg:flex-row lg:items-center lg:justify-between">
+        <p>
+          현재 {pagination.page}페이지 / 전체 {pagination.totalPages}페이지 · 전체{" "}
+          {pagination.totalRows}명
+        </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <FieldLabel className="w-full sm:w-36">
+            <FieldText className="text-xs">페이지 크기</FieldText>
+            <SelectInput onChange={handlePageSizeChange} value={String(pagination.pageSize)}>
+              {[20, 30, 50].map((size) => (
+                <option key={size} value={size}>
+                  {size}개
+                </option>
+              ))}
+            </SelectInput>
+          </FieldLabel>
+          <div className="flex gap-2">
+            {pagination.hasPrevious ? (
+              <ButtonLink
+                className="flex-1 justify-center sm:flex-none"
+                href={buildHref(pagination.page - 1)}
+                variant="secondary"
+              >
+                이전 페이지
+              </ButtonLink>
+            ) : (
+              <Button className="flex-1 justify-center sm:flex-none" disabled type="button" variant="secondary">
+                이전 페이지
+              </Button>
+            )}
+            {pagination.hasNext ? (
+              <ButtonLink
+                className="flex-1 justify-center sm:flex-none"
+                href={buildHref(pagination.page + 1)}
+                variant="secondary"
+              >
+                다음 페이지
+              </ButtonLink>
+            ) : (
+              <Button className="flex-1 justify-center sm:flex-none" disabled type="button" variant="secondary">
+                다음 페이지
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function MoksilgiProgressClientTable({
   initialMemberId,
+  pagination,
+  printRelationshipRows,
+  printRows,
   relationshipRows,
   rows,
   year,
 }: {
   initialMemberId: string | null;
+  pagination: CoachMakerMoksilgiProgressPagination;
+  printRelationshipRows: CoachMakerMoksilgiRelationshipProgressRow[];
+  printRows: CoachMakerMoksilgiProgressRow[];
   relationshipRows: CoachMakerMoksilgiRelationshipProgressRow[];
   rows: CoachMakerMoksilgiProgressRow[];
   year: number;
@@ -878,6 +1085,23 @@ export function MoksilgiProgressClientTable({
 
     return map;
   }, [relationshipRows]);
+
+  const printCoachNameByCoacheeId = useMemo(() => {
+    const map = new Map<string, string>();
+
+    for (const relationship of printRelationshipRows) {
+      map.set(
+        relationship.coachee_profile_id,
+        personName({
+          displayName: relationship.coach_display_name,
+          email: relationship.coach_email,
+          fullName: relationship.coach_full_name,
+        }),
+      );
+    }
+
+    return map;
+  }, [printRelationshipRows]);
 
   const coachIdByCoacheeId = useMemo(() => {
     const map = new Map<string, string>();
@@ -1047,203 +1271,128 @@ export function MoksilgiProgressClientTable({
 
   return (
     <section className="print-section mt-8 space-y-5">
-      <CareNeededTable
-        onCreateNote={setNoteTargetRow}
-        onViewDetail={setDetailRow}
-        rows={filteredRows}
-        year={year}
-      />
+      <div className="print-only">
+        <ProgressRowsTable
+          coachNameByCoacheeId={printCoachNameByCoacheeId}
+          rows={printRows}
+          year={year}
+        />
+      </div>
 
-      <Card className="print-hidden">
-        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
-        <div className="flex w-full min-w-0 flex-wrap gap-2 lg:w-auto">
-          {[
-            { label: "전체 목실기 표", mode: "team" as const },
-            { label: "코치-코치이 관계별", mode: "relationship" as const },
-            { label: "관심 필요자 전체", mode: "care" as const },
-          ].map((item) => (
-            <Button
-              className="w-full justify-center sm:w-auto"
-              key={item.mode}
-              onClick={() => setViewMode(item.mode)}
-              size="sm"
-              type="button"
-              variant={viewMode === item.mode ? "primary" : "secondary"}
-            >
-              {item.label}
-            </Button>
-          ))}
-        </div>
-        <Button
-          className="w-full justify-center sm:w-auto"
-          icon="report"
-          onClick={exportVisibleRowsToCsv}
-          type="button"
-          variant="secondary"
-        >
-          CSV 내보내기
-        </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="print-hidden">
-        <CardHeader>
-          <CardTitle className="text-lg">화면 내 상세 필터</CardTitle>
-          <CardDescription>
-            조회된 결과 안에서 국가, 소속 기관/교회, 그룹/팀/목장, 담당 코치 기준으로 다시 좁힙니다.
-            모바일에서는 필요한 조건만 선택한 뒤 표로 이동해 확인하세요.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-4">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <FieldLabel className="xl:col-span-2">
-            <FieldText className="text-xs">{t("common.search", "검색")}</FieldText>
-            <TextInput
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="이름, 국가, 소속, 직분, 코치 검색"
-              type="search"
-              value={search}
-            />
-          </FieldLabel>
-          <FilterSelect label="국가" onChange={setCountryFilter} options={countryOptions} value={countryFilter} />
-          <FilterSelect label="지역/도시" onChange={setRegionFilter} options={regionOptions} value={regionFilter} />
-          <FilterSelect label="소속 기관/교회" onChange={setOrganizationFilter} options={organizationOptions} value={organizationFilter} />
-          <FilterSelect label="그룹/팀/목장" onChange={setGroupFilter} options={groupOptions} value={groupFilter} />
-          <FilterSelect label="직책/직분" onChange={setMinistryFilter} options={ministryOptions} value={ministryFilter} />
-          <FilterSelect label="세대" onChange={setGenerationFilter} options={generationOptions} value={generationFilter} />
-          <FilterSelect label="담당 코치" onChange={setCoachFilter} options={coachOptions} value={coachFilter} />
-        </div>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
-          <p>
-            {filteredRows.length}명 표시 / 전체 {rows.length}명
-          </p>
-          <Button
-            className="w-full justify-center sm:w-auto"
-            icon="filter"
-            onClick={resetFilters}
-            size="sm"
-            type="button"
-            variant="secondary"
-          >
-            보기 필터 초기화
-          </Button>
-        </div>
-        </CardContent>
-      </Card>
-
-      {viewMode === "relationship" ? (
-        <RelationshipProgressTable rows={filteredRelationshipRows} year={year} />
-      ) : viewMode === "care" ? (
+      <div className="print-hidden space-y-5">
         <CareNeededTable
           onCreateNote={setNoteTargetRow}
           onViewDetail={setDetailRow}
           rows={filteredRows}
           year={year}
         />
-      ) : filteredRows.length === 0 ? (
-        <Card>
-          <CardContent className="px-4 py-6 text-center text-slate-500">
-            <p>선택한 조건에 해당하는 목실기 기록이 없습니다.</p>
-            <p className="mt-1">필터를 초기화하거나 다른 조건으로 다시 조회해 주세요.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="print-card min-w-0 overflow-hidden">
-          <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1540px] border-collapse text-sm">
-            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="sticky left-0 z-10 bg-slate-50 px-3 py-3 shadow-[1px_0_0_#e2e8f0]">
-                  <SortButton onClick={() => toggleSort("name")}>이름</SortButton>
-                </th>
-                <th className="px-3 py-3">소속</th>
-                <th className="px-3 py-3">
-                  <SortButton onClick={() => toggleSort("region")}>지역</SortButton>
-                </th>
-                {MONTHS.map((month) => (
-                  <th className="px-3 py-3 text-right" key={month}>
-                    {month}월
-                  </th>
-                ))}
-                <th className="px-3 py-3 text-right">
-                  <SortButton onClick={() => toggleSort("achievement")}>현재 월까지 평균</SortButton>
-                </th>
-                <th className="px-3 py-3 text-right">12개월 평균</th>
-                <th className="px-3 py-3">
-                  <SortButton onClick={() => toggleSort("care")}>상태</SortButton>
-                </th>
-                <th className="px-3 py-3">상세보기</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredRows.map((row) => {
-                const assessment = assessCare(row, year);
 
-                return (
-                  <tr className="align-top hover:bg-slate-50/70" key={row.plan_id}>
-                    <td className="sticky left-0 z-10 bg-white px-3 py-3 shadow-[1px_0_0_#e2e8f0]">
-                      <p className="font-medium text-slate-900">{profileName(row)}</p>
-                      <p className="mt-1 text-xs text-slate-500">{displayText(row.email)}</p>
-                    </td>
-                    <td className="px-3 py-3">
-                      <p>{displayText(rowOrganizationChurch(row))}</p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {displayText(countryLabel(row))} · {displayText(rowGroup(row))}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        담당 코치: {displayText(coachNameByCoacheeId.get(row.profile_id))}
-                      </p>
-                    </td>
-                    <td className="px-3 py-3">{displayText(rowRegion(row))}</td>
-                    {MONTHS.map((month) => (
-                      <td className="px-3 py-3 text-right tabular-nums" key={month}>
-                        {formatPercent(monthRate(row, month))}
-                      </td>
-                    ))}
-                    <td className="min-w-32 px-3 py-3 text-right font-semibold tabular-nums">
-                      <ProgressBar
-                        label={formatPercent(upToCurrentRate(row, year))}
-                        showValue={false}
-                        value={upToCurrentRate(row, year)}
-                      />
-                    </td>
-                    <td className="px-3 py-3 text-right font-semibold tabular-nums">
-                      {formatPercent(row.cumulative_rate)}
-                    </td>
-                    <td className="px-3 py-3">
-                      <StatusBadge assessment={assessment} row={row} />
-                    </td>
-                    <td className="px-3 py-3">
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          className="w-full justify-center sm:w-auto"
-                          onClick={() => setDetailRow(row)}
-                          size="sm"
-                          type="button"
-                          variant="secondary"
-                        >
-                          상세보기
-                        </Button>
-                        <ButtonLink
-                          className="w-full justify-center sm:w-auto"
-                          href={`/coach-maker/moksilgi-progress/${row.plan_id}?year=${year}`}
-                          size="sm"
-                          variant="secondary"
-                        >
-                          기록 보기
-                        </ButtonLink>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <Card>
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <div className="flex w-full min-w-0 flex-wrap gap-2 lg:w-auto">
+            {[
+              { label: "전체 목실기 표", mode: "team" as const },
+              { label: "코치-코치이 관계별", mode: "relationship" as const },
+              { label: "관심 필요자 전체", mode: "care" as const },
+            ].map((item) => (
+              <Button
+                className="w-full justify-center sm:w-auto"
+                key={item.mode}
+                onClick={() => setViewMode(item.mode)}
+                size="sm"
+                type="button"
+                variant={viewMode === item.mode ? "primary" : "secondary"}
+              >
+                {item.label}
+              </Button>
+            ))}
+          </div>
+          <Button
+            className="w-full justify-center sm:w-auto"
+            icon="report"
+            onClick={exportVisibleRowsToCsv}
+            type="button"
+            variant="secondary"
+          >
+            CSV 내보내기
+          </Button>
           </CardContent>
         </Card>
-      )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">화면 내 상세 필터</CardTitle>
+            <CardDescription>
+              조회된 결과 안에서 국가, 소속 기관/교회, 그룹/팀/목장, 담당 코치 기준으로 다시 좁힙니다.
+              모바일에서는 필요한 조건만 선택한 뒤 표로 이동해 확인하세요.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <FieldLabel className="xl:col-span-2">
+              <FieldText className="text-xs">{t("common.search", "검색")}</FieldText>
+              <TextInput
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="이름, 국가, 소속, 직분, 코치 검색"
+                type="search"
+                value={search}
+              />
+            </FieldLabel>
+            <FilterSelect label="국가" onChange={setCountryFilter} options={countryOptions} value={countryFilter} />
+            <FilterSelect label="지역/도시" onChange={setRegionFilter} options={regionOptions} value={regionFilter} />
+            <FilterSelect label="소속 기관/교회" onChange={setOrganizationFilter} options={organizationOptions} value={organizationFilter} />
+            <FilterSelect label="그룹/팀/목장" onChange={setGroupFilter} options={groupOptions} value={groupFilter} />
+            <FilterSelect label="직책/직분" onChange={setMinistryFilter} options={ministryOptions} value={ministryFilter} />
+            <FilterSelect label="세대" onChange={setGenerationFilter} options={generationOptions} value={generationFilter} />
+            <FilterSelect label="담당 코치" onChange={setCoachFilter} options={coachOptions} value={coachFilter} />
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
+            <p>
+              {filteredRows.length}명 표시 / 현재 페이지 {rows.length}명 · 전체 필터 결과 {pagination.totalRows}명
+            </p>
+            <Button
+              className="w-full justify-center sm:w-auto"
+              icon="filter"
+              onClick={resetFilters}
+              size="sm"
+              type="button"
+              variant="secondary"
+            >
+              보기 필터 초기화
+            </Button>
+          </div>
+          </CardContent>
+        </Card>
+
+        {viewMode === "relationship" ? (
+          <RelationshipProgressTable rows={filteredRelationshipRows} year={year} />
+        ) : viewMode === "care" ? (
+          <CareNeededTable
+            onCreateNote={setNoteTargetRow}
+            onViewDetail={setDetailRow}
+            rows={filteredRows}
+            year={year}
+          />
+        ) : filteredRows.length === 0 ? (
+          <Card>
+            <CardContent className="px-4 py-6 text-center text-slate-500">
+              <p>선택한 조건에 해당하는 목실기 기록이 없습니다.</p>
+              <p className="mt-1">필터를 초기화하거나 다른 조건으로 다시 조회해 주세요.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <ProgressRowsTable
+            coachNameByCoacheeId={coachNameByCoacheeId}
+            detailHrefBuilder={(row) => `/coach-maker/moksilgi-progress/${row.plan_id}?year=${year}`}
+            onSort={toggleSort}
+            onViewDetail={setDetailRow}
+            rows={filteredRows}
+            year={year}
+          />
+        )}
+
+        <PaginationControls pagination={pagination} />
+      </div>
 
       {detailRow ? (
         <ProgressDetailModal

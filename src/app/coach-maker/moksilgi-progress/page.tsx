@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import {
   getCoachMakerMoksilgiProgress,
   type CoachMakerMoksilgiProgressFilters,
-  type CoachMakerMoksilgiProgressRow,
 } from "@/lib/api/coach-maker/moksilgi-progress";
 import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
 import { PrintPageButton } from "@/components/print/PrintPageButton";
@@ -24,14 +23,14 @@ import { I18nText } from "@/lib/i18n/I18nProvider";
 import {
   DEFAULT_TIMEZONE,
   formatDateInTimezone,
-  getCurrentMonthInTimezone,
   getCurrentYearInTimezone,
 } from "@/lib/timezone";
 import { MoksilgiProgressClientTable } from "./MoksilgiProgressClientTable";
 
 export const dynamic = "force-dynamic";
 
-const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
+const DEFAULT_PAGE_SIZE = 20;
+const MAX_PAGE_SIZE = 50;
 
 function firstParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -51,6 +50,19 @@ function parseYear(params: Record<string, string | string[] | undefined>) {
     : currentYear;
 }
 
+function parseOptionalPositiveInteger(
+  value: string | string[] | undefined,
+  max?: number,
+) {
+  const parsed = Number(firstParam(value));
+
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    return null;
+  }
+
+  return typeof max === "number" ? Math.min(parsed, max) : parsed;
+}
+
 function parseFilters(
   params: Record<string, string | string[] | undefined>,
 ): CoachMakerMoksilgiProgressFilters {
@@ -61,6 +73,10 @@ function parseFilters(
     roleLabel: textParam(params.role),
     generationLabel: textParam(params.generation),
     search: textParam(params.search),
+    page: parseOptionalPositiveInteger(params.page) ?? 1,
+    pageSize:
+      parseOptionalPositiveInteger(params.pageSize, MAX_PAGE_SIZE) ??
+      DEFAULT_PAGE_SIZE,
   };
 }
 
@@ -69,81 +85,16 @@ function formatPercent(value: number | null | undefined) {
   return `${numeric.toFixed(1)}%`;
 }
 
-function safeNumber(value: number | null | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
+function buildTopSummary(result: Awaited<ReturnType<typeof getCoachMakerMoksilgiProgress>>) {
+  if (!result.data) {
+    return {
+      careCounts: { attention: 0, missing: 0 },
+      statusCounts: { completed: 0, inProgress: 0, notStarted: 0 },
+      totalRows: 0,
+    };
+  }
 
-function average(values: number[]) {
-  if (values.length === 0) return 0;
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
-function monthRate(row: CoachMakerMoksilgiProgressRow, month: number) {
-  const key = `month_${month}_rate` as keyof CoachMakerMoksilgiProgressRow;
-  const value = row[key];
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
-
-function currentMonthCutoff(year: number, timezone: string) {
-  const currentYear = getCurrentYearInTimezone(timezone);
-
-  if (year < currentYear) return 12;
-  if (year > currentYear) return 0;
-  return getCurrentMonthInTimezone(timezone);
-}
-
-function upToCurrentRate(row: CoachMakerMoksilgiProgressRow, year: number, timezone: string) {
-  const cutoff = currentMonthCutoff(year, timezone);
-  if (cutoff <= 0) return 0;
-
-  return average(MONTHS.slice(0, cutoff).map((month) => monthRate(row, month)));
-}
-
-function hasProgressInput(row: CoachMakerMoksilgiProgressRow) {
-  return MONTHS.some((month) => monthRate(row, month) > 0)
-    || safeNumber(row.cumulative_rate) > 0;
-}
-
-function attentionCounts(
-  rows: CoachMakerMoksilgiProgressRow[],
-  year: number,
-  timezone: string,
-) {
-  return rows.reduce(
-    (counts, row) => {
-      if (!hasProgressInput(row)) {
-        return { ...counts, missing: counts.missing + 1 };
-      }
-
-      if (upToCurrentRate(row, year, timezone) < 50) {
-        return { ...counts, attention: counts.attention + 1 };
-      }
-
-      return counts;
-    },
-    { attention: 0, missing: 0 },
-  );
-}
-
-function progressStatusCounts(rows: CoachMakerMoksilgiProgressRow[]) {
-  return rows.reduce(
-    (counts, row) => {
-      const rate = typeof row.cumulative_rate === "number" && Number.isFinite(row.cumulative_rate)
-        ? row.cumulative_rate
-        : 0;
-
-      if (rate >= 100) {
-        return { ...counts, completed: counts.completed + 1 };
-      }
-
-      if (rate > 0) {
-        return { ...counts, inProgress: counts.inProgress + 1 };
-      }
-
-      return { ...counts, notStarted: counts.notStarted + 1 };
-    },
-    { completed: 0, inProgress: 0, notStarted: 0 },
-  );
+  return result.data.overview;
 }
 
 function SummaryCard({
@@ -184,6 +135,8 @@ function FilterForm({ filters }: { filters: CoachMakerMoksilgiProgressFilters })
       </CardHeader>
       <CardContent>
         <form className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" method="get">
+          <input name="page" type="hidden" value="1" />
+          <input name="pageSize" type="hidden" value={filters.pageSize ?? DEFAULT_PAGE_SIZE} />
           <FieldLabel>
             <FieldText>
               <I18nText k="moksilgi.year" fallback="연도" />
@@ -255,7 +208,7 @@ function FilterForm({ filters }: { filters: CoachMakerMoksilgiProgressFilters })
             </Button>
             <ButtonLink
               className="min-h-10 justify-center"
-              href={`/coach-maker/moksilgi-progress?year=${filters.year}`}
+              href={`/coach-maker/moksilgi-progress?year=${filters.year}&page=1&pageSize=${filters.pageSize ?? DEFAULT_PAGE_SIZE}`}
               icon="filter"
               variant="secondary"
             >
@@ -291,12 +244,9 @@ export default async function CoachMakerMoksilgiProgressPage({
   const initialMemberId = textParam(params.memberId);
   const result = await getCoachMakerMoksilgiProgress(filters);
   const timezone = result.data?.timezone ?? DEFAULT_TIMEZONE;
-  const statusCounts = result.data
-    ? progressStatusCounts(result.data.rows)
-    : { completed: 0, inProgress: 0, notStarted: 0 };
-  const careCounts = result.data
-    ? attentionCounts(result.data.rows, result.data.year, timezone)
-    : { attention: 0, missing: 0 };
+  const topSummary = buildTopSummary(result);
+  const statusCounts = topSummary.statusCounts;
+  const careCounts = topSummary.careCounts;
 
   if (result.error?.code === "UNAUTHORIZED") {
     redirect("/login?redirectTo=/coach-maker/moksilgi-progress");
@@ -364,7 +314,7 @@ export default async function CoachMakerMoksilgiProgressPage({
               <SummaryCard
                 description="현재 필터 조건으로 조회된 목실기 대상자 수입니다."
                 title={<I18nText k="moksilgi.totalTargets" fallback="전체 대상자 수" />}
-                value={result.data.rows.length}
+                value={topSummary.totalRows}
               />
               <SummaryCard
                 description="누적 성취율이 0% 초과 100% 미만인 대상자 수입니다."
@@ -410,6 +360,9 @@ export default async function CoachMakerMoksilgiProgressPage({
                 </p>
                 <MoksilgiProgressClientTable
                   initialMemberId={initialMemberId}
+                  pagination={result.data.pagination}
+                  printRelationshipRows={result.data.printRelationshipRows}
+                  printRows={result.data.printRows}
                   relationshipRows={result.data.relationshipRows}
                   rows={result.data.rows}
                   year={result.data.year}

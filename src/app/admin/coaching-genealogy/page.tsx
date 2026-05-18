@@ -5,6 +5,7 @@ import {
   getAdminCoachingGenealogy,
   parseGenealogyFilters,
 } from "@/lib/api/admin/coaching-genealogy";
+import { createApiPerformanceLogger } from "@/lib/performance";
 import { CoachingGenealogyClient } from "./CoachingGenealogyClient";
 
 export const dynamic = "force-dynamic";
@@ -53,11 +54,13 @@ export default async function AdminCoachingGenealogyPage({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const perf = createApiPerformanceLogger("/admin/coaching-genealogy");
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const view = normalizeView(resolvedSearchParams.view);
   const filterParams = buildFilterParams(resolvedSearchParams);
   const result = await getAdminCoachingGenealogy(
     parseGenealogyFilters(filterParams),
+    perf,
   );
 
   if (!result.ok) {

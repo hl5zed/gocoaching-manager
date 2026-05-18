@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useI18n } from "@/lib/i18n/useI18n";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export type AuthLoginTranslations = {
@@ -56,18 +57,21 @@ function safeRedirectPath(value: string | null) {
 export function LoginForm({ translations }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const loginText = translations.login ?? "로그인";
-  const emailText = translations.email ?? "이메일";
-  const passwordText = translations.password ?? "비밀번호";
-  const loginDescriptionText =
+  const loginText = t("auth.login", translations.login ?? "로그인");
+  const emailText = t("auth.email", translations.email ?? "이메일");
+  const passwordText = t("auth.password", translations.password ?? "비밀번호");
+  const loginDescriptionText = t(
+    "auth.loginDescription",
     translations.login_description ??
-    "Supabase Auth에 등록된 이메일과 비밀번호로 로그인합니다.";
-  const loadingText = translations.loading ?? "불러오는 중";
-  const errorText = translations.error ?? "오류";
+      "Supabase Auth에 등록된 이메일과 비밀번호로 로그인합니다.",
+  );
+  const loadingText = t("common.loading", translations.loading ?? "불러오는 중");
+  const errorText = t("common.error", translations.error ?? "오류");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

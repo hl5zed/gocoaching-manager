@@ -1947,6 +1947,569 @@ Validation:
 - `npm run typecheck`: passed
 - `npm run build`: passed
 
+## LOCK: coach moksilgi 계열 핵심 언어변환 1차 마무리
+
+완료일: 2026-05-17
+
+### 완료 페이지
+- `/coach/moksilgi`
+- `/coach/moksilgi/[planId]`
+
+### 완료 내용
+- `LanguageSwitcher` UI 누락 문제를 해결했다.
+- 목록 페이지와 상세 페이지의 핵심 제목, 설명, 주요 링크, 주요 라벨, 빈 상태, 오류 문구, 출력 관련 문구를 i18n 키로 전환했다.
+- 기존 `I18nText` 패턴을 사용했다.
+- 번역 키는 `coach.moksilgi.*`, `coach.moksilgi.detail.*` 구조로 정리했다.
+- `LanguageSwitcher`는 `print-hidden` 영역에 배치하여 인쇄물에는 표시되지 않도록 유지했다.
+
+### 유지한 것
+- 기존 페이지 구조 유지
+- 기존 링크 경로 유지
+- 목실기 목록 조회 유지
+- 목실기 상세 조회 유지
+- 연도 조회 유지
+- 출력/인쇄 흐름 유지
+- API/DB/RLS/인증/권한 로직 변경 없음
+
+### 검증
+- `npm run typecheck` 통과
+- `npm run build` 통과
+
+### 남은 확인
+- 실제 로그인 세션에서 `/coach/moksilgi` 언어전환 수동 확인
+- 실제 `planId` 상세 페이지에서 언어전환 수동 확인
+- 인쇄/PDF 화면에서 주요 라벨 표시 확인
+
+### 다음 작업 기준
+- 다음 언어변환 보완 대상은 `/admin/invitations/new` 또는 `/coach-maker/report` 중 하나로 진행한다.
+- 새 i18n 구조를 만들지 않고 기존 `LanguageSwitcher`와 `I18nText` 패턴을 계속 재사용한다.
+
+## LOCK: admin invitations new 헤더 언어변환 4-1차 완료
+
+완료일: 2026-05-17
+
+### 완료 범위
+- `/admin/invitations/new` 페이지 헤더의 언어변환 UI 누락 문제를 해결했다.
+- 페이지 헤더 핵심 문구를 i18n 번역 키로 전환했다.
+- 실제 초대 생성 폼 컴포넌트는 이번 작업에서 수정하지 않았다.
+
+### 수정 파일
+- `src/app/admin/invitations/new/page.tsx`
+- `src/lib/i18n/messages.ts`
+
+### 적용 방식
+- 기존 `LanguageSwitcher`를 재사용했다.
+- 기존 `I18nText` 패턴을 사용했다.
+- 새 Provider, 새 switcher, 새 i18n 구조는 만들지 않았다.
+- `PageNavigationButtons`는 사용하지 않았다.
+
+### LanguageSwitcher 삽입 위치
+- `/admin/invitations/new` 헤더 오른쪽 영역
+- 기존 `초대 목록으로` 링크와 같은 버튼 그룹 안에 배치
+
+### 추가된 번역 키
+- `admin.invitations.new.badge`
+- `admin.invitations.new.title`
+- `admin.invitations.new.description`
+- `admin.invitations.new.backToList`
+
+### 번역 적용 문구
+- 관리자
+- 초대 생성
+- 새 사용자를 초대하고 역할과 소속 범위를 지정합니다.
+- 초대 목록으로
+
+### 검증
+- `npm run typecheck` 통과
+- `npm run build` 통과
+
+### 유지한 것
+- `AdminInvitationCreateForm.tsx` 미수정
+- 초대 생성 폼 유지
+- submit 로직 유지
+- API 호출 유지
+- 이메일 발송 관련 흐름 유지
+- DB 변경 없음
+- RLS 변경 없음
+- 인증/권한 로직 변경 없음
+
+### 다음 작업 기준
+- 4-2차는 `src/components/admin/AdminInvitationCreateForm.tsx`만 대상으로 한다.
+- 폼 라벨, 버튼, 성공/실패/복사/검증 문구를 최소 범위로 i18n 적용한다.
+- 이벤트 핸들러 내부 문자열은 기존 `useI18n().t()` 패턴을 사용한다.
+
+## LOCK: admin invitations new 언어변환 1차 마무리
+
+완료일: 2026-05-17
+
+### 완료 페이지
+- `/admin/invitations/new`
+
+### 완료 내용
+- 페이지 헤더에 기존 `LanguageSwitcher`를 직접 삽입했다.
+- 헤더 핵심 문구를 `I18nText`로 전환했다.
+- 초대 생성 폼 내부 문구를 `useI18n().t()`로 전환했다.
+- 이벤트 핸들러 내부 state 메시지도 `t()`로 처리했다.
+- 번역 키는 `admin.invitations.new.*`, `admin.invitations.new.form.*` 구조로 정리했다.
+
+### 완료된 문구 영역
+- 페이지 헤더
+- 초대 목록 이동 링크
+- 이메일 입력 라벨
+- 권한 설정 안내
+- 역할/범위/만료 기간 라벨
+- 제출/취소 버튼
+- 생성 중 상태
+- 성공 안내
+- 복사 안내
+- 이메일 발송 상태
+- 검증 오류 메시지
+- fallback 오류 메시지
+
+### 유지한 것
+- 기존 페이지 구조 유지
+- 기존 초대 생성 폼 구조 유지
+- submit 로직 유지
+- `/api/admin/invitations` 호출 유지
+- 이메일 발송 판단 로직 유지
+- API 반환 오류 메시지 흐름 유지
+- role/scope label helper 유지
+- DB 변경 없음
+- RLS 변경 없음
+- 인증/권한 로직 변경 없음
+
+### 검증
+- `npm run typecheck` 통과
+- `npm run build` 통과
+
+### 다음 작업 기준
+- 다음 언어변환 보완 대상은 `/coach-maker/report` 또는 `/login` 중 하나로 진행한다.
+- 기능이 민감한 페이지는 먼저 `LanguageSwitcher` UI 노출과 헤더 문구 번역만 진행하고, 폼/상태 메시지는 별도 단계로 분리한다.
+
+## LOCK: login 언어변환 적용 완료
+
+완료일: 2026-05-17
+
+### 완료 페이지
+- `/login`
+
+### 완료 내용
+- 로그인 페이지 카드 상단에 기존 `LanguageSwitcher`를 직접 삽입했다.
+- `LoginForm.tsx`에서 기존 `translations` prop 기반 문구를 유지하되, `useI18n().t()`를 우선 사용하도록 수정했다.
+- 기존 `?lang=` 방식은 서버 fallback 용도로 유지했다.
+- 새 i18n Provider, 새 LanguageSwitcher, 새 messages 키는 만들지 않았다.
+
+### 수정 파일
+- `src/app/login/page.tsx`
+- `src/app/login/LoginForm.tsx`
+
+### LanguageSwitcher 삽입 위치
+- `/login` 카드 상단의 `GoCoaching Manager` 텍스트 오른쪽
+
+### 사용한 i18n 방식
+- `useI18n().t()` 우선 사용
+- 기존 `translations` prop fallback 유지
+- 예: `t("auth.login", translations.login ?? "로그인")`
+
+### 재사용한 번역 키
+- `auth.login`
+- `auth.email`
+- `auth.password`
+- `auth.loginDescription`
+- `common.loading`
+- `common.error`
+
+### 새로 추가한 번역 키
+- 없음
+
+### 유지한 것
+- 로그인 submit 함수 유지
+- Supabase auth 호출 유지
+- `redirectTo` 처리 유지
+- `next` 처리 유지
+- 로그인 성공 후 이동 흐름 유지
+- 오류 표시 구조 유지
+- `?lang=` 서버 fallback 유지
+- API 변경 없음
+- DB 변경 없음
+- RLS 변경 없음
+- 인증/권한 로직 변경 없음
+
+### 검증
+- `npm run typecheck` 통과
+- `npm run build` 통과
+
+### 남은 확인
+- 브라우저에서 `/login` 한국어/영어 전환 수동 확인
+- `/login?lang=en` 접속 시 fallback 문구 확인
+- `/login?redirectTo=/dashboard` 로그인 후 이동 확인
+- 잘못된 로그인 정보 입력 시 오류 표시 확인
+
+## LOCK: coach-maker report 언어변환 6-1차 완료
+
+완료일: 2026-05-17
+
+### 완료 범위
+- `/coach-maker/report` 페이지의 언어변환 UI 누락 문제를 해결했다.
+- 보고서 상단 핵심 문구, 주요 섹션 제목, 일부 빈 상태 문구를 i18n 번역 키로 전환했다.
+- `PrintReportButton`의 버튼 문구를 언어변환에 반응하도록 수정했다.
+
+### 수정 파일
+- `src/app/coach-maker/report/page.tsx`
+- `src/app/coach-maker/report/PrintReportButton.tsx`
+- `src/lib/i18n/messages.ts`
+
+### 적용 방식
+- `page.tsx`: 서버 영역 문구에 기존 `I18nText` 패턴 사용
+- `PrintReportButton.tsx`: 클라이언트 컴포넌트이므로 `useI18n().t()` 사용
+- 기존 `LanguageSwitcher` 재사용
+- 새 Provider, 새 switcher, 새 i18n 구조 생성 없음
+- `PageNavigationButtons` 미사용
+
+### LanguageSwitcher 삽입 위치
+- `/coach-maker/report` 상단 `report-controls` 영역
+- 기존 `대시보드로 돌아가기` 링크와 `PrintReportButton`이 있는 같은 controls 영역
+- 인쇄 시 숨김 구조 안에 배치하여 인쇄물에는 표시되지 않도록 유지
+
+### 추가된 번역 키
+- `coachMaker.report.backToDashboard`
+- `coachMaker.report.printOrPdf`
+- `coachMaker.report.badge`
+- `coachMaker.report.title`
+- `coachMaker.report.generatedAt`
+- `coachMaker.report.year`
+- `coachMaker.report.timezone`
+- `coachMaker.report.description`
+- `coachMaker.report.scopeSummary`
+- `coachMaker.report.coachAssignmentStatus`
+- `coachMaker.report.moksilgiSummary`
+- `coachMaker.report.attentionTargets`
+- `coachMaker.report.actionMemoSummary`
+- `coachMaker.report.priorityActionList`
+- `coachMaker.report.noScopeData`
+- `coachMaker.report.noCoachAssignmentData`
+- `coachMaker.report.noMoksilgiData`
+- `coachMaker.report.noAttentionTargets`
+- `coachMaker.report.noActionMemos`
+
+### 번역 적용 문구
+- 대시보드로 돌아가기
+- 보고서 인쇄/PDF 저장
+- 코치메이커 보고서
+- 코치메이커 운영 보고서
+- 생성일
+- 기준 연도
+- 기준 시간대
+- 보고서 설명 문구
+- 주요 섹션 제목 6개
+- 지정된 빈 상태 문구
+
+### 보류한 영역
+- `ReportFilters.tsx`
+- `buildFilterSummary()`
+- `buildReportAutoSummary()`
+- `coachStatsErrorMessage()`
+- action/priority/status/target label map
+- 숫자와 상태를 조합하는 자동 문장
+
+### 유지한 것
+- 데이터 조회 유지
+- 필터 파라미터 처리 유지
+- `ReportFilters` 유지
+- `window.print()` 호출 유지
+- print CSS 구조 유지
+- 인쇄/PDF 저장 흐름 유지
+- API 변경 없음
+- DB 변경 없음
+- RLS 변경 없음
+- 인증/권한 로직 변경 없음
+
+### 검증
+- `npm run typecheck` 통과
+- `npm run build` 통과
+
+### 남은 확인
+- 브라우저에서 `/coach-maker/report` 한국어/영어 전환 수동 확인
+- 필터 적용 흐름 확인
+- 인쇄/PDF 저장 버튼 작동 확인
+- 인쇄 화면에 `LanguageSwitcher`가 표시되지 않는지 확인
+
+### 다음 작업 기준
+- 6-2차는 `ReportFilters.tsx`만 대상으로 한다.
+- 필터 라벨/버튼 문구만 `useI18n().t()`로 전환한다.
+- `buildFilterSummary`, 자동 요약 문장, label map은 계속 보류한다.
+
+## LOCK: coach-maker report filters 언어변환 6-2차 완료
+
+완료일: 2026-05-17
+
+### 완료 범위
+- `/coach-maker/report`의 필터 UI 문구를 i18n 번역 키로 전환했다.
+- `ReportFilters.tsx`는 클라이언트 컴포넌트이므로 기존 `useI18n().t()` 패턴을 사용했다.
+- 필터 상태, URL query string, 필터 적용/초기화 로직은 변경하지 않았다.
+
+### 수정 파일
+- `src/app/coach-maker/report/ReportFilters.tsx`
+- `src/lib/i18n/messages.ts`
+
+### 사용한 i18n 방식
+- `useI18n().t()` 사용
+- 새 Provider 생성 없음
+- 새 LanguageSwitcher 생성 없음
+- 새 i18n 구조 생성 없음
+
+### 추가된 번역 키
+- `coachMaker.report.filters.title`
+- `coachMaker.report.filters.description`
+- `coachMaker.report.filters.year`
+- `coachMaker.report.filters.yearSuffix`
+- `coachMaker.report.filters.team`
+- `coachMaker.report.filters.teamPlaceholder`
+- `coachMaker.report.filters.from`
+- `coachMaker.report.filters.to`
+- `coachMaker.report.filters.apply`
+- `coachMaker.report.filters.reset`
+- `coachMaker.report.filters.allTeams`
+- `coachMaker.report.filters.allPeriod`
+- `coachMaker.report.filters.moksilgiBasis`
+- `coachMaker.report.filters.actionMemoBasis`
+- `coachMaker.report.filters.teamBasis`
+- `coachMaker.report.filters.notSelected`
+- `coachMaker.report.filters.all`
+
+### 번역 적용 문구
+- 보고서 기준
+- 기준 설명 문구
+- 연도
+- 팀
+- 전체 또는 팀명 입력
+- 시작일
+- 종료일
+- 필터 적용
+- 필터 초기화
+- 연도 suffix
+
+### 보류한 영역
+- `buildFilterSummary()`
+- `buildReportAutoSummary()`
+- `coachStatsErrorMessage()`
+- action/priority/status/target label map
+- `checkNeededLabel()`
+- 숫자와 상태를 조합하는 자동 문장
+
+### 유지한 것
+- 필터 state 유지
+- URL query string 유지
+- 필터 적용 로직 유지
+- 필터 초기화 로직 유지
+- 보고서 조회 흐름 유지
+- 인쇄/PDF 저장 흐름 유지
+- API 변경 없음
+- DB 변경 없음
+- RLS 변경 없음
+- 인증/권한 로직 변경 없음
+
+### 검증
+- `npm run typecheck` 통과
+- `npm run build` 통과
+
+### 남은 확인
+- 브라우저에서 `/coach-maker/report` 한국어/영어 전환 수동 확인
+- 필터 라벨과 버튼 문구 전환 확인
+- 필터 적용/초기화 정상 작동 확인
+- 인쇄/PDF 저장 정상 작동 확인
+
+## LOCK: coach-maker report filter summary 언어변환 6-3차 완료
+
+완료일: 2026-05-17
+
+### 완료 범위
+- `/coach-maker/report`의 필터 요약 문구를 i18n 번역 키로 전환했다.
+- 기준 연도, 팀, 기간, 목실기 기준, 관리 메모 기준, 작성일, 팀 기준 등 주요 필터 요약 라벨을 번역 적용했다.
+- 숫자/날짜/팀명 같은 실제 데이터 값은 기존 흐름을 유지했다.
+
+### 수정 파일
+- `src/app/coach-maker/report/page.tsx`
+- `src/lib/i18n/messages.ts`
+
+### 추가된 번역 키
+- `coachMaker.report.filterSummary.year`
+- `coachMaker.report.filterSummary.team`
+- `coachMaker.report.filterSummary.period`
+- `coachMaker.report.filterSummary.moksilgiBasis`
+- `coachMaker.report.filterSummary.actionMemoBasis`
+- `coachMaker.report.filterSummary.teamBasis`
+- `coachMaker.report.filterSummary.all`
+- `coachMaker.report.filterSummary.allPeriod`
+- `coachMaker.report.filterSummary.allTeams`
+- `coachMaker.report.filterSummary.selectedYear`
+- `coachMaker.report.filterSummary.createdAt`
+
+### 번역 적용 문구
+- 기준 연도
+- 팀
+- 기간
+- 전체
+- 전체 기간
+- 목실기 기준
+- 관리 메모 기준
+- 작성일
+- 팀 기준
+- 전체 팀
+- 선택 연도
+
+### 보류한 영역
+- `buildReportAutoSummary()`
+- `coachStatsErrorMessage()`
+- `ACTION_TYPE_LABELS`
+- `PRIORITY_LABELS`
+- `STATUS_LABELS`
+- `TARGET_TYPE_LABELS`
+- `checkNeededLabel()`
+- 숫자와 상태를 조합하는 자동 문장 번역
+
+### 유지한 것
+- 보고서 조회 유지
+- 필터 적용 결과 유지
+- URL query 처리 유지
+- `ReportFilters` 유지
+- `PrintReportButton` 유지
+- `window.print()` 흐름 유지
+- print CSS 구조 유지
+- API 변경 없음
+- DB 변경 없음
+- RLS 변경 없음
+- 인증/권한 로직 변경 없음
+
+### 검증
+- `npm run typecheck` 통과
+- `npm run build` 통과
+
+### 남은 확인
+- 브라우저에서 `/coach-maker/report` 한국어/영어 전환 수동 확인
+- 필터 적용 후 요약 문구 전환 확인
+- 인쇄/PDF 저장 시 요약 문구 표시 확인
+
+## LOCK: my-coaching records 언어변환 2-2차 완료
+
+완료일: 2026-05-17
+
+### 완료 범위
+- `/my-coaching/records` 페이지의 핵심 문구를 i18n 번역 키로 전환했다.
+- 기존 `LanguageSwitcher` 노출 상태는 유지했다.
+- 기존 `I18nText` 패턴을 사용했다.
+- 기록 조회, 필터, 링크 이동, 인쇄 범위 계산, `window.print()` 흐름은 변경하지 않았다.
+
+### 수정 파일
+- `src/app/my-coaching/records/page.tsx`
+- `src/lib/i18n/messages.ts`
+
+### 추가된 주요 번역 키
+- `myCoaching.records.title`
+- `myCoaching.records.reportTitle`
+- `myCoaching.records.description`
+- `myCoaching.records.daily`
+- `myCoaching.records.weekly`
+- `myCoaching.records.monthly`
+- `myCoaching.records.chooseType`
+- `myCoaching.records.printNotice`
+- `myCoaching.records.printRange`
+- `myCoaching.records.currentResults`
+- `myCoaching.records.searchResults`
+- `myCoaching.records.noRecordsForConditions`
+- `myCoaching.records.resetFilters`
+- `myCoaching.records.writeDaily`
+- `myCoaching.records.writeWeekly`
+
+### 번역 적용 문구
+- `나의 기록`
+- `나의 기록 보고서`
+- `기록 방식 선택`
+- `하루 기록`
+- `주간 기록`
+- `월간 기록`
+- `월간 회고`
+- 기록 작성 카드 제목/설명/CTA
+- 인쇄 범위/출력 기준/인쇄 안내
+- 최근 기록 섹션
+- 검색 결과/빈 상태/필터 초기화/작성 CTA
+
+### 검증
+- `npm run typecheck` 통과
+- `npm run build` 통과
+
+### 유지한 것
+- 기록 조회 기능 유지
+- 필터 기능 유지
+- 링크 이동 유지
+- 인쇄 기능 유지
+- API 변경 없음
+- DB 변경 없음
+- RLS 변경 없음
+- 권한 로직 변경 없음
+
+### 남은 확인
+- 브라우저 로그인 상태에서 한국어/영어 전환 수동 확인 필요
+
+### 다음 작업 기준
+- 2-3차는 `/my-coaching/moksilgi/page.tsx`만 대상으로 한다.
+- 기존 `myCoaching.*` 및 `myCoaching.records.*` 구조와 동일한 방식으로 `myCoaching.moksilgi.*` 키를 추가한다.
+
+## LOCK: my-coaching 메인 언어변환 2-1차 완료
+
+완료일: 2026-05-17
+
+### 완료 범위
+- `/my-coaching` 메인 페이지의 핵심 문구를 i18n 번역 키로 전환했다.
+- `LanguageSwitcher`는 기존 위치와 방식 그대로 유지했다.
+- 새 i18n Provider, 새 언어변환 시스템, 새 LanguageSwitcher 컴포넌트는 만들지 않았다.
+- 기존 `I18nText` 패턴을 사용했다.
+
+### 수정 파일
+- `src/app/my-coaching/page.tsx`
+- `src/lib/i18n/messages.ts`
+
+### 추가된 주요 번역 키
+- `myCoaching.badge`
+- `myCoaching.title`
+- `myCoaching.subtitle`
+- `myCoaching.loadFailed`
+- `myCoaching.backToDashboard`
+- `myCoaching.myRecords`
+- `myCoaching.viewProfile`
+- `myCoaching.welcome`
+- `myCoaching.hello`
+- `myCoaching.nameSuffix`
+- `myCoaching.intro`
+- `myCoaching.myCoach`
+- `myCoaching.noCoach`
+- `myCoaching.myRelationships`
+- `myCoaching.myMoksilgi`
+- `myCoaching.writeMoksilgi`
+- `myCoaching.monthlyMoksilgi`
+- `myCoaching.viewAchievement`
+- `myCoaching.chooseRecord`
+- `myCoaching.coachFeedback`
+- `myCoaching.viewFeedback`
+
+### 검증
+- `npm run typecheck` 통과
+- `npm run build` 통과
+
+### 유지한 것
+- 링크 경로 유지
+- 권한 체크 유지
+- 데이터 조회 유지
+- API 변경 없음
+- DB 변경 없음
+- RLS 변경 없음
+- `/my-coaching/records`와 `/my-coaching/moksilgi` 본문 번역은 다음 단계로 분리
+
+### 다음 작업 기준
+- 2-2차는 `/my-coaching/records/page.tsx`만 대상으로 한다.
+- 2-3차는 `/my-coaching/moksilgi/page.tsx`만 대상으로 한다.
+- 각 단계는 기존 `I18nText` 패턴과 `myCoaching.*` 키 구조를 우선 재사용한다.
+
 ## LOCK - Admin Coaching Genealogy Print and Generation Mismatch UX
 
 Completed date:

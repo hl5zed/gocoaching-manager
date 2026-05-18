@@ -7,6 +7,7 @@ import { getActiveAnnouncementsForCurrentUser } from "@/lib/api/admin/system-ann
 import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
 import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
 import { I18nText } from "@/lib/i18n/I18nProvider";
+import { createApiPerformanceLogger } from "@/lib/performance";
 
 export const dynamic = "force-dynamic";
 
@@ -65,15 +66,18 @@ const coachMakerFeatureCards = [
 ];
 
 export default async function DashboardPage() {
+  const perf = createApiPerformanceLogger("/dashboard");
   const session = await getSession();
 
   if (!session.user) {
+    perf.mark("auth.session_missing");
     redirect("/login?redirectTo=%2Fdashboard");
   }
 
-  const result = await getDashboardMe(session);
+  const result = await getDashboardMe(session, perf);
 
   if (!result.ok && result.error.code === "UNAUTHORIZED") {
+    perf.mark("auth.session_missing");
     redirect("/login?redirectTo=%2Fdashboard");
   }
 
@@ -131,7 +135,10 @@ export default async function DashboardPage() {
     "사용자";
   const dashboardAnnouncements = await getActiveAnnouncementsForCurrentUser({
     placement: "dashboard",
+    roles: roleValues,
   });
+  perf.mark("dashboard.announcements_query", dashboardAnnouncements.length);
+  perf.mark("dashboard.complete", 1);
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">

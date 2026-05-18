@@ -3,6 +3,7 @@ import {
   getAdminCoachingGenealogy,
   parseGenealogyFilters,
 } from "@/lib/api/admin/coaching-genealogy";
+import { createApiPerformanceLogger } from "@/lib/performance";
 
 export const dynamic = "force-dynamic";
 
@@ -11,11 +12,14 @@ const noStoreHeaders = {
 };
 
 export async function GET(request: Request) {
+  const perf = createApiPerformanceLogger("/api/admin/coaching-genealogy");
   const url = new URL(request.url);
   const filters = parseGenealogyFilters(url.searchParams);
-  const result = await getAdminCoachingGenealogy(filters);
+  perf.mark("filters_parsed");
+  const result = await getAdminCoachingGenealogy(filters, perf);
 
   if (!result.ok) {
+    perf.mark("failed");
     return NextResponse.json(
       {
         ok: false,
@@ -27,6 +31,8 @@ export async function GET(request: Request) {
       },
     );
   }
+
+  perf.mark("complete", result.data.nodes.length);
 
   return NextResponse.json(
     {

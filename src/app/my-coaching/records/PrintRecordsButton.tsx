@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui";
+import { useI18n } from "@/lib/i18n/useI18n";
 
 type PrintRange = "all" | "daily" | "weekly" | "monthly";
 
@@ -10,23 +11,28 @@ type PrintRecordsButtonProps = {
 };
 
 const printRangeButtons: Array<{
-  label: string;
+  fallback: string;
+  labelKey: string;
   value: PrintRange;
 }> = [
   {
-    label: "현재 결과 전체 인쇄/PDF 저장",
+    fallback: "현재 결과 전체 인쇄/PDF 저장",
+    labelKey: "myCoaching.records.print.currentResults",
     value: "all",
   },
   {
-    label: "하루 기록 인쇄/PDF 저장",
+    fallback: "하루 기록 인쇄/PDF 저장",
+    labelKey: "myCoaching.records.print.daily",
     value: "daily",
   },
   {
-    label: "주간 기록 인쇄/PDF 저장",
+    fallback: "주간 기록 인쇄/PDF 저장",
+    labelKey: "myCoaching.records.print.weekly",
     value: "weekly",
   },
   {
-    label: "월간 회고 인쇄/PDF 저장",
+    fallback: "월간 회고 인쇄/PDF 저장",
+    labelKey: "myCoaching.records.print.monthlyReflection",
     value: "monthly",
   },
 ];
@@ -34,6 +40,7 @@ const printRangeButtons: Array<{
 export function PrintRecordsButton({
   suggestedTitles,
 }: PrintRecordsButtonProps) {
+  const { t } = useI18n();
   const [printRange, setPrintRange] = useState<PrintRange>("all");
 
   useEffect(() => {
@@ -91,7 +98,7 @@ export function PrintRecordsButton({
           type="button"
           variant={printRange === button.value ? "primary" : "secondary"}
         >
-          {button.label}
+          {t(button.labelKey, button.fallback)}
         </Button>
       ))}
     </div>

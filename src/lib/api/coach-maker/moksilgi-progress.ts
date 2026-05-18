@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/auth/getSession";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { createApiPerformanceLogger } from "@/lib/performance";
 import {
   DEFAULT_TIMEZONE,
   getCurrentMonthInTimezone,
@@ -8,7 +9,6 @@ import {
   getEffectiveTimezone,
 } from "@/lib/timezone";
 import type { Tables, UserRole } from "@/types/database";
-import type { ActiveRoleSlim } from "@/types/profile";
 
 const ALLOWED_ROLES = new Set<UserRole>([
   "coach_maker",
@@ -23,12 +23,16 @@ const BROAD_ACCESS_ROLES = new Set<UserRole>([
   "super_admin",
 ]);
 const MAX_DB_PREFILTER_PROFILE_IDS = 200;
+const DEFAULT_PAGE_SIZE = 20;
+const MAX_PAGE_SIZE = 50;
+const AFFILIATION_LOOKUP_CACHE_TTL_MS = 5 * 60 * 1000;
 
 type ServiceSupabaseClient = NonNullable<
   ReturnType<typeof createSupabaseServiceClient>["client"]
 >;
 type ProfileIdRow = { id: string };
 type CurrentProfileRow = { id: string; timezone: string | null };
+type CurrentRoleRow = { role: UserRole };
 type RelationshipRow = {
   id: string;
   coach_profile_id: string;
@@ -70,6 +74,16 @@ type SummaryRow = Pick<
   Tables<"moksilgi_monthly_summaries">,
   "plan_id" | "month" | "average_rate"
 >;
+type LookupQueryResult<TRow> = {
+  data: TRow[];
+  error: unknown;
+};
+type LookupCacheEntry = {
+  expiresAt: number;
+  rows: Array<{ id: string }>;
+};
+
+const affiliationLookupCache = new Map<string, LookupCacheEntry>();
 
 export type CoachMakerMoksilgiProgressFilters = {
   year: number;
@@ -78,6 +92,8 @@ export type CoachMakerMoksilgiProgressFilters = {
   roleLabel?: string | null;
   generationLabel?: string | null;
   search?: string | null;
+  page?: number | null;
+  pageSize?: number | null;
 };
 
 export type CoachMakerMoksilgiProgressRow = {
@@ -170,6 +186,16 @@ export type CoachMakerMoksilgiProgressAverageRow = {
   cumulative_rate: number;
 };
 
+export type CoachMakerMoksilgiProgressPagination = {
+  hasNext: boolean;
+  hasPrevious: boolean;
+  isPaginated: boolean;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  totalRows: number;
+};
+
 export type GetCoachMakerMoksilgiProgressErrorCode =
   | "UNAUTHORIZED"
   | "PROFILE_NOT_FOUND"
@@ -185,8 +211,23 @@ export type GetCoachMakerMoksilgiProgressResult =
   | {
       data: {
         rows: CoachMakerMoksilgiProgressRow[];
+        printRows: CoachMakerMoksilgiProgressRow[];
+        printRelationshipRows: CoachMakerMoksilgiRelationshipProgressRow[];
         relationshipRows: CoachMakerMoksilgiRelationshipProgressRow[];
         averageRow: CoachMakerMoksilgiProgressAverageRow;
+        overview: {
+          careCounts: {
+            attention: number;
+            missing: number;
+          };
+          statusCounts: {
+            completed: number;
+            inProgress: number;
+            notStarted: number;
+          };
+          totalRows: number;
+        };
+        pagination: CoachMakerMoksilgiProgressPagination;
         upToCurrentRate: number;
         year: number;
         timezone: string;
@@ -288,8 +329,51 @@ function uniqueNonNull(values: Array<string | null | undefined>) {
   return [...new Set(values.filter((value): value is string => Boolean(value)))];
 }
 
+function uniqueSortedNonNull(values: Array<string | null | undefined>) {
+  return uniqueNonNull(values).sort();
+}
+
 function mapById<TRow extends { id: string }>(rows: TRow[]) {
   return new Map(rows.map((row) => [row.id, row]));
+}
+
+async function getCachedLookupRows<TRow extends { id: string }>(
+  kind: string,
+  ids: string[],
+  loadRows: (lookupIds: string[]) => Promise<{
+    data: TRow[] | null;
+    error: unknown;
+  }>,
+): Promise<LookupQueryResult<TRow>> {
+  const lookupIds = uniqueSortedNonNull(ids);
+
+  if (lookupIds.length === 0) {
+    return { data: [], error: null };
+  }
+
+  const cacheKey = `${kind}:${lookupIds.join(",")}`;
+  const cached = affiliationLookupCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return { data: cached.rows as TRow[], error: null };
+  }
+
+  const { data, error } = await loadRows(lookupIds);
+
+  if (error) {
+    return { data: [], error };
+  }
+
+  const rows = data ?? [];
+
+  // Affiliation data is editable in admin settings; this short server cache can delay
+  // reflecting those edits for up to AFFILIATION_LOOKUP_CACHE_TTL_MS.
+  affiliationLookupCache.set(cacheKey, {
+    expiresAt: Date.now() + AFFILIATION_LOOKUP_CACHE_TTL_MS,
+    rows,
+  });
+
+  return { data: rows, error: null };
 }
 
 function limitedProfileIds(rows: ProfileIdRow[] | null) {
@@ -413,6 +497,50 @@ function average(values: number[]) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+function normalizePagination(filters: CoachMakerMoksilgiProgressFilters) {
+  const isPaginated = filters.page !== undefined || filters.pageSize !== undefined;
+  const page = Number.isInteger(filters.page) && (filters.page ?? 0) > 0
+    ? filters.page ?? 1
+    : 1;
+  const requestedPageSize =
+    Number.isInteger(filters.pageSize) && (filters.pageSize ?? 0) > 0
+      ? filters.pageSize ?? DEFAULT_PAGE_SIZE
+      : DEFAULT_PAGE_SIZE;
+
+  return {
+    isPaginated,
+    page,
+    pageSize: Math.min(requestedPageSize, MAX_PAGE_SIZE),
+  };
+}
+
+function buildPaginationMeta({
+  isPaginated,
+  page,
+  pageSize,
+  totalRows,
+}: {
+  isPaginated: boolean;
+  page: number;
+  pageSize: number;
+  totalRows: number;
+}) {
+  const totalPages = isPaginated
+    ? Math.max(1, Math.ceil(totalRows / pageSize))
+    : 1;
+  const safePage = isPaginated ? Math.min(page, totalPages) : 1;
+
+  return {
+    hasNext: isPaginated && safePage < totalPages,
+    hasPrevious: isPaginated && safePage > 1,
+    isPaginated,
+    page: safePage,
+    pageSize,
+    totalPages,
+    totalRows,
+  };
+}
+
 function monthKey(month: number) {
   return `month_${month}_rate` as keyof CoachMakerMoksilgiProgressAverageRow;
 }
@@ -439,17 +567,37 @@ function calculateAverageRow(rows: CoachMakerMoksilgiProgressRow[]) {
   if (rows.length === 0) return emptyAverageRow();
 
   const averageRow = emptyAverageRow();
+  const monthSums = Array.from({ length: 12 }, () => 0);
+  let cumulativeSum = 0;
 
-  for (let month = 1; month <= 12; month += 1) {
-    const key = monthKey(month);
-    averageRow[key] = average(rows.map((row) => safeNumber(row[key])));
+  for (const row of rows) {
+    for (let month = 1; month <= 12; month += 1) {
+      monthSums[month - 1] += safeNumber(row[monthKey(month)]);
+    }
+
+    cumulativeSum += safeNumber(row.cumulative_rate);
   }
 
-  averageRow.cumulative_rate = average(
-    rows.map((row) => safeNumber(row.cumulative_rate)),
-  );
+  for (let month = 1; month <= 12; month += 1) {
+    averageRow[monthKey(month)] = monthSums[month - 1] / rows.length;
+  }
+
+  averageRow.cumulative_rate = cumulativeSum / rows.length;
 
   return averageRow;
+}
+
+function buildProgressSummary(
+  rows: CoachMakerMoksilgiProgressRow[],
+  year: number,
+  timezone: string,
+) {
+  const averageRow = calculateAverageRow(rows);
+
+  return {
+    averageRow,
+    upToCurrentRate: calculateUpToCurrentRate(averageRow, year, timezone),
+  };
 }
 
 function getCurrentMonthCutoff(year: number, timezone: string) {
@@ -473,6 +621,70 @@ function calculateUpToCurrentRate(
       safeNumber(averageRow[monthKey(index + 1)]),
     ),
   );
+}
+
+function calculateRowUpToCurrentRate(
+  row: CoachMakerMoksilgiProgressRow,
+  year: number,
+  timezone: string,
+) {
+  const cutoff = getCurrentMonthCutoff(year, timezone);
+  if (cutoff <= 0) return 0;
+
+  return average(
+    Array.from({ length: cutoff }, (_, index) =>
+      safeNumber(row[monthKey(index + 1)]),
+    ),
+  );
+}
+
+function hasProgressInput(row: CoachMakerMoksilgiProgressRow) {
+  for (let month = 1; month <= 12; month += 1) {
+    if (safeNumber(row[monthKey(month)]) > 0) {
+      return true;
+    }
+  }
+
+  return safeNumber(row.cumulative_rate) > 0;
+}
+
+function buildProgressOverview(
+  rows: CoachMakerMoksilgiProgressRow[],
+  year: number,
+  timezone: string,
+) {
+  const overview = {
+    careCounts: {
+      attention: 0,
+      missing: 0,
+    },
+    statusCounts: {
+      completed: 0,
+      inProgress: 0,
+      notStarted: 0,
+    },
+    totalRows: rows.length,
+  };
+
+  for (const row of rows) {
+    const cumulativeRate = safeNumber(row.cumulative_rate);
+
+    if (cumulativeRate >= 100) {
+      overview.statusCounts.completed += 1;
+    } else if (cumulativeRate > 0) {
+      overview.statusCounts.inProgress += 1;
+    } else {
+      overview.statusCounts.notStarted += 1;
+    }
+
+    if (!hasProgressInput(row)) {
+      overview.careCounts.missing += 1;
+    } else if (calculateRowUpToCurrentRate(row, year, timezone) < 50) {
+      overview.careCounts.attention += 1;
+    }
+  }
+
+  return overview;
 }
 
 function matchesTextFilter(value: string | null, filter: string | null | undefined) {
@@ -508,6 +720,57 @@ function applyFilters(
     .filter((row) => matchesTextFilter(row.generation_label, filters.generationLabel))
     .filter((row) => matchesSearchFilter(row, filters.search))
     .map((row, index) => ({ ...row, index: index + 1 }));
+}
+
+function buildProgressRows({
+  filters,
+  lookups,
+  planRows,
+  profilesById,
+  selectedYear,
+  summariesByPlanId,
+}: {
+  filters: CoachMakerMoksilgiProgressFilters;
+  lookups: {
+    churches: Map<string, ChurchRow>;
+    countries: Map<string, CountryRow>;
+    groups: Map<string, GroupRow>;
+    organizations: Map<string, OrganizationRow>;
+    regions: Map<string, RegionRow>;
+  };
+  planRows: PlanRow[];
+  profilesById: Map<string, ProfileRow>;
+  selectedYear: number;
+  summariesByPlanId: Map<string, SummaryRow[]>;
+}) {
+  return applyFilters(
+    planRows.map((plan, index) =>
+      buildRow(
+        plan,
+        profilesById.get(plan.profile_id),
+        lookups,
+        summariesByPlanId.get(plan.id) ?? [],
+        index + 1,
+      ),
+    ),
+    { ...filters, year: selectedYear },
+  );
+}
+
+function buildPrintRows(rows: CoachMakerMoksilgiProgressRow[]) {
+  return rows;
+}
+
+function buildTableRows(
+  rows: CoachMakerMoksilgiProgressRow[],
+  pagination: Pick<CoachMakerMoksilgiProgressPagination, "isPaginated" | "page" | "pageSize">,
+) {
+  if (!pagination.isPaginated) {
+    return rows;
+  }
+
+  const from = (pagination.page - 1) * pagination.pageSize;
+  return rows.slice(from, from + pagination.pageSize);
 }
 
 function buildRow(
@@ -679,12 +942,15 @@ function buildRelationshipProgressRows({
 export async function getCoachMakerMoksilgiProgress(
   filters: CoachMakerMoksilgiProgressFilters,
 ): Promise<GetCoachMakerMoksilgiProgressResult> {
+  const perf = createApiPerformanceLogger("/coach-maker/moksilgi-progress");
+  const requestedPagination = normalizePagination(filters);
   const selectedYear = validateYear(filters.year)
     ? filters.year
     : getCurrentYearInTimezone(DEFAULT_TIMEZONE);
   const session = await getSession();
 
   if (!session.user) {
+    perf.mark("auth.session_missing");
     return {
       data: null,
       error: { code: "UNAUTHORIZED", message: "로그인이 필요합니다." },
@@ -699,6 +965,8 @@ export async function getCoachMakerMoksilgiProgress(
     .is("deleted_at", null)
     .eq("status", "active")
     .maybeSingle();
+
+  perf.mark("auth.profile_lookup", profile ? 1 : 0);
 
   if (profileError) {
     return {
@@ -725,11 +993,14 @@ export async function getCoachMakerMoksilgiProgress(
   const effectiveTimezone = getEffectiveTimezone(profileRecord.timezone);
   const { data: roles, error: rolesError } = await supabase
     .from("user_roles")
-    .select("id, role, scope_type, scope_id, granted_at, expires_at")
+    .select("role")
     .eq("profile_id", profileId)
+    .in("role", Array.from(ALLOWED_ROLES))
     .eq("status", "active")
     .eq("is_active", true)
     .is("deleted_at", null);
+
+  perf.mark("auth.roles_lookup", roles?.length ?? 0);
 
   if (rolesError) {
     return {
@@ -741,11 +1012,11 @@ export async function getCoachMakerMoksilgiProgress(
     };
   }
 
-  const activeRoles = (roles ?? []) as ActiveRoleSlim[];
-  const roleValues = activeRoles.map((role) => role.role);
+  const roleValues = ((roles ?? []) as CurrentRoleRow[]).map((role) => role.role);
   const hasAllowedRole = roleValues.some((role) => ALLOWED_ROLES.has(role));
 
   if (!hasAllowedRole) {
+    perf.mark("auth.access_denied");
     return {
       data: null,
       error: {
@@ -758,6 +1029,7 @@ export async function getCoachMakerMoksilgiProgress(
   const serviceClientResult = getServiceClientResult();
 
   if (!serviceClientResult.ok) {
+    perf.mark("service.service_client_unavailable");
     return { data: null, error: serviceClientResult.error };
   }
 
@@ -785,6 +1057,7 @@ export async function getCoachMakerMoksilgiProgress(
     }
 
     activeRelationships = (relationships ?? []) as RelationshipRow[];
+    perf.mark("data.relationships_query", activeRelationships.length);
     accessibleProfileIds = [
       ...new Set(
         activeRelationships.map(
@@ -795,11 +1068,20 @@ export async function getCoachMakerMoksilgiProgress(
 
     if (accessibleProfileIds.length === 0) {
       const averageRow = emptyAverageRow();
+      const pagination = buildPaginationMeta({
+        ...requestedPagination,
+        totalRows: 0,
+      });
+      perf.mark("build.complete", 0);
       return {
         data: {
           rows: [],
+          printRows: [],
+          printRelationshipRows: [],
           relationshipRows: [],
           averageRow,
+          overview: buildProgressOverview([], selectedYear, effectiveTimezone),
+          pagination,
           upToCurrentRate: 0,
           year: selectedYear,
           timezone: effectiveTimezone,
@@ -826,9 +1108,11 @@ export async function getCoachMakerMoksilgiProgress(
     }
 
     activeRelationships = (relationships ?? []) as RelationshipRow[];
+    perf.mark("data.relationships_query", activeRelationships.length);
   }
 
   const dbPrefilters = await buildDbPrefilters(serviceClient, filters);
+  perf.mark("prefilter.profile_ids");
   const teamNamePattern = buildIlikePattern(filters.teamName);
   const roleLabelPattern = buildIlikePattern(filters.roleLabel);
   const regionNamePattern = buildPostgrestOrIlikePattern(filters.regionName);
@@ -886,6 +1170,7 @@ export async function getCoachMakerMoksilgiProgress(
   }
 
   const { data: plans, error: plansError } = await plansQuery;
+  perf.mark("data.plans_query", plans?.length ?? 0);
 
   if (plansError) {
     return {
@@ -928,6 +1213,10 @@ export async function getCoachMakerMoksilgiProgress(
           .is("deleted_at", null)
       : Promise.resolve({ data: [], error: null }),
   ]);
+  perf.mark(
+    "data.profiles_summaries_query",
+    (profilesResult.data?.length ?? 0) + (summariesResult.data?.length ?? 0),
+  );
 
   if (profilesResult.error) {
     return {
@@ -950,13 +1239,13 @@ export async function getCoachMakerMoksilgiProgress(
   }
 
   const profileRows = (profilesResult.data ?? []) as ProfileRow[];
-  const countryIds = uniqueNonNull(profileRows.map((profile) => profile.country_id));
-  const regionIds = uniqueNonNull(profileRows.map((profile) => profile.region_id));
-  const organizationIds = uniqueNonNull(
+  const countryIds = uniqueSortedNonNull(profileRows.map((profile) => profile.country_id));
+  const regionIds = uniqueSortedNonNull(profileRows.map((profile) => profile.region_id));
+  const organizationIds = uniqueSortedNonNull(
     profileRows.map((profile) => profile.organization_id),
   );
-  const churchIds = uniqueNonNull(profileRows.map((profile) => profile.church_id));
-  const groupIds = uniqueNonNull(profileRows.map((profile) => profile.group_id));
+  const churchIds = uniqueSortedNonNull(profileRows.map((profile) => profile.church_id));
+  const groupIds = uniqueSortedNonNull(profileRows.map((profile) => profile.group_id));
   const [
     countriesResult,
     regionsResult,
@@ -964,33 +1253,57 @@ export async function getCoachMakerMoksilgiProgress(
     churchesResult,
     groupsResult,
   ] = await Promise.all([
-    countryIds.length > 0
-      ? serviceClient
-          .from("countries")
-          .select("id, name, code")
-          .in("id", countryIds)
-      : Promise.resolve({ data: [], error: null }),
-    regionIds.length > 0
-      ? serviceClient.from("regions").select("id, name").in("id", regionIds)
-      : Promise.resolve({ data: [], error: null }),
-    organizationIds.length > 0
-      ? serviceClient
-          .from("organizations")
-          .select("id, name")
-          .in("id", organizationIds)
-          .is("deleted_at", null)
-      : Promise.resolve({ data: [], error: null }),
-    churchIds.length > 0
-      ? serviceClient.from("churches").select("id, name").in("id", churchIds)
-      : Promise.resolve({ data: [], error: null }),
-    groupIds.length > 0
-      ? serviceClient
-          .from("groups")
-          .select("id, name")
-          .in("id", groupIds)
-          .is("deleted_at", null)
-      : Promise.resolve({ data: [], error: null }),
+    getCachedLookupRows<CountryRow>("countries", countryIds, async (lookupIds) => {
+      const { data, error } = await serviceClient
+        .from("countries")
+        .select("id, name, code")
+        .in("id", lookupIds);
+
+      return { data: data as CountryRow[] | null, error };
+    }),
+    getCachedLookupRows<RegionRow>("regions", regionIds, async (lookupIds) => {
+      const { data, error } = await serviceClient
+        .from("regions")
+        .select("id, name")
+        .in("id", lookupIds);
+
+      return { data: data as RegionRow[] | null, error };
+    }),
+    getCachedLookupRows<OrganizationRow>("organizations", organizationIds, async (lookupIds) => {
+      const { data, error } = await serviceClient
+        .from("organizations")
+        .select("id, name")
+        .in("id", lookupIds)
+        .is("deleted_at", null);
+
+      return { data: data as OrganizationRow[] | null, error };
+    }),
+    getCachedLookupRows<ChurchRow>("churches", churchIds, async (lookupIds) => {
+      const { data, error } = await serviceClient
+        .from("churches")
+        .select("id, name")
+        .in("id", lookupIds);
+
+      return { data: data as ChurchRow[] | null, error };
+    }),
+    getCachedLookupRows<GroupRow>("groups", groupIds, async (lookupIds) => {
+      const { data, error } = await serviceClient
+        .from("groups")
+        .select("id, name")
+        .in("id", lookupIds)
+        .is("deleted_at", null);
+
+      return { data: data as GroupRow[] | null, error };
+    }),
   ]);
+  perf.mark(
+    "lookup.affiliations_query",
+    (countriesResult.data?.length ?? 0) +
+      (regionsResult.data?.length ?? 0) +
+      (organizationsResult.data?.length ?? 0) +
+      (churchesResult.data?.length ?? 0) +
+      (groupsResult.data?.length ?? 0),
+  );
 
   const lookupError =
     countriesResult.error ??
@@ -1025,37 +1338,51 @@ export async function getCoachMakerMoksilgiProgress(
     summariesByPlanId.set(summary.plan_id, current);
   }
 
-  const rows = applyFilters(
-    planRows.map((plan, index) =>
-      buildRow(
-        plan,
-        profileById.get(plan.profile_id),
-        lookups,
-        summariesByPlanId.get(plan.id) ?? [],
-        index + 1,
-      ),
-    ),
-    { ...filters, year: selectedYear },
-  );
-  const averageRow = calculateAverageRow(rows);
-  const rowsByProfileId = new Map(rows.map((row) => [row.profile_id, row]));
+  const filteredRows = buildProgressRows({
+    filters,
+    lookups,
+    planRows,
+    profilesById: profileById,
+    selectedYear,
+    summariesByPlanId,
+  });
+  const printRows = buildPrintRows(filteredRows);
+  const summary = buildProgressSummary(printRows, selectedYear, effectiveTimezone);
+  const overview = buildProgressOverview(printRows, selectedYear, effectiveTimezone);
+  const pagination = buildPaginationMeta({
+    ...requestedPagination,
+    totalRows: printRows.length,
+  });
+  const tableRows = buildTableRows(printRows, pagination);
+  const rowsByProfileId = new Map(tableRows.map((row) => [row.profile_id, row]));
+  const printRowsByProfileId = new Map(printRows.map((row) => [row.profile_id, row]));
   const relationshipRows = buildRelationshipProgressRows({
     profilesById: profileById,
     relationships: activeRelationships,
     rowsByProfileId,
     summariesByPlanId,
   });
+  const printRelationshipRows = buildRelationshipProgressRows({
+    profilesById: profileById,
+    relationships: activeRelationships,
+    rowsByProfileId: printRowsByProfileId,
+    summariesByPlanId,
+  });
+
+  perf.mark("build.rows", filteredRows.length);
+  perf.mark("build.table_rows", tableRows.length);
+  perf.mark("build.complete", tableRows.length);
 
   return {
     data: {
-      rows,
+      rows: tableRows,
+      printRows,
+      printRelationshipRows,
       relationshipRows,
-      averageRow,
-      upToCurrentRate: calculateUpToCurrentRate(
-        averageRow,
-        selectedYear,
-        effectiveTimezone,
-      ),
+      averageRow: summary.averageRow,
+      overview,
+      pagination,
+      upToCurrentRate: summary.upToCurrentRate,
       year: selectedYear,
       timezone: effectiveTimezone,
       scopeMode: hasBroadAccess ? "all" : "direct_coaching_relationships",

@@ -89,7 +89,13 @@ type RoleRecord = {
   granted_at: string;
 };
 
-export async function getMyProfile(): Promise<MyProfileResult> {
+type ProfilePerformanceLogger = {
+  mark: (stage: string, resultCount?: number) => void;
+};
+
+export async function getMyProfile(
+  perf?: ProfilePerformanceLogger,
+): Promise<MyProfileResult> {
   const session = await getSession();
 
   if (!session.user) {
@@ -113,6 +119,7 @@ export async function getMyProfile(): Promise<MyProfileResult> {
       .is("deleted_at", null)
       .neq("status", "anonymized")
       .maybeSingle();
+    perf?.mark("auth.profile_lookup", profile ? 1 : 0);
 
     if (profileError) {
       return {
@@ -159,6 +166,12 @@ export async function getMyProfile(): Promise<MyProfileResult> {
             .maybeSingle()
         : Promise.resolve({ data: null, error: null }),
     ]);
+    perf?.mark(
+      "profile.affiliations_query",
+      [countryResult.data, organizationResult.data, churchResult.data].filter(
+        Boolean,
+      ).length,
+    );
 
     const country = countryResult.data as CountryLookup | null;
     const organization = organizationResult.data as NameLookup | null;
@@ -172,6 +185,7 @@ export async function getMyProfile(): Promise<MyProfileResult> {
       .eq("is_active", true)
       .is("deleted_at", null)
       .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+    perf?.mark("profile.roles_query", roles?.length ?? 0);
 
     if (rolesError) {
       return {
