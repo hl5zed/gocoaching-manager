@@ -111,12 +111,12 @@ function SummaryCard({
   return (
     <Card>
       <CardContent className="min-w-0 p-5">
-        <p className="text-sm font-medium text-slate-500">{title}</p>
+        <p className="text-sm font-medium text-ink-faint">{title}</p>
         <p className="mt-2 break-words text-3xl font-semibold">{value}</p>
         {typeof progressValue === "number" ? (
           <ProgressBar className="mt-4" showValue={false} value={progressValue} />
         ) : null}
-        <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>
+        <p className="mt-3 text-sm leading-6 text-ink-muted">{description}</p>
       </CardContent>
     </Card>
   );
@@ -225,7 +225,7 @@ function ProfileMissing() {
   return (
     <Card className="mt-8">
       <CardContent className="p-6">
-      <p className="text-slate-700">아직 프로필이 생성되지 않았습니다.</p>
+      <p className="text-ink-base">아직 프로필이 생성되지 않았습니다.</p>
       <ButtonLink className="mt-4" href="/profile" icon="users" variant="secondary">
         프로필 보기
       </ButtonLink>
@@ -253,7 +253,7 @@ export default async function CoachMakerMoksilgiProgressPage({
   }
 
   return (
-    <main className="print-root min-h-screen bg-[var(--trust-bg)] px-4 py-6 text-slate-950 sm:px-6 sm:py-10">
+    <main className="print-root min-h-screen bg-[var(--trust-bg)] px-4 py-6 text-ink-strong sm:px-6 sm:py-10">
       <section className="mx-auto w-full max-w-7xl">
         <div className="print-report-title print-only">
           <h1>
@@ -301,11 +301,11 @@ export default async function CoachMakerMoksilgiProgressPage({
         {result.error?.code === "PROFILE_NOT_FOUND" ? (
           <ProfileMissing />
         ) : result.error?.code === "ACCESS_DENIED" ? (
-          <section className="mt-8 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <section className="mt-8 rounded-control border border-red-200 bg-red-50 p-4 text-sm text-red-800">
             <I18nText k="moksilgi.accessDenied" fallback="코치메이커 권한이 없습니다." />
           </section>
         ) : result.error ? (
-          <section className="mt-8 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <section className="mt-8 rounded-control border border-red-200 bg-red-50 p-4 text-sm text-red-800">
             <I18nText k="moksilgi.loadFailed" fallback="지금 전체 목실기 성취 현황을 불러올 수 없습니다." />
           </section>
         ) : (
@@ -346,14 +346,14 @@ export default async function CoachMakerMoksilgiProgressPage({
 
             {result.data.rows.length === 0 ? (
               <Card className="mt-8">
-                <CardContent className="px-4 py-6 text-center text-slate-500">
+                <CardContent className="px-4 py-6 text-center text-ink-faint">
                   <p>선택한 조건에 해당하는 목실기 기록이 없습니다.</p>
                   <p className="mt-1">필터를 초기화하거나 다른 조건으로 다시 조회해 주세요.</p>
                 </CardContent>
               </Card>
             ) : (
               <>
-                <p className="print-hidden mt-6 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
+                <p className="print-hidden mt-6 rounded-md border border-line-base bg-surface-card px-4 py-3 text-sm leading-6 text-ink-muted">
                   화면 내 보기 필터는 이미 조회된 결과 안에서만 표시를
                   좁힙니다. 관심 필요 대상자 표와 월별 표는 가로로 스크롤해
                   전체 내용을 확인하세요.

@@ -82,7 +82,7 @@ function assignmentStatusClass(status: AssignCandidate["assignmentStatus"]) {
     return "border-amber-200 bg-amber-50 text-amber-700";
   }
 
-  return "border-slate-200 bg-slate-50 text-slate-700";
+  return "border-line-base bg-surface-sunken text-ink-base";
 }
 
 function inferScope(data: CoachingGenealogyData) {
@@ -114,8 +114,8 @@ function ResultList({
 
   return (
     <div>
-      <p className="text-sm font-semibold text-slate-800">{title}</p>
-      <ul className="mt-2 space-y-1 text-sm text-slate-600">
+      <p className="text-sm font-semibold text-ink-base">{title}</p>
+      <ul className="mt-2 space-y-1 text-sm text-ink-muted">
         {items.map((item, index) => (
           <li key={`${item.coacheeProfileId ?? item.profileId ?? "item"}-${index}`}>
             {item.message}
@@ -272,9 +272,9 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-md border border-slate-200 bg-white p-5">
-        <h2 className="text-xl font-semibold text-slate-950">배정 관리</h2>
-        <p className="mt-2 text-sm text-slate-600">
+      <div className="rounded-card border border-line-base bg-surface-card p-5">
+        <h2 className="text-xl font-semibold text-ink-strong">배정 관리</h2>
+        <p className="mt-2 text-sm text-ink-muted">
           코치와 코치이를 배정하고, 세대를 지정할 수 있습니다. 세대 변경은
           자동으로 이력에 기록됩니다.
         </p>
@@ -289,16 +289,16 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
         </p>
       </div>
 
-      <div className="rounded-md border border-slate-200 bg-white p-5">
+      <div className="rounded-card border border-line-base bg-surface-card p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-slate-950">필터</h3>
-            <p className="mt-1 text-sm text-slate-600">
+            <h3 className="text-lg font-semibold text-ink-strong">필터</h3>
+            <p className="mt-1 text-sm text-ink-muted">
               코치와 코치이 후보, 현재 배정 관계 목록에 함께 적용됩니다.
             </p>
           </div>
           <button
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+            className="rounded-control border border-line-base px-3 py-2 text-sm font-medium text-ink-base"
             onClick={resetAssignFilters}
             type="button"
           >
@@ -307,10 +307,10 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-ink-base">
             국가
             <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
               onChange={(event) => updateQuery("countryId", event.target.value)}
               value={data.filters.countryId ?? ""}
             >
@@ -327,10 +327,10 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
             </select>
           </label>
 
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-ink-base">
             교회
             <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
               onChange={(event) => updateQuery("churchId", event.target.value)}
               value={data.filters.churchId ?? ""}
             >
@@ -345,10 +345,10 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
             </select>
           </label>
 
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-ink-base">
             세대
             <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
               onChange={(event) =>
                 updateQuery("generationNumber", event.target.value)
               }
@@ -368,10 +368,10 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
             </select>
           </label>
 
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-ink-base">
             역할
             <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
               onChange={(event) => updateQuery("role", event.target.value)}
               value={data.filters.role ?? "all"}
             >
@@ -384,7 +384,7 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
           </label>
 
           <form
-            className="text-sm font-medium text-slate-700"
+            className="text-sm font-medium text-ink-base"
             onSubmit={(event) => {
               event.preventDefault();
               updateQuery("q", searchText.trim());
@@ -393,13 +393,13 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
             검색어
             <div className="mt-2 flex gap-2">
               <input
-                className="min-w-0 flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="min-w-0 flex-1 rounded-control border border-line-base px-3 py-2 text-sm"
                 onChange={(event) => setSearchText(event.target.value)}
                 placeholder="이름, 이메일"
                 value={searchText}
               />
               <button
-                className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+                className="rounded-control border border-line-base px-3 py-2 text-sm font-medium text-ink-base"
                 type="submit"
               >
                 적용
@@ -411,12 +411,12 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
 
       <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
         <div className="space-y-6">
-          <section className="rounded-md border border-slate-200 bg-white p-5">
-            <h3 className="text-lg font-semibold text-slate-950">코치 선택</h3>
-            <label className="mt-4 block text-sm font-medium text-slate-700">
+          <section className="rounded-card border border-line-base bg-surface-card p-5">
+            <h3 className="text-lg font-semibold text-ink-strong">코치 선택</h3>
+            <label className="mt-4 block text-sm font-medium text-ink-base">
               배정할 코치
               <select
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
                 onChange={(event) => handleCoachChange(event.target.value)}
                 value={selectedCoachId}
               >
@@ -430,19 +430,19 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
               </select>
             </label>
             {data.assignData.coaches.length === 0 ? (
-              <p className="mt-3 rounded-md bg-slate-50 p-3 text-sm text-slate-600">
+              <p className="mt-3 rounded-md bg-surface-app p-3 text-sm text-ink-muted">
                 배정 가능한 코치가 없습니다.
               </p>
             ) : selectedCoach ? (
-              <div className="mt-4 rounded-md bg-slate-50 p-4 text-sm text-slate-700">
-                <p className="font-semibold text-slate-900">{selectedCoach.label}</p>
+              <div className="mt-4 rounded-md bg-surface-app p-4 text-sm text-ink-base">
+                <p className="font-semibold text-ink-strong">{selectedCoach.label}</p>
                 <p className="mt-1">{displayValue(selectedCoach.email)}</p>
                 <p className="mt-1">
                   {generationLabel(selectedCoach.generationNumber)} ·{" "}
                   {countryLabel(selectedCoach)} ·{" "}
                   {displayValue(selectedCoach.churchName)}
                 </p>
-                <p className="mt-2 text-slate-600">
+                <p className="mt-2 text-ink-muted">
                   추천 세대:{" "}
                   {recommendedGeneration
                     ? `${recommendedGeneration}세대`
@@ -452,14 +452,14 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
             ) : null}
           </section>
 
-          <section className="rounded-md border border-slate-200 bg-white p-5">
-            <h3 className="text-lg font-semibold text-slate-950">세대 지정</h3>
-            <p className="mt-1 text-sm text-slate-600">
+          <section className="rounded-card border border-line-base bg-surface-card p-5">
+            <h3 className="text-lg font-semibold text-ink-strong">세대 지정</h3>
+            <p className="mt-1 text-sm text-ink-muted">
               선택한 코치이에게만 적용됩니다. 비워두면 세대는 변경하지 않습니다.
             </p>
 
             <div className="mt-4 space-y-3">
-              <label className="flex items-center gap-2 text-sm text-slate-700">
+              <label className="flex items-center gap-2 text-sm text-ink-base">
                 <input
                   checked={generationMode === "none"}
                   onChange={() => setGenerationMode("none")}
@@ -467,7 +467,7 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
                 />
                 세대 변경 안 함
               </label>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
+              <label className="flex items-center gap-2 text-sm text-ink-base">
                 <input
                   checked={generationMode === "option"}
                   onChange={() => setGenerationMode("option")}
@@ -477,7 +477,7 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
               </label>
               {generationMode === "option" ? (
                 <select
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
                   onChange={(event) => setGenerationOption(event.target.value)}
                   value={generationOption}
                 >
@@ -492,7 +492,7 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
                   ))}
                 </select>
               ) : null}
-              <label className="flex items-center gap-2 text-sm text-slate-700">
+              <label className="flex items-center gap-2 text-sm text-ink-base">
                 <input
                   checked={generationMode === "custom"}
                   onChange={() => setGenerationMode("custom")}
@@ -502,7 +502,7 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
               </label>
               {generationMode === "custom" ? (
                 <input
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-control border border-line-base px-3 py-2 text-sm"
                   min={1}
                   onChange={(event) => setCustomGeneration(event.target.value)}
                   placeholder="예: 6"
@@ -514,19 +514,19 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
           </section>
         </div>
 
-        <section className="rounded-md border border-slate-200 bg-white p-5">
+        <section className="rounded-card border border-line-base bg-surface-card p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-lg font-semibold text-slate-950">
+              <h3 className="text-lg font-semibold text-ink-strong">
                 코치이 선택
               </h3>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-ink-muted">
                 선택됨 {selectedCoacheeIds.length}명 / 후보{" "}
                 {selectableCoachees.length}명
               </p>
             </div>
             <button
-              className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="rounded-control bg-navy-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
               disabled={
                 isPending || !selectedCoachId || selectedCoacheeIds.length === 0
               }
@@ -538,7 +538,7 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
           </div>
 
           {message ? (
-            <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+            <div className="mt-4 rounded-control border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
               {message}
             </div>
           ) : null}
@@ -548,7 +548,7 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
             </div>
           ) : null}
           {lastResult ? (
-            <div className="mt-4 space-y-3 rounded-md bg-slate-50 p-4">
+            <div className="mt-4 space-y-3 rounded-md bg-surface-app p-4">
               <ResultList items={lastResult.created} title="생성된 관계" />
               <ResultList
                 items={lastResult.updatedGenerations.map((item) => ({
@@ -563,13 +563,13 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
           ) : null}
 
           {selectableCoachees.length === 0 ? (
-            <p className="mt-5 rounded-md bg-slate-50 p-4 text-sm text-slate-600">
+            <p className="mt-5 rounded-md bg-surface-app p-4 text-sm text-ink-muted">
               배정 가능한 코치이가 없습니다.
             </p>
           ) : (
             <div className="mt-5 overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <table className="min-w-full divide-y divide-line-base text-sm">
+                <thead className="bg-surface-sunken text-left text-xs font-semibold uppercase tracking-wide text-ink-faint">
                   <tr>
                     <th className="px-3 py-3">선택</th>
                     <th className="px-3 py-3">코치이</th>
@@ -579,7 +579,7 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
                     <th className="px-3 py-3">배정 상태</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-line-soft">
                   {selectableCoachees.map((coachee) => (
                     <tr key={coachee.profileId}>
                       <td className="px-3 py-3">
@@ -590,10 +590,10 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
                         />
                       </td>
                       <td className="px-3 py-3">
-                        <p className="font-medium text-slate-950">
+                        <p className="font-medium text-ink-strong">
                           {coachee.label}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-ink-faint">
                           {displayValue(coachee.email)}
                         </p>
                       </td>
@@ -602,7 +602,7 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
                       </td>
                       <td className="px-3 py-3">
                         <p>{countryLabel(coachee)}</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-ink-faint">
                           {displayValue(coachee.churchName)}
                         </p>
                       </td>
@@ -627,18 +627,18 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
         </section>
       </div>
 
-      <section className="rounded-md border border-slate-200 bg-white p-5">
-        <h3 className="text-lg font-semibold text-slate-950">
+      <section className="rounded-card border border-line-base bg-surface-card p-5">
+        <h3 className="text-lg font-semibold text-ink-strong">
           현재 배정 관계 목록
         </h3>
         {data.assignData.relationships.length === 0 ? (
-          <p className="mt-4 rounded-md bg-slate-50 p-4 text-sm text-slate-600">
+          <p className="mt-4 rounded-md bg-surface-app p-4 text-sm text-ink-muted">
             현재 조건에 해당하는 활성 배정 관계가 없습니다.
           </p>
         ) : (
           <div className="mt-4 overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <table className="min-w-full divide-y divide-line-base text-sm">
+              <thead className="bg-surface-sunken text-left text-xs font-semibold uppercase tracking-wide text-ink-faint">
                 <tr>
                   <th className="px-3 py-3">코치</th>
                   <th className="px-3 py-3">코치이</th>
@@ -648,22 +648,22 @@ export function GenealogyAssignPanel({ data }: AssignPanelProps) {
                   <th className="px-3 py-3">생성일</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-line-soft">
                 {data.assignData.relationships.map((relationship) => (
                   <tr key={relationship.relationshipId}>
                     <td className="px-3 py-3">
-                      <p className="font-medium text-slate-950">
+                      <p className="font-medium text-ink-strong">
                         {relationship.coachLabel}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-ink-faint">
                         {generationLabel(relationship.coachGenerationNumber)}
                       </p>
                     </td>
                     <td className="px-3 py-3">
-                      <p className="font-medium text-slate-950">
+                      <p className="font-medium text-ink-strong">
                         {relationship.coacheeLabel}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-ink-faint">
                         {generationLabel(relationship.coacheeGenerationNumber)}
                       </p>
                     </td>

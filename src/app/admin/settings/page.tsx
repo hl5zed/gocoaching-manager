@@ -98,7 +98,7 @@ export default async function AdminSettingsPage() {
     }));
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <section className="mx-auto w-full max-w-7xl">
         <Card>
           <CardHeader className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -126,22 +126,22 @@ export default async function AdminSettingsPage() {
         <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {settingCards.map((card) => (
             <Link
-              className="rounded-md border border-slate-200 bg-white p-5 transition hover:border-slate-300 hover:bg-slate-50"
+              className="rounded-card border border-line-base bg-surface-card p-5 transition hover:border-line-base hover:bg-surface-sunken"
               href={card.href}
               key={card.href}
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <h2 className="text-lg font-semibold text-slate-950">
+                <h2 className="text-lg font-semibold text-ink-strong">
                   {card.title}
                 </h2>
                 <Badge className="shrink-0" tone={card.statusTone}>
                   {card.status}
                 </Badge>
               </div>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
+              <p className="mt-3 text-sm leading-6 text-ink-muted">
                 {card.description}
               </p>
-              <p className="mt-3 rounded-md border border-slate-100 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">
+              <p className="mt-3 rounded-md border border-line-soft bg-surface-app px-3 py-2 text-xs leading-5 text-ink-faint">
                 적용 위치: {card.applyInfo}
               </p>
             </Link>
@@ -150,10 +150,10 @@ export default async function AdminSettingsPage() {
 
         <section className="mt-8">
           <div>
-            <h2 className="text-xl font-semibold text-slate-950">
+            <h2 className="text-xl font-semibold text-ink-strong">
               운영 기본값 설정
             </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-ink-muted">
               기본 언어, 기본 국가, 초대 만료 기간, 인쇄 옵션, 운영 공지,
               조직별 기본 권한을 관리합니다. 저장만 되는 항목과 실제 적용 중인
               항목을 구분해 확인해 주세요.
@@ -180,7 +180,7 @@ export default async function AdminSettingsPage() {
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {systemSettingSections.map((section) => (
-              <Card className="bg-slate-50" key={section.title}>
+              <Card className="bg-surface-sunken" key={section.title}>
                 <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <CardTitle className="text-lg">{section.title}</CardTitle>
                   <Badge className="shrink-0" tone="warning">
@@ -188,10 +188,10 @@ export default async function AdminSettingsPage() {
                   </Badge>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm leading-6 text-slate-600">
+                  <p className="text-sm leading-6 text-ink-muted">
                     {section.description}
                   </p>
-                  <p className="mt-3 text-xs font-medium text-slate-500">
+                  <p className="mt-3 text-xs font-medium text-ink-faint">
                     다음 단계에서 저장 기능과 메일 서비스 연결 예정
                   </p>
                 </CardContent>

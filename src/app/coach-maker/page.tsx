@@ -52,27 +52,27 @@ function SummaryCard({
     <div
       className={`min-w-0 rounded-md border p-5 ${
         accent === "strong"
-          ? "border-slate-300 bg-slate-950 text-white"
-          : "border-slate-200 bg-white"
+          ? "border-line-base bg-navy-900 text-white"
+          : "border-line-base bg-surface-card"
       }`}
     >
       <p
         className={`text-sm font-medium ${
-          accent === "strong" ? "text-slate-300" : "text-slate-500"
+          accent === "strong" ? "text-ink-faint" : "text-ink-faint"
         }`}
       >
         {title}
       </p>
       <p
         className={`mt-2 break-words text-3xl font-semibold ${
-          accent === "strong" ? "text-white" : "text-slate-950"
+          accent === "strong" ? "text-white" : "text-ink-strong"
         }`}
       >
         {value}
       </p>
       <p
         className={`mt-2 text-sm leading-6 ${
-          accent === "strong" ? "text-slate-200" : "text-slate-600"
+          accent === "strong" ? "text-ink-muted" : "text-ink-muted"
         }`}
       >
         {description}
@@ -83,12 +83,12 @@ function SummaryCard({
 
 function ProfileMissing() {
   return (
-    <section className="mt-8 rounded-md border border-slate-200 bg-white p-4 sm:p-6">
-      <p className="text-slate-700">
+    <section className="mt-8 rounded-card border border-line-base bg-surface-card p-4 sm:p-6">
+      <p className="text-ink-base">
         <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
       </p>
       <Link
-        className="mt-4 inline-block text-sm font-medium text-slate-700 underline"
+        className="mt-4 inline-block text-sm font-medium text-brand-600 underline"
         href="/profile"
       >
         <I18nText k="dashboard.viewProfile" fallback="프로필 보기" />
@@ -184,30 +184,30 @@ function WorkQueueSection({
   ];
 
   return (
-    <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
+    <section className="mt-8 rounded-card border border-line-base bg-surface-card p-6">
       <div>
-        <p className="text-sm font-medium text-slate-500">
+        <p className="text-sm font-medium text-ink-faint">
           오늘/이번 주 처리 필요
         </p>
-        <h2 className="mt-1 text-xl font-semibold text-slate-950">
+        <h2 className="mt-1 text-xl font-semibold text-ink-strong">
           우선 확인할 작업
         </h2>
       </div>
       <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
           <article
-            className="min-w-0 rounded-md border border-slate-200 bg-slate-50 p-4"
+            className="min-w-0 rounded-card border border-line-base bg-surface-app p-4"
             key={card.title}
           >
-            <p className="text-sm font-medium text-slate-500">{card.title}</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-950">
+            <p className="text-sm font-medium text-ink-faint">{card.title}</p>
+            <p className="mt-2 text-3xl font-semibold text-ink-strong">
               {card.value}
             </p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+            <p className="mt-2 text-sm leading-6 text-ink-muted">
               {card.description}
             </p>
             <Link
-              className="mt-4 inline-flex min-h-10 w-full justify-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+              className="mt-4 inline-flex min-h-10 w-full justify-center rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm font-semibold text-ink-base hover:bg-surface-sunken sm:w-auto"
               href={card.href}
             >
               {card.action}
@@ -216,7 +216,7 @@ function WorkQueueSection({
         ))}
         <ActionMemoTaskSummary />
       </div>
-      <div className="mt-4 text-sm text-slate-500">
+      <div className="mt-4 text-sm text-ink-faint">
         목실기 기준 연도: {year}
       </div>
     </section>
@@ -232,23 +232,23 @@ function QuickCheckSection({
 }) {
   return (
     <section
-      className="mt-8 rounded-md border border-slate-200 bg-white p-4 sm:p-6"
+      className="mt-8 rounded-card border border-line-base bg-surface-card p-4 sm:p-6"
       id="quick-check"
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-slate-500">
+          <p className="text-sm font-medium text-ink-faint">
             <I18nText k="moksilgi.quickCheck" fallback="빠른 점검" />
           </p>
-          <h2 className="mt-1 text-xl font-semibold text-slate-950">
+          <h2 className="mt-1 text-xl font-semibold text-ink-strong">
             <I18nText k="moksilgi.attentionUsers" fallback="관심 필요 대상자" />
           </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-ink-muted">
             성취율이 낮은 대상자 중 낮은 순서로 최대 5명만 표시합니다.
           </p>
         </div>
         <Link
-          className="inline-flex w-full justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto"
+          className="inline-flex w-full justify-center rounded-md border border-line-base bg-surface-card px-4 py-2 text-sm font-semibold text-ink-base hover:bg-surface-sunken sm:w-auto"
           href={`/coach-maker/moksilgi-progress?year=${year}`}
         >
           <I18nText k="moksilgi.viewOverallProgress" fallback="전체 목실기 현황 보기" />
@@ -256,18 +256,18 @@ function QuickCheckSection({
       </div>
 
       {attention.attentionRows.length === 0 ? (
-        <p className="mt-5 rounded-md border border-slate-200 bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">
+        <p className="mt-5 rounded-md border border-line-base bg-surface-app px-4 py-5 text-center text-sm text-ink-faint">
           <I18nText k="moksilgi.noAttentionUsers" fallback="관심 필요 대상자가 없습니다." />
         </p>
       ) : (
         <>
-          <p className="mt-5 text-sm text-slate-500 md:hidden">
+          <p className="mt-5 text-sm text-ink-faint md:hidden">
             표는 가로로 스크롤해 전체 내용을 확인하세요.
           </p>
           <div className="mt-5 overflow-x-auto">
             <table className="w-full min-w-[720px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-600">
+              <tr className="border-b border-line-soft text-ink-muted">
                 <th className="px-3 py-2 font-semibold">
                   <I18nText k="members.name" fallback="이름" />
                 </th>
@@ -280,13 +280,13 @@ function QuickCheckSection({
             </thead>
             <tbody>
               {attention.attentionRows.map((item) => (
-                <tr className="border-b border-slate-100" key={item.row.plan_id}>
-                  <td className="px-3 py-3 font-medium text-slate-950">
+                <tr className="border-b border-line-soft" key={item.row.plan_id}>
+                  <td className="px-3 py-3 font-medium text-ink-strong">
                     {personName(item.row)}
                   </td>
-                  <td className="px-3 py-3 text-slate-700">
+                  <td className="px-3 py-3 text-ink-base">
                     <p>국가/소속: {displayValue(item.row.region_name)}</p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-ink-faint">
                       공동체/팀: {displayValue(item.row.team_name)}
                     </p>
                   </td>
@@ -295,7 +295,7 @@ function QuickCheckSection({
                   </td>
                   <td className="px-3 py-3">
                     <Link
-                      className="inline-flex rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      className="inline-flex rounded-control border border-line-base px-3 py-1.5 text-sm font-medium text-ink-base hover:bg-surface-sunken"
                       href={`/coach-maker/moksilgi-progress?year=${year}&memberId=${encodeURIComponent(item.row.profile_id)}`}
                     >
                       <I18nText k="moksilgi.viewProgress" fallback="현황 보기" />
@@ -318,17 +318,17 @@ function CoachStatsSection({
   data: CoachMakerCoachStatsData;
 }) {
   return (
-    <section className="mt-8 rounded-md border border-slate-200 bg-white p-4 sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-5">
+    <section className="mt-8 rounded-card border border-line-base bg-surface-card p-4 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line-soft pb-5">
         <div>
-          <p className="text-sm font-medium text-slate-500">
+          <p className="text-sm font-medium text-ink-faint">
             <I18nText k="coachMaker.coachStatusHeading" fallback="코치별 현황" /> ·{" "}
             {data.weekRange.start} ~ {data.weekRange.end}
           </p>
-          <h2 className="mt-1 text-xl font-semibold text-slate-950">
+          <h2 className="mt-1 text-xl font-semibold text-ink-strong">
             코칭 진행 요약
           </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-ink-muted">
             {data.scopeLabel}{" "}
             <I18nText
               k="coachMaker.coachStatusHelp"
@@ -337,7 +337,7 @@ function CoachStatsSection({
           </p>
         </div>
         <Link
-          className="inline-flex w-full justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto"
+          className="inline-flex w-full justify-center rounded-md border border-line-base bg-surface-card px-4 py-2 text-sm font-semibold text-ink-base hover:bg-surface-sunken sm:w-auto"
           href="/coach/relationships"
         >
           <I18nText k="coachMaker.viewRelationships" fallback="코칭 관계 보기" />
@@ -345,7 +345,7 @@ function CoachStatsSection({
       </div>
 
       {data.coaches.length === 0 ? (
-        <p className="mt-6 rounded-md border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+        <p className="mt-6 rounded-md border border-line-base bg-surface-app px-4 py-6 text-center text-sm text-ink-faint">
           <I18nText
             k="coachMaker.noCoachStats"
             fallback="관리 범위 안에 등록된 코치가 없거나 아직 배정된 코치-코치이 관계가 없습니다."
@@ -353,13 +353,13 @@ function CoachStatsSection({
         </p>
       ) : (
         <>
-          <p className="mt-6 text-sm text-slate-500 md:hidden">
+          <p className="mt-6 text-sm text-ink-faint md:hidden">
             표는 가로로 스크롤해 전체 내용을 확인하세요.
           </p>
           <div className="mt-6 overflow-x-auto">
             <table className="w-full min-w-[760px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-600">
+              <tr className="border-b border-line-soft text-ink-muted">
                 <th className="px-3 py-2 font-semibold"><I18nText k="roles.coach" fallback="코치" /></th>
                 <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.assignedCoachees" fallback="담당 코치이" /></th>
                 <th className="px-3 py-2 font-semibold">이번 주 진행</th>
@@ -369,17 +369,17 @@ function CoachStatsSection({
             </thead>
             <tbody>
               {data.coaches.map((coach) => (
-                <tr className="border-b border-slate-100" key={coach.coachId}>
+                <tr className="border-b border-line-soft" key={coach.coachId}>
                   <td className="px-3 py-3">
-                    <p className="font-medium text-slate-950">{coach.coachName}</p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="font-medium text-ink-strong">{coach.coachName}</p>
+                    <p className="mt-1 text-xs text-ink-faint">
                       {displayOptional(coach.coachEmail, "이메일 미등록")}
                     </p>
                   </td>
-                  <td className="px-3 py-3 font-semibold text-slate-950">
+                  <td className="px-3 py-3 font-semibold text-ink-strong">
                     {coach.assignedCoacheeCount}명
                   </td>
-                  <td className="px-3 py-3 text-slate-700">
+                  <td className="px-3 py-3 text-ink-base">
                     제출 {coach.weeklySubmittedThisWeekCount}명 / 담당{" "}
                     {coach.assignedCoacheeCount}명
                   </td>
@@ -407,10 +407,10 @@ function CoachStatsSection({
                   </td>
                   <td className="px-3 py-3">
                     <details className="min-w-36">
-                      <summary className="cursor-pointer text-sm font-medium text-slate-700 underline">
+                      <summary className="cursor-pointer text-sm font-medium text-brand-600 underline">
                         상세 통계
                       </summary>
-                      <dl className="mt-2 grid gap-1 text-xs text-slate-600">
+                      <dl className="mt-2 grid gap-1 text-xs text-ink-muted">
                         <div>공유 하루 기록 {coach.sharedDailyRecordCount}개</div>
                         <div>공유 월간 회고 {coach.sharedMonthlyReflectionCount}개</div>
                         <div>피드백 작성 {coach.feedbackCount}개</div>
@@ -436,25 +436,25 @@ function MoksilgiSummarySection({
   data: CoachMakerMoksilgiDashboardSummaryData;
 }) {
   return (
-    <section className="mt-8 rounded-md border border-slate-200 bg-white p-4 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
+    <section className="mt-8 rounded-card border border-line-base bg-surface-card p-4 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-soft pb-5">
         <div>
-          <p className="text-sm font-medium text-slate-500">
+          <p className="text-sm font-medium text-ink-faint">
             {data.year} <I18nText k="moksilgi.yearSummary" fallback="년 목실기 요약" />
           </p>
-          <h2 className="mt-1 text-xl font-semibold text-slate-950">
+          <h2 className="mt-1 text-xl font-semibold text-ink-strong">
             목실기 성취 요약
           </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-ink-muted">
             전체 {data.totalCount}명 중 현재 월까지 평균 성취율은{" "}
-            <span className="font-semibold text-slate-950">
+            <span className="font-semibold text-ink-strong">
               {formatPercent(data.upToCurrentRate)}
             </span>
             입니다.
           </p>
         </div>
         <Link
-          className="inline-flex w-full justify-center rounded-md bg-slate-950 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 sm:w-auto"
+          className="inline-flex w-full justify-center rounded-control bg-navy-900 px-5 py-3 text-sm font-semibold text-white hover:bg-navy-800 sm:w-auto"
           href={`/coach-maker/moksilgi-progress?year=${data.year}`}
         >
           <I18nText k="moksilgi.viewOverallProgress" fallback="전체 목실기 현황 보기" />
@@ -462,7 +462,7 @@ function MoksilgiSummarySection({
       </div>
 
       {data.totalCount === 0 ? (
-        <p className="mt-6 rounded-md border border-slate-200 bg-slate-50 px-4 py-6 text-center text-slate-500">
+        <p className="mt-6 rounded-md border border-line-base bg-surface-app px-4 py-6 text-center text-ink-faint">
           <I18nText
             k="moksilgi.noProgressSummary"
             fallback="아직 목실기 현황 데이터가 없습니다. 코치이가 목실기와 월별 기록을 저장하면 이곳에 요약이 표시됩니다."
@@ -532,10 +532,10 @@ function QuickLinksSection({
   ];
 
   return (
-    <section className="mt-8 rounded-md border border-slate-200 bg-white p-4 sm:p-6">
+    <section className="mt-8 rounded-card border border-line-base bg-surface-card p-4 sm:p-6">
       <div>
-        <p className="text-sm font-medium text-slate-500">주요 기능</p>
-        <h2 className="mt-1 text-xl font-semibold text-slate-950">
+        <p className="text-sm font-medium text-ink-faint">주요 기능</p>
+        <h2 className="mt-1 text-xl font-semibold text-ink-strong">
           바로가기
         </h2>
       </div>
@@ -543,29 +543,29 @@ function QuickLinksSection({
         {cards.map((card) =>
           card.href ? (
             <Link
-              className="min-w-0 rounded-md border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
+              className="min-w-0 rounded-card border border-line-base bg-surface-app p-5 transition hover:border-line-base hover:bg-surface-card"
               href={card.href}
               key={card.title}
             >
-              <h3 className="font-semibold text-slate-950">{card.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
+              <h3 className="font-semibold text-ink-strong">{card.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-ink-muted">
                 {card.description}
               </p>
             </Link>
           ) : (
             <div
               aria-disabled="true"
-              className="min-w-0 cursor-default select-none rounded-md border border-dashed border-slate-300 bg-slate-100/80 p-5 text-slate-500"
+              className="min-w-0 cursor-default select-none rounded-md border border-dashed border-line-base bg-surface-sunken/80 p-5 text-ink-faint"
               key={card.title}
             >
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="font-semibold text-slate-700">{card.title}</h3>
-                <span className="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-xs font-medium text-slate-500">
+                <h3 className="font-semibold text-ink-base">{card.title}</h3>
+                <span className="rounded-full border border-line-base bg-surface-card px-2 py-0.5 text-xs font-medium text-ink-faint">
                   준비 중
                 </span>
               </div>
               <p className="mt-2 text-sm leading-6">{card.description}</p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-ink-faint">
                 현재 권한에서는 사용할 수 없습니다.
               </p>
             </div>
@@ -600,17 +600,17 @@ export default async function CoachMakerPage() {
     coachStatsResult.data?.roles.some((role) => role.role === "super_admin") ?? false;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-950 sm:px-6 sm:py-10">
+    <main className="min-h-screen bg-surface-app px-4 py-6 text-ink-strong sm:px-6 sm:py-10">
       <section className="mx-auto w-full max-w-7xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+            <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
               <I18nText k="nav.coachMaker" fallback="코치메이커" />
             </p>
             <h1 className="mt-3 text-3xl font-semibold">
               <I18nText k="coachMaker.title" fallback="코치메이커 대시보드" />
             </h1>
-            <p className="mt-3 max-w-3xl text-slate-600">
+            <p className="mt-3 max-w-3xl text-ink-muted">
               <I18nText
                 k="coachMaker.subtitle"
                 fallback="담당 범위의 목실기 성취 현황과 코칭 진행 상태를 확인합니다."
@@ -621,12 +621,12 @@ export default async function CoachMakerPage() {
             <PageNavigationButtons className="justify-start sm:justify-end" />
             <div className="w-full sm:w-auto">
               <Link
-                className="inline-flex min-h-10 w-full justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto"
+                className="inline-flex min-h-10 w-full justify-center rounded-md border border-line-base bg-surface-card px-4 py-2 text-sm font-semibold text-ink-base hover:bg-surface-sunken sm:w-auto"
                 href={`/coach-maker/report?year=${currentYear}`}
               >
                 <I18nText k="common.print" fallback="인쇄용 보고서 보기" />
               </Link>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-ink-faint">
                 현재 연도 기준 인쇄용 보고서로 이동합니다.
               </p>
             </div>
@@ -636,11 +636,11 @@ export default async function CoachMakerPage() {
         {moksilgiSummaryResult.error?.code === "PROFILE_NOT_FOUND" ? (
           <ProfileMissing />
         ) : moksilgiSummaryResult.error?.code === "ACCESS_DENIED" ? (
-          <section className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <section className="mt-8 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
             <I18nText k="moksilgi.accessDenied" fallback="코치메이커 권한이 없습니다." />
           </section>
         ) : moksilgiSummaryResult.error ? (
-          <section className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <section className="mt-8 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
             <I18nText
               k="moksilgi.loadFailed"
               fallback="목실기 요약 정보를 불러오지 못했습니다. 잠시 후 다시 확인해 주세요."
@@ -661,7 +661,7 @@ export default async function CoachMakerPage() {
                 />
               </>
             ) : coachStatsResult.error ? (
-              <section className="mt-8 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+              <section className="mt-8 rounded-control border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                 {coachStatsResult.error.message}
               </section>
             ) : null}

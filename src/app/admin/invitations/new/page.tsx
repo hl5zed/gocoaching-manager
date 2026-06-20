@@ -19,17 +19,17 @@ export default async function NewAdminInvitationPage() {
     expiresInDaysResult.expiresInDays ?? FALLBACK_INVITATION_EXPIRES_IN_DAYS;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <section className="mx-auto w-full max-w-4xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+            <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
               <I18nText k="admin.invitations.new.badge" fallback="관리자" />
             </p>
             <h1 className="mt-3 text-3xl font-semibold">
               <I18nText k="admin.invitations.new.title" fallback="초대 생성" />
             </h1>
-            <p className="mt-4 max-w-2xl leading-7 text-slate-600">
+            <p className="mt-4 max-w-2xl leading-7 text-ink-muted">
               <I18nText
                 k="admin.invitations.new.description"
                 fallback="새 사용자를 초대하고 역할과 소속 범위를 지정합니다."
@@ -39,7 +39,7 @@ export default async function NewAdminInvitationPage() {
           <div className="flex flex-wrap items-center gap-2">
             <LanguageSwitcher />
             <Link
-              className="inline-flex h-10 min-h-10 items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+              className="inline-flex h-10 min-h-10 items-center justify-center rounded-md border border-line-base bg-surface-card px-4 py-2 text-sm font-semibold text-ink-base hover:bg-surface-sunken"
               href="/admin/invitations"
             >
               <I18nText

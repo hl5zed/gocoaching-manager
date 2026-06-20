@@ -108,13 +108,13 @@ export function ProfileForm({ profile, translations }: ProfileFormProps) {
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label
-            className="block text-sm font-medium text-slate-700"
+            className="block text-sm font-medium text-ink-base"
             htmlFor="display_name"
           >
             {translations.profile.display_name}
           </label>
           <input
-            className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+            className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
             id="display_name"
             onChange={(event) => setDisplayName(event.target.value)}
             type="text"
@@ -124,13 +124,13 @@ export function ProfileForm({ profile, translations }: ProfileFormProps) {
 
         <div>
           <label
-            className="block text-sm font-medium text-slate-700"
+            className="block text-sm font-medium text-ink-base"
             htmlFor="email"
           >
             {translations.profile.email_readonly}
           </label>
           <input
-            className="mt-2 w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-slate-600"
+            className="mt-2 w-full rounded-md border border-line-base bg-surface-sunken px-3 py-2 text-ink-muted"
             id="email"
             readOnly
             type="email"
@@ -140,13 +140,13 @@ export function ProfileForm({ profile, translations }: ProfileFormProps) {
 
         <div>
           <label
-            className="block text-sm font-medium text-slate-700"
+            className="block text-sm font-medium text-ink-base"
             htmlFor="phone"
           >
             {translations.profile.phone}
           </label>
           <input
-            className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+            className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
             id="phone"
             onChange={(event) => setPhone(event.target.value)}
             type="tel"
@@ -155,33 +155,33 @@ export function ProfileForm({ profile, translations }: ProfileFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-ink-base">
             {translations.profile.primary_role_readonly}
           </label>
-          <div className="mt-2 rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-slate-600">
+          <div className="mt-2 rounded-md border border-line-base bg-surface-sunken px-3 py-2 text-ink-muted">
             {displayValue(profile.primary_role)}
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-ink-base">
             {translations.profile.status_readonly}
           </label>
-          <div className="mt-2 rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-slate-600">
+          <div className="mt-2 rounded-md border border-line-base bg-surface-sunken px-3 py-2 text-ink-muted">
             {displayValue(profile.status)}
           </div>
         </div>
 
         <div>
           <label
-            className="block text-sm font-medium text-slate-700"
+            className="block text-sm font-medium text-ink-base"
             htmlFor="preferred_language"
           >
             {translations.profile.preferred_language ||
               translations.common.language}
           </label>
           <select
-            className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+            className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
             id="preferred_language"
             onChange={(event) => setPreferredLanguage(event.target.value)}
             value={preferredLanguage}
@@ -194,13 +194,13 @@ export function ProfileForm({ profile, translations }: ProfileFormProps) {
 
         <div>
           <label
-            className="block text-sm font-medium text-slate-700"
+            className="block text-sm font-medium text-ink-base"
             htmlFor="timezone"
           >
             {translations.profile.timezone || translations.common.timezone}
           </label>
           <input
-            className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+            className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
             id="timezone"
             onChange={(event) => setTimezone(event.target.value)}
             type="text"
@@ -210,19 +210,19 @@ export function ProfileForm({ profile, translations }: ProfileFormProps) {
       </div>
 
       {message && (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">
+        <p className="rounded-control border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">
           {message}
         </p>
       )}
 
       {errorMessage && (
-        <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+        <p className="rounded-control border border-red-200 bg-red-50 px-4 py-3 text-red-700">
           {errorMessage}
         </p>
       )}
 
       <button
-        className="rounded-md bg-slate-950 px-5 py-2.5 font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+        className="rounded-control bg-navy-900 px-5 py-2.5 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
         disabled={isSaving}
         type="submit"
       >

@@ -1,13 +1,20 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CoacheeActionHub } from "@/components/dashboard/CoacheeActionHub";
+import { DashboardHero } from "@/components/dashboard/DashboardHero";
+import { DashboardSectionCard } from "@/components/dashboard/DashboardSectionCard";
+import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
+import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Icon, type IconName } from "@/components/ui/Icon";
 import { getSession } from "@/lib/auth/getSession";
 import { getDashboardMe } from "@/lib/api/dashboard/me";
 import { getDashboardQuickLinksState } from "@/lib/dashboard/quick-links";
 import { getActiveAnnouncementsForCurrentUser } from "@/lib/api/admin/system-announcements";
-import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
-import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
 import { I18nText } from "@/lib/i18n/I18nProvider";
+import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
 import { createApiPerformanceLogger } from "@/lib/performance";
+import type { ProfileStatus, UserRole } from "@/types/database";
 
 export const dynamic = "force-dynamic";
 
@@ -15,20 +22,18 @@ function displayValue(value: string | null) {
   return value && value.trim().length > 0 ? value : "-";
 }
 
-function profileStatusBadgeClass(status: string) {
+function profileStatusTone(status: string) {
   switch (status) {
     case "active":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
-    case "inactive":
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "success" as const;
     case "suspended":
-      return "border-amber-200 bg-amber-50 text-amber-700";
-    case "archived":
-      return "border-slate-300 bg-slate-50 text-slate-600";
+      return "warning" as const;
     case "anonymized":
-      return "border-rose-200 bg-rose-50 text-rose-700";
+      return "danger" as const;
+    case "inactive":
+    case "archived":
     default:
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "neutral" as const;
   }
 }
 
@@ -40,6 +45,7 @@ const coachMakerFeatureCards = [
     titleKey: "dashboard.coachMakerCenter",
     description:
       "담당 코치와 코치이의 성장 현황과 목실기 진행 상황을 관리합니다.",
+    icon: "users" as IconName,
   },
   {
     href: "/coach-maker/moksilgi-progress",
@@ -48,6 +54,7 @@ const coachMakerFeatureCards = [
     titleKey: "dashboard.moksilgiProgress",
     description:
       "코치메이커가 담당하는 지역/팀과 코치-코치이 관계의 목실기 월별 성취율을 확인합니다.",
+    icon: "report" as IconName,
   },
   {
     href: "/my-coaching/moksilgi",
@@ -55,6 +62,7 @@ const coachMakerFeatureCards = [
     title: "나의 목실기",
     titleKey: "dashboard.myMoksilgi",
     description: "내 목실기 목표와 실행전략을 작성하고 점검합니다.",
+    icon: "report" as IconName,
   },
   {
     href: "/my-coaching/records",
@@ -62,8 +70,68 @@ const coachMakerFeatureCards = [
     title: "나의 기록",
     titleKey: "dashboard.myRecords",
     description: "하루기록, 주간기록, 월간기록을 확인하고 작성합니다.",
+    icon: "dashboard" as IconName,
   },
 ];
+
+function QuickLinkTile({
+  href,
+  icon,
+  labelKey,
+  fallback,
+}: {
+  href: string;
+  icon: IconName;
+  labelKey: string;
+  fallback: string;
+}) {
+  return (
+    <Link
+      className="flex flex-col items-center gap-2 rounded-xl border border-line-base bg-surface-app p-4 text-center transition hover:border-brand-200 hover:bg-brand-50"
+      href={href}
+    >
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-card text-brand-600">
+        <Icon className="h-5 w-5" name={icon} />
+      </span>
+      <span className="text-sm font-medium text-ink-base">
+        <I18nText k={labelKey} fallback={fallback} />
+      </span>
+    </Link>
+  );
+}
+
+function FeatureLinkCard({
+  description,
+  descriptionKey,
+  href,
+  icon,
+  title,
+  titleKey,
+}: {
+  href: string;
+  titleKey: string;
+  title: string;
+  descriptionKey: string;
+  description: string;
+  icon: IconName;
+}) {
+  return (
+    <Link
+      className="flex h-full flex-col rounded-xl border border-line-base bg-surface-app p-4 transition hover:border-brand-200 hover:bg-brand-50"
+      href={href}
+    >
+      <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-surface-card text-brand-600">
+        <Icon className="h-4 w-4" name={icon} />
+      </span>
+      <h3 className="font-semibold text-ink-base">
+        <I18nText k={titleKey} fallback={title} />
+      </h3>
+      <p className="mt-2 flex-1 text-sm leading-6 text-ink-muted">
+        <I18nText k={descriptionKey} fallback={description} />
+      </p>
+    </Link>
+  );
+}
 
 export default async function DashboardPage() {
   const perf = createApiPerformanceLogger("/dashboard");
@@ -85,17 +153,19 @@ export default async function DashboardPage() {
 
   if (!result.ok) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
-        <section className="mx-auto w-full max-w-5xl">
-          <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+      <main className="min-h-screen bg-surface-app px-4 py-6 text-ink-base sm:px-6 sm:py-10">
+        <section className="mx-auto w-full max-w-4xl">
+          <p className="text-sm font-medium uppercase tracking-wide text-ink-muted">
             <I18nText k="dashboard.title" fallback="대시보드" />
           </p>
-          <h1 className="mt-3 text-3xl font-semibold">
+          <h1 className="mt-3 text-2xl font-semibold text-ink-strong">
             <I18nText k="dashboard.title" fallback="대시보드" />
           </h1>
-          <div className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
-            <I18nText k="dashboard.loadFailed" fallback="지금 대시보드를 불러올 수 없습니다." />
-          </div>
+          <Card className="mt-8 border-red-200 bg-red-50">
+            <CardContent className="p-4 text-sm text-red-700">
+              <I18nText k="dashboard.loadFailed" fallback="지금 대시보드를 불러올 수 없습니다." />
+            </CardContent>
+          </Card>
         </section>
       </main>
     );
@@ -104,17 +174,22 @@ export default async function DashboardPage() {
   const profile = result.data.profile;
   if (profile && profile.status !== "active") {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
-        <section className="mx-auto w-full max-w-5xl">
-          <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+      <main className="min-h-screen bg-surface-app px-4 py-6 text-ink-base sm:px-6 sm:py-10">
+        <section className="mx-auto w-full max-w-4xl">
+          <p className="text-sm font-medium uppercase tracking-wide text-ink-muted">
             <I18nText k="dashboard.title" fallback="대시보드" />
           </p>
-          <h1 className="mt-3 text-3xl font-semibold">
+          <h1 className="mt-3 text-2xl font-semibold text-ink-strong">
             <I18nText k="dashboard.accountStatus" fallback="계정 상태 확인" />
           </h1>
-          <div className="mt-8 rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-800">
-            <I18nText k="dashboard.inactiveAccount" fallback="비활성화된 계정입니다. 관리자에게 문의하세요." />
-          </div>
+          <Card className="mt-8 border-amber-200 bg-amber-50">
+            <CardContent className="p-4 text-sm text-amber-800">
+              <I18nText
+                k="dashboard.inactiveAccount"
+                fallback="비활성화된 계정입니다. 관리자에게 문의하세요."
+              />
+            </CardContent>
+          </Card>
         </section>
       </main>
     );
@@ -141,329 +216,272 @@ export default async function DashboardPage() {
   perf.mark("dashboard.complete", 1);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
-      <section className="mx-auto w-full max-w-5xl">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-              <I18nText k="dashboard.personalHomeBadge" fallback="개인 홈" />
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold">
-              <I18nText k="dashboard.title" fallback="나의 홈" />
-            </h1>
-          </div>
-          <PageNavigationButtons className="justify-start sm:justify-end" />
-        </div>
+    <main className="min-h-screen bg-surface-app px-4 py-6 text-ink-base sm:px-6 sm:py-10">
+      <section className="mx-auto w-full max-w-4xl space-y-6">
+        <DashboardHero
+          navigation={
+            <PageNavigationButtons className="justify-start sm:justify-end" />
+          }
+          roles={result.data.roles.map((role) => ({ role: role.role as UserRole }))}
+          welcomeName={welcomeName}
+        />
 
-        <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
-          <h2 className="text-lg font-semibold">
-            <I18nText k="dashboard.welcome" fallback="환영합니다" />
-          </h2>
-          <p className="mt-3 text-slate-700">
-            <I18nText k="dashboard.hello" fallback="안녕하세요" />,{" "}
-            <span className="font-medium text-slate-950">{welcomeName}</span>.
-          </p>
-          <p className="mt-2 text-slate-600">
-            <I18nText
-              k="dashboard.subtitle"
-              fallback="내 역할에 맞는 코칭 기록, 목실기, 담당 현황으로 이동하는 개인 시작 화면입니다."
-            />
-          </p>
-        </section>
+        {quickLinks.showMyCoachingLink ? <CoacheeActionHub /> : null}
 
         {dashboardAnnouncements.length > 0 ? (
-          <section className="mt-6 grid gap-3">
+          <div className="grid gap-3">
             {dashboardAnnouncements.map((announcement) => (
-              <article
-                className="rounded-md border border-sky-200 bg-sky-50 p-5 text-slate-950"
+              <Card
+                className="border-sky-200 bg-sky-50"
                 key={announcement.id}
               >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex rounded-full border border-sky-200 bg-white px-2.5 py-1 text-xs font-semibold text-sky-700">
-                    시스템 공지
-                  </span>
-                  {announcement.audience === "admin" ? (
-                    <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
-                      관리자 전용
-                    </span>
-                  ) : null}
-                </div>
-                <h2 className="mt-3 break-words text-base font-semibold">
-                  {announcement.title}
-                </h2>
-                <p className="mt-2 whitespace-pre-line break-words text-sm leading-6 text-slate-700">
-                  {announcement.body}
-                </p>
-              </article>
+                <CardContent className="p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge tone="info">시스템 공지</Badge>
+                    {announcement.audience === "admin" ? (
+                      <Badge tone="warning">관리자 전용</Badge>
+                    ) : null}
+                  </div>
+                  <h2 className="mt-3 break-words text-base font-semibold text-ink-strong">
+                    {announcement.title}
+                  </h2>
+                  <p className="mt-2 whitespace-pre-line break-words text-sm leading-6 text-ink-base">
+                    {announcement.body}
+                  </p>
+                </CardContent>
+              </Card>
             ))}
-          </section>
+          </div>
         ) : null}
 
-        <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">
-              <I18nText k="dashboard.profile" fallback="프로필" />
-            </h2>
-            <Link
-              className="text-sm font-medium text-slate-700 underline"
-              href="/profile"
-            >
-              <I18nText k="dashboard.viewProfile" fallback="프로필 보기" />
-            </Link>
-          </div>
-
-          {profile === null ? (
-            <div className="mt-4">
-              <p className="text-slate-700">
-                <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
-              </p>
-              <p className="mt-2 text-slate-600">
-                <I18nText k="dashboard.acceptInvitationFirst" fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요." />
-              </p>
-            </div>
-          ) : (
-            <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div>
-                <dt className="text-sm font-medium text-slate-500">
-                  <I18nText k="dashboard.displayName" fallback="표시 이름" />
-                </dt>
-                <dd className="mt-1 text-slate-950">
-                  {displayValue(profile.display_name)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-slate-500">
-                  <I18nText k="members.email" fallback="이메일" />
-                </dt>
-                <dd className="mt-1 text-slate-950">{displayValue(profile.email)}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-slate-500">
-                  <I18nText k="dashboard.fullName" fallback="전체 이름" />
-                </dt>
-                <dd className="mt-1 text-slate-950">
-                  {displayValue(profile.full_name)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-slate-500">
-                  <I18nText k="members.status" fallback="상태" />
-                </dt>
-                <dd className="mt-1">
-                  <span
-                    className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${profileStatusBadgeClass(
-                      profile.status,
-                    )}`}
-                  >
-                    {getStatusLabel(profile.status)}
-                  </span>
-                </dd>
-              </div>
-            </dl>
-          )}
-        </section>
-
-        <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-          <h2 className="text-lg font-semibold">
-            <I18nText k="dashboard.myRoles" fallback="내 역할" />
-          </h2>
-          {result.data.roles.length > 0 ? (
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[640px] border-collapse text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 text-slate-500">
-                    <th className="px-3 py-2 font-medium">
-                      <I18nText k="members.role" fallback="역할" />
-                    </th>
-                    <th className="px-3 py-2 font-medium">
-                      <I18nText k="members.scope" fallback="범위" />
-                    </th>
-                    <th className="px-3 py-2 font-medium">
-                      <I18nText k="members.status" fallback="상태" />
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.data.roles.map((role) => (
-                    <tr
-                      className="border-b border-slate-100 text-slate-800"
-                      key={`${role.role}-${role.scope_type}-${role.scope_id ?? "global"}`}
-                    >
-                      <td className="px-3 py-3">
-                        <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-                          <I18nText
-                            k={`roles.${role.role}`}
-                            fallback={getRoleLabel(role.role)}
-                          />
-                        </span>
-                      </td>
-                      <td className="px-3 py-3">
-                        {formatScope(role.scope_type, role.scope_id)}
-                      </td>
-                      <td className="px-3 py-3">{getStatusLabel(role.status)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="mt-4">
-              <p className="text-slate-700">
-                <I18nText k="dashboard.noActiveRole" fallback="아직 활성 역할이 배정되지 않았습니다." />
-              </p>
-              <p className="mt-2 text-slate-600">
-                <I18nText k="dashboard.acceptInvitationFirst" fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요." />
-              </p>
-            </div>
-          )}
-        </section>
-
-        <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-          <h2 className="text-lg font-semibold">
-            <I18nText k="dashboard.quickLinks" fallback="바로가기" />
-          </h2>
-          <div className="mt-4 flex flex-col gap-3">
-            <Link
-              className="text-sm font-medium text-slate-700 underline"
-              href="/profile"
-            >
-              <I18nText k="dashboard.myProfile" fallback="내 프로필" />
-            </Link>
-
-            {quickLinks.showAdminUsers && (
-              <Link
-                className="text-sm font-medium text-slate-700 underline"
-                href="/admin"
-              >
-                <I18nText k="dashboard.adminCenter" fallback="관리자 센터" />
-              </Link>
-            )}
-
-            {quickLinks.showCoachLink && (
-              <Link
-                className="text-sm font-medium text-slate-700 underline"
-                href="/coach"
-              >
-                <I18nText k="dashboard.coachWorkspace" fallback="코치 작업 공간" />
-              </Link>
-            )}
-
-            {quickLinks.showMyCoachingLink && (
-              <Link
-                className="text-sm font-medium text-slate-700 underline"
-                href="/my-coaching"
-              >
-                <I18nText k="dashboard.myCoachingSpace" fallback="내 코칭 공간" />
-              </Link>
-            )}
-
-            {showMyMoksilgiCard ? (
-              <Link
-                className="rounded-md border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
-                href="/my-coaching/moksilgi"
-              >
-                <h3 className="break-words font-semibold text-slate-950">
+        {showMyMoksilgiCard && !quickLinks.showMyCoachingLink ? (
+          <Link
+            className="block rounded-xl border border-line-base border-l-4 border-l-brand-600 bg-surface-card p-4 transition hover:border-brand-200 hover:bg-brand-50"
+            href="/my-coaching/moksilgi"
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+                <Icon className="h-5 w-5" name="report" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <h2 className="font-semibold text-ink-strong">
                   <I18nText k="dashboard.myMoksilgi" fallback="나의 목실기" />
-                </h3>
-                <p className="mt-2 break-words text-sm leading-6 text-slate-600">
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-ink-muted">
                   <I18nText
                     k="dashboard.myMoksilgiDescription"
                     fallback="내 목실기 목표와 실행전략을 작성하고 점검합니다."
                   />
                 </p>
-              </Link>
-            ) : null}
-
-            {quickLinks.showCoacheeMessage && (
-              <div className="text-slate-700">
-                <p>
-                  <I18nText k="dashboard.coachingSpacePreparing" fallback="코칭 공간이 준비 중입니다." />
-                </p>
-                <Link
-                  className="mt-2 inline-block text-sm font-medium text-slate-700 underline"
-                  href="/profile"
-                >
-                  <I18nText k="dashboard.checkProfile" fallback="프로필 확인하기" />
-                </Link>
               </div>
-            )}
+              <Icon className="h-5 w-5 shrink-0 text-brand-600" name="arrow-right" />
+            </div>
+          </Link>
+        ) : null}
 
-            {quickLinks.showNoRoleMessage && (
-              <div className="text-slate-700">
-                <p>
-                  <I18nText k="dashboard.noActiveRole" fallback="아직 활성 역할이 배정되지 않았습니다." />
-                </p>
-                <p className="mt-2 text-slate-600">
-                  <I18nText k="dashboard.acceptInvitationFirst" fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요." />
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {showCoachMakerFeatureCards ? (
-          <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-            <div>
-              <h2 className="text-lg font-semibold">
+        <DashboardSectionCard
+          action={
+            <Link
+              className="text-sm font-medium text-brand-600 underline underline-offset-2"
+              href="/profile"
+            >
+              <I18nText k="dashboard.viewProfile" fallback="프로필 보기" />
+            </Link>
+          }
+          title={<I18nText k="dashboard.profile" fallback="프로필" />}
+        >
+          {profile === null ? (
+            <div className="space-y-2">
+              <p className="text-sm text-ink-base">
                 <I18nText
-                  k="dashboard.coachMakerFeatures"
-                  fallback="코치메이커 기능"
+                  k="dashboard.noProfile"
+                  fallback="아직 프로필이 생성되지 않았습니다."
                 />
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
+              </p>
+              <p className="text-sm text-ink-muted">
                 <I18nText
-                  k="dashboard.coachMakerFeaturesDescription"
-                  fallback="코치메이커 센터, 전체 목실기 성취 현황, 나의 목실기와 나의 기록으로 바로 이동합니다."
+                  k="dashboard.acceptInvitationFirst"
+                  fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요."
                 />
               </p>
             </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          ) : (
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-ink-muted">
+                  <I18nText k="dashboard.displayName" fallback="표시 이름" />
+                </p>
+                <p className="mt-1 font-medium text-ink-strong">
+                  {displayValue(profile.display_name)}
+                </p>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-ink-muted">
+                  <I18nText k="members.email" fallback="이메일" />
+                </p>
+                <p className="mt-1 text-ink-base">{displayValue(profile.email)}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-ink-muted">
+                  <I18nText k="members.status" fallback="상태" />
+                </p>
+                <div className="mt-1">
+                  <Badge tone={profileStatusTone(profile.status)}>
+                    {getStatusLabel(profile.status as ProfileStatus)}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          )}
+        </DashboardSectionCard>
+
+        <DashboardSectionCard
+          title={<I18nText k="dashboard.myRoles" fallback="내 역할" />}
+        >
+            {result.data.roles.length > 0 ? (
+              <div className="space-y-3">
+                {result.data.roles.map((role) => (
+                  <div
+                    className="rounded-card border border-line-base bg-surface-app p-3"
+                    key={`${role.role}-${role.scope_type}-${role.scope_id ?? "global"}`}
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge tone="neutral">
+                        <I18nText
+                          k={`roles.${role.role}`}
+                          fallback={getRoleLabel(role.role)}
+                        />
+                      </Badge>
+                      <Badge tone="neutral">{getStatusLabel(role.status)}</Badge>
+                    </div>
+                    <p className="mt-2 text-sm text-ink-muted">
+                      {formatScope(role.scope_type, role.scope_id)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-sm text-ink-base">
+                  <I18nText
+                    k="dashboard.noActiveRole"
+                    fallback="아직 활성 역할이 배정되지 않았습니다."
+                  />
+                </p>
+                <p className="text-sm text-ink-muted">
+                  <I18nText
+                    k="dashboard.acceptInvitationFirst"
+                    fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요."
+                  />
+                </p>
+              </div>
+            )}
+        </DashboardSectionCard>
+
+        <DashboardSectionCard
+          title={<I18nText k="dashboard.quickLinks" fallback="바로가기" />}
+        >
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <QuickLinkTile
+              fallback="내 프로필"
+              href="/profile"
+              icon="settings"
+              labelKey="dashboard.myProfile"
+            />
+
+            {quickLinks.showAdminUsers ? (
+              <QuickLinkTile
+                fallback="관리자 센터"
+                href="/admin"
+                icon="settings"
+                labelKey="dashboard.adminCenter"
+              />
+            ) : null}
+
+            {quickLinks.showCoachLink ? (
+              <QuickLinkTile
+                fallback="코치 작업 공간"
+                href="/coach"
+                icon="users"
+                labelKey="dashboard.coachWorkspace"
+              />
+            ) : null}
+          </div>
+
+          {quickLinks.showCoacheeMessage ? (
+            <div className="mt-4 rounded-card border border-line-base bg-surface-app p-4 text-sm text-ink-base">
+              <p>
+                <I18nText
+                  k="dashboard.coachingSpacePreparing"
+                  fallback="코칭 공간이 준비 중입니다."
+                />
+              </p>
+              <Link
+                className="mt-2 inline-block font-medium text-brand-600 underline underline-offset-2"
+                href="/profile"
+              >
+                <I18nText k="dashboard.checkProfile" fallback="프로필 확인하기" />
+              </Link>
+            </div>
+          ) : null}
+
+          {quickLinks.showNoRoleMessage ? (
+            <div className="mt-4 rounded-card border border-line-base bg-surface-app p-4 text-sm text-ink-base">
+              <p>
+                <I18nText
+                  k="dashboard.noActiveRole"
+                  fallback="아직 활성 역할이 배정되지 않았습니다."
+                />
+              </p>
+              <p className="mt-2 text-ink-muted">
+                <I18nText
+                  k="dashboard.acceptInvitationFirst"
+                  fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요."
+                />
+              </p>
+            </div>
+          ) : null}
+        </DashboardSectionCard>
+
+        {showCoachMakerFeatureCards ? (
+          <DashboardSectionCard
+            title={
+              <I18nText k="dashboard.coachMakerFeatures" fallback="코치메이커 기능" />
+            }
+          >
+            <p className="mb-4 text-sm leading-6 text-ink-muted">
+              <I18nText
+                k="dashboard.coachMakerFeaturesDescription"
+                fallback="코치메이커 센터, 전체 목실기 성취 현황, 나의 목실기와 나의 기록으로 바로 이동합니다."
+              />
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {coachMakerFeatureCards.map((card) => (
-                <Link
-                  className="rounded-md border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
-                  href={card.href}
-                  key={card.href}
-                >
-                  <h3 className="font-semibold text-slate-950">
-                    <I18nText k={card.titleKey} fallback={card.title} />
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    <I18nText k={card.descriptionKey} fallback={card.description} />
-                  </p>
-                </Link>
+                <FeatureLinkCard key={card.href} {...card} />
               ))}
             </div>
-          </section>
+          </DashboardSectionCard>
         ) : null}
 
         {showAdminCenterCard ? (
-          <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-            <div>
-              <h2 className="text-lg font-semibold">
-                <I18nText k="dashboard.adminCenter" fallback="관리자 센터" />
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                <I18nText
-                  k="dashboard.adminCenterDescription"
-                  fallback="회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간으로 이동합니다."
-                />
-              </p>
-            </div>
-            <Link
-              className="mt-4 block rounded-md border border-slate-200 bg-slate-50 p-5 transition hover:border-slate-300 hover:bg-white"
+          <DashboardSectionCard
+            title={<I18nText k="dashboard.adminCenter" fallback="관리자 센터" />}
+          >
+            <p className="mb-4 text-sm leading-6 text-ink-muted">
+              <I18nText
+                k="dashboard.adminCenterDescription"
+                fallback="회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간으로 이동합니다."
+              />
+            </p>
+            <FeatureLinkCard
+              description="회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간으로 이동합니다."
+              descriptionKey="dashboard.adminCenterDescription"
               href="/admin"
-            >
-              <h3 className="font-semibold text-slate-950">
-                <I18nText k="dashboard.adminCenter" fallback="관리자 센터" />
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                <I18nText
-                  k="dashboard.adminCenterDescription"
-                  fallback="회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간으로 이동합니다."
-                />
-              </p>
-            </Link>
-          </section>
+              icon="settings"
+              title="관리자 센터"
+              titleKey="dashboard.adminCenter"
+            />
+          </DashboardSectionCard>
         ) : null}
       </section>
     </main>

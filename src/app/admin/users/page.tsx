@@ -269,7 +269,7 @@ function ProfileAffiliationBadges({ user }: { user: AdminUserSummary }) {
           tone={value === "미지정" ? "neutral" : "info"}
         >
           <span className="font-semibold">{label}</span>
-          <span className="text-slate-500">·</span>
+          <span className="text-ink-faint">·</span>
           <span className="min-w-0 break-words">{value}</span>
         </Badge>
       ))}
@@ -309,7 +309,7 @@ function FieldBadge({
   const toneClass: Record<FieldBadgeTone, string> = {
     edit: "border-sky-200 bg-sky-50 text-sky-700",
     new: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    auto: "border-slate-200 bg-slate-100 text-slate-600",
+    auto: "border-line-base bg-surface-sunken text-ink-muted",
     admin: "border-amber-200 bg-amber-50 text-amber-700",
   };
   const labelKey: Record<string, string> = {
@@ -362,11 +362,11 @@ function DetailValue({
 
   return (
     <div>
-      <dt className="text-sm font-medium text-slate-500">
+      <dt className="text-sm font-medium text-ink-faint">
         {labelKey[label] ? <I18nText k={labelKey[label]} fallback={label} /> : label}
         {badge ? <FieldBadge tone={tone}>{badge}</FieldBadge> : null}
       </dt>
-      <dd className="mt-1 break-words text-slate-950">{value}</dd>
+      <dd className="mt-1 break-words text-ink-strong">{value}</dd>
     </div>
   );
 }
@@ -380,7 +380,7 @@ function StatusChangeForm({
 }) {
   if (representativeRole?.role === "super_admin") {
     return (
-      <span className="text-xs text-slate-500">
+      <span className="text-xs text-ink-faint">
         <I18nText k="members.protectedSuperAdmin" fallback="super_admin 보호" />
       </span>
     );
@@ -388,7 +388,7 @@ function StatusChangeForm({
 
   if (user.status !== "active" && user.status !== "inactive") {
     return (
-      <span className="text-xs text-slate-500">
+      <span className="text-xs text-ink-faint">
         <I18nText k="members.needsReview" fallback="확인 필요" />
       </span>
     );
@@ -733,7 +733,7 @@ export default async function AdminUsersPage({
 
   const getUserCountryLabel = (user: AdminUserSummary) => formatCountryValue(user);
   return (
-    <main className="min-h-screen bg-[var(--trust-bg)] px-4 py-6 text-slate-950 sm:px-6 sm:py-10">
+    <main className="min-h-screen bg-[var(--trust-bg)] px-4 py-6 text-ink-strong sm:px-6 sm:py-10">
       <section className="mx-auto w-full max-w-7xl">
         <Card>
           <CardHeader className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -750,7 +750,7 @@ export default async function AdminUsersPage({
                   fallback="프로필과 활성 역할을 조회하고, 필요한 경우 관리자가 직접 회원을 등록할 수 있습니다."
                 />
               </CardDescription>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-ink-faint">
                 <I18nText
                   k="members.invitationNotice"
                   fallback="기존 이메일 초대 방식은 그대로 유지됩니다. 직접 등록 시 임시 비밀번호는 별도로 전달해야 합니다."
@@ -843,14 +843,14 @@ export default async function AdminUsersPage({
         ) : null}
 
         {error && (
-          <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <div className="mt-6 rounded-control border border-red-200 bg-red-50 p-4 text-sm text-red-800">
             지금 사용자를 불러올 수 없습니다.
           </div>
         )}
 
         {!error && users.length === 0 && (
           <Card className="mt-6">
-            <CardContent className="p-6 text-sm text-slate-600">
+            <CardContent className="p-6 text-sm text-ink-muted">
             {getEmptyUsersMessage({ q, role, status })}
             </CardContent>
           </Card>
@@ -879,7 +879,7 @@ export default async function AdminUsersPage({
                     fallback="검색, 필터, 정렬, 페이지네이션을 사용해 현재 목록을 확인합니다."
                   />
                 </CardDescription>
-                <p className="text-sm text-slate-500 lg:hidden">
+                <p className="text-sm text-ink-faint lg:hidden">
                   표는 가로로 스크롤해 전체 내용을 확인하세요.
                 </p>
               </CardHeader>
@@ -887,7 +887,7 @@ export default async function AdminUsersPage({
                 <div className="overflow-x-auto">
                   <table className="block min-w-full table-auto border-collapse text-left text-sm lg:table">
                 <thead className="hidden lg:table-header-group">
-                  <tr className="border-b border-slate-200 bg-slate-50/80 text-xs uppercase tracking-wide text-slate-500">
+                  <tr className="border-b border-line-soft bg-surface-sunken/80 text-xs uppercase tracking-wide text-ink-faint">
                     <th className="w-[22%] px-3 py-3 font-medium">
                       <button
                         className="font-medium"
@@ -942,7 +942,7 @@ export default async function AdminUsersPage({
                 <tbody className="block space-y-4 lg:table-row-group lg:space-y-0">
                   {users.map((user) => (
                     <tr
-                      className="block rounded-lg border border-slate-200 bg-white p-4 text-slate-800 shadow-sm transition lg:table-row lg:border-0 lg:border-b lg:border-slate-100 lg:p-0 lg:shadow-none lg:hover:bg-[var(--trust-primary-soft)]/40"
+                      className="block rounded-card border border-line-base bg-surface-card p-4 text-ink-base shadow-sm transition lg:table-row lg:border-0 lg:border-b lg:border-line-soft lg:p-0 lg:shadow-none lg:hover:bg-[var(--trust-primary-soft)]/40"
                       data-admin-user-row
                       data-created-at={user.created_at}
                       data-email={user.email ?? ""}
@@ -959,13 +959,13 @@ export default async function AdminUsersPage({
 
                         return (
                           <>
-                            <td className="block border-b border-slate-100 pb-3 lg:table-cell lg:border-b-0 lg:px-3 lg:py-3">
+                            <td className="block border-b border-line-soft pb-3 lg:table-cell lg:border-b-0 lg:px-3 lg:py-3">
                               <div className="flex items-start justify-between gap-3 lg:block">
                                 <div className="min-w-0">
-                                  <p className="break-words text-base font-semibold text-slate-950 lg:text-sm">
+                                  <p className="break-words text-base font-semibold text-ink-strong lg:text-sm">
                                     {formatName(user)}
                                   </p>
-                                  <p className="mt-1 break-all text-sm text-slate-500 lg:max-w-[220px] lg:truncate">
+                                  <p className="mt-1 break-all text-sm text-ink-faint lg:max-w-[220px] lg:truncate">
                                     {formatEmail(user.email)}
                                   </p>
                                 </div>
@@ -977,28 +977,28 @@ export default async function AdminUsersPage({
                             <td className="hidden lg:table-cell lg:px-3 lg:py-3">
                               <StatusBadge status={user.status} />
                             </td>
-                            <td className="block border-b border-slate-100 py-3 lg:table-cell lg:border-b-0 lg:max-w-[240px] lg:px-3 lg:py-3">
-                              <span className="mb-1 block text-xs font-semibold text-slate-500 lg:hidden">
+                            <td className="block border-b border-line-soft py-3 lg:table-cell lg:border-b-0 lg:max-w-[240px] lg:px-3 lg:py-3">
+                              <span className="mb-1 block text-xs font-semibold text-ink-faint lg:hidden">
                                 <I18nText k="members.roleScope" fallback="역할/범위" />
                               </span>
                               <RoleBadgeList roles={user.roles} />
-                              <p className="mt-2 break-words text-xs leading-5 text-slate-500">
+                              <p className="mt-2 break-words text-xs leading-5 text-ink-faint">
                                 {formatScopeSummary(user.roles)}
                               </p>
                             </td>
-                            <td className="block border-b border-slate-100 py-3 lg:table-cell lg:border-b-0 lg:max-w-[260px] lg:px-3 lg:py-3">
-                              <span className="mb-1 block text-xs font-semibold text-slate-500 lg:hidden">
+                            <td className="block border-b border-line-soft py-3 lg:table-cell lg:border-b-0 lg:max-w-[260px] lg:px-3 lg:py-3">
+                              <span className="mb-1 block text-xs font-semibold text-ink-faint lg:hidden">
                                 <I18nText k="members.organization" fallback="소속 정보" />
                               </span>
                               <ProfileAffiliationBadges user={user} />
                             </td>
-                            <td className="block border-b border-slate-100 py-3 lg:table-cell lg:border-b-0 lg:px-3 lg:py-3">
-                              <span className="mb-1 block text-xs font-semibold text-slate-500 lg:hidden">
+                            <td className="block border-b border-line-soft py-3 lg:table-cell lg:border-b-0 lg:px-3 lg:py-3">
+                              <span className="mb-1 block text-xs font-semibold text-ink-faint lg:hidden">
                                 <I18nText k="members.recordInfo" fallback="기록 정보" />
                               </span>
-                              <div className="grid grid-cols-2 gap-3 text-xs text-slate-500 lg:block lg:space-y-1">
+                              <div className="grid grid-cols-2 gap-3 text-xs text-ink-faint lg:block lg:space-y-1">
                                 <p>
-                                  <span className="font-medium text-slate-600">
+                                  <span className="font-medium text-ink-muted">
                                     <I18nText k="members.createdShort" fallback="생성" />
                                   </span>{" "}
                                   <span className="whitespace-nowrap">
@@ -1006,7 +1006,7 @@ export default async function AdminUsersPage({
                                   </span>
                                 </p>
                                 <p>
-                                  <span className="font-medium text-slate-600">
+                                  <span className="font-medium text-ink-muted">
                                     <I18nText k="members.updatedShort" fallback="수정" />
                                   </span>{" "}
                                   <span className="whitespace-nowrap">
@@ -1015,8 +1015,8 @@ export default async function AdminUsersPage({
                                 </p>
                               </div>
                             </td>
-                            <td className="block border-b border-slate-100 py-3 lg:table-cell lg:border-b-0 lg:px-3 lg:py-3">
-                              <span className="mb-1 block text-xs font-semibold text-slate-500 lg:hidden">
+                            <td className="block border-b border-line-soft py-3 lg:table-cell lg:border-b-0 lg:px-3 lg:py-3">
+                              <span className="mb-1 block text-xs font-semibold text-ink-faint lg:hidden">
                                 <I18nText k="members.loginGuide" fallback="로그인 안내" />
                               </span>
                               <div className="flex flex-wrap gap-2 lg:block">
@@ -1024,7 +1024,7 @@ export default async function AdminUsersPage({
                               </div>
                             </td>
                             <td className="block pt-3 lg:table-cell lg:px-3 lg:py-3 lg:text-right">
-                              <span className="mb-1 block text-xs font-semibold text-slate-500 lg:hidden">
+                              <span className="mb-1 block text-xs font-semibold text-ink-faint lg:hidden">
                                 <I18nText k="members.actions" fallback="관리" />
                               </span>
                               <div className="flex flex-wrap gap-2 lg:justify-end">

@@ -151,7 +151,7 @@ export function SystemSettingsForm({
                 <option value="ko">한국어</option>
                 <option value="en">English</option>
               </SelectInput>
-              <p className="text-xs leading-5 text-slate-500">
+              <p className="text-xs leading-5 text-ink-faint">
                 저장되며, 실제 적용 화면은 단계적으로 연결 예정입니다.
               </p>
             </div>
@@ -170,7 +170,7 @@ export function SystemSettingsForm({
                   </option>
                 ))}
               </SelectInput>
-              <p className="text-xs leading-5 text-slate-500">
+              <p className="text-xs leading-5 text-ink-faint">
                 저장되며, 실제 적용 화면은 단계적으로 연결 예정입니다.
               </p>
             </div>
@@ -188,7 +188,7 @@ export function SystemSettingsForm({
                   </option>
                 ))}
               </SelectInput>
-              <p className="text-xs leading-5 text-slate-500">
+              <p className="text-xs leading-5 text-ink-faint">
                 사용자 또는 조직 시간대가 없을 때 적용되는 시스템 기본
                 시간대입니다.
               </p>
@@ -207,7 +207,7 @@ export function SystemSettingsForm({
                   </option>
                 ))}
               </SelectInput>
-              <p className="text-xs leading-5 text-slate-500">
+              <p className="text-xs leading-5 text-ink-faint">
                 /admin/invitations/new 초대 생성 화면의 기본 만료일로
                 사용됩니다.
               </p>
@@ -282,12 +282,12 @@ export function SystemSettingsForm({
               ["show_page_numbers", "페이지 번호 표시"],
             ].map(([key, label]) => (
               <label
-                className="inline-flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700"
+                className="inline-flex min-w-0 items-center gap-2 rounded-card border border-line-base bg-surface-app px-3 py-2 text-sm font-semibold text-ink-base"
                 key={key}
               >
                 <input
                   checked={Boolean(printOptions[key as keyof PrintOptions])}
-                  className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-600"
+                  className="h-4 w-4 rounded border-line-base text-teal-700 focus:ring-teal-600"
                   onChange={(event) =>
                     setPrintOption(
                       key as keyof PrintOptions,
@@ -301,7 +301,7 @@ export function SystemSettingsForm({
             ))}
           </div>
 
-          <p className="text-xs leading-5 text-slate-500">
+          <p className="text-xs leading-5 text-ink-faint">
             인쇄 옵션은 저장되지만 출력 화면 반영은 단계적으로 연결 예정입니다.
             페이지 번호, 로고, 서명란은 문서별 레이아웃 차이가 있어 현재는
             저장값 중심으로 관리합니다.
@@ -310,7 +310,7 @@ export function SystemSettingsForm({
       </Card>
 
       <div className="flex flex-wrap items-center justify-end gap-3">
-        <p className="text-xs leading-5 text-slate-500">
+        <p className="text-xs leading-5 text-ink-faint">
           설정 변경은 전체 운영 기본값에 영향을 줄 수 있습니다.
         </p>
         <Button type="button" onClick={handleSave} disabled={isSaving}>

@@ -234,7 +234,7 @@ function getStatusClass(status: string | null) {
     return "border-amber-200 bg-amber-50 text-amber-800";
   }
 
-  return "border-slate-200 bg-slate-50 text-slate-700";
+  return "border-line-base bg-surface-sunken text-ink-base";
 }
 
 function getStatusTone(status: string | null) {
@@ -273,10 +273,10 @@ function getVisibilityClass(
   }
 
   if (visibility === "private") {
-    return "border-slate-200 bg-white text-slate-700";
+    return "border-line-base bg-surface-card text-ink-base";
   }
 
-  return "border-slate-200 bg-slate-50 text-slate-700";
+  return "border-line-base bg-surface-sunken text-ink-base";
 }
 
 function getVisibilityTone(
@@ -441,7 +441,7 @@ function sortFilterLabel(sort: SortOption) {
 
 function getRecordsResultSectionClass(hasActiveSearchOrFilter: boolean) {
   return [
-    "mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm print:block print:border-0 print:p-0 print:shadow-none",
+    "mt-8 rounded-card border border-line-base bg-surface-card p-6 shadow-sm print:block print:border-0 print:p-0 print:shadow-none",
     hasActiveSearchOrFilter ? "" : "hidden",
   ]
     .filter(Boolean)
@@ -525,7 +525,7 @@ function groupRecordsByType(records: CombinedRecord[]) {
 
 function RecordCard({ record }: { record: CombinedRecord }) {
   return (
-    <article className="break-inside-avoid rounded-lg border border-slate-200 bg-white p-4 shadow-sm print:mb-3 print:overflow-visible print:bg-white print:shadow-none">
+    <article className="break-inside-avoid rounded-card border border-line-base bg-surface-card p-4 shadow-sm print:mb-3 print:overflow-visible print:bg-white print:shadow-none">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -539,8 +539,8 @@ function RecordCard({ record }: { record: CombinedRecord }) {
               {getVisibilityLabel(record.visibility, record.sharedWithCoach)}
             </Badge>
           </div>
-          <h3 className="mt-3 break-words font-semibold text-slate-950">{record.title}</h3>
-          <p className="mt-1 text-sm text-slate-500">{record.dateLabel}</p>
+          <h3 className="mt-3 break-words font-semibold text-ink-strong">{record.title}</h3>
+          <p className="mt-1 text-sm text-ink-muted">{record.dateLabel}</p>
         </div>
         <ButtonLink
           className="print:hidden"
@@ -552,22 +552,22 @@ function RecordCard({ record }: { record: CombinedRecord }) {
         </ButtonLink>
       </div>
 
-      <dl className="mt-4 grid gap-3 text-sm text-slate-700">
+      <dl className="mt-4 grid gap-3 text-sm text-ink-base">
         <div>
-          <dt className="font-medium text-slate-500">{record.primaryLabel}</dt>
+          <dt className="font-medium text-ink-muted">{record.primaryLabel}</dt>
           <dd className="mt-1 whitespace-pre-wrap break-words">
             {summarizeText(record.primaryText, 120)}
           </dd>
         </div>
         <div>
-          <dt className="font-medium text-slate-500">{record.secondaryLabel}</dt>
+          <dt className="font-medium text-ink-muted">{record.secondaryLabel}</dt>
           <dd className="mt-1 whitespace-pre-wrap break-words">
             {summarizeText(record.secondaryText, 120)}
           </dd>
         </div>
         {record.metaLabel ? (
           <div>
-            <dt className="font-medium text-slate-500">{record.metaLabel}</dt>
+            <dt className="font-medium text-ink-muted">{record.metaLabel}</dt>
             <dd className="mt-1">{record.metaText ?? "-"}</dd>
           </div>
         ) : null}
@@ -856,7 +856,7 @@ export default async function MyCoachingRecordsPage({
 
   return (
     <main
-      className="min-h-screen bg-[var(--trust-bg)] px-4 py-6 text-slate-950 print:bg-white print:px-0 print:py-0 sm:px-6 sm:py-10"
+      className="min-h-screen bg-surface-app px-4 py-5 text-ink-base print:bg-white print:px-0 print:py-0"
       data-records-print-page
     >
       <style>{`
@@ -924,7 +924,7 @@ export default async function MyCoachingRecordsPage({
           }
         }
       `}</style>
-      <section className="mx-auto w-full max-w-6xl print:max-w-none">
+      <section className="mx-auto w-full max-w-md print:max-w-none">
         <Card className="print:border-0 print:shadow-none">
           <CardHeader className="space-y-5">
           <div className="min-w-0">
@@ -943,13 +943,13 @@ export default async function MyCoachingRecordsPage({
                 fallback="하루, 주간, 월간 단위로 나의 코칭 여정과 실천 내용을 기록합니다."
               />
             </CardDescription>
-            <p className="mt-3 hidden text-sm text-slate-600 print:block">
+            <p className="mt-3 hidden text-sm text-ink-muted print:block">
               <I18nText k="myCoaching.records.generatedAt" fallback="생성일" />: {generatedAt}
             </p>
-            <p className="mt-2 hidden text-sm text-slate-600 print:block">
+            <p className="mt-2 hidden text-sm text-ink-muted print:block">
               <I18nText k="myCoaching.records.timezone" fallback="기준 시간대" />: {effectiveTimezone}
             </p>
-            <p className="mt-2 hidden text-sm text-slate-600 print:block">
+            <p className="mt-2 hidden text-sm text-ink-muted print:block">
               <I18nText k="myCoaching.records.printRange" fallback="인쇄 범위" />:{" "}
               <span data-print-range-label="all">
                 <I18nText k="myCoaching.records.currentResults" fallback="현재 결과 전체" />
@@ -964,7 +964,7 @@ export default async function MyCoachingRecordsPage({
                 <I18nText k="myCoaching.records.monthlyReflection" fallback="월간 회고" />
               </span>
             </p>
-            <p className="mt-2 hidden text-sm text-slate-600 print:block">
+            <p className="mt-2 hidden text-sm text-ink-muted print:block">
               <I18nText
                 k="myCoaching.records.printBasis"
                 fallback="출력 기준: 현재 검색/필터/정렬 결과"
@@ -979,15 +979,15 @@ export default async function MyCoachingRecordsPage({
                 </>
               ) : null}
             </p>
-            <p className="mt-2 hidden text-sm text-slate-600 print:block">
+            <p className="mt-2 hidden text-sm text-ink-muted print:block">
               <I18nText k="myCoaching.records.appliedFilters" fallback="적용된 필터" />: {filterSummary}
             </p>
-            <p className="mt-2 hidden text-sm text-slate-600 print:block">
+            <p className="mt-2 hidden text-sm text-ink-muted print:block">
               <I18nText k="myCoaching.records.recordCount" fallback="기록 수" />: {printRecordCountSummary}
             </p>
           </div>
           <div className="print:hidden">
-            <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+            <div className="rounded-card border border-line-base bg-surface-card p-3 shadow-sm">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="shrink-0">
                   <LanguageSwitcher />
@@ -998,7 +998,7 @@ export default async function MyCoachingRecordsPage({
               </div>
             </div>
 
-            <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600">
+            <div className="mt-3 rounded-control border border-line-base bg-surface-sunken p-3 text-sm leading-6 text-ink-muted">
               <p>
                 <I18nText
                   k="myCoaching.records.printNotice"
@@ -1013,15 +1013,9 @@ export default async function MyCoachingRecordsPage({
               </p>
             </div>
 
-            <nav className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:flex-wrap">
-              <ButtonLink href="/my-coaching" icon="arrow-left" size="sm" variant="secondary">
-                <I18nText k="myCoaching.records.backToMyCoaching" fallback="내 코칭 공간으로 돌아가기" />
-              </ButtonLink>
+            <nav className="mt-4 flex flex-col gap-2 border-t border-line-base pt-4 sm:flex-row sm:flex-wrap">
               <ButtonLink href="/my-coaching/moksilgi" icon="report" size="sm" variant="secondary">
                 <I18nText k="myCoaching.myMoksilgi" fallback="나의 목실기" />
-              </ButtonLink>
-              <ButtonLink href="/dashboard" icon="dashboard" size="sm" variant="secondary">
-                <I18nText k="myCoaching.backToDashboard" fallback="대시보드로 돌아가기" />
               </ButtonLink>
             </nav>
           </div>
@@ -1041,23 +1035,23 @@ export default async function MyCoachingRecordsPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-3">
             <ButtonLink
               className="h-full flex-col items-start justify-start p-4 text-left"
               href="/my-coaching/records/daily"
               icon="report"
               variant="secondary"
             >
-              <p className="font-medium text-slate-950">
+              <p className="font-medium text-ink-strong">
                 <I18nText k="myCoaching.records.daily" fallback="하루 기록" />
               </p>
-              <p className="mt-2 text-sm text-slate-600">
+              <p className="mt-2 text-sm text-ink-muted">
                 <I18nText
                   k="myCoaching.records.dailyDescription"
                   fallback="오늘의 묵상, 실천, 적용, 기도제목을 간단히 기록합니다."
                 />
               </p>
-              <p className="mt-4 text-sm font-medium text-slate-700 underline">
+              <p className="mt-4 text-sm font-medium text-ink-base underline">
                 <I18nText k="myCoaching.records.writeDaily" fallback="하루 기록 작성" />
               </p>
             </ButtonLink>
@@ -1068,16 +1062,16 @@ export default async function MyCoachingRecordsPage({
               icon="report"
               variant="secondary"
             >
-              <p className="font-medium text-slate-950">
+              <p className="font-medium text-ink-strong">
                 <I18nText k="myCoaching.records.weekly" fallback="주간 기록" />
               </p>
-              <p className="mt-2 text-sm text-slate-600">
+              <p className="mt-2 text-sm text-ink-muted">
                 <I18nText
                   k="myCoaching.records.weeklyDescription"
                   fallback="한 주간의 목표 실행과 목실기 실천을 정리합니다."
                 />
               </p>
-              <p className="mt-4 text-sm font-medium text-slate-700 underline">
+              <p className="mt-4 text-sm font-medium text-ink-base underline">
                 <I18nText k="myCoaching.records.writeWeekly" fallback="주간 기록 작성" />
               </p>
             </ButtonLink>
@@ -1088,16 +1082,16 @@ export default async function MyCoachingRecordsPage({
               icon="report"
               variant="secondary"
             >
-              <p className="font-medium text-slate-950">
+              <p className="font-medium text-ink-strong">
                 <I18nText k="myCoaching.records.monthly" fallback="월간 기록" />
               </p>
-              <p className="mt-2 text-sm text-slate-600">
+              <p className="mt-2 text-sm text-ink-muted">
                 <I18nText
                   k="myCoaching.records.monthlyDescription"
                   fallback="한 달 동안의 성장과 다음 달 계획을 정리합니다."
                 />
               </p>
-              <p className="mt-4 text-sm font-medium text-slate-700 underline">
+              <p className="mt-4 text-sm font-medium text-ink-base underline">
                 <I18nText k="myCoaching.records.writeMonthly" fallback="월간 회고 작성" />
               </p>
             </ButtonLink>
@@ -1129,7 +1123,7 @@ export default async function MyCoachingRecordsPage({
                 name="q"
                 type="search"
               />
-              <p className="mt-1 text-xs leading-5 text-slate-500">
+              <p className="mt-1 text-xs leading-5 text-ink-muted">
                 <I18nText
                   k="myCoaching.records.filters.searchPlaceholder"
                   fallback="제목, 돌아봄, 기도제목, 진행요약, 회고 내용 검색"
@@ -1137,7 +1131,7 @@ export default async function MyCoachingRecordsPage({
               </p>
             </FieldLabel>
 
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-3">
               <FieldLabel htmlFor="type">
                 <FieldText>
                   <I18nText k="myCoaching.records.filters.recordType" fallback="기록 유형" />
@@ -1236,7 +1230,7 @@ export default async function MyCoachingRecordsPage({
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-ink-muted">
                 <ResultCountText
                   shown={filteredRecords.length}
                   total={combinedRecords.length}
@@ -1273,15 +1267,15 @@ export default async function MyCoachingRecordsPage({
           </CardHeader>
 
           <CardContent>
-          <div className="grid gap-5 lg:grid-cols-3">
-            <Card className="bg-slate-50">
+          <div className="grid gap-3">
+            <Card className="bg-surface-sunken">
               <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="font-semibold text-slate-950">
+                  <h3 className="font-semibold text-ink-strong">
                     <I18nText k="myCoaching.records.recentDaily" fallback="최근 하루 기록" />
                   </h3>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <p className="mt-1 text-sm text-ink-muted">
                     <I18nText k="myCoaching.records.latestDailyThree" fallback="최신 기록 날짜순 3개" />
                   </p>
                 </div>
@@ -1296,11 +1290,11 @@ export default async function MyCoachingRecordsPage({
               </div>
 
               {!dailyResult.ok ? (
-                <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                <div className="mt-4 rounded-control border border-red-200 bg-red-50 p-3 text-sm text-red-800">
                   <I18nText k="myCoaching.records.dailyLoadFailed" fallback="하루 기록을 불러오지 못했습니다." />
                 </div>
               ) : recentDailyRecords.length === 0 ? (
-                <div className="mt-4 rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-600">
+                <div className="mt-4 rounded-control border border-line-base bg-surface-card p-3 text-sm text-ink-muted">
                   <I18nText k="myCoaching.records.noDaily" fallback="아직 작성한 하루 기록이 없습니다." />
                 </div>
               ) : (
@@ -1336,14 +1330,14 @@ export default async function MyCoachingRecordsPage({
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-50">
+            <Card className="bg-surface-sunken">
               <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="font-semibold text-slate-950">
+                  <h3 className="font-semibold text-ink-strong">
                     <I18nText k="myCoaching.records.recentWeekly" fallback="최근 주간 기록" />
                   </h3>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <p className="mt-1 text-sm text-ink-muted">
                     <I18nText k="myCoaching.records.latestWeeklyThree" fallback="최신 주간 기간순 3개" />
                   </p>
                 </div>
@@ -1358,11 +1352,11 @@ export default async function MyCoachingRecordsPage({
               </div>
 
               {!weeklyResult.ok ? (
-                <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                <div className="mt-4 rounded-control border border-red-200 bg-red-50 p-3 text-sm text-red-800">
                   <I18nText k="myCoaching.records.weeklyLoadFailed" fallback="주간 기록을 불러오지 못했습니다." />
                 </div>
               ) : recentWeeklyLogs.length === 0 ? (
-                <div className="mt-4 rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-600">
+                <div className="mt-4 rounded-control border border-line-base bg-surface-card p-3 text-sm text-ink-muted">
                   <I18nText k="myCoaching.records.noWeekly" fallback="아직 작성한 주간 기록이 없습니다." />
                 </div>
               ) : (
@@ -1406,14 +1400,14 @@ export default async function MyCoachingRecordsPage({
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-50">
+            <Card className="bg-surface-sunken">
               <CardContent className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="font-semibold text-slate-950">
+                  <h3 className="font-semibold text-ink-strong">
                     <I18nText k="myCoaching.records.recentMonthly" fallback="최근 월간 회고" />
                   </h3>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <p className="mt-1 text-sm text-ink-muted">
                     <I18nText k="myCoaching.records.latestMonthlyThree" fallback="최신 연도/월순 3개" />
                   </p>
                 </div>
@@ -1428,11 +1422,11 @@ export default async function MyCoachingRecordsPage({
               </div>
 
               {!monthlyResult.ok ? (
-                <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                <div className="mt-4 rounded-control border border-red-200 bg-red-50 p-3 text-sm text-red-800">
                   <I18nText k="myCoaching.records.monthlyLoadFailed" fallback="월간 회고를 불러오지 못했습니다." />
                 </div>
               ) : recentMonthlyReflections.length === 0 ? (
-                <div className="mt-4 rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-600">
+                <div className="mt-4 rounded-control border border-line-base bg-surface-card p-3 text-sm text-ink-muted">
                   <I18nText k="myCoaching.records.noMonthly" fallback="아직 작성한 월간 회고가 없습니다." />
                 </div>
               ) : (
@@ -1483,20 +1477,20 @@ export default async function MyCoachingRecordsPage({
               <h2 className="text-lg font-semibold">
                 <I18nText k="myCoaching.records.searchResults" fallback="검색 결과" />
               </h2>
-              <p className="mt-2 text-sm text-slate-600">
+              <p className="mt-2 text-sm text-ink-muted">
                 <ResultCountText
                   shown={printRecords.length}
                   total={combinedRecords.length}
                 />
               </p>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-ink-muted">
                 <I18nText k="myCoaching.records.appliedFilters" fallback="적용된 필터" />: {filterSummary}
               </p>
             </div>
           </div>
 
           {printRecords.length === 0 ? (
-            <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            <div className="mt-5 rounded-control border border-line-base bg-surface-sunken p-4 text-sm text-ink-muted">
               <p>
                 <I18nText
                   k="myCoaching.records.noRecordsForConditions"
@@ -1538,11 +1532,11 @@ export default async function MyCoachingRecordsPage({
           ) : (
             <div className="mt-5 grid gap-6">
               <section data-print-section="daily">
-                <h3 className="border-b border-slate-200 pb-2 font-semibold">
+                <h3 className="border-b border-line-base pb-2 font-semibold">
                   <I18nText k="myCoaching.records.dailyResults" fallback="하루 기록 결과" />
                 </h3>
                 {dailyPrintRecords.length === 0 ? (
-                  <p className="mt-3 text-sm text-slate-600">
+                  <p className="mt-3 text-sm text-ink-muted">
                     <I18nText
                       k="myCoaching.records.noDailyResults"
                       fallback="선택한 조건에 해당하는 하루 기록이 없습니다."
@@ -1558,11 +1552,11 @@ export default async function MyCoachingRecordsPage({
               </section>
 
               <section data-print-section="weekly">
-                <h3 className="border-b border-slate-200 pb-2 font-semibold">
+                <h3 className="border-b border-line-base pb-2 font-semibold">
                   <I18nText k="myCoaching.records.weeklyResults" fallback="주간 기록 결과" />
                 </h3>
                 {weeklyPrintRecords.length === 0 ? (
-                  <p className="mt-3 text-sm text-slate-600">
+                  <p className="mt-3 text-sm text-ink-muted">
                     <I18nText
                       k="myCoaching.records.noWeeklyResults"
                       fallback="선택한 조건에 해당하는 주간 기록이 없습니다."
@@ -1578,11 +1572,11 @@ export default async function MyCoachingRecordsPage({
               </section>
 
               <section data-print-section="monthly">
-                <h3 className="border-b border-slate-200 pb-2 font-semibold">
+                <h3 className="border-b border-line-base pb-2 font-semibold">
                   <I18nText k="myCoaching.records.monthlyResults" fallback="월간 회고 결과" />
                 </h3>
                 {monthlyPrintRecords.length === 0 ? (
-                  <p className="mt-3 text-sm text-slate-600">
+                  <p className="mt-3 text-sm text-ink-muted">
                     <I18nText
                       k="myCoaching.records.noMonthlyResults"
                       fallback="선택한 조건에 해당하는 월간 회고가 없습니다."

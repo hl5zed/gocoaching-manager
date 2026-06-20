@@ -11,7 +11,25 @@ import {
 } from "@/lib/auth/route-access";
 import type { Database, ProfileStatus } from "@/types/database";
 
+const SUPABASE_HOST = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+  : "*.supabase.co";
+
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self'",
+  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST}`,
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+].join("; ");
+
 const securityHeaders = {
+  "Content-Security-Policy": CONTENT_SECURITY_POLICY,
   "X-Frame-Options": "DENY",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",

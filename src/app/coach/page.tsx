@@ -103,12 +103,12 @@ function SummaryMetricCard({
   return (
     <Card>
       <CardContent className="p-4">
-        <p className="break-words text-sm text-slate-500">{title}</p>
+        <p className="break-words text-sm text-ink-faint">{title}</p>
         <p className="mt-2 break-words text-2xl font-semibold">{value}</p>
         {typeof progressValue === "number" ? (
           <ProgressBar className="mt-3" showValue={false} value={progressValue} />
         ) : null}
-        <p className="mt-3 break-words text-xs leading-5 text-slate-500">
+        <p className="mt-3 break-words text-xs leading-5 text-ink-faint">
           {description}
         </p>
       </CardContent>
@@ -126,7 +126,7 @@ export default async function CoachPage() {
   const dashboard = await getCoachDashboard();
 
   return (
-    <main className="min-h-screen bg-[var(--trust-bg)] px-4 py-6 text-slate-950 sm:px-6 sm:py-10">
+    <main className="min-h-screen bg-[var(--trust-bg)] px-4 py-6 text-ink-strong sm:px-6 sm:py-10">
       <div className="mx-auto max-w-6xl">
         <Card>
           <CardHeader className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
@@ -215,7 +215,7 @@ export default async function CoachPage() {
 
               {dashboard.data.coachees.length === 0 ? (
                 <CardContent>
-                <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600">
+                <div className="rounded-lg border border-dashed border-line-base bg-surface-app p-5 text-sm text-ink-muted">
                   현재 배정된 코치이가 없습니다.
                 </div>
                 </CardContent>
@@ -223,7 +223,7 @@ export default async function CoachPage() {
                 <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="min-w-[920px] w-full text-left text-sm">
-                    <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
+                    <thead className="border-b border-line-base text-xs uppercase text-ink-faint">
                       <tr>
                         <th className="whitespace-nowrap px-3 py-2 font-medium">코치이</th>
                         <th className="whitespace-nowrap px-3 py-2 font-medium">소속</th>
@@ -241,39 +241,39 @@ export default async function CoachPage() {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-line-soft">
                       {dashboard.data.coachees.map((coachee) => (
                         <tr
                           key={coachee.relationshipId}
                           className="align-top transition hover:bg-[var(--trust-primary-soft)]/40"
                         >
                           <td className="px-3 py-3">
-                            <div className="min-w-0 break-words font-medium text-slate-900">
+                            <div className="min-w-0 break-words font-medium text-ink-strong">
                               {coachee.coacheeName}
                             </div>
-                            <div className="mt-1 break-all text-xs text-slate-500">
+                            <div className="mt-1 break-all text-xs text-ink-faint">
                               {coachee.coacheeEmail ?? "이메일 미등록"}
                             </div>
                           </td>
-                          <td className="px-3 py-3 break-words text-slate-600">
+                          <td className="px-3 py-3 break-words text-ink-muted">
                             {getScopeLabel(coachee)}
                           </td>
-                          <td className="px-3 py-3 text-slate-600">
+                          <td className="px-3 py-3 text-ink-muted">
                             {formatDate(coachee.startedAt)}
                           </td>
                           <td className="px-3 py-3">
                             <WeeklyStatusBadge status={coachee.latestWeeklyStatus} />
-                            <div className="mt-1 text-xs text-slate-500">
+                            <div className="mt-1 text-xs text-ink-faint">
                               제출일: {formatDate(coachee.latestWeeklySubmittedAt)}
                             </div>
                           </td>
-                          <td className="px-3 py-3 text-slate-600">
+                          <td className="px-3 py-3 text-ink-muted">
                             <div>하루 {coachee.sharedDailyCount}개</div>
-                            <div className="text-xs text-slate-500">
+                            <div className="text-xs text-ink-faint">
                               최근: {formatDate(coachee.latestSharedDailyDate)}
                             </div>
                             <div className="mt-2">월간 {coachee.sharedMonthlyCount}개</div>
-                            <div className="text-xs text-slate-500">
+                            <div className="text-xs text-ink-faint">
                               최근: {coachee.latestSharedMonthlyLabel ?? "미등록"}
                             </div>
                           </td>
@@ -290,7 +290,7 @@ export default async function CoachPage() {
             </Card>
           </section>
         ) : (
-          <div className="mt-8 rounded-lg border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
+          <div className="mt-8 rounded-control border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
             {dashboard.error.message}
           </div>
         )}
@@ -303,7 +303,7 @@ export default async function CoachPage() {
             variant="secondary"
           >
             <h2 className="text-lg font-semibold">코칭 관계 보기</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-ink-faint">
               현재 담당 중인 코칭 관계를 확인합니다.
             </p>
           </ButtonLink>
@@ -315,7 +315,7 @@ export default async function CoachPage() {
             variant="secondary"
           >
             <h2 className="text-lg font-semibold">주간 기록 보기</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-ink-faint">
               담당 코치이들의 주간 기록을 확인합니다.
             </p>
           </ButtonLink>
@@ -327,7 +327,7 @@ export default async function CoachPage() {
             variant="secondary"
           >
             <h2 className="text-lg font-semibold">코치이 목실기 보기</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-ink-faint">
               담당 코치이들의 목실기와 성취 요약을 확인합니다.
             </p>
           </ButtonLink>

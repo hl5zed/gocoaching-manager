@@ -61,7 +61,7 @@ function FieldBadge({
 }) {
   const toneClass: Record<FieldBadgeTone, string> = {
     new: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    auto: "border-slate-200 bg-slate-100 text-slate-600",
+    auto: "border-line-base bg-surface-sunken text-ink-muted",
   };
 
   return (
@@ -81,12 +81,12 @@ function ReadOnlyField({
   value: string;
 }) {
   return (
-    <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
-      <dt className="text-sm font-medium text-slate-500">
+    <div className="rounded-md border border-line-base bg-surface-card px-3 py-2">
+      <dt className="text-sm font-medium text-ink-faint">
         {label}
         <FieldBadge tone="auto">자동</FieldBadge>
       </dt>
-      <dd className="mt-1 break-words text-sm text-slate-950">
+      <dd className="mt-1 break-words text-sm text-ink-strong">
         {value.trim().length > 0 ? value : "미지정"}
       </dd>
     </div>
@@ -170,9 +170,9 @@ export function AcceptInvitationButton({
 
   return (
     <div className="mt-6 space-y-5">
-      <section className="rounded-md border border-slate-200 bg-slate-50 p-4">
-        <h2 className="text-base font-semibold text-slate-950">기본 정보</h2>
-        <p className="mt-1 text-sm text-slate-600">
+      <section className="rounded-card border border-line-base bg-surface-app p-4">
+        <h2 className="text-base font-semibold text-ink-strong">기본 정보</h2>
+        <p className="mt-1 text-sm text-ink-muted">
           초대 이메일은 자동으로 확인됩니다. 이름과 표시 이름은 현재 로그인 계정의 프로필 흐름을 따릅니다.
         </p>
         <dl className="mt-4 grid gap-3 md:grid-cols-2">
@@ -181,9 +181,9 @@ export function AcceptInvitationButton({
         </dl>
       </section>
 
-      <section className="rounded-md border border-slate-200 bg-slate-50 p-4">
-        <h2 className="text-base font-semibold text-slate-950">소속 정보</h2>
-        <p className="mt-1 text-sm text-slate-600">
+      <section className="rounded-card border border-line-base bg-surface-app p-4">
+        <h2 className="text-base font-semibold text-ink-strong">소속 정보</h2>
+        <p className="mt-1 text-sm text-ink-muted">
           소속 직분은 시스템 권한이 아니라 실제 소속 내 직분입니다.
         </p>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -191,12 +191,12 @@ export function AcceptInvitationButton({
           <ReadOnlyField label="소속 교회" value={churchLabel} />
 
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-base">
               소속 국가
               <FieldBadge tone="new">신규</FieldBadge>
             </span>
             <select
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 font-sans tracking-normal"
+              className="rounded-md border border-line-base bg-surface-card px-3 py-2 font-sans tracking-normal"
               onChange={(event) => setCountryId(event.target.value)}
               value={countryId}
             >
@@ -209,19 +209,19 @@ export function AcceptInvitationButton({
               ))}
             </select>
             {countries.length === 0 ? (
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-ink-faint">
                 등록된 국가가 없거나 국가 목록을 불러오지 못한 경우 미지정으로 수락할 수 있습니다.
               </span>
             ) : null}
           </label>
 
           <label className="grid gap-2 md:col-span-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-base">
               소속 직분
               <FieldBadge tone="new">신규</FieldBadge>
             </span>
             <select
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 font-sans tracking-normal"
+              className="rounded-md border border-line-base bg-surface-card px-3 py-2 font-sans tracking-normal"
               onChange={(event) => setMinistryPosition(event.target.value)}
               value={ministryPosition}
             >
@@ -236,21 +236,21 @@ export function AcceptInvitationButton({
         </div>
       </section>
 
-      <section className="rounded-md border border-slate-200 bg-slate-50 p-4">
-        <h2 className="text-base font-semibold text-slate-950">역할 및 세대</h2>
-        <p className="mt-1 text-sm text-slate-600">
+      <section className="rounded-card border border-line-base bg-surface-app p-4">
+        <h2 className="text-base font-semibold text-ink-strong">역할 및 세대</h2>
+        <p className="mt-1 text-sm text-ink-muted">
           시스템 역할은 초대에 지정된 권한이고, 세대는 회원 프로필에 숫자로 저장됩니다.
         </p>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <ReadOnlyField label="시스템 역할" value={invitedRoleLabel} />
 
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-base">
               세대
               <FieldBadge tone="new">신규</FieldBadge>
             </span>
             <select
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 font-sans tracking-normal"
+              className="rounded-md border border-line-base bg-surface-card px-3 py-2 font-sans tracking-normal"
               onChange={(event) => {
                 setGenerationSelection(event.target.value);
                 if (event.target.value !== "custom") {
@@ -274,12 +274,12 @@ export function AcceptInvitationButton({
 
           {generationSelection === "custom" ? (
             <label className="grid gap-2 md:col-span-2">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-ink-base">
                 직접 입력 세대
                 <FieldBadge tone="new">신규</FieldBadge>
               </span>
               <input
-                className="rounded-md border border-slate-300 bg-white px-3 py-2 font-sans tracking-normal"
+                className="rounded-md border border-line-base bg-surface-card px-3 py-2 font-sans tracking-normal"
                 min="1"
                 onChange={(event) =>
                   setCustomGenerationNumber(event.target.value)
@@ -291,38 +291,38 @@ export function AcceptInvitationButton({
             </label>
           ) : null}
         </div>
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-ink-faint">
           직접 입력은 1 이상의 숫자만 저장되며, NaN 값은 저장하지 않습니다.
         </p>
       </section>
 
-      <section className="rounded-md border border-slate-200 bg-slate-50 p-4">
-        <h2 className="text-base font-semibold text-slate-950">계정 설정</h2>
-        <p className="mt-1 text-sm text-slate-600">
+      <section className="rounded-card border border-line-base bg-surface-app p-4">
+        <h2 className="text-base font-semibold text-ink-strong">계정 설정</h2>
+        <p className="mt-1 text-sm text-ink-muted">
           이 초대는 현재 로그인한 계정에 연결됩니다. 아직 로그인하지 않았다면
           먼저 로그인한 뒤 다시 초대 링크를 열어 주세요. 비밀번호 설정은 이
           화면에서 진행하지 않습니다. 관리자로부터 받은 임시 비밀번호로 먼저
           로그인해 주세요.
         </p>
-        <div className="mt-4 rounded-md border border-slate-200 bg-white p-4">
-          <h3 className="text-sm font-semibold text-slate-800">
+        <div className="mt-4 rounded-card border border-line-base bg-surface-card p-4">
+          <h3 className="text-sm font-semibold text-ink-base">
             초대 수락 순서
           </h3>
-          <ol className="mt-3 grid gap-2 text-sm leading-6 text-slate-600">
+          <ol className="mt-3 grid gap-2 text-sm leading-6 text-ink-muted">
             <li>1. 관리자로부터 받은 이메일과 임시 비밀번호로 먼저 로그인합니다.</li>
             <li>2. 로그인 후 다시 초대 링크를 엽니다.</li>
             <li>3. 소속 국가, 소속 직분, 세대를 확인합니다.</li>
             <li>4. 초대 수락 버튼을 눌러 가입을 완료합니다.</li>
           </ol>
           <Link
-            className="mt-4 inline-flex rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+            className="mt-4 inline-flex rounded-control border border-line-base px-3 py-2 text-sm font-medium text-ink-base"
             href="/login"
           >
             먼저 로그인하기
           </Link>
         </div>
         <button
-          className="mt-4 rounded-md bg-slate-950 px-4 py-2.5 font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+          className="mt-4 rounded-control bg-navy-900 px-4 py-2.5 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isSubmitting}
           onClick={handleAccept}
           type="button"
@@ -341,7 +341,7 @@ export function AcceptInvitationButton({
       )}
 
       {errorMessage && (
-        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-control border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {errorMessage}
         </div>
       )}

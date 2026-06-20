@@ -42,10 +42,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <section className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md flex-col justify-center">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+          <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
             GoCoaching Manager
           </p>
           <LanguageSwitcher />

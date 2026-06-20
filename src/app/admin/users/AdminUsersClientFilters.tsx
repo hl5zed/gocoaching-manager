@@ -323,7 +323,7 @@ export function AdminUsersClientFilters({
           </Button>
         </div>
 
-        <p className="mt-3 text-sm text-slate-600">
+        <p className="mt-3 text-sm text-ink-muted">
           {formatMessage(
             t("adminUsers.filterInfo", "필터 결과 {filtered}명 / 현재 페이지 데이터 {total}명"),
             { filtered: filteredCount, total: totalCount },
@@ -336,7 +336,7 @@ export function AdminUsersClientFilters({
 
       {filteredCount === 0 ? (
         <Card className="mt-4">
-          <CardContent className="p-6 text-sm text-slate-600">
+          <CardContent className="p-6 text-sm text-ink-muted">
             {getEmptyFilterMessage({ search, role, status, t })}
           </CardContent>
         </Card>
@@ -344,7 +344,7 @@ export function AdminUsersClientFilters({
 
       <Card className="mt-4">
         <CardContent className="flex flex-wrap items-center justify-between gap-4 px-4 py-3">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-ink-muted">
           {formatMessage(
             t("adminUsers.pageInfo", "전체 결과 {total}명 · 현재 페이지 {page} / {pages}"),
             { page: currentPage, pages: totalPages, total: filteredCount },

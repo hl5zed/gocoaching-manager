@@ -132,11 +132,11 @@ function invitationStatusBadgeClass(status: AdminInvitationSummary["status"]) {
     case "accepted":
       return "border-emerald-200 bg-emerald-50 text-emerald-700";
     case "expired":
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "border-line-base bg-surface-sunken text-ink-base";
     case "revoked":
       return "border-rose-200 bg-rose-50 text-rose-700";
     default:
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "border-line-base bg-surface-sunken text-ink-base";
   }
 }
 
@@ -163,15 +163,15 @@ export default async function AdminInvitationsPage({
   const hasActiveFilter = q.length > 0 || role !== "all" || status !== "all";
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <section className="mx-auto w-full max-w-7xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+            <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
               관리자
             </p>
             <h1 className="mt-3 text-3xl font-semibold">초대</h1>
-            <p className="mt-4 max-w-3xl leading-7 text-slate-600">
+            <p className="mt-4 max-w-3xl leading-7 text-ink-muted">
               초대와 현재 상태를 읽기 전용으로 확인할 수 있습니다.
             </p>
             <PageNavigationButtons
@@ -183,7 +183,7 @@ export default async function AdminInvitationsPage({
           </div>
 
           <Link
-            className="rounded-md bg-slate-950 px-4 py-2 font-medium text-white"
+            className="rounded-control bg-navy-900 px-4 py-2 font-medium text-white"
             href="/admin/invitations/new"
           >
             초대 생성
@@ -191,14 +191,14 @@ export default async function AdminInvitationsPage({
         </div>
 
         <form
-          className="mt-6 rounded-md border border-slate-200 bg-white p-4"
+          className="mt-6 rounded-card border border-line-base bg-surface-card p-4"
           method="get"
         >
           <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-slate-700">검색</span>
+              <span className="text-sm font-medium text-ink-base">검색</span>
               <input
-                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                 defaultValue={q}
                 name="q"
                 placeholder="이메일"
@@ -207,9 +207,9 @@ export default async function AdminInvitationsPage({
             </label>
 
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-slate-700">역할</span>
+              <span className="text-sm font-medium text-ink-base">역할</span>
               <select
-                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                 defaultValue={role}
                 name="role"
               >
@@ -223,9 +223,9 @@ export default async function AdminInvitationsPage({
             </label>
 
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-slate-700">상태</span>
+              <span className="text-sm font-medium text-ink-base">상태</span>
               <select
-                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                 defaultValue={status}
                 name="status"
               >
@@ -239,7 +239,7 @@ export default async function AdminInvitationsPage({
             </label>
 
             <button
-              className="rounded-md bg-slate-950 px-4 py-2 font-medium text-white"
+              className="rounded-control bg-navy-900 px-4 py-2 font-medium text-white"
               type="submit"
             >
               필터
@@ -248,14 +248,14 @@ export default async function AdminInvitationsPage({
         </form>
 
         {error && (
-          <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <div className="mt-6 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
             지금 초대를 불러올 수 없습니다.
           </div>
         )}
 
         {!error && invitations.length === 0 && (
-          <div className="mt-6 rounded-md border border-slate-200 bg-white p-6 text-slate-600">
-            <p className="font-medium text-slate-800">
+          <div className="mt-6 rounded-card border border-line-base bg-surface-card p-6 text-ink-muted">
+            <p className="font-medium text-ink-base">
               {hasActiveFilter
                 ? "검색 조건에 맞는 초대가 없습니다."
                 : "아직 생성된 초대가 없습니다."}
@@ -268,14 +268,14 @@ export default async function AdminInvitationsPage({
             <div className="mt-4 flex flex-wrap gap-2">
               {hasActiveFilter ? (
                 <Link
-                  className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  className="rounded-control border border-line-base px-4 py-2 text-sm font-medium text-ink-base hover:bg-surface-sunken"
                   href="/admin/invitations"
                 >
                   필터 초기화
                 </Link>
               ) : null}
               <Link
-                className="rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                className="rounded-control bg-navy-900 px-4 py-2 text-sm font-medium text-white hover:bg-navy-800"
                 href="/admin/invitations/new"
               >
                 초대 생성
@@ -286,13 +286,13 @@ export default async function AdminInvitationsPage({
 
         {!error && invitations.length > 0 && (
           <>
-            <p className="mt-6 text-sm text-slate-500 md:hidden">
+            <p className="mt-6 text-sm text-ink-faint md:hidden">
               표는 가로로 스크롤해 전체 내용을 확인하세요.
             </p>
-            <div className="mt-6 overflow-x-auto rounded-md border border-slate-200 bg-white">
+            <div className="mt-6 overflow-x-auto rounded-md border border-line-base bg-surface-card">
               <table className="w-full min-w-[1280px] border-collapse text-left text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-500">
+                  <tr className="border-b border-line-soft text-ink-faint">
                     <th className="px-4 py-3 font-medium">이메일</th>
                     <th className="px-4 py-3 font-medium">역할</th>
                     <th className="px-4 py-3 font-medium">범위</th>
@@ -307,19 +307,19 @@ export default async function AdminInvitationsPage({
                 <tbody>
                   {invitations.map((invitation) => (
                     <tr
-                      className="border-b border-slate-100 text-slate-800"
+                      className="border-b border-line-soft text-ink-base"
                       key={invitation.id}
                     >
                       <td className="px-4 py-3">
                         <Link
-                          className="font-medium text-slate-900 underline"
+                          className="font-medium text-ink-strong underline"
                           href={getDetailHref(invitation.id, currentListHref)}
                         >
                           {invitation.email}
                         </Link>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                        <span className="inline-flex rounded-full border border-line-base bg-surface-sunken px-2.5 py-1 text-xs font-medium text-ink-base">
                           {getRoleLabel(invitation.invited_role)}
                         </span>
                       </td>
@@ -356,7 +356,7 @@ export default async function AdminInvitationsPage({
                             )}
                           </div>
                         ) : (
-                          <span className="text-slate-400">—</span>
+                          <span className="text-ink-faint">—</span>
                         )}
                       </td>
                     </tr>
@@ -365,31 +365,31 @@ export default async function AdminInvitationsPage({
               </table>
             </div>
 
-            <div className="mt-4 flex items-center justify-between gap-4 rounded-md border border-slate-200 bg-white px-4 py-3">
-              <p className="text-sm text-slate-600">{page}페이지</p>
+            <div className="mt-4 flex items-center justify-between gap-4 rounded-md border border-line-base bg-surface-card px-4 py-3">
+              <p className="text-sm text-ink-muted">{page}페이지</p>
               <div className="flex items-center gap-2">
                 {page > 1 ? (
                   <Link
-                    className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+                    className="rounded-control border border-line-base px-3 py-2 text-sm font-medium text-ink-base"
                     href={getPageHref({ q, role, status, page: page - 1 })}
                   >
                     이전
                   </Link>
                 ) : (
-                  <span className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-400">
+                  <span className="rounded-control border border-line-base px-3 py-2 text-sm text-ink-faint">
                     이전
                   </span>
                 )}
 
                 {hasNext ? (
                   <Link
-                    className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+                    className="rounded-control border border-line-base px-3 py-2 text-sm font-medium text-ink-base"
                     href={getPageHref({ q, role, status, page: page + 1 })}
                   >
                     다음
                   </Link>
                 ) : (
-                  <span className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-400">
+                  <span className="rounded-control border border-line-base px-3 py-2 text-sm text-ink-faint">
                     다음
                   </span>
                 )}

@@ -59,7 +59,7 @@ export default async function CoachWeeklyLogsPage() {
 
   if (result.error?.code === "PROFILE_NOT_FOUND") {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+      <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
         <div className="mx-auto max-w-5xl">
           <p className="rounded-md border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800">
             아직 프로필이 생성되지 않았습니다.
@@ -77,10 +77,10 @@ export default async function CoachWeeklyLogsPage() {
 
   if (result.error) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+      <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
         <div className="mx-auto max-w-5xl">
           <Nav />
-          <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+          <p className="rounded-control border border-red-200 bg-red-50 px-4 py-3 text-red-700">
             지금 주간 기록을 불러올 수 없습니다.
           </p>
         </div>
@@ -91,23 +91,23 @@ export default async function CoachWeeklyLogsPage() {
   const logs = result.data;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <div className="mx-auto max-w-5xl">
         <Nav />
 
         <h1 className="mt-6 text-2xl font-semibold">주간 기록</h1>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm text-ink-muted">
           담당 코치이가 제출한 주간 기록을 확인합니다.
         </p>
 
         {logs.length === 0 ? (
-          <p className="mt-8 rounded-md border border-slate-200 bg-white px-4 py-6 text-center text-slate-500">
+          <p className="mt-8 rounded-md border border-line-base bg-surface-card px-4 py-6 text-center text-ink-faint">
             아직 확인할 주간 기록이 없습니다.
           </p>
         ) : (
-          <div className="mt-6 overflow-x-auto rounded-md border border-slate-200 bg-white">
+          <div className="mt-6 overflow-x-auto rounded-md border border-line-base bg-surface-card">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-100 text-xs font-medium uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-line-base bg-surface-sunken text-xs font-medium uppercase tracking-wide text-ink-faint">
                 <tr>
                   <th className="px-4 py-3">코치이</th>
                   <th className="px-4 py-3">주간 기간</th>
@@ -118,9 +118,9 @@ export default async function CoachWeeklyLogsPage() {
                   <th className="px-4 py-3">보기</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-line-soft">
                 {logs.map((entry) => (
-                  <tr key={entry.id} className="hover:bg-slate-50">
+                  <tr key={entry.id} className="hover:bg-surface-sunken">
                     <td className="px-4 py-3 font-medium">{coacheeName(entry)}</td>
                     <td className="px-4 py-3">
                       {formatDate(entry.week_start)} ~ {formatDate(entry.week_end)}
@@ -158,7 +158,7 @@ function Nav() {
       <Link href="/coach" className="text-blue-600 hover:underline">
         코치 홈
       </Link>
-      <span className="text-slate-300">/</span>
+      <span className="text-ink-faint">/</span>
       <Link href="/dashboard" className="text-blue-600 hover:underline">
         대시보드
       </Link>
@@ -167,7 +167,7 @@ function Nav() {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  let color = "bg-slate-100 text-slate-600";
+  let color = "bg-surface-sunken text-ink-muted";
 
   if (status === "submitted") {
     color = "bg-green-100 text-green-700";
@@ -178,7 +178,7 @@ function StatusBadge({ status }: { status: string }) {
   }
 
   if (status === "archived") {
-    color = "bg-slate-200 text-slate-500";
+    color = "bg-surface-sunken text-ink-faint";
   }
 
   return (

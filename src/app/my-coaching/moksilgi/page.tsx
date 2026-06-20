@@ -2,7 +2,18 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { MoksilgiAreaCard } from "@/components/coachee/MoksilgiAreaCard";
+import { MoksilgiPrintSummary } from "@/components/coachee/MoksilgiPrintSummary";
+import {
+  MoksilgiAppBar,
+  MoksilgiProgressCard,
+  MoksilgiSection,
+  MoksilgiSectionNav,
+} from "@/components/coachee/MoksilgiSection";
 import { PrintPageButton } from "@/components/print/PrintPageButton";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import {
   getMyMoksilgi,
@@ -16,6 +27,10 @@ import {
 import type { Json, MoksilgiMeasurementType } from "@/types/database";
 
 export const dynamic = "force-dynamic";
+
+const INPUT_CLASS =
+  "mt-2 w-full rounded-control border border-line-base bg-surface-card px-3 py-2 text-ink-base outline-none focus:border-brand-600";
+const LABEL_CLASS = "text-sm font-medium text-ink-muted";
 
 const MEASUREMENT_OPTIONS: Array<{
   value: MoksilgiMeasurementType;
@@ -44,12 +59,40 @@ const MEASUREMENT_OPTIONS: Array<{
   },
 ];
 
+const SECTION_NAV = [
+  { anchorId: "section-basic", label: "기본정보" },
+  { anchorId: "section-mission", label: "사명" },
+  { anchorId: "section-vision", label: "비전" },
+  { anchorId: "section-core", label: "핵심가치" },
+  { anchorId: "section-goal", label: "목표" },
+  { anchorId: "section-strategy", label: "실행전략" },
+] as const;
+
+type EditSection = "basic" | "mission" | "vision" | "core" | "goal";
+
 function normalizeMessage(value: string | string[] | undefined) {
   if (Array.isArray(value)) {
     return value[0] ?? "";
   }
 
   return value ?? "";
+}
+
+function normalizeEditSection(
+  value: string | string[] | undefined,
+): EditSection | null {
+  const raw = normalizeMessage(value);
+  if (
+    raw === "basic" ||
+    raw === "mission" ||
+    raw === "vision" ||
+    raw === "core" ||
+    raw === "goal"
+  ) {
+    return raw;
+  }
+
+  return null;
 }
 
 function jsonArray(value: Json): Json[] {
@@ -105,6 +148,76 @@ function displayValue(value: string | number | null) {
   }
 
   return value.trim().length > 0 ? value : "-";
+}
+
+function hasText(value: string | null | undefined) {
+  return Boolean(value?.trim());
+}
+
+function isBasicComplete(plan: MoksilgiPlan | null) {
+  if (!plan) return false;
+  return (
+    hasText(plan.title) &&
+    hasText(plan.period_start) &&
+    hasText(plan.period_end) &&
+    hasText(plan.author_name)
+  );
+}
+
+function isMissionComplete(plan: MoksilgiPlan | null) {
+  return hasText(plan?.mission_statement);
+}
+
+function isVisionComplete(plan: MoksilgiPlan | null) {
+  return hasText(plan?.vision_statement) || plan?.vision_year !== null;
+}
+
+function isCoreComplete(coreValues: MoksilgiCoreValue[]) {
+  return coreValues.some(
+    (value) =>
+      hasText(value.value_name) ||
+      hasText(value.meaning) ||
+      hasText(value.practice_example),
+  );
+}
+
+function isGoalComplete(plan: MoksilgiPlan | null) {
+  return hasText(plan?.main_goal);
+}
+
+function isStrategyComplete(detailGoals: MoksilgiDetailGoal[]) {
+  return detailGoals.length > 0;
+}
+
+function basicSummary(plan: MoksilgiPlan | null) {
+  if (!plan) return "";
+  return [plan.title, plan.author_name, plan.region_name]
+    .filter((value) => hasText(value))
+    .join(" · ");
+}
+
+function missionSummary(plan: MoksilgiPlan | null) {
+  return plan?.mission_statement?.trim() ?? "";
+}
+
+function visionSummary(plan: MoksilgiPlan | null) {
+  if (!plan) return "";
+  const parts = [
+    plan.vision_year ? `${plan.vision_year}년` : null,
+    plan.vision_statement?.trim() || null,
+  ].filter(Boolean);
+  return parts.join(" · ");
+}
+
+function coreSummary(coreValues: MoksilgiCoreValue[]) {
+  const names = coreValues
+    .map((value) => value.value_name.trim())
+    .filter((value) => value.length > 0);
+  return names.join(", ");
+}
+
+function goalSummary(plan: MoksilgiPlan | null) {
+  return plan?.main_goal?.trim() ?? "";
 }
 
 function measurementLabel(value: string) {
@@ -186,9 +299,9 @@ function TextInput({
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
+      <span className={LABEL_CLASS}>{label}</span>
       <input
-        className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+        className={INPUT_CLASS}
         defaultValue={fieldValue(value)}
         maxLength={maxLength}
         name={name}
@@ -196,9 +309,7 @@ function TextInput({
         type={type}
       />
       {helpText ? (
-        <span className="mt-1 block text-xs leading-5 text-slate-500">
-          {helpText}
-        </span>
+        <span className="mt-1 block text-xs leading-5 text-ink-muted">{helpText}</span>
       ) : null}
     </label>
   );
@@ -219,9 +330,9 @@ function TextArea({
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
+      <span className={LABEL_CLASS}>{label}</span>
       <textarea
-        className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+        className={INPUT_CLASS}
         defaultValue={value ?? ""}
         maxLength={maxLength}
         name={name}
@@ -232,11 +343,13 @@ function TextArea({
 }
 
 function PlanForm({
-  plan,
   coreValues,
+  editSection,
+  plan,
 }: {
   plan: MoksilgiPlan | null;
   coreValues: MoksilgiCoreValue[];
+  editSection: EditSection | null;
 }) {
   const visibleCoreValues = [...coreValues];
 
@@ -248,15 +361,22 @@ function PlanForm({
     });
   }
 
+  const sectionOpen = (section: EditSection) =>
+    editSection === section || (!plan && section === "basic" && editSection === null);
+
   return (
-    <form action={savePlanAction} className="space-y-6">
+    <form action={savePlanAction} className="space-y-4" id="moksilgi-plan-form">
       <input name="plan_id" type="hidden" value={plan?.id ?? ""} />
 
-      <section className="rounded-md border border-slate-200 bg-white p-6">
-        <h2 className="text-lg font-semibold">
-          <I18nText k="myCoaching.moksilgi.basicInfo" fallback="기본 정보" />
-        </h2>
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+      <MoksilgiSection
+        anchorId="section-basic"
+        editQuery="basic"
+        isComplete={isBasicComplete(plan)}
+        isOpen={sectionOpen("basic")}
+        summaryText={basicSummary(plan)}
+        title={<I18nText k="myCoaching.moksilgi.basicInfo" fallback="기본 정보" />}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.title" fallback="제목" />} maxLength={160} name="title" value={plan?.title ?? "목표와 실행전략 기획안"} />
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.subtitle" fallback="부제" />} maxLength={160} name="subtitle" value={plan?.subtitle ?? "목실기와 체크리스트"} />
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.periodStartDate" fallback="기간 시작일" />} name="period_start" type="date" value={plan?.period_start} />
@@ -288,24 +408,32 @@ function PlanForm({
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.generation" fallback="세대" />} maxLength={80} name="generation_label" value={plan?.generation_label} />
           <input name="team_name" type="hidden" value={plan?.team_name ?? ""} />
         </div>
-      </section>
+      </MoksilgiSection>
 
-      <section className="rounded-md border border-slate-200 bg-white p-6">
-        <h2 className="text-lg font-semibold">
-          <I18nText k="myCoaching.moksilgi.missionTitle" fallback="Ⅰ. 사명선언서 (Mission)" />
-        </h2>
-        <div className="mt-5 grid gap-4">
+      <MoksilgiSection
+        anchorId="section-mission"
+        editQuery="mission"
+        isComplete={isMissionComplete(plan)}
+        isOpen={sectionOpen("mission")}
+        summaryText={missionSummary(plan)}
+        title={<I18nText k="myCoaching.moksilgi.missionTitle" fallback="Ⅰ. 사명선언서 (Mission)" />}
+      >
+        <div className="grid gap-4">
           <TextArea label={<I18nText k="myCoaching.moksilgi.form.missionStatement" fallback="사명선언 문장" />} maxLength={3000} name="mission_statement" value={plan?.mission_statement} />
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.relatedBibleVerse" fallback="관련 성경구절" />} maxLength={120} name="mission_bible_verse" value={plan?.mission_bible_verse} />
           <TextArea label={<I18nText k="myCoaching.moksilgi.form.missionDescription" fallback="사명 설명" />} maxLength={4000} name="mission_description" value={plan?.mission_description} />
         </div>
-      </section>
+      </MoksilgiSection>
 
-      <section className="rounded-md border border-slate-200 bg-white p-6">
-        <h2 className="text-lg font-semibold">
-          <I18nText k="myCoaching.moksilgi.visionTitle" fallback="Ⅱ. 비전 (Vision)" />
-        </h2>
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+      <MoksilgiSection
+        anchorId="section-vision"
+        editQuery="vision"
+        isComplete={isVisionComplete(plan)}
+        isOpen={sectionOpen("vision")}
+        summaryText={visionSummary(plan)}
+        title={<I18nText k="myCoaching.moksilgi.visionTitle" fallback="Ⅱ. 비전 (Vision)" />}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.visionTargetYear" fallback="비전 목표 연도" />} name="vision_year" type="number" value={plan?.vision_year} />
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.keyMetric" fallback="핵심 수치" />} maxLength={1000} name="vision_metrics" value={plan?.vision_metrics} />
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.target" fallback="대상" />} maxLength={1000} name="vision_target" value={plan?.vision_target} />
@@ -314,37 +442,42 @@ function PlanForm({
           <TextArea label={<I18nText k="myCoaching.moksilgi.form.visionStatement" fallback="비전 문장" />} maxLength={3000} name="vision_statement" value={plan?.vision_statement} />
           <TextArea label={<I18nText k="myCoaching.moksilgi.form.visionDescription" fallback="비전 설명" />} maxLength={4000} name="vision_description" value={plan?.vision_description} />
         </div>
-      </section>
+      </MoksilgiSection>
 
-      <section className="rounded-md border border-slate-200 bg-white p-6">
-        <h2 className="text-lg font-semibold">
-          <I18nText k="myCoaching.moksilgi.coreValueTitle" fallback="Ⅲ. 핵심가치 (Core Value)" />
-        </h2>
-        <div className="mt-5 grid gap-4">
+      <MoksilgiSection
+        anchorId="section-core"
+        editQuery="core"
+        isComplete={isCoreComplete(visibleCoreValues)}
+        isOpen={sectionOpen("core")}
+        summaryText={coreSummary(visibleCoreValues)}
+        title={<I18nText k="myCoaching.moksilgi.coreValueTitle" fallback="Ⅲ. 핵심가치 (Core Value)" />}
+      >
+        <div className="grid gap-4">
           {visibleCoreValues.slice(0, 5).map((value, index) => (
-            <div className="grid gap-4 rounded-md border border-slate-200 bg-slate-50 p-4 md:grid-cols-3" key={index}>
+            <div className="grid gap-4 rounded-card border border-line-base bg-surface-app p-4 md:grid-cols-3" key={index}>
               <TextInput label={<I18nText k="myCoaching.moksilgi.form.valueName" fallback="가치명" />} maxLength={120} name={`core_value_name_${index}`} value={value.value_name} />
               <TextInput label={<I18nText k="myCoaching.moksilgi.form.meaning" fallback="의미" />} maxLength={1000} name={`core_value_meaning_${index}`} value={value.meaning} />
               <TextInput label={<I18nText k="myCoaching.moksilgi.form.practice" fallback="실천 모습" />} maxLength={1000} name={`core_value_practice_${index}`} value={value.practice_example} />
             </div>
           ))}
         </div>
-      </section>
+      </MoksilgiSection>
 
-      <section className="rounded-md border border-slate-200 bg-white p-6">
-        <h2 className="text-lg font-semibold">
-          <I18nText k="myCoaching.moksilgi.goalTitle" fallback="Ⅳ. 목표" />
-        </h2>
-        <div className="mt-5 grid gap-4">
+      <MoksilgiSection
+        anchorId="section-goal"
+        editQuery="goal"
+        isComplete={isGoalComplete(plan)}
+        isOpen={sectionOpen("goal")}
+        summaryText={goalSummary(plan)}
+        title={<I18nText k="myCoaching.moksilgi.goalTitle" fallback="Ⅳ. 목표" />}
+      >
+        <div className="grid gap-4">
           <TextArea label={<I18nText k="myCoaching.moksilgi.form.overallGoalStatement" fallback="전체 목표 문장" />} maxLength={1000} name="main_goal" value={plan?.main_goal} />
           <TextArea label={<I18nText k="myCoaching.moksilgi.form.goalDescription" fallback="목표 설명" />} maxLength={3000} name="main_goal_description" value={plan?.main_goal_description} />
         </div>
-      </section>
+      </MoksilgiSection>
 
       <input name="status" type="hidden" value={plan?.status ?? "draft"} />
-      <button className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" type="submit">
-        <I18nText k="myCoaching.moksilgi.saveBasicInfo" fallback="기본 정보 저장" />
-      </button>
     </form>
   );
 }
@@ -361,7 +494,7 @@ function DetailGoalForm({
   const strategies = detailGoal ? strategiesFromGoal(detailGoal) : [];
 
   return (
-    <form action={saveDetailGoalAction} className="mt-4 grid gap-4 rounded-md border border-slate-200 bg-white p-4">
+    <form action={saveDetailGoalAction} className="mt-4 grid gap-4 rounded-card border border-line-base bg-surface-card p-4">
       <input name="plan_id" type="hidden" value={planId} />
       <input name="area_id" type="hidden" value={area.id} />
       <input name="detail_goal_id" type="hidden" value={detailGoal?.id ?? ""} />
@@ -373,11 +506,11 @@ function DetailGoalForm({
         <TextInput label={<I18nText k="myCoaching.moksilgi.detailGoal.unit" fallback="단위" />} maxLength={40} name="unit" value={detailGoal?.unit} />
       </div>
       <label className="block">
-        <span className="text-sm font-medium text-slate-700">
+        <span className={LABEL_CLASS}>
           <I18nText k="myCoaching.moksilgi.detailGoal.measurementMethod" fallback="측정 방식" />
         </span>
         <select
-          className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+          className={INPUT_CLASS}
           defaultValue={detailGoal?.measurement_type ?? "monthly_number"}
           name="measurement_type"
         >
@@ -399,9 +532,9 @@ function DetailGoalForm({
           />
         ))}
       </div>
-      <button className="w-fit rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" type="submit">
+      <Button className="w-fit" type="submit" variant="primary">
         <I18nText k="myCoaching.moksilgi.saveDetailGoal" fallback="세부 목표 저장" />
-      </button>
+      </Button>
     </form>
   );
 }
@@ -420,172 +553,253 @@ export default async function MyMoksilgiPage({
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const saved = normalizeMessage(resolvedSearchParams.saved);
   const error = normalizeMessage(resolvedSearchParams.error);
+  const editSection = normalizeEditSection(resolvedSearchParams.edit);
   const printYear = new Date().getFullYear();
 
+  const coreValues = result.ok
+    ? coreValuesFromPlan(result.data.plan, result.data.defaultCoreValues)
+    : [];
+  const completedSections = result.ok
+    ? [
+        isBasicComplete(result.data.plan),
+        isMissionComplete(result.data.plan),
+        isVisionComplete(result.data.plan),
+        isCoreComplete(coreValues),
+        isGoalComplete(result.data.plan),
+        isStrategyComplete(result.data.detailGoals),
+      ].filter(Boolean).length
+    : 0;
+
   return (
-    <main className="print-root min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
-      <section className="mx-auto w-full max-w-6xl">
-        <div className="print-report-title print-only">
-          <h1>
-            <I18nText k="myCoaching.moksilgi.reportTitle" fallback="내 목실기 보고서" />
-          </h1>
-          <p>
-            <I18nText k="myCoaching.moksilgi.printYear" fallback="출력 연도" />: {printYear}
-          </p>
-          <p>
-            <I18nText k="myCoaching.moksilgi.generatedAt" fallback="생성일" />: {new Date().toLocaleDateString("ko-KR")}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-              <I18nText k="myCoaching.moksilgi.badge" fallback="목실기 작성" />
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold">
-              <I18nText k="myCoaching.moksilgi.title" fallback="목표와 실행전략 기획안" />
-            </h1>
-            <p className="mt-2 text-xl text-slate-700">
-              <I18nText k="myCoaching.moksilgi.subtitle" fallback="목실기와 체크리스트" />
-            </p>
-            <p className="mt-3 max-w-3xl text-slate-600">
-              <I18nText
-                k="myCoaching.moksilgi.description"
-                fallback="사명선언서, 비전, 핵심가치, 목표와 실행전략을 작성합니다."
-              />
-            </p>
-          </div>
-          <div className="flex flex-col items-start gap-2 text-sm">
+    <main className="print-root min-h-screen bg-surface-app px-4 py-5 pb-32 text-ink-base">
+      <MoksilgiAppBar
+        actions={
+          <>
             <div className="print:hidden">
               <LanguageSwitcher />
             </div>
             <PrintPageButton
               fileName={`moksilgi-my-record-${printYear}`}
-              label={<I18nText k="myCoaching.moksilgi.printMyMoksilgi" fallback="내 목실기 출력" /> as unknown as string}
+              label={
+                (
+                  <I18nText
+                    k="myCoaching.moksilgi.printMyMoksilgi"
+                    fallback="내 목실기 출력"
+                  />
+                ) as unknown as string
+              }
             />
-            <Link className="font-medium text-slate-700 underline" href="/my-coaching">
-              <I18nText k="myCoaching.moksilgi.backToMyCoaching" fallback="내 코칭 공간으로 돌아가기" />
-            </Link>
-            <Link className="font-medium text-slate-700 underline" href="/dashboard">
-              <I18nText k="myCoaching.backToDashboard" fallback="대시보드로 돌아가기" />
-            </Link>
-          </div>
-        </div>
+          </>
+        }
+      />
+
+      <section className="mx-auto w-full max-w-md space-y-4">
+        <Card className="border-line-base bg-surface-card print:hidden">
+          <CardContent className="space-y-2 p-4">
+            <Badge tone="info">
+              <I18nText k="myCoaching.moksilgi.badge" fallback="목실기 작성" />
+            </Badge>
+            <h2 className="text-xl font-semibold text-ink-strong">
+              <I18nText k="myCoaching.moksilgi.title" fallback="목표와 실행전략 기획안" />
+            </h2>
+            <p className="text-base text-ink-base">
+              <I18nText k="myCoaching.moksilgi.subtitle" fallback="목실기와 체크리스트" />
+            </p>
+            <p className="text-sm text-ink-muted">
+              <I18nText
+                k="myCoaching.moksilgi.description"
+                fallback="사명선언서, 비전, 핵심가치, 목표와 실행전략을 작성합니다."
+              />
+            </p>
+          </CardContent>
+        </Card>
 
         {!result.ok && result.error.code === "PROFILE_NOT_FOUND" ? (
-          <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
-            <p className="text-slate-700">
-              <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
-            </p>
-            <Link className="mt-4 inline-block text-sm font-medium text-slate-700 underline" href="/profile">
-              <I18nText k="myCoaching.viewProfile" fallback="프로필 보기" />
-            </Link>
-          </section>
+          <Card className="border-line-base bg-surface-card">
+            <CardContent className="space-y-3 p-4">
+              <p className="text-sm text-ink-base">
+                <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
+              </p>
+              <Link
+                className="text-sm font-medium text-brand-600 underline"
+                href="/profile"
+              >
+                <I18nText k="myCoaching.viewProfile" fallback="프로필 보기" />
+              </Link>
+            </CardContent>
+          </Card>
         ) : !result.ok ? (
-          <section className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
-            <I18nText k="myCoaching.moksilgi.loadFailed" fallback="지금 목실기를 불러올 수 없습니다." />
-          </section>
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="p-4 text-sm text-red-700">
+              <I18nText k="myCoaching.moksilgi.loadFailed" fallback="지금 목실기를 불러올 수 없습니다." />
+            </CardContent>
+          </Card>
         ) : (
-          <div className="mt-8 space-y-6">
-            {saved ? (
-              <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
-                <I18nText k="myCoaching.moksilgi.saved" fallback="저장되었습니다." />
-              </div>
-            ) : null}
-            {error ? (
-              <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <>
+            <div className="print-report-title print-only">
+              <h1>
                 <I18nText
-                  k="myCoaching.moksilgi.saveFailed"
-                  fallback="저장할 수 없습니다. 입력값을 확인해 주세요."
+                  k="myCoaching.moksilgi.reportTitle"
+                  fallback="내 목실기 보고서"
                 />
-              </div>
-            ) : null}
+              </h1>
+              {result.data.plan && hasText(result.data.plan.author_name) ? (
+                <p>
+                  <I18nText
+                    k="myCoaching.moksilgi.form.author"
+                    fallback="작성자"
+                  />
+                  : {result.data.plan.author_name}
+                </p>
+              ) : null}
+              {result.data.plan &&
+              hasText(result.data.plan.period_start) &&
+              hasText(result.data.plan.period_end) ? (
+                <p>
+                  <I18nText
+                    k="myCoaching.moksilgi.printPeriod"
+                    fallback="기간"
+                  />
+                  : {result.data.plan.period_start} ~{" "}
+                  {result.data.plan.period_end}
+                </p>
+              ) : null}
+              <p>
+                <I18nText k="myCoaching.moksilgi.printYear" fallback="출력 연도" />
+                : {printYear}
+              </p>
+              <p>
+                <I18nText k="myCoaching.moksilgi.generatedAt" fallback="생성일" />
+                : {new Date().toLocaleDateString("ko-KR")}
+              </p>
+            </div>
 
-            <PlanForm
-              coreValues={coreValuesFromPlan(
-                result.data.plan,
-                result.data.defaultCoreValues,
-              )}
+            <MoksilgiPrintSummary
+              areas={result.data.areas}
+              coreValues={coreValues}
+              detailGoals={result.data.detailGoals}
               plan={result.data.plan}
             />
 
-            <section className="rounded-md border border-slate-200 bg-white p-6">
-              <h2 className="text-lg font-semibold">
-                <I18nText
-                  k="myCoaching.moksilgi.actionStrategyTitle"
-                  fallback="Ⅴ. 목표에 따른 실행전략 기획안"
-                />
-              </h2>
-              <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                <I18nText
-                  k="myCoaching.moksilgi.monthlyComingSoon"
-                  fallback="월별 체크리스트와 달성률 계산은 다음 단계에서 추가됩니다."
-                />
-              </p>
-
-              {!result.data.plan ? (
-                <p className="mt-5 text-slate-700">
+            {saved ? (
+              <Card className="print-hidden border-emerald-200 bg-emerald-50">
+                <CardContent className="p-4 text-sm text-emerald-900">
+                  <I18nText k="myCoaching.moksilgi.saved" fallback="저장되었습니다." />
+                </CardContent>
+              </Card>
+            ) : null}
+            {error ? (
+              <Card className="print-hidden border-red-200 bg-red-50">
+                <CardContent className="p-4 text-sm text-red-700">
                   <I18nText
-                    k="myCoaching.moksilgi.saveBasicInfoFirst"
-                    fallback="기본 정보를 먼저 저장하면 목표 영역과 세부 목표를 작성할 수 있습니다."
+                    k="myCoaching.moksilgi.saveFailed"
+                    fallback="저장할 수 없습니다. 입력값을 확인해 주세요."
                   />
-                </p>
-              ) : (() => {
-                const plan = result.data.plan;
+                </CardContent>
+              </Card>
+            ) : null}
 
-                return (
-                  <div className="mt-5 grid gap-5">
-                    {result.data.areas.map((area) => {
-                      const detailGoals = result.data.detailGoals.filter(
-                        (goal) => goal.area_id === area.id,
-                      );
+            <div className="print-hidden">
+              <MoksilgiProgressCard completedCount={completedSections} totalCount={6} />
+              <MoksilgiSectionNav items={[...SECTION_NAV]} />
 
-                      return (
-                        <article className="rounded-md border border-slate-200 bg-slate-50 p-5" key={area.id}>
-                        <h3 className="text-lg font-semibold">
-                          <I18nText
-                            k={AREA_TRANSLATION_KEY_BY_AREA_KEY[area.area_key].title}
-                            fallback={`목표 ${area.sort_order}: ${area.area_title}`}
-                          />
-                        </h3>
-                        <p className="mt-1 text-sm text-slate-600">
+              <PlanForm
+                coreValues={coreValues}
+                editSection={editSection}
+                plan={result.data.plan}
+              />
+
+              <section className="space-y-3" id="section-strategy">
+              <Card className="border-line-base bg-surface-card">
+                <CardContent className="space-y-3 p-4">
+                  <h2 className="text-base font-semibold text-ink-base">
+                    <I18nText
+                      k="myCoaching.moksilgi.actionStrategyTitle"
+                      fallback="Ⅴ. 목표에 따른 실행전략 기획안"
+                    />
+                  </h2>
+                  <p className="rounded-control border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                    <I18nText
+                      k="myCoaching.moksilgi.monthlyComingSoon"
+                      fallback="월별 체크리스트와 달성률 계산은 다음 단계에서 추가됩니다."
+                    />
+                  </p>
+                  {!result.data.plan ? (
+                    <p className="text-sm text-ink-base">
+                      <I18nText
+                        k="myCoaching.moksilgi.saveBasicInfoFirst"
+                        fallback="기본 정보를 먼저 저장하면 목표 영역과 세부 목표를 작성할 수 있습니다."
+                      />
+                    </p>
+                  ) : null}
+                </CardContent>
+              </Card>
+
+              {result.data.plan ? (
+                <div className="space-y-3">
+                  {result.data.areas.map((area) => {
+                    const detailGoals = result.data.detailGoals.filter(
+                      (goal) => goal.area_id === area.id,
+                    );
+                    const plan = result.data.plan;
+
+                    if (!plan) {
+                      return null;
+                    }
+
+                    return (
+                      <MoksilgiAreaCard
+                        areaKey={area.area_key}
+                        areaSubtitle={
                           <I18nText
                             k={AREA_TRANSLATION_KEY_BY_AREA_KEY[area.area_key].subtitle}
                             fallback={area.area_subtitle ?? ""}
                           />
-                        </p>
-
+                        }
+                        areaTitle={
+                          <I18nText
+                            k={AREA_TRANSLATION_KEY_BY_AREA_KEY[area.area_key].title}
+                            fallback={`목표 ${area.sort_order}: ${area.area_title}`}
+                          />
+                        }
+                        detailGoalCount={detailGoals.length}
+                        key={area.id}
+                      >
                         {detailGoals.length > 0 ? (
-                          <div className="mt-4 grid gap-3">
+                          <div className="grid gap-3">
                             {detailGoals.map((goal) => (
-                              <div className="rounded-md border border-slate-200 bg-white p-4" key={goal.id}>
+                              <div
+                                className="rounded-card border border-line-base bg-surface-app p-4"
+                                key={goal.id}
+                              >
                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                   <div>
-                                    <p className="font-semibold text-slate-950">
+                                    <p className="font-semibold text-ink-base">
                                       {goal.title}
                                     </p>
-                                    <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
+                                    <p className="mt-2 whitespace-pre-wrap text-sm text-ink-muted">
                                       {displayValue(goal.description)}
                                     </p>
                                   </div>
-                                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                                  <Badge tone="neutral">
                                     {measurementLabel(goal.measurement_type)}
-                                  </span>
+                                  </Badge>
                                 </div>
                                 <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
                                   <div>
-                                    <dt className="font-medium text-slate-500">
+                                    <dt className="font-medium text-ink-muted">
                                       <I18nText k="myCoaching.moksilgi.detailGoal.yearlyTarget" fallback="연간 목표량" />
                                     </dt>
                                     <dd>{displayValue(goal.annual_target)}</dd>
                                   </div>
                                   <div>
-                                    <dt className="font-medium text-slate-500">
+                                    <dt className="font-medium text-ink-muted">
                                       <I18nText k="myCoaching.moksilgi.detailGoal.monthlyTarget" fallback="월 목표량" />
                                     </dt>
                                     <dd>{displayValue(goal.monthly_target)}</dd>
                                   </div>
                                   <div>
-                                    <dt className="font-medium text-slate-500">
+                                    <dt className="font-medium text-ink-muted">
                                       <I18nText k="myCoaching.moksilgi.detailGoal.unit" fallback="단위" />
                                     </dt>
                                     <dd>{displayValue(goal.unit)}</dd>
@@ -596,20 +810,39 @@ export default async function MyMoksilgiPage({
                             ))}
                           </div>
                         ) : (
-                          <p className="mt-4 text-sm text-slate-600">
+                          <p className="text-sm text-ink-muted">
                             <I18nText k="myCoaching.moksilgi.noDetailGoals" fallback="아직 세부 목표가 없습니다." />
                           </p>
                         )}
 
                         <DetailGoalForm area={area} planId={plan.id} />
-                      </article>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-            </section>
-          </div>
+                      </MoksilgiAreaCard>
+                    );
+                  })}
+                </div>
+              ) : null}
+              </section>
+            </div>
+
+            <div className="print:hidden fixed inset-x-0 bottom-20 z-20 mx-auto max-w-md px-4">
+              <div className="flex gap-2 rounded-xl border border-line-base bg-surface-card p-3 shadow-lg">
+                <Button className="flex-1" form="moksilgi-plan-form" type="submit" variant="primary">
+                  <I18nText k="myCoaching.moksilgi.saveBasicInfo" fallback="기본 정보 저장" />
+                </Button>
+                <PrintPageButton
+                  fileName={`moksilgi-my-record-${printYear}`}
+                  label={
+                    (
+                      <I18nText
+                        k="myCoaching.moksilgi.printMyMoksilgi"
+                        fallback="내 목실기 출력"
+                      />
+                    ) as unknown as string
+                  }
+                />
+              </div>
+            </div>
+          </>
         )}
       </section>
     </main>

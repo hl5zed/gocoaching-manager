@@ -124,7 +124,7 @@ function Nav() {
 
 function ProfileMissing() {
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <div className="mx-auto max-w-5xl">
         <p className="rounded-md border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800">
           <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
@@ -146,22 +146,22 @@ function MoksilgiCard({ item }: { item: CoachMoksilgiItem }) {
       <CardContent className="p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-slate-500">
+          <p className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.coachee" fallback="코치이" />
           </p>
-          <p className="mt-1 break-words text-lg font-semibold text-slate-950">
+          <p className="mt-1 break-words text-lg font-semibold text-ink-strong">
             {coacheeName(item)}
           </p>
-          <p className="mt-1 break-all text-sm text-slate-600">
+          <p className="mt-1 break-all text-sm text-ink-muted">
             {item.coachee_email ?? "-"}
           </p>
         </div>
         <div className="min-w-[180px] text-left sm:text-right">
-          <p className="text-sm font-medium text-slate-500">
+          <p className="text-sm font-medium text-ink-faint">
             {item.summary_year}
             <I18nText k="coach.moksilgi.totalAchievementSuffix" fallback="년 총 달성률" />
           </p>
-          <p className="mt-1 text-3xl font-semibold text-slate-950">
+          <p className="mt-1 text-3xl font-semibold text-ink-strong">
             {formatPercent(item.total_achievement_rate)}
           </p>
           <ProgressBar
@@ -175,10 +175,10 @@ function MoksilgiCard({ item }: { item: CoachMoksilgiItem }) {
       <section className="mt-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="break-words text-lg font-semibold text-slate-950">
+            <h2 className="break-words text-lg font-semibold text-ink-strong">
               {item.title}
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-ink-muted">
               {formatDate(item.period_start)} ~ {formatDate(item.period_end)}
             </p>
           </div>
@@ -190,26 +190,26 @@ function MoksilgiCard({ item }: { item: CoachMoksilgiItem }) {
 
       <dl className="mt-5 grid gap-4 lg:grid-cols-3">
         <div>
-          <dt className="text-sm font-medium text-slate-500">
+          <dt className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.missionSummary" fallback="사명선언서 요약" />
           </dt>
-          <dd className="mt-1 whitespace-pre-wrap text-slate-700">
+          <dd className="mt-1 whitespace-pre-wrap text-ink-base">
             {summaryText(item.mission_statement)}
           </dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">
+          <dt className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.visionSummary" fallback="비전 요약" />
           </dt>
-          <dd className="mt-1 whitespace-pre-wrap text-slate-700">
+          <dd className="mt-1 whitespace-pre-wrap text-ink-base">
             {summaryText(item.vision_statement)}
           </dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">
+          <dt className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.mainGoal" fallback="전체 목표" />
           </dt>
-          <dd className="mt-1 whitespace-pre-wrap text-slate-700">
+          <dd className="mt-1 whitespace-pre-wrap text-ink-base">
             {summaryText(item.main_goal)}
           </dd>
         </div>
@@ -217,79 +217,79 @@ function MoksilgiCard({ item }: { item: CoachMoksilgiItem }) {
 
       <dl className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <dt className="text-sm font-medium text-slate-500">
+          <dt className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.spiritualGrowth" fallback="영적 성장" />
           </dt>
-          <dd className="mt-1 text-slate-950">{formatPercent(item.spiritual_rate)}</dd>
+          <dd className="mt-1 text-ink-strong">{formatPercent(item.spiritual_rate)}</dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">
+          <dt className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.intellectualGrowth" fallback="지적 성장" />
           </dt>
-          <dd className="mt-1 text-slate-950">{formatPercent(item.intellectual_rate)}</dd>
+          <dd className="mt-1 text-ink-strong">{formatPercent(item.intellectual_rate)}</dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">
+          <dt className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.physicalGrowth" fallback="육체적 성장" />
           </dt>
-          <dd className="mt-1 text-slate-950">{formatPercent(item.physical_rate)}</dd>
+          <dd className="mt-1 text-ink-strong">{formatPercent(item.physical_rate)}</dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">
+          <dt className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.socialGrowth" fallback="사회적 성장" />
           </dt>
-          <dd className="mt-1 text-slate-950">{formatPercent(item.social_rate)}</dd>
+          <dd className="mt-1 text-ink-strong">{formatPercent(item.social_rate)}</dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">
+          <dt className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.otherGrowth" fallback="기타" />
           </dt>
-          <dd className="mt-1 text-slate-950">{formatPercent(item.other_rate)}</dd>
+          <dd className="mt-1 text-ink-strong">{formatPercent(item.other_rate)}</dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">
+          <dt className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.total" fallback="종합" />
           </dt>
-          <dd className="mt-1 text-slate-950">{formatPercent(item.total_rate)}</dd>
+          <dd className="mt-1 text-ink-strong">{formatPercent(item.total_rate)}</dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">
+          <dt className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.average" fallback="평균" />
           </dt>
-          <dd className="mt-1 text-slate-950">{formatPercent(item.average_rate)}</dd>
+          <dd className="mt-1 text-ink-strong">{formatPercent(item.average_rate)}</dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">
+          <dt className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.updatedAt" fallback="최근 수정일" />
           </dt>
-          <dd className="mt-1 text-slate-950">{formatDate(item.updated_at)}</dd>
+          <dd className="mt-1 text-ink-strong">{formatDate(item.updated_at)}</dd>
         </div>
       </dl>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <p className="text-sm font-medium text-slate-500">
+          <p className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.author" fallback="작성자" />
           </p>
-          <p className="mt-1 text-slate-950">{displayValue(item.author_name)}</p>
+          <p className="mt-1 text-ink-strong">{displayValue(item.author_name)}</p>
         </div>
         <div>
-          <p className="text-sm font-medium text-slate-500">
+          <p className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.community" fallback="소속/공동체" />
           </p>
-          <p className="mt-1 text-slate-950">{displayValue(item.region_name)}</p>
+          <p className="mt-1 text-ink-strong">{displayValue(item.region_name)}</p>
         </div>
         <div>
-          <p className="text-sm font-medium text-slate-500">
+          <p className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.coach" fallback="코치" />
           </p>
-          <p className="mt-1 text-slate-950">{displayValue(item.coach_name)}</p>
+          <p className="mt-1 text-ink-strong">{displayValue(item.coach_name)}</p>
         </div>
         <div>
-          <p className="text-sm font-medium text-slate-500">
+          <p className="text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.summaryMonths" fallback="요약 월 수" />
           </p>
-          <p className="mt-1 text-slate-950">
+          <p className="mt-1 text-ink-strong">
             {item.summary_count}
             <I18nText k="coach.moksilgi.monthsSuffix" fallback="개월" />
           </p>
@@ -329,10 +329,10 @@ export default async function CoachMoksilgiPage({
 
   if (result.error?.code === "ACCESS_DENIED") {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+      <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
         <div className="mx-auto max-w-5xl">
           <Nav />
-          <p className="mt-8 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+          <p className="mt-8 rounded-control border border-red-200 bg-red-50 px-4 py-3 text-red-700">
             <I18nText k="coach.moksilgi.accessDenied" fallback="코치 권한이 없습니다." />
           </p>
         </div>
@@ -342,10 +342,10 @@ export default async function CoachMoksilgiPage({
 
   if (result.error) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+      <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
         <div className="mx-auto max-w-5xl">
           <Nav />
-          <p className="mt-8 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+          <p className="mt-8 rounded-control border border-red-200 bg-red-50 px-4 py-3 text-red-700">
             <I18nText k="coach.moksilgi.loadFailed" fallback="지금 코치이 목실기를 불러올 수 없습니다." />
           </p>
         </div>
@@ -354,7 +354,7 @@ export default async function CoachMoksilgiPage({
   }
 
   return (
-    <main className="print-root min-h-screen bg-[var(--trust-bg)] px-4 py-8 text-slate-950 sm:px-6 lg:py-10">
+    <main className="print-root min-h-screen bg-[var(--trust-bg)] px-4 py-8 text-ink-strong sm:px-6 lg:py-10">
       <div className="mx-auto max-w-5xl">
         <Nav />
 
@@ -384,7 +384,7 @@ export default async function CoachMoksilgiPage({
               <CardDescription className="text-base">
                 <I18nText k="coach.moksilgi.subtitle" fallback="코치용 목실기 읽기 화면" />
               </CardDescription>
-              <p className="mt-2 max-w-3xl break-words text-sm leading-6 text-slate-600">
+              <p className="mt-2 max-w-3xl break-words text-sm leading-6 text-ink-muted">
                 <I18nText
                   k="coach.moksilgi.description"
                   fallback="담당 코치이들이 작성한 목표와 실행전략 기획안과 성취 요약을 확인합니다."
@@ -396,7 +396,7 @@ export default async function CoachMoksilgiPage({
               fileName={`moksilgi-coach-list-${year}`}
               label="코치이 목실기 목록 인쇄/PDF 저장"
             />
-            <p className="print-hidden text-sm leading-6 text-slate-500 sm:max-w-xs sm:text-right">
+            <p className="print-hidden text-sm leading-6 text-ink-faint sm:max-w-xs sm:text-right">
               <I18nText
                 k="coach.moksilgi.mobilePrintNotice"
                 fallback="모바일 브라우저에서는 PDF 저장 옵션이 기기와 브라우저에 따라 다르게 표시될 수 있습니다. 인쇄창이 열리지 않으면 Safari 또는 Chrome에서 다시 열어 주세요."
@@ -408,7 +408,7 @@ export default async function CoachMoksilgiPage({
         {result.data.length === 0 ? (
           <Card className="print-section mt-6">
             <CardContent>
-              <p className="text-center text-slate-500">
+              <p className="text-center text-ink-faint">
                 <I18nText k="coach.moksilgi.empty" fallback="아직 확인할 코치이 목실기가 없습니다." />
               </p>
               <div className="mt-4 flex justify-center print:hidden">

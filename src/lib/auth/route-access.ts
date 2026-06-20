@@ -31,6 +31,8 @@ export function isPublicRoute(pathname: string) {
     pathname === "/login" ||
     pathname === "/signup" ||
     pathname === "/unauthorized" ||
+    pathname === "/password-reset" ||
+    pathname === "/password-reset/confirm" ||
     pathname === "/api/invitations/accept"
   );
 }
@@ -42,6 +44,8 @@ export function isApiRoute(pathname: string) {
 export function isProtectedPageRoute(pathname: string) {
   return (
     pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/my-coaching/") ||
+    pathname === "/my-coaching" ||
     pathname.startsWith("/coach/") ||
     pathname === "/coach" ||
     pathname.startsWith("/coach-maker/") ||

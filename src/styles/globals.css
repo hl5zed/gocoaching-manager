@@ -14,6 +14,75 @@
   --trust-primary-soft: #e1f5ee;
   --trust-gold: #ba7517;
   --trust-gold-soft: #faeeda;
+
+  /* === UI Renewal design tokens (additive, do not remove --trust-*) === */
+  /* Brand scale (teal-green, aligned with --trust-primary) */
+  --brand-50: #ecfdf6;
+  --brand-100: #d2f7e8;
+  --brand-200: #a8edd4;
+  --brand-300: #6fdcbb;
+  --brand-400: #36c39d;
+  --brand-500: #14a583;
+  --brand-600: #0f6e56; /* = --trust-primary */
+  --brand-700: #0d5c49;
+  --brand-800: #0a4f3f; /* = --trust-primary-strong */
+  --brand-900: #093f33;
+
+  /* Navy (1차 강조 — 사이드바 active, 헤더 등) */
+  --navy-700: #2b3d72;
+  --navy-800: #243460;
+  --navy-900: #1d2b4f;
+
+  /* Surface */
+  --surface-app: #f4f6fa;
+  --surface-card: #ffffff;
+  --surface-sunken: #eef1f6;
+  /* 라이트 사이드바로 전환 */
+  --surface-sidebar: #ffffff;
+  --surface-sidebar-hover: #f4f6fa;
+  --surface-sidebar-active: #eef1f6;
+
+  /* Ink */
+  --ink-strong: #1a2236;
+  --ink-base: #1a2236;
+  --ink-muted: #5b6478;
+  --ink-faint: #8b93a7;
+  /* 라이트 사이드바용 텍스트 (다크 계열로 역전) */
+  --ink-on-dark: #1a2236;
+  --ink-on-dark-muted: #5b6478;
+
+  /* Border */
+  --line-soft: #e8ecf4;
+  --line-base: #d6dce8;
+
+  /* Elevation */
+  --shadow-card: 0 1px 3px rgb(26 34 54 / 0.06), 0 1px 2px rgb(26 34 54 / 0.04);
+  --shadow-raised: 0 4px 12px rgb(26 34 54 / 0.10);
+  --shadow-overlay: 0 12px 32px rgb(26 34 54 / 0.18);
+
+  /* Radius (상향) */
+  --radius-card: 0.875rem;   /* 14px */
+  --radius-control: 0.625rem; /* 10px */
+
+  /* Layout */
+  --shell-sidebar-width: 16rem;
+  --shell-topbar-height: 3.5rem;
+
+  /* 도메인 4색 (지성·신체·영성·사회) */
+  --domain-intellect: #3a4ea8;
+  --domain-body: #e0612f;
+  --domain-spirit: #6a5ae0;
+  --domain-social: #c08a2a;
+
+  /* 상태 색상 */
+  --status-done-bg: #ecfdf5;
+  --status-done-text: #065f46;
+  --status-upcoming-bg: #eff6ff;
+  --status-upcoming-text: #1e40af;
+  --status-wait-bg: #fffbeb;
+  --status-wait-text: #92400e;
+  --status-cancel-bg: #fff1f2;
+  --status-cancel-text: #9f1239;
 }
 
 * {
@@ -28,8 +97,8 @@ body {
 
 body {
   font-family: Arial, Helvetica, sans-serif;
-  background: var(--trust-bg);
-  color: var(--trust-ink);
+  background: var(--surface-app);
+  color: var(--ink-base);
   text-rendering: optimizeLegibility;
 }
 

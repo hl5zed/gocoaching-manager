@@ -98,7 +98,7 @@ export function ResendInvitationButton({
   return (
     <div className="flex flex-col gap-1">
       <button
-        className="rounded-md border border-sky-300 px-3 py-1.5 text-sm font-medium text-sky-700 disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
+        className="rounded-control border border-sky-300 px-3 py-1.5 text-sm font-medium text-sky-700 disabled:cursor-not-allowed disabled:border-line-base disabled:text-ink-faint"
         disabled={isSubmitting}
         onClick={handleClick}
         type="button"
@@ -115,7 +115,7 @@ export function ResendInvitationButton({
             {successUrl}
           </a>
           <button
-            className="mt-2 rounded-md border border-sky-300 px-2 py-1 text-xs font-medium"
+            className="mt-2 rounded-control border border-sky-300 px-2 py-1 text-xs font-medium"
             onClick={handleCopy}
             type="button"
           >

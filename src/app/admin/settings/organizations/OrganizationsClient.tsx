@@ -384,24 +384,24 @@ export function OrganizationsClient({
 
   return (
     <>
-      <div className="mt-8 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+      <div className="mt-8 rounded-control border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
         기관 및 단체는 회원의 소속 기관 선택에 사용됩니다. 이미 회원에게
         연결된 기관은 삭제하지 않고 비활성화만 할 수 있습니다.
       </div>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-md border border-slate-200 bg-white p-5">
-          <p className="text-sm font-medium text-slate-500">
+        <div className="rounded-card border border-line-base bg-surface-card p-5">
+          <p className="text-sm font-medium text-ink-faint">
             전체 기관 및 단체 수
           </p>
           <p className="mt-3 text-3xl font-semibold">{organizations.length}</p>
         </div>
-        <div className="rounded-md border border-slate-200 bg-white p-5">
-          <p className="text-sm font-medium text-slate-500">사용 중</p>
+        <div className="rounded-card border border-line-base bg-surface-card p-5">
+          <p className="text-sm font-medium text-ink-faint">사용 중</p>
           <p className="mt-3 text-3xl font-semibold">{activeCount}</p>
         </div>
-        <div className="rounded-md border border-slate-200 bg-white p-5">
-          <p className="text-sm font-medium text-slate-500">비활성</p>
+        <div className="rounded-card border border-line-base bg-surface-card p-5">
+          <p className="text-sm font-medium text-ink-faint">비활성</p>
           <p className="mt-3 text-3xl font-semibold">
             {organizations.length - activeCount}
           </p>
@@ -409,13 +409,13 @@ export function OrganizationsClient({
       </section>
 
       <form
-        className="mt-8 rounded-md border border-slate-200 bg-white p-5"
+        className="mt-8 rounded-card border border-line-base bg-surface-card p-5"
         onSubmit={handleCreate}
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold">기관 및 단체 추가</h2>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
+            <p className="mt-1 text-sm leading-6 text-ink-muted">
               기관명, 기관 유형, 소속 국가를 선택해 등록합니다.
             </p>
           </div>
@@ -423,22 +423,22 @@ export function OrganizationsClient({
 
         <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_180px_220px_220px_auto] lg:items-end">
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-base">
               기관 및 단체명
             </span>
             <input
-              className="rounded-md border border-slate-300 px-3 py-2"
+              className="rounded-control border border-line-base px-3 py-2"
               onChange={(event) => setName(event.target.value)}
               placeholder="GO Coaching Thailand"
               value={name}
             />
           </label>
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-base">
               기관 유형
             </span>
             <select
-              className="rounded-md border border-slate-300 px-3 py-2"
+              className="rounded-control border border-line-base px-3 py-2"
               onChange={(event) =>
                 setOrganizationType(event.target.value as OrganizationType)
               }
@@ -452,11 +452,11 @@ export function OrganizationsClient({
             </select>
           </label>
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-base">
               소속 국가
             </span>
             <select
-              className="rounded-md border border-slate-300 px-3 py-2"
+              className="rounded-control border border-line-base px-3 py-2"
               onChange={(event) => setCountryId(event.target.value)}
               value={countryId}
             >
@@ -469,11 +469,11 @@ export function OrganizationsClient({
             </select>
           </label>
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-base">
               기관/조직 기본 시간대
             </span>
             <select
-              className="rounded-md border border-slate-300 px-3 py-2"
+              className="rounded-control border border-line-base px-3 py-2"
               onChange={(event) => setDefaultTimezone(event.target.value)}
               value={defaultTimezone}
             >
@@ -484,12 +484,12 @@ export function OrganizationsClient({
                 </option>
               ))}
             </select>
-            <span className="text-xs leading-5 text-slate-500">
+            <span className="text-xs leading-5 text-ink-faint">
               개인 시간대가 없을 때 이 조직 기본값을 사용합니다.
             </span>
           </label>
           <button
-            className="rounded-md bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="rounded-control bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             disabled={pendingAction !== null}
             type="submit"
           >
@@ -499,26 +499,26 @@ export function OrganizationsClient({
       </form>
 
       {message ? (
-        <div className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+        <div className="mt-5 rounded-control border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
           {message}
         </div>
       ) : null}
 
       {errorMessage ? (
-        <div className="mt-5 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+        <div className="mt-5 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
           {errorMessage}
         </div>
       ) : null}
 
       {organizations.length === 0 ? (
-        <div className="mt-8 rounded-md border border-slate-200 bg-white p-6 text-slate-600">
+        <div className="mt-8 rounded-card border border-line-base bg-surface-card p-6 text-ink-muted">
           등록된 기관 및 단체가 없습니다.
         </div>
       ) : (
-        <div className="mt-8 overflow-x-auto rounded-md border border-slate-200 bg-white">
+        <div className="mt-8 overflow-x-auto rounded-md border border-line-base bg-surface-card">
           <table className="w-full min-w-[1280px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
+              <tr className="border-b border-line-soft bg-surface-sunken text-ink-faint">
                 <th className="px-4 py-3 font-medium">기관명</th>
                 <th className="px-4 py-3 font-medium">기관 유형</th>
                 <th className="px-4 py-3 font-medium">소속 국가</th>
@@ -535,13 +535,13 @@ export function OrganizationsClient({
 
                 return (
                   <tr
-                    className="border-b border-slate-100 last:border-b-0"
+                    className="border-b border-line-soft last:border-b-0"
                     key={organization.id}
                   >
-                    <td className="px-4 py-3 font-medium text-slate-950">
+                    <td className="px-4 py-3 font-medium text-ink-strong">
                       {isEditing ? (
                         <input
-                          className="w-full rounded-md border border-slate-300 px-3 py-2"
+                          className="w-full rounded-control border border-line-base px-3 py-2"
                           onChange={(event) => setEditName(event.target.value)}
                           value={editName}
                         />
@@ -549,10 +549,10 @@ export function OrganizationsClient({
                         organization.name || "미지정"
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-ink-base">
                       {isEditing ? (
                         <select
-                          className="w-full rounded-md border border-slate-300 px-3 py-2"
+                          className="w-full rounded-control border border-line-base px-3 py-2"
                           onChange={(event) =>
                             setEditOrganizationType(
                               event.target.value as OrganizationType,
@@ -570,10 +570,10 @@ export function OrganizationsClient({
                         organization.organization_type_label || "미지정"
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-ink-base">
                       {isEditing ? (
                         <select
-                          className="w-full rounded-md border border-slate-300 px-3 py-2"
+                          className="w-full rounded-control border border-line-base px-3 py-2"
                           onChange={(event) =>
                             setEditCountryId(event.target.value)
                           }
@@ -590,10 +590,10 @@ export function OrganizationsClient({
                         formatCountry(countryMap.get(organization.country_id))
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-ink-base">
                       {isEditing ? (
                         <select
-                          className="w-full rounded-md border border-slate-300 px-3 py-2"
+                          className="w-full rounded-control border border-line-base px-3 py-2"
                           onChange={(event) =>
                             setEditDefaultTimezone(event.target.value)
                           }
@@ -615,23 +615,23 @@ export function OrganizationsClient({
                         className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
                           organization.is_active
                             ? "bg-emerald-50 text-emerald-700"
-                            : "bg-slate-100 text-slate-600"
+                            : "bg-surface-sunken text-ink-muted"
                         }`}
                       >
                         {statusLabel(organization.is_active)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-ink-muted">
                       {formatDateTime(organization.created_at)}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-ink-muted">
                       {formatDateTime(organization.updated_at)}
                     </td>
                     <td className="px-4 py-3">
                       {isEditing ? (
                         <div className="flex flex-wrap gap-2">
                           <button
-                            className="rounded-md bg-slate-950 px-3 py-1.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+                            className="rounded-control bg-navy-900 px-3 py-1.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                             disabled={pendingAction !== null}
                             onClick={() => handleUpdate(organization.id)}
                             type="button"
@@ -641,7 +641,7 @@ export function OrganizationsClient({
                               : "저장"}
                           </button>
                           <button
-                            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                            className="rounded-control border border-line-base px-3 py-1.5 text-sm font-semibold text-ink-base hover:bg-surface-sunken"
                             disabled={pendingAction !== null}
                             onClick={cancelEdit}
                             type="button"
@@ -652,7 +652,7 @@ export function OrganizationsClient({
                       ) : (
                         <div className="flex flex-wrap gap-2">
                           <button
-                            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                            className="rounded-control border border-line-base px-3 py-1.5 text-sm font-semibold text-ink-base hover:bg-surface-sunken"
                             disabled={pendingAction !== null}
                             onClick={() => startEdit(organization)}
                             type="button"
@@ -660,7 +660,7 @@ export function OrganizationsClient({
                             수정
                           </button>
                           <button
-                            className={`rounded-md border px-3 py-1.5 text-sm font-semibold disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400 ${
+                            className={`rounded-md border px-3 py-1.5 text-sm font-semibold disabled:cursor-not-allowed disabled:border-line-base disabled:text-ink-faint ${
                               organization.is_active
                                 ? "border-amber-300 text-amber-700 hover:bg-amber-50"
                                 : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"

@@ -185,21 +185,21 @@ export default async function AcceptInvitationPage({
   ]);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <section className="mx-auto w-full max-w-3xl">
-        <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+        <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
           Invitation
         </p>
         <h1 className="mt-3 text-3xl font-semibold">초대 확인</h1>
-        <p className="mt-4 leading-7 text-slate-600">
+        <p className="mt-4 leading-7 text-ink-muted">
           초대 정보를 확인하고, 필요한 프로필 정보를 입력한 뒤 현재 로그인한
           계정으로 초대를 수락합니다.
         </p>
 
-        <div className="mt-8 rounded-md border border-slate-200 bg-white p-6">
+        <div className="mt-8 rounded-card border border-line-base bg-surface-card p-6">
           {result.status === "valid" ? (
             <div className="space-y-6">
-              <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-900">
+              <div className="rounded-control border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-900">
                 <p className="font-semibold">{result.message}</p>
                 <p className="mt-1 text-sm">
                   초대 이메일과 시스템 역할은 초대 정보에서 자동으로 적용됩니다.
@@ -218,7 +218,7 @@ export default async function AcceptInvitationPage({
               />
             </div>
           ) : (
-            <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-800">
+            <div className="rounded-control border border-red-200 bg-red-50 px-4 py-3 text-red-800">
               <p className="font-semibold">{result.message}</p>
             </div>
           )}

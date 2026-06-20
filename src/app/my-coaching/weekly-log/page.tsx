@@ -208,7 +208,7 @@ function getWeeklyLogStatusClass(status: string) {
     return "border-amber-200 bg-amber-50 text-amber-800";
   }
 
-  return "border-slate-200 bg-slate-50 text-slate-700";
+  return "border-line-base bg-surface-sunken text-ink-base";
 }
 
 export default async function MyWeeklyLogPage({
@@ -306,17 +306,17 @@ export default async function MyWeeklyLogPage({
   const currentWeek = result.ok ? result.data.currentWeek : getCurrentWeekRange();
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <section className="mx-auto w-full max-w-5xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+            <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
               <I18nText k="myCoaching.weeklyLog.badge" fallback="코칭" />
             </p>
             <h1 className="mt-3 text-3xl font-semibold">
               <I18nText k="myCoaching.weeklyLog.title" fallback="주간 기록" />
             </h1>
-            <p className="mt-3 max-w-3xl text-slate-600">
+            <p className="mt-3 max-w-3xl text-ink-muted">
               <I18nText
                 k="myCoaching.weeklyLog.description"
                 fallback="이번 주 코칭 관계에 대한 기록을 작성합니다. 현재는 주간 기록을 작성하는 공간이며, 하루 기록과 월간 기록은 단계적으로 확장됩니다."
@@ -326,7 +326,7 @@ export default async function MyWeeklyLogPage({
           <div className="flex flex-col items-start gap-2 text-sm">
             <LanguageSwitcher />
             <Link
-              className="font-medium text-slate-700 underline"
+              className="font-medium text-brand-600 underline"
               href="/my-coaching/records"
             >
               <I18nText
@@ -334,40 +334,25 @@ export default async function MyWeeklyLogPage({
                 fallback="나의 기록으로 돌아가기"
               />
             </Link>
-            <Link
-              className="font-medium text-slate-700 underline"
-              href="/my-coaching"
-            >
-              <I18nText
-                k="myCoaching.weeklyLog.backToMyCoaching"
-                fallback="내 코칭 공간으로 돌아가기"
-              />
-            </Link>
-            <Link
-              className="font-medium text-slate-700 underline"
-              href="/dashboard"
-            >
-              <I18nText k="myCoaching.backToDashboard" fallback="대시보드로 돌아가기" />
-            </Link>
           </div>
         </div>
 
         {!result.ok ? (
-          <section className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <section className="mt-8 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
             <I18nText
               k="myCoaching.weeklyLog.form.loadFailed"
               fallback="지금 주간 기록을 불러올 수 없습니다."
             />
           </section>
         ) : result.data.profile === null ? (
-          <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
-            <p className="text-slate-700">
+          <section className="mt-8 rounded-card border border-line-base bg-surface-card p-6">
+            <p className="text-ink-base">
               <I18nText
                 k="myCoaching.weeklyLog.form.noProfile"
                 fallback="아직 프로필이 생성되지 않았습니다."
               />
             </p>
-            <p className="mt-2 text-slate-600">
+            <p className="mt-2 text-ink-muted">
               <I18nText
                 k="myCoaching.weeklyLog.form.acceptInvitationFirst"
                 fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요."
@@ -375,7 +360,7 @@ export default async function MyWeeklyLogPage({
             </p>
             <div className="mt-4">
               <Link
-                className="text-sm font-medium text-slate-700 underline"
+                className="text-sm font-medium text-brand-600 underline"
                 href="/profile"
               >
                 <I18nText
@@ -387,17 +372,17 @@ export default async function MyWeeklyLogPage({
           </section>
         ) : (
           <>
-            <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
+            <section className="mt-8 rounded-card border border-line-base bg-surface-card p-6">
               <h2 className="text-lg font-semibold">
                 <I18nText k="myCoaching.weeklyLog.form.thisWeek" fallback="이번 주" />
               </h2>
-              <p className="mt-3 text-slate-700">
+              <p className="mt-3 text-ink-base">
                 <I18nText k="myCoaching.weeklyLog.form.period" fallback="기간" />:{" "}
                 {formatDateRange(currentWeek)}
               </p>
-              <p className="mt-2 text-slate-600">
+              <p className="mt-2 text-ink-muted">
                 <I18nText k="myCoaching.weeklyLog.form.author" fallback="작성자" />{" "}
-                <span className="font-medium text-slate-950">
+                <span className="font-medium text-ink-strong">
                   {result.data.profile.display_name ||
                     result.data.profile.full_name ||
                     result.data.profile.email ||
@@ -408,8 +393,8 @@ export default async function MyWeeklyLogPage({
             </section>
 
             {result.data.relationships.length === 0 ? (
-              <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-                <p className="text-slate-700">
+              <section className="mt-6 rounded-card border border-line-base bg-surface-card p-6">
+                <p className="text-ink-base">
                   <I18nText
                     k="myCoaching.weeklyLog.form.noCoach"
                     fallback="아직 배정된 코치가 없습니다."
@@ -418,7 +403,7 @@ export default async function MyWeeklyLogPage({
               </section>
             ) : (
               <>
-                <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
+                <section className="mt-6 rounded-card border border-line-base bg-surface-card p-6">
                   <h2 className="text-lg font-semibold">
                     <I18nText
                       k="myCoaching.weeklyLog.form.myRelationships"
@@ -428,20 +413,20 @@ export default async function MyWeeklyLogPage({
                   <div className="mt-4 grid gap-4">
                     {result.data.relationships.map((relationship) => (
                       <div
-                        className={`rounded-md border p-4 ${
+                        className={`rounded-card border p-4 ${
                           result.data.selectedRelationshipId === relationship.id
-                            ? "border-slate-900 bg-slate-50"
-                            : "border-slate-200"
+                            ? "border-navy-900 bg-surface-sidebar-active"
+                            : "border-line-base"
                         }`}
                         key={relationship.id}
                       >
-                        <p className="font-medium text-slate-950">
+                        <p className="font-medium text-ink-strong">
                           {formatPersonName(relationship.coach)}
                         </p>
-                        <p className="mt-1 text-sm text-slate-600">
+                        <p className="mt-1 text-sm text-ink-muted">
                           {displayValue(relationship.coach?.email ?? null)}
                         </p>
-                        <p className="mt-2 text-sm text-slate-600">
+                        <p className="mt-2 text-sm text-ink-muted">
                           {getRelationshipTypeLabel(relationship.relationshipType)} /{" "}
                           {formatScope(
                             relationship.scopeType,
@@ -453,14 +438,14 @@ export default async function MyWeeklyLogPage({
                   </div>
                 </section>
 
-                <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
+                <section className="mt-6 rounded-card border border-line-base bg-surface-card p-6">
                   {errorMessage && (
-                    <div className="mb-5 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+                    <div className="mb-5 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
                       {renderWeeklyLogMessage(errorMessage)}
                     </div>
                   )}
                   {successMessage && (
-                    <div className="mb-5 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+                    <div className="mb-5 rounded-control border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
                       {renderWeeklyLogMessage(successMessage)}
                     </div>
                   )}
@@ -472,7 +457,7 @@ export default async function MyWeeklyLogPage({
                     />
                   </h2>
                   {result.data.weeklyLog ? (
-                    <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                    <div className="mt-4 rounded-control border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
                       <I18nText
                         k="myCoaching.weeklyLog.form.existingRecordNotice"
                         fallback="이번 주 기록이 있습니다. 아래 입력란에는 저장된 이번 주 기록 내용이 채워져 있습니다."
@@ -483,7 +468,7 @@ export default async function MyWeeklyLogPage({
                     {result.data.relationships.length > 1 && (
                       <div>
                         <label
-                          className="block text-sm font-medium text-slate-700"
+                          className="block text-sm font-medium text-ink-base"
                           htmlFor="relationship_id"
                         >
                           <I18nText
@@ -492,7 +477,7 @@ export default async function MyWeeklyLogPage({
                           />
                         </label>
                         <select
-                          className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                          className="mt-2 w-full rounded-control border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
                           defaultValue={result.data.selectedRelationshipId ?? ""}
                           id="relationship_id"
                           name="relationship_id"
@@ -519,7 +504,7 @@ export default async function MyWeeklyLogPage({
 
                     <div>
                       <label
-                        className="block text-sm font-medium text-slate-700"
+                        className="block text-sm font-medium text-ink-base"
                         htmlFor="gratitude"
                       >
                         <I18nText
@@ -528,7 +513,7 @@ export default async function MyWeeklyLogPage({
                         />
                       </label>
                       <textarea
-                        className="mt-2 min-h-28 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                        className="mt-2 min-h-28 w-full rounded-control border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
                         defaultValue={result.data.weeklyLog?.gratitude ?? ""}
                         id="gratitude"
                         maxLength={2000}
@@ -538,7 +523,7 @@ export default async function MyWeeklyLogPage({
 
                     <div>
                       <label
-                        className="block text-sm font-medium text-slate-700"
+                        className="block text-sm font-medium text-ink-base"
                         htmlFor="prayer_request"
                       >
                         <I18nText
@@ -547,7 +532,7 @@ export default async function MyWeeklyLogPage({
                         />
                       </label>
                       <textarea
-                        className="mt-2 min-h-28 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                        className="mt-2 min-h-28 w-full rounded-control border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
                         defaultValue={result.data.weeklyLog?.prayerRequest ?? ""}
                         id="prayer_request"
                         maxLength={2000}
@@ -557,7 +542,7 @@ export default async function MyWeeklyLogPage({
 
                     <div>
                       <label
-                        className="block text-sm font-medium text-slate-700"
+                        className="block text-sm font-medium text-ink-base"
                         htmlFor="progress_summary"
                       >
                         <I18nText
@@ -566,7 +551,7 @@ export default async function MyWeeklyLogPage({
                         />
                       </label>
                       <textarea
-                        className="mt-2 min-h-28 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                        className="mt-2 min-h-28 w-full rounded-control border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
                         defaultValue={
                           result.data.weeklyLog?.progressSummary ?? ""
                         }
@@ -578,7 +563,7 @@ export default async function MyWeeklyLogPage({
 
                     <div>
                       <label
-                        className="block text-sm font-medium text-slate-700"
+                        className="block text-sm font-medium text-ink-base"
                         htmlFor="difficulty"
                       >
                         <I18nText
@@ -587,7 +572,7 @@ export default async function MyWeeklyLogPage({
                         />
                       </label>
                       <textarea
-                        className="mt-2 min-h-28 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                        className="mt-2 min-h-28 w-full rounded-control border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
                         defaultValue={result.data.weeklyLog?.difficulty ?? ""}
                         id="difficulty"
                         maxLength={2000}
@@ -597,7 +582,7 @@ export default async function MyWeeklyLogPage({
 
                     <div>
                       <label
-                        className="block text-sm font-medium text-slate-700"
+                        className="block text-sm font-medium text-ink-base"
                         htmlFor="message_to_coach"
                       >
                         <I18nText
@@ -606,7 +591,7 @@ export default async function MyWeeklyLogPage({
                         />
                       </label>
                       <textarea
-                        className="mt-2 min-h-28 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                        className="mt-2 min-h-28 w-full rounded-control border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
                         defaultValue={
                           result.data.weeklyLog?.messageToCoach ?? ""
                         }
@@ -618,7 +603,7 @@ export default async function MyWeeklyLogPage({
 
                     <div className="flex flex-wrap items-center gap-3">
                       <button
-                        className="rounded-md border border-slate-300 px-5 py-2.5 font-medium text-slate-700"
+                        className="rounded-control border border-line-base px-5 py-2.5 font-medium text-ink-base"
                         name="intent"
                         type="submit"
                         value="draft"
@@ -629,7 +614,7 @@ export default async function MyWeeklyLogPage({
                         />
                       </button>
                       <button
-                        className="rounded-md bg-slate-950 px-5 py-2.5 font-medium text-white"
+                        className="rounded-control bg-navy-900 px-5 py-2.5 font-medium text-white"
                         name="intent"
                         type="submit"
                         value="submitted"
@@ -655,7 +640,7 @@ export default async function MyWeeklyLogPage({
                         value={result.data.selectedRelationshipId ?? ""}
                       />
                       <button
-                        className="rounded-md border border-red-200 bg-white px-5 py-2.5 font-medium text-red-700"
+                        className="rounded-control border border-red-200 bg-surface-card px-5 py-2.5 font-medium text-red-700"
                         type="submit"
                       >
                         <I18nText
@@ -667,7 +652,7 @@ export default async function MyWeeklyLogPage({
                   ) : null}
                 </section>
 
-                <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
+                <section className="mt-6 rounded-card border border-line-base bg-surface-card p-6">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <h2 className="text-lg font-semibold">
@@ -676,14 +661,14 @@ export default async function MyWeeklyLogPage({
                           fallback="나의 주간 기록"
                         />
                       </h2>
-                      <p className="mt-2 text-sm text-slate-600">
+                      <p className="mt-2 text-sm text-ink-muted">
                         <I18nText
                           k="myCoaching.weeklyLog.form.myWeeklyLogsDescription"
                           fallback="현재 선택한 코칭 관계의 주간 기록을 최신순으로 확인합니다."
                         />
                       </p>
                     </div>
-                    <p className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600">
+                    <p className="rounded-full border border-line-base bg-surface-sunken px-3 py-1 text-sm text-ink-muted">
                       <I18nText k="myCoaching.weeklyLog.form.total" fallback="전체" />{" "}
                       {result.data.weeklyLogs.length}
                       <I18nText k="myCoaching.weeklyLog.form.countSuffix" fallback="개" />
@@ -691,7 +676,7 @@ export default async function MyWeeklyLogPage({
                   </div>
 
                   {result.data.weeklyLogs.length === 0 ? (
-                    <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                    <div className="mt-5 rounded-control border border-line-base bg-surface-sunken p-4 text-sm text-ink-muted">
                       <I18nText
                         k="myCoaching.weeklyLog.form.empty"
                         fallback="아직 작성한 주간 기록이 없습니다."
@@ -701,18 +686,18 @@ export default async function MyWeeklyLogPage({
                     <div className="mt-5 space-y-4">
                       {result.data.weeklyLogs.map((weeklyLog) => (
                         <article
-                          className="rounded-md border border-slate-200 bg-slate-50 p-4"
+                          className="rounded-card border border-line-base bg-surface-sunken p-4"
                           key={weeklyLog.id}
                         >
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
-                              <p className="text-sm font-medium text-slate-500">
+                              <p className="text-sm font-medium text-ink-faint">
                                 <I18nText
                                   k="myCoaching.weeklyLog.form.weeklyPeriod"
                                   fallback="주간 기간"
                                 />
                               </p>
-                              <h3 className="mt-1 font-semibold text-slate-950">
+                              <h3 className="mt-1 font-semibold text-ink-strong">
                                 {formatDateRange({
                                   weekStart: weeklyLog.weekStart,
                                   weekEnd: weeklyLog.weekEnd,
@@ -730,63 +715,63 @@ export default async function MyWeeklyLogPage({
 
                           <dl className="mt-4 grid gap-4 text-sm">
                             <div>
-                              <dt className="font-medium text-slate-500">
+                              <dt className="font-medium text-ink-faint">
                                 <I18nText
                                   k="myCoaching.weeklyLog.form.gratitudeContent"
                                   fallback="감사 내용"
                                 />
                               </dt>
-                              <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                              <dd className="mt-1 whitespace-pre-wrap text-ink-base">
                                 {displayValue(weeklyLog.gratitude)}
                               </dd>
                             </div>
                             <div>
-                              <dt className="font-medium text-slate-500">
+                              <dt className="font-medium text-ink-faint">
                                 <I18nText
                                   k="myCoaching.weeklyLog.form.prayerRequest"
                                   fallback="기도 제목"
                                 />
                               </dt>
-                              <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                              <dd className="mt-1 whitespace-pre-wrap text-ink-base">
                                 {displayValue(weeklyLog.prayerRequest)}
                               </dd>
                             </div>
                             <div>
-                              <dt className="font-medium text-slate-500">
+                              <dt className="font-medium text-ink-faint">
                                 <I18nText
                                   k="myCoaching.weeklyLog.form.progressSummary"
                                   fallback="진행 요약"
                                 />
                               </dt>
-                              <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                              <dd className="mt-1 whitespace-pre-wrap text-ink-base">
                                 {displayValue(weeklyLog.progressSummary)}
                               </dd>
                             </div>
                             <div>
-                              <dt className="font-medium text-slate-500">
+                              <dt className="font-medium text-ink-faint">
                                 <I18nText
                                   k="myCoaching.weeklyLog.form.difficulty"
                                   fallback="어려웠던 점"
                                 />
                               </dt>
-                              <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                              <dd className="mt-1 whitespace-pre-wrap text-ink-base">
                                 {displayValue(weeklyLog.difficulty)}
                               </dd>
                             </div>
                             <div>
-                              <dt className="font-medium text-slate-500">
+                              <dt className="font-medium text-ink-faint">
                                 <I18nText
                                   k="myCoaching.weeklyLog.form.coachMessage"
                                   fallback="코치에게 남긴 메시지"
                                 />
                               </dt>
-                              <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                              <dd className="mt-1 whitespace-pre-wrap text-ink-base">
                                 {displayValue(weeklyLog.messageToCoach)}
                               </dd>
                             </div>
                           </dl>
 
-                          <dl className="mt-4 grid gap-3 border-t border-slate-200 pt-4 text-xs text-slate-600 sm:grid-cols-3">
+                          <dl className="mt-4 grid gap-3 border-t border-line-soft pt-4 text-xs text-ink-muted sm:grid-cols-3">
                             <div>
                               <dt className="font-medium">
                                 <I18nText

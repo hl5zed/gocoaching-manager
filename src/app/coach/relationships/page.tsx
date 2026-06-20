@@ -82,11 +82,11 @@ function relationshipStatusBadgeClass(status: CoachingRelationshipStatus) {
     case "paused":
       return "border-amber-200 bg-amber-50 text-amber-700";
     case "ended":
-      return "border-slate-300 bg-slate-50 text-slate-700";
+      return "border-line-base bg-surface-sunken text-ink-base";
     case "archived":
-      return "border-slate-300 bg-slate-100 text-slate-600";
+      return "border-line-base bg-surface-sunken text-ink-muted";
     default:
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "border-line-base bg-surface-sunken text-ink-base";
   }
 }
 
@@ -103,7 +103,7 @@ function relationshipTypeBadgeClass(type: RelationshipType) {
     case "missionary_coaching":
       return "border-rose-200 bg-rose-50 text-rose-700";
     default:
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "border-line-base bg-surface-sunken text-ink-base";
   }
 }
 
@@ -175,13 +175,13 @@ export default async function CoachRelationshipsPage({
 
   if (!result.ok) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+      <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
         <section className="mx-auto w-full max-w-6xl">
-          <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+          <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
             코치
           </p>
           <h1 className="mt-3 text-3xl font-semibold">코칭 관계</h1>
-          <div className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <div className="mt-8 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
             지금 코칭 관계를 불러올 수 없습니다.
           </div>
         </section>
@@ -192,25 +192,25 @@ export default async function CoachRelationshipsPage({
   const { filters, pagination, profile, relationships } = result.data;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <section className="mx-auto w-full max-w-6xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+            <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
               코치
             </p>
             <h1 className="mt-3 text-3xl font-semibold">코칭 관계</h1>
-            <p className="mt-3 max-w-3xl text-slate-600">
+            <p className="mt-3 max-w-3xl text-ink-muted">
               내 코치 프로필에 연결된 코칭 관계를 읽기 전용으로 확인할 수
               있습니다.
             </p>
           </div>
           <div className="flex flex-col items-start gap-2 text-sm">
-            <Link className="font-medium text-slate-700 underline" href="/coach">
+            <Link className="font-medium text-brand-600 underline" href="/coach">
               코치 홈으로 돌아가기
             </Link>
             <Link
-              className="font-medium text-slate-700 underline"
+              className="font-medium text-brand-600 underline"
               href="/dashboard"
             >
               대시보드로 돌아가기
@@ -219,14 +219,14 @@ export default async function CoachRelationshipsPage({
         </div>
 
         {profile === null ? (
-          <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
-            <p className="text-slate-700">아직 프로필이 생성되지 않았습니다.</p>
-            <p className="mt-2 text-slate-600">
+          <section className="mt-8 rounded-card border border-line-base bg-surface-card p-6">
+            <p className="text-ink-base">아직 프로필이 생성되지 않았습니다.</p>
+            <p className="mt-2 text-ink-muted">
               초대를 받으셨다면 먼저 초대를 수락해 주세요.
             </p>
             <div className="mt-4">
               <Link
-                className="text-sm font-medium text-slate-700 underline"
+                className="text-sm font-medium text-brand-600 underline"
                 href="/profile"
               >
                 프로필 보기
@@ -235,17 +235,17 @@ export default async function CoachRelationshipsPage({
           </section>
         ) : (
           <>
-            <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
+            <section className="mt-8 rounded-card border border-line-base bg-surface-card p-6">
               <form className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px_260px]">
                 <div>
                   <label
-                    className="block text-sm font-medium text-slate-700"
+                    className="block text-sm font-medium text-ink-base"
                     htmlFor="q"
                   >
                     코치이 검색
                   </label>
                   <input
-                    className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 placeholder:text-slate-400 focus:border-slate-400"
+                    className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm text-ink-strong shadow-sm outline-none ring-0 placeholder:text-ink-faint focus:border-brand-600"
                     defaultValue={filters.q}
                     id="q"
                     name="q"
@@ -255,13 +255,13 @@ export default async function CoachRelationshipsPage({
                 </div>
                 <div>
                   <label
-                    className="block text-sm font-medium text-slate-700"
+                    className="block text-sm font-medium text-ink-base"
                     htmlFor="status"
                   >
                     상태
                   </label>
                   <select
-                    className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 focus:border-slate-400"
+                    className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm text-ink-strong shadow-sm outline-none ring-0 focus:border-brand-600"
                     defaultValue={filters.status}
                     id="status"
                     name="status"
@@ -275,13 +275,13 @@ export default async function CoachRelationshipsPage({
                 </div>
                 <div>
                   <label
-                    className="block text-sm font-medium text-slate-700"
+                    className="block text-sm font-medium text-ink-base"
                     htmlFor="type"
                   >
                     관계 유형
                   </label>
                   <select
-                    className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none ring-0 focus:border-slate-400"
+                    className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm text-ink-strong shadow-sm outline-none ring-0 focus:border-brand-600"
                     defaultValue={filters.type}
                     id="type"
                     name="type"
@@ -295,7 +295,7 @@ export default async function CoachRelationshipsPage({
                 </div>
                 <div className="md:col-span-3">
                   <button
-                    className="inline-flex rounded-md bg-slate-950 px-4 py-2.5 text-sm font-medium text-white"
+                    className="inline-flex rounded-control bg-navy-900 px-4 py-2.5 text-sm font-medium text-white"
                     type="submit"
                   >
                     필터 적용
@@ -304,14 +304,14 @@ export default async function CoachRelationshipsPage({
               </form>
             </section>
 
-            <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
+            <section className="mt-6 rounded-card border border-line-base bg-surface-card p-6">
               {relationships.length === 0 ? (
-                <p className="text-slate-700">코칭 관계가 없습니다.</p>
+                <p className="text-ink-base">코칭 관계가 없습니다.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[920px] border-collapse text-left text-sm">
                     <thead>
-                      <tr className="border-b border-slate-200 text-slate-500">
+                      <tr className="border-b border-line-base text-ink-faint">
                         <th className="px-3 py-2 font-medium">코치이</th>
                         <th className="px-3 py-2 font-medium">관계 유형</th>
                         <th className="px-3 py-2 font-medium">상태</th>
@@ -325,12 +325,12 @@ export default async function CoachRelationshipsPage({
                     <tbody>
                       {relationships.map((relationship) => (
                         <tr
-                          className="border-b border-slate-100 text-slate-800"
+                          className="border-b border-line-soft text-ink-base"
                           key={relationship.id}
                         >
                           <td className="px-3 py-3">
                             <Link
-                              className="font-medium text-slate-900 underline"
+                              className="font-medium text-ink-strong underline"
                               href={createDetailHref(relationship.id, filters)}
                             >
                               {getCoacheeLabel(relationship)}
@@ -338,7 +338,7 @@ export default async function CoachRelationshipsPage({
                             {relationship.coachee?.email &&
                               relationship.coachee.email !==
                                 getCoacheeLabel(relationship) && (
-                                <div className="mt-1 text-xs text-slate-500">
+                                <div className="mt-1 text-xs text-ink-faint">
                                   {relationship.coachee.email}
                                 </div>
                               )}
@@ -380,7 +380,7 @@ export default async function CoachRelationshipsPage({
                           </td>
                           <td className="px-3 py-3">
                             <Link
-                              className="text-sm font-medium text-slate-700 underline"
+                              className="text-sm font-medium text-brand-600 underline"
                               href={createDetailHref(relationship.id, filters)}
                             >
                               보기
@@ -393,28 +393,28 @@ export default async function CoachRelationshipsPage({
                 </div>
               )}
 
-              <div className="mt-6 flex items-center justify-between gap-3 border-t border-slate-200 pt-4 text-sm text-slate-600">
+              <div className="mt-6 flex items-center justify-between gap-3 border-t border-line-soft pt-4 text-sm text-ink-muted">
                 <p>{pagination.page}페이지</p>
                 <div className="flex items-center gap-3">
                   {pagination.page > 1 ? (
                     <Link
-                      className="font-medium text-slate-700 underline"
+                      className="font-medium text-brand-600 underline"
                       href={createPageHref(pagination.page - 1, filters)}
                     >
                       이전
                     </Link>
                   ) : (
-                    <span className="text-slate-400">이전</span>
+                    <span className="text-ink-faint">이전</span>
                   )}
                   {pagination.hasNext ? (
                     <Link
-                      className="font-medium text-slate-700 underline"
+                      className="font-medium text-brand-600 underline"
                       href={createPageHref(pagination.page + 1, filters)}
                     >
                       다음
                     </Link>
                   ) : (
-                    <span className="text-slate-400">다음</span>
+                    <span className="text-ink-faint">다음</span>
                   )}
                 </div>
               </div>

@@ -71,12 +71,12 @@ function ScopeIdField({
   scopeType: ScopeType | "";
 }) {
   const sharedClassName =
-    "rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal disabled:bg-slate-100 disabled:text-slate-500";
+    "rounded-control border border-line-base px-3 py-2 font-sans tracking-normal disabled:bg-surface-sunken disabled:text-ink-faint";
 
   if (!scopeType) {
     return (
       <label className="grid gap-2 lg:col-span-3">
-        <span className="text-sm font-medium text-slate-700">권한 범위</span>
+        <span className="text-sm font-medium text-ink-base">권한 범위</span>
         <input
           className={sharedClassName}
           disabled
@@ -111,7 +111,7 @@ function ScopeIdField({
 
     return (
       <label className="grid gap-2 lg:col-span-3">
-        <span className="text-sm font-medium text-slate-700">권한 범위</span>
+        <span className="text-sm font-medium text-ink-base">권한 범위</span>
         <select className={sharedClassName} name="scope_id" required>
           <option value="">권한을 적용할 범위를 선택하세요</option>
           {lookupOptions.map((option) => (
@@ -120,7 +120,7 @@ function ScopeIdField({
             </option>
           ))}
         </select>
-        <span className="text-xs leading-5 text-slate-500">
+        <span className="text-xs leading-5 text-ink-faint">
           권한 범위는 회원 소속 정보와 다를 수 있습니다.
         </span>
       </label>
@@ -129,7 +129,7 @@ function ScopeIdField({
 
   return (
     <label className="grid gap-2 lg:col-span-3">
-      <span className="text-sm font-medium text-slate-700">권한 범위 ID</span>
+      <span className="text-sm font-medium text-ink-base">권한 범위 ID</span>
       <input
         className={sharedClassName}
         name="scope_id"
@@ -137,7 +137,7 @@ function ScopeIdField({
         required
         type="text"
       />
-      <span className="text-xs leading-5 text-slate-500">
+      <span className="text-xs leading-5 text-ink-faint">
         이 범위는 선택 목록이 준비되지 않아 ID 입력이 필요합니다. 값이 확실한
         경우에만 등록하세요.
       </span>
@@ -175,7 +175,7 @@ export function AdminUserDirectCreatePanel() {
 
   return (
     <details
-      className="group mt-6 rounded-md border border-slate-200 bg-white"
+      className="group mt-6 rounded-md border border-line-base bg-surface-card"
       onToggle={handleToggle}
     >
       <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 px-5 py-4">
@@ -183,14 +183,14 @@ export function AdminUserDirectCreatePanel() {
           <h2 className="text-lg font-semibold">
             <I18nText k="members.directCreate" fallback="직접 회원 등록" />
           </h2>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-ink-muted">
             <I18nText
               k="members.directCreateDescription"
               fallback="기존 이메일 초대 방식은 유지하고, 필요한 경우에만 직접 등록합니다."
             />
           </p>
         </div>
-        <span className="rounded-md bg-slate-950 px-4 py-2.5 text-sm font-medium text-white">
+        <span className="rounded-control bg-navy-900 px-4 py-2.5 text-sm font-medium text-white">
           <span className="group-open:hidden">
             <I18nText k="members.openCreate" fallback="회원 등록 열기" />
           </span>
@@ -200,22 +200,22 @@ export function AdminUserDirectCreatePanel() {
         </span>
       </summary>
 
-      <div className="border-t border-slate-200 px-5 pb-5 pt-4">
+      <div className="border-t border-line-base px-5 pb-5 pt-4">
         {isLoading ? (
-          <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+          <div className="rounded-card border border-line-base bg-surface-app p-4 text-sm text-ink-muted">
             회원 등록 선택값을 불러오는 중...
           </div>
         ) : null}
 
         {error ? (
-          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <div className="rounded-control border border-red-200 bg-red-50 p-4 text-sm text-red-800">
             {error}
           </div>
         ) : null}
 
         {payload ? (
           <>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-ink-muted">
               <I18nText
                 k="members.directCreateHelp"
                 fallback="이메일 발송 없이 Supabase Auth 계정을 만들고 기존 프로필/역할 구조에 연결합니다."
@@ -227,15 +227,15 @@ export function AdminUserDirectCreatePanel() {
               method="post"
             >
               <input name="intent" type="hidden" value="create_profile" />
-              <fieldset className="grid gap-4 rounded-md border border-slate-200 p-4">
-                <legend className="px-1 text-sm font-semibold text-slate-800">
+              <fieldset className="grid gap-4 rounded-md border border-line-base p-4">
+                <legend className="px-1 text-sm font-semibold text-ink-base">
                   기본 정보
                 </legend>
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="grid gap-2">
-                    <span className="text-sm font-medium text-slate-700">이름</span>
+                    <span className="text-sm font-medium text-ink-base">이름</span>
                     <input
-                      className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                      className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                       maxLength={120}
                       name="full_name"
                       required
@@ -243,20 +243,20 @@ export function AdminUserDirectCreatePanel() {
                     />
                   </label>
                   <label className="grid gap-2">
-                    <span className="text-sm font-medium text-slate-700">이메일</span>
+                    <span className="text-sm font-medium text-ink-base">이메일</span>
                     <input
-                      className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                      className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                       name="email"
                       required
                       type="email"
                     />
                   </label>
                   <label className="grid gap-2 md:col-span-2">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-ink-base">
                       임시 비밀번호
                     </span>
                     <input
-                      className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                      className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                       maxLength={72}
                       minLength={8}
                       name="temporary_password"
@@ -267,8 +267,8 @@ export function AdminUserDirectCreatePanel() {
                 </div>
               </fieldset>
 
-              <fieldset className="grid gap-4 rounded-md border border-slate-200 p-4">
-                <legend className="px-1 text-sm font-semibold text-slate-800">
+              <fieldset className="grid gap-4 rounded-md border border-line-base p-4">
+                <legend className="px-1 text-sm font-semibold text-ink-base">
                   소속 정보
                 </legend>
                 <div className="grid gap-4 md:grid-cols-2">
@@ -287,11 +287,11 @@ export function AdminUserDirectCreatePanel() {
                     regionOptions={payload.options.regions}
                   />
                   <label className="grid gap-2">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-ink-base">
                       소속 직분
                     </span>
                     <select
-                      className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                      className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                       defaultValue=""
                       name="ministry_position"
                     >
@@ -306,8 +306,8 @@ export function AdminUserDirectCreatePanel() {
                 </div>
               </fieldset>
 
-              <fieldset className="grid gap-4 rounded-md border border-slate-200 p-4">
-                <legend className="px-1 text-sm font-semibold text-slate-800">
+              <fieldset className="grid gap-4 rounded-md border border-line-base p-4">
+                <legend className="px-1 text-sm font-semibold text-ink-base">
                   역할 및 세대
                 </legend>
                 <div className="rounded-md border border-amber-100 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-900">
@@ -322,11 +322,11 @@ export function AdminUserDirectCreatePanel() {
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   <label className="grid gap-2">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-ink-base">
                       시스템 역할
                     </span>
                     <select
-                      className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                      className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                       name="role"
                       onChange={(event) => {
                         setSelectedRole(event.currentTarget.value as UserRole | "");
@@ -350,9 +350,9 @@ export function AdminUserDirectCreatePanel() {
                     ) : null}
                   </label>
                   <label className="grid gap-2">
-                    <span className="text-sm font-medium text-slate-700">세대</span>
+                    <span className="text-sm font-medium text-ink-base">세대</span>
                     <select
-                      className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                      className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                       defaultValue=""
                       name="generation_number"
                     >
@@ -370,11 +370,11 @@ export function AdminUserDirectCreatePanel() {
                     </select>
                   </label>
                   <label className="grid gap-2">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-ink-base">
                       권한 범위 유형
                     </span>
                     <select
-                      className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
+                      className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal disabled:bg-surface-sunken disabled:text-ink-faint"
                       disabled={!selectedRole}
                       name="scope_type"
                       onChange={(event) =>
@@ -402,12 +402,12 @@ export function AdminUserDirectCreatePanel() {
 
               <div>
                 <button
-                  className="rounded-md bg-slate-950 px-4 py-2.5 text-sm font-medium text-white"
+                  className="rounded-control bg-navy-900 px-4 py-2.5 text-sm font-medium text-white"
                   type="submit"
                 >
                   직접 회원 등록
                 </button>
-                <p className="mt-2 text-sm text-slate-500">
+                <p className="mt-2 text-sm text-ink-faint">
                   생성 성공 후 임시 비밀번호를 사용자에게 직접 전달하세요.
                 </p>
               </div>

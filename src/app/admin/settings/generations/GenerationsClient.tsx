@@ -324,22 +324,22 @@ export function GenerationsClient({
 
   return (
     <>
-      <div className="mt-8 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+      <div className="mt-8 rounded-control border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
         세대 옵션은 회원가입/초대 수락 시 표시되는 선택 항목입니다.
         회원에게 저장되는 실제 값은 profiles.generation_number입니다.
       </div>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-md border border-slate-200 bg-white p-5">
-          <p className="text-sm font-medium text-slate-500">전체 옵션 수</p>
+        <div className="rounded-card border border-line-base bg-surface-card p-5">
+          <p className="text-sm font-medium text-ink-faint">전체 옵션 수</p>
           <p className="mt-3 text-3xl font-semibold">{generations.length}</p>
         </div>
-        <div className="rounded-md border border-slate-200 bg-white p-5">
-          <p className="text-sm font-medium text-slate-500">사용 중</p>
+        <div className="rounded-card border border-line-base bg-surface-card p-5">
+          <p className="text-sm font-medium text-ink-faint">사용 중</p>
           <p className="mt-3 text-3xl font-semibold">{activeCount}</p>
         </div>
-        <div className="rounded-md border border-slate-200 bg-white p-5">
-          <p className="text-sm font-medium text-slate-500">비활성</p>
+        <div className="rounded-card border border-line-base bg-surface-card p-5">
+          <p className="text-sm font-medium text-ink-faint">비활성</p>
           <p className="mt-3 text-3xl font-semibold">
             {generations.length - activeCount}
           </p>
@@ -347,21 +347,21 @@ export function GenerationsClient({
       </section>
 
       <form
-        className="mt-8 rounded-md border border-slate-200 bg-white p-5"
+        className="mt-8 rounded-card border border-line-base bg-surface-card p-5"
         onSubmit={handleCreate}
       >
         <h2 className="text-lg font-semibold">세대 추가</h2>
-        <p className="mt-1 text-sm leading-6 text-slate-600">
+        <p className="mt-1 text-sm leading-6 text-ink-muted">
           세대 번호는 1 이상의 정수로 입력합니다. 정렬 순서를 비우면 세대 번호를 사용합니다.
         </p>
 
         <div className="mt-4 grid gap-3 md:grid-cols-[160px_1fr_160px_auto] md:items-end">
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-base">
               세대 번호
             </span>
             <input
-              className="rounded-md border border-slate-300 px-3 py-2"
+              className="rounded-control border border-line-base px-3 py-2"
               min="1"
               onChange={(event) => setGenerationNumber(event.target.value)}
               type="number"
@@ -369,29 +369,29 @@ export function GenerationsClient({
             />
           </label>
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-base">
               표시 이름
             </span>
             <input
-              className="rounded-md border border-slate-300 px-3 py-2"
+              className="rounded-control border border-line-base px-3 py-2"
               onChange={(event) => setLabel(event.target.value)}
               placeholder="6세대"
               value={label}
             />
           </label>
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-base">
               정렬 순서
             </span>
             <input
-              className="rounded-md border border-slate-300 px-3 py-2"
+              className="rounded-control border border-line-base px-3 py-2"
               onChange={(event) => setSortOrder(event.target.value)}
               type="number"
               value={sortOrder}
             />
           </label>
           <button
-            className="rounded-md bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="rounded-control bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             disabled={pendingAction !== null}
             type="submit"
           >
@@ -401,26 +401,26 @@ export function GenerationsClient({
       </form>
 
       {message ? (
-        <div className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+        <div className="mt-5 rounded-control border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
           {message}
         </div>
       ) : null}
 
       {errorMessage ? (
-        <div className="mt-5 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+        <div className="mt-5 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
           {errorMessage}
         </div>
       ) : null}
 
       {generations.length === 0 ? (
-        <div className="mt-8 rounded-md border border-slate-200 bg-white p-6 text-slate-600">
+        <div className="mt-8 rounded-card border border-line-base bg-surface-card p-6 text-ink-muted">
           등록된 세대 옵션이 없습니다. 세대 옵션을 추가해 주세요.
         </div>
       ) : (
-        <div className="mt-8 overflow-x-auto rounded-md border border-slate-200 bg-white">
+        <div className="mt-8 overflow-x-auto rounded-md border border-line-base bg-surface-card">
           <table className="w-full min-w-[1080px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
+              <tr className="border-b border-line-soft bg-surface-sunken text-ink-faint">
                 <th className="px-4 py-3 font-medium">세대 번호</th>
                 <th className="px-4 py-3 font-medium">표시 이름</th>
                 <th className="px-4 py-3 font-medium">범위</th>
@@ -437,13 +437,13 @@ export function GenerationsClient({
 
                 return (
                   <tr
-                    className="border-b border-slate-100 last:border-b-0"
+                    className="border-b border-line-soft last:border-b-0"
                     key={generation.id}
                   >
                     <td className="px-4 py-3">
                       {isEditing ? (
                         <input
-                          className="w-28 rounded-md border border-slate-300 px-3 py-2"
+                          className="w-28 rounded-control border border-line-base px-3 py-2"
                           min="1"
                           onChange={(event) =>
                             setEditGenerationNumber(event.target.value)
@@ -455,10 +455,10 @@ export function GenerationsClient({
                         generation.generation_number
                       )}
                     </td>
-                    <td className="px-4 py-3 font-medium text-slate-950">
+                    <td className="px-4 py-3 font-medium text-ink-strong">
                       {isEditing ? (
                         <input
-                          className="w-full rounded-md border border-slate-300 px-3 py-2"
+                          className="w-full rounded-control border border-line-base px-3 py-2"
                           onChange={(event) => setEditLabel(event.target.value)}
                           value={editLabel}
                         />
@@ -466,7 +466,7 @@ export function GenerationsClient({
                         generation.label
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
+                    <td className="px-4 py-3 text-ink-base">
                       {generation.scope_type}
                     </td>
                     <td className="px-4 py-3">
@@ -474,7 +474,7 @@ export function GenerationsClient({
                         className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
                           generation.is_active
                             ? "bg-emerald-50 text-emerald-700"
-                            : "bg-slate-100 text-slate-600"
+                            : "bg-surface-sunken text-ink-muted"
                         }`}
                       >
                         {statusLabel(generation.is_active)}
@@ -483,7 +483,7 @@ export function GenerationsClient({
                     <td className="px-4 py-3">
                       {isEditing ? (
                         <input
-                          className="w-28 rounded-md border border-slate-300 px-3 py-2"
+                          className="w-28 rounded-control border border-line-base px-3 py-2"
                           onChange={(event) =>
                             setEditSortOrder(event.target.value)
                           }
@@ -494,17 +494,17 @@ export function GenerationsClient({
                         generation.sort_order
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-ink-muted">
                       {formatDateTime(generation.created_at)}
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="px-4 py-3 text-ink-muted">
                       {formatDateTime(generation.updated_at)}
                     </td>
                     <td className="px-4 py-3">
                       {isEditing ? (
                         <div className="flex flex-wrap gap-2">
                           <button
-                            className="rounded-md bg-slate-950 px-3 py-1.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+                            className="rounded-control bg-navy-900 px-3 py-1.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                             disabled={pendingAction !== null}
                             onClick={() => handleUpdate(generation.id)}
                             type="button"
@@ -514,7 +514,7 @@ export function GenerationsClient({
                               : "저장"}
                           </button>
                           <button
-                            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                            className="rounded-control border border-line-base px-3 py-1.5 text-sm font-semibold text-ink-base hover:bg-surface-sunken"
                             disabled={pendingAction !== null}
                             onClick={cancelEdit}
                             type="button"
@@ -525,7 +525,7 @@ export function GenerationsClient({
                       ) : (
                         <div className="flex flex-wrap gap-2">
                           <button
-                            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                            className="rounded-control border border-line-base px-3 py-1.5 text-sm font-semibold text-ink-base hover:bg-surface-sunken"
                             disabled={pendingAction !== null}
                             onClick={() => startEdit(generation)}
                             type="button"
@@ -533,7 +533,7 @@ export function GenerationsClient({
                             수정
                           </button>
                           <button
-                            className={`rounded-md border px-3 py-1.5 text-sm font-semibold disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400 ${
+                            className={`rounded-md border px-3 py-1.5 text-sm font-semibold disabled:cursor-not-allowed disabled:border-line-base disabled:text-ink-faint ${
                               generation.is_active
                                 ? "border-amber-300 text-amber-700 hover:bg-amber-50"
                                 : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"

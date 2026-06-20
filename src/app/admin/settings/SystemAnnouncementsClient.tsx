@@ -346,9 +346,9 @@ export function SystemAnnouncementsClient({
       </CardHeader>
       <CardContent className="space-y-6">
         {saveState ? (
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <div className="flex flex-wrap items-center gap-2 rounded-card border border-line-base bg-surface-app p-3">
             <Badge tone={saveState.tone}>{saveState.tone === "success" ? "완료" : "확인"}</Badge>
-            <p className="min-w-0 break-words text-sm text-slate-700">
+            <p className="min-w-0 break-words text-sm text-ink-base">
               {saveState.message}
             </p>
           </div>
@@ -438,10 +438,10 @@ export function SystemAnnouncementsClient({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <label className="inline-flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-700">
+            <label className="inline-flex min-w-0 items-center gap-2 text-sm font-semibold text-ink-base">
               <input
                 checked={form.is_active}
-                className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-600"
+                className="h-4 w-4 rounded border-line-base text-teal-700 focus:ring-teal-600"
                 onChange={(event) => setField("is_active", event.target.checked)}
                 type="checkbox"
               />
@@ -471,14 +471,14 @@ export function SystemAnnouncementsClient({
 
         <div className="space-y-3">
           <div>
-            <h3 className="text-lg font-semibold text-slate-950">공지 목록</h3>
-            <p className="mt-1 text-sm text-slate-600">
+            <h3 className="text-lg font-semibold text-ink-strong">공지 목록</h3>
+            <p className="mt-1 text-sm text-ink-muted">
               삭제된 공지는 관리 이력을 위해 목록에 흐리게 표시됩니다.
             </p>
           </div>
 
           {announcements.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600">
+            <div className="rounded-lg border border-dashed border-line-base bg-surface-app p-5 text-sm text-ink-muted">
               등록된 시스템 공지가 없습니다.
             </div>
           ) : (
@@ -489,7 +489,7 @@ export function SystemAnnouncementsClient({
 
                 return (
                   <div
-                    className={`rounded-lg border border-slate-200 bg-white p-4 ${
+                    className={`rounded-card border border-line-base bg-surface-card p-4 ${
                       disabled ? "opacity-60" : ""
                     }`}
                     key={announcement.id}
@@ -502,13 +502,13 @@ export function SystemAnnouncementsClient({
                           <Badge tone="info">{placementLabels[announcement.placement]}</Badge>
                           <Badge tone="neutral">우선순위 {announcement.priority}</Badge>
                         </div>
-                        <h4 className="mt-3 break-words text-base font-semibold text-slate-950">
+                        <h4 className="mt-3 break-words text-base font-semibold text-ink-strong">
                           {announcement.title}
                         </h4>
-                        <p className="mt-2 max-h-24 overflow-hidden whitespace-pre-line break-words text-sm leading-6 text-slate-600">
+                        <p className="mt-2 max-h-24 overflow-hidden whitespace-pre-line break-words text-sm leading-6 text-ink-muted">
                           {announcement.body}
                         </p>
-                        <p className="mt-3 text-xs leading-5 text-slate-500">
+                        <p className="mt-3 text-xs leading-5 text-ink-faint">
                           기간: {formatDateTime(announcement.starts_at)} ~{" "}
                           {formatDateTime(announcement.ends_at)}
                         </p>

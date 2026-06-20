@@ -53,11 +53,11 @@ function invitationStatusBadgeClass(status: InvitationStatus) {
     case "accepted":
       return "border-emerald-200 bg-emerald-50 text-emerald-700";
     case "expired":
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "border-line-base bg-surface-sunken text-ink-base";
     case "revoked":
       return "border-rose-200 bg-rose-50 text-rose-700";
     default:
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "border-line-base bg-surface-sunken text-ink-base";
   }
 }
 
@@ -159,9 +159,9 @@ export default async function AdminInvitationDetailPage({
 
   if (detail.kind === "error") {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+      <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
         <section className="mx-auto w-full max-w-4xl">
-          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <div className="rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
             지금 초대를 불러올 수 없습니다.
           </div>
         </section>
@@ -173,38 +173,38 @@ export default async function AdminInvitationDetailPage({
   const backHref = from.length > 0 ? from : "/admin/invitations";
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <section className="mx-auto w-full max-w-4xl">
-        <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+        <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
           관리자
         </p>
         <h1 className="mt-3 text-3xl font-semibold">초대 상세</h1>
-        <p className="mt-4 max-w-3xl leading-7 text-slate-600">
+        <p className="mt-4 max-w-3xl leading-7 text-ink-muted">
           하나의 초대를 읽기 전용으로 확인할 수 있습니다.
         </p>
 
         <div className="mt-6 grid gap-6">
-          <section className="rounded-md border border-slate-200 bg-white p-6">
+          <section className="rounded-card border border-line-base bg-surface-card p-6">
             <h2 className="text-lg font-semibold">초대 요약</h2>
             <dl className="mt-4 grid gap-4 md:grid-cols-2">
               <div>
-                <dt className="text-sm font-medium text-slate-500">이메일</dt>
+                <dt className="text-sm font-medium text-ink-faint">이메일</dt>
                 <dd className="mt-1">{invitation.email}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-slate-500">역할</dt>
+                <dt className="text-sm font-medium text-ink-faint">역할</dt>
                 <dd className="mt-1">
-                  <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                  <span className="inline-flex rounded-full border border-line-base bg-surface-sunken px-2.5 py-1 text-xs font-medium text-ink-base">
                     {getRoleLabel(invitation.invited_role)}
                   </span>
                 </dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-slate-500">범위</dt>
+                <dt className="text-sm font-medium text-ink-faint">범위</dt>
                 <dd className="mt-1">{formatScope(invitation)}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-slate-500">상태</dt>
+                <dt className="text-sm font-medium text-ink-faint">상태</dt>
                 <dd className="mt-1">
                   <span
                     className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${invitationStatusBadgeClass(
@@ -216,67 +216,67 @@ export default async function AdminInvitationDetailPage({
                 </dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-slate-500">생성일</dt>
+                <dt className="text-sm font-medium text-ink-faint">생성일</dt>
                 <dd className="mt-1">{formatDateTime(invitation.created_at)}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-slate-500">수정일</dt>
+                <dt className="text-sm font-medium text-ink-faint">수정일</dt>
                 <dd className="mt-1">{formatDateTime(invitation.updated_at)}</dd>
               </div>
             </dl>
           </section>
 
-          <section className="rounded-md border border-slate-200 bg-white p-6">
+          <section className="rounded-card border border-line-base bg-surface-card p-6">
             <h2 className="text-lg font-semibold">수락 상태</h2>
             <dl className="mt-4 grid gap-4 md:grid-cols-2">
               <div>
-                <dt className="text-sm font-medium text-slate-500">만료일</dt>
+                <dt className="text-sm font-medium text-ink-faint">만료일</dt>
                 <dd className="mt-1">{formatDateTime(invitation.expires_at)}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-slate-500">수락일</dt>
+                <dt className="text-sm font-medium text-ink-faint">수락일</dt>
                 <dd className="mt-1">{formatDateTime(invitation.accepted_at)}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-slate-500">만료 여부</dt>
+                <dt className="text-sm font-medium text-ink-faint">만료 여부</dt>
                 <dd className="mt-1">{isExpired(invitation) ? "예" : "아니오"}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-slate-500">수락 여부</dt>
+                <dt className="text-sm font-medium text-ink-faint">수락 여부</dt>
                 <dd className="mt-1">{isAccepted(invitation) ? "예" : "아니오"}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-slate-500">철회 여부</dt>
+                <dt className="text-sm font-medium text-ink-faint">철회 여부</dt>
                 <dd className="mt-1">{isRevoked(invitation) ? "예" : "아니오"}</dd>
               </div>
             </dl>
           </section>
 
-          <section className="rounded-md border border-slate-200 bg-white p-6">
+          <section className="rounded-card border border-line-base bg-surface-card p-6">
             <h2 className="text-lg font-semibold">관리자 정보</h2>
             <dl className="mt-4 grid gap-4 md:grid-cols-2">
               <div>
-                <dt className="text-sm font-medium text-slate-500">초대한 사람</dt>
+                <dt className="text-sm font-medium text-ink-faint">초대한 사람</dt>
                 <dd className="mt-1">{formatInviter(invitation)}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-slate-500">초대한 사람 ID</dt>
+                <dt className="text-sm font-medium text-ink-faint">초대한 사람 ID</dt>
                 <dd className="mt-1">{shortenUuid(invitation.invited_by)}</dd>
               </div>
               {invitation.inviter?.email && (
                 <div>
-                  <dt className="text-sm font-medium text-slate-500">초대한 사람 이메일</dt>
+                  <dt className="text-sm font-medium text-ink-faint">초대한 사람 이메일</dt>
                   <dd className="mt-1">{invitation.inviter.email}</dd>
                 </div>
               )}
             </dl>
           </section>
 
-          <section className="rounded-md border border-slate-200 bg-white p-6">
+          <section className="rounded-card border border-line-base bg-surface-card p-6">
             <h2 className="text-lg font-semibold">안전한 작업</h2>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <Link
-                className="rounded-md border border-slate-300 px-4 py-2 font-medium text-slate-700"
+                className="rounded-control border border-line-base px-4 py-2 font-medium text-ink-base"
                 href={backHref}
               >
                 초대 목록으로 돌아가기

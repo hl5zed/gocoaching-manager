@@ -72,15 +72,15 @@ function statusBadgeClass(status: string) {
     case "active":
       return "border-emerald-200 bg-emerald-50 text-emerald-700";
     case "inactive":
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "border-line-base bg-surface-sunken text-ink-base";
     case "suspended":
       return "border-amber-200 bg-amber-50 text-amber-700";
     case "archived":
-      return "border-slate-300 bg-slate-50 text-slate-600";
+      return "border-line-base bg-surface-sunken text-ink-muted";
     case "anonymized":
       return "border-rose-200 bg-rose-50 text-rose-700";
     default:
-      return "border-slate-200 bg-slate-100 text-slate-700";
+      return "border-line-base bg-surface-sunken text-ink-base";
   }
 }
 
@@ -93,8 +93,8 @@ function DetailItem({
 }) {
   return (
     <div>
-      <dt className="text-sm font-medium text-slate-500">{label}</dt>
-      <dd className="mt-1 break-words text-slate-950">{value}</dd>
+      <dt className="text-sm font-medium text-ink-faint">{label}</dt>
+      <dd className="mt-1 break-words text-ink-strong">{value}</dd>
     </div>
   );
 }
@@ -118,26 +118,26 @@ export default async function ProfilePage() {
   perf.mark("profile.complete", result.ok && result.data.profile ? 1 : 0);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <section className="mx-auto w-full max-w-4xl">
-        <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+        <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
           프로필
         </p>
         <h1 className="mt-3 text-3xl font-semibold">내 프로필</h1>
-        <p className="mt-4 leading-7 text-slate-600">
+        <p className="mt-4 leading-7 text-ink-muted">
           회원가입과 초대 수락 때 입력한 본인 프로필 정보를 확인할 수 있습니다.
         </p>
 
         <div className="mt-6">
           <div className="flex flex-wrap items-center gap-4">
             <Link
-              className="text-sm font-medium text-slate-700 underline"
+              className="text-sm font-medium text-brand-600 underline"
               href="/dashboard"
             >
               대시보드로 돌아가기
             </Link>
             <Link
-              className="text-sm font-medium text-slate-700 underline"
+              className="text-sm font-medium text-brand-600 underline"
               href="/profile/edit"
             >
               프로필 수정
@@ -146,19 +146,19 @@ export default async function ProfilePage() {
         </div>
 
         {!result.ok ? (
-          <div className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <div className="mt-8 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
             지금 프로필을 불러올 수 없습니다.
           </div>
         ) : (
           <div className="mt-8 space-y-6">
-            <section className="rounded-md border border-slate-200 bg-white p-6">
+            <section className="rounded-card border border-line-base bg-surface-card p-6">
               <h2 className="text-lg font-semibold">계정</h2>
               <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>
-                  <dt className="text-sm font-medium text-slate-500">
+                  <dt className="text-sm font-medium text-ink-faint">
                     로그인 이메일
                   </dt>
-                  <dd className="mt-1 text-slate-950">
+                  <dd className="mt-1 text-ink-strong">
                     {displayValue(result.data.authEmail)}
                   </dd>
                 </div>
@@ -166,23 +166,23 @@ export default async function ProfilePage() {
             </section>
 
             {result.data.profile === null ? (
-              <section className="rounded-md border border-slate-200 bg-white p-6">
+              <section className="rounded-card border border-line-base bg-surface-card p-6">
                 <h2 className="text-lg font-semibold">프로필</h2>
-                <p className="mt-4 text-slate-700">
+                <p className="mt-4 text-ink-base">
                   아직 프로필이 생성되지 않았습니다.
                 </p>
                 {result.data.authEmail && (
-                  <p className="mt-2 text-slate-600">
+                  <p className="mt-2 text-ink-muted">
                     현재 계정 이메일: {result.data.authEmail}
                   </p>
                 )}
-                <p className="mt-3 text-slate-600">
+                <p className="mt-3 text-ink-muted">
                   초대를 받으셨다면 먼저 초대를 수락해 주세요.
                 </p>
               </section>
             ) : (
               <>
-                <section className="rounded-md border border-slate-200 bg-white p-6">
+                <section className="rounded-card border border-line-base bg-surface-card p-6">
                   <h2 className="text-lg font-semibold">기본 정보</h2>
                   <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                     <DetailItem
@@ -204,7 +204,7 @@ export default async function ProfilePage() {
                   </dl>
                 </section>
 
-                <section className="rounded-md border border-slate-200 bg-white p-6">
+                <section className="rounded-card border border-line-base bg-surface-card p-6">
                   <h2 className="text-lg font-semibold">소속 정보</h2>
                   <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                     <DetailItem
@@ -240,7 +240,7 @@ export default async function ProfilePage() {
                   </dl>
                 </section>
 
-                <section className="rounded-md border border-slate-200 bg-white p-6">
+                <section className="rounded-card border border-line-base bg-surface-card p-6">
                   <h2 className="text-lg font-semibold">역할 및 세대</h2>
                   <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                     <DetailItem
@@ -260,14 +260,14 @@ export default async function ProfilePage() {
                   </dl>
 
                   <div className="mt-6">
-                    <h3 className="text-sm font-semibold text-slate-700">
+                    <h3 className="text-sm font-semibold text-ink-base">
                       활성 시스템 역할
                     </h3>
                     {result.data.roles.length > 0 ? (
                       <div className="mt-4 overflow-x-auto">
                         <table className="w-full min-w-[640px] border-collapse text-left text-sm">
                           <thead>
-                            <tr className="border-b border-slate-200 text-slate-500">
+                            <tr className="border-b border-line-base text-ink-faint">
                               <th className="px-3 py-2 font-medium">역할</th>
                               <th className="px-3 py-2 font-medium">범위</th>
                               <th className="px-3 py-2 font-medium">상태</th>
@@ -279,11 +279,11 @@ export default async function ProfilePage() {
                           <tbody>
                             {result.data.roles.map((role) => (
                               <tr
-                                className="border-b border-slate-100 text-slate-800"
+                                className="border-b border-line-soft text-ink-base"
                                 key={`${role.role}-${role.scope_type}-${role.scope_id ?? "global"}`}
                               >
                                 <td className="px-3 py-3">
-                                  <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                                  <span className="inline-flex rounded-full border border-line-base bg-surface-sunken px-2.5 py-1 text-xs font-medium text-ink-base">
                                     {getRoleLabel(role.role)}
                                   </span>
                                 </td>
@@ -302,18 +302,18 @@ export default async function ProfilePage() {
                         </table>
                       </div>
                     ) : (
-                      <p className="mt-4 text-slate-600">
+                      <p className="mt-4 text-ink-muted">
                         활성 역할이 없습니다.
                       </p>
                     )}
                   </div>
                 </section>
 
-                <section className="rounded-md border border-slate-200 bg-white p-6">
+                <section className="rounded-card border border-line-base bg-surface-card p-6">
                   <h2 className="text-lg font-semibold">시스템 자동 기록</h2>
                   <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <dt className="text-sm font-medium text-slate-500">
+                      <dt className="text-sm font-medium text-ink-faint">
                         회원 상태
                       </dt>
                       <dd className="mt-1">

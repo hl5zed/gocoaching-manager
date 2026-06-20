@@ -102,21 +102,21 @@ export function LoginForm({ translations }: LoginFormProps) {
   return (
     <>
       <h1 className="mt-6 text-3xl font-semibold">{loginText}</h1>
-      <p className="mt-4 leading-7 text-slate-600">
+      <p className="mt-4 leading-7 text-ink-muted">
         {loginDescriptionText}
       </p>
 
       <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
         <div>
           <label
-            className="block text-sm font-medium text-slate-700"
+            className="block text-sm font-medium text-ink-base"
             htmlFor="email"
           >
             {emailText}
           </label>
           <input
             autoComplete="email"
-            className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+            className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
             id="email"
             onChange={(event) => setEmail(event.target.value)}
             required
@@ -127,14 +127,14 @@ export function LoginForm({ translations }: LoginFormProps) {
 
         <div>
           <label
-            className="block text-sm font-medium text-slate-700"
+            className="block text-sm font-medium text-ink-base"
             htmlFor="password"
           >
             {passwordText}
           </label>
           <input
             autoComplete="current-password"
-            className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+            className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
             id="password"
             onChange={(event) => setPassword(event.target.value)}
             required
@@ -144,13 +144,13 @@ export function LoginForm({ translations }: LoginFormProps) {
         </div>
 
         {errorMessage && (
-          <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-control border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {errorMessage}
           </div>
         )}
 
         <button
-          className="w-full rounded-md bg-slate-950 px-4 py-2.5 font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+          className="w-full rounded-control bg-navy-900 px-4 py-2.5 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isSubmitting}
           type="submit"
         >

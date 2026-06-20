@@ -43,7 +43,7 @@ export function LoginGuideCopyButton({ email }: LoginGuideCopyButtonProps) {
   }
 
   if (!normalizedEmail) {
-    return <span className="text-sm text-slate-400">이메일 없음</span>;
+    return <span className="text-sm text-ink-faint">이메일 없음</span>;
   }
 
   return (
@@ -55,7 +55,7 @@ export function LoginGuideCopyButton({ email }: LoginGuideCopyButtonProps) {
         <p className="text-xs text-emerald-700">로그인 안내문이 복사되었습니다.</p>
       ) : null}
       {fallbackText ? (
-        <label className="grid gap-1 text-xs text-slate-600">
+        <label className="grid gap-1 text-xs text-ink-muted">
           <span>복사에 실패했습니다. 아래 안내문을 수동으로 복사해 주세요.</span>
           <TextareaInput
             className="min-h-32 text-xs"

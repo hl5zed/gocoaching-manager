@@ -128,7 +128,7 @@ const STATUS_LABELS: Record<NoteStatus, string> = {
 };
 
 const STATUS_BADGE_CLASSES: Record<NoteStatus, string> = {
-  archived: "border-slate-300 bg-slate-100 text-slate-700",
+  archived: "border-line-base bg-surface-sunken text-ink-base",
   completed: "border-emerald-300 bg-emerald-50 text-emerald-700",
   in_progress: "border-blue-300 bg-blue-50 text-blue-700",
   open: "border-amber-300 bg-amber-50 text-amber-700",
@@ -136,7 +136,7 @@ const STATUS_BADGE_CLASSES: Record<NoteStatus, string> = {
 
 const PRIORITY_BADGE_CLASSES: Record<Priority, string> = {
   high: "border-red-300 bg-red-50 text-red-700",
-  low: "border-slate-300 bg-slate-50 text-slate-700",
+  low: "border-line-base bg-surface-sunken text-ink-base",
   normal: "border-blue-300 bg-blue-50 text-blue-700",
 };
 
@@ -154,7 +154,7 @@ const STATUS_SORT_WEIGHT: Record<NoteStatus, number> = {
 };
 
 const DUE_DATE_BADGE_CLASSES = {
-  missing: "border-slate-300 bg-slate-50 text-slate-700",
+  missing: "border-line-base bg-surface-sunken text-ink-base",
   overdue: "border-red-300 bg-red-50 text-red-700",
   today: "border-amber-300 bg-amber-50 text-amber-700",
   upcoming: "border-emerald-300 bg-emerald-50 text-emerald-700",
@@ -332,18 +332,18 @@ export function ActionMemoTaskSummary() {
   }
 
   return (
-    <article className="min-w-0 rounded-md border border-slate-200 bg-white p-4">
-      <p className="text-sm font-medium text-slate-500">
+    <article className="min-w-0 rounded-card border border-line-base bg-surface-card p-4">
+      <p className="text-sm font-medium text-ink-faint">
         기한 지난 관리 메모
       </p>
-      <p className="mt-2 text-3xl font-semibold text-slate-950">
+      <p className="mt-2 text-3xl font-semibold text-ink-strong">
         {isLoading ? "..." : `${overdueCount}개`}
       </p>
-      <p className="mt-2 text-sm leading-6 text-slate-600">
+      <p className="mt-2 text-sm leading-6 text-ink-muted">
         {error ?? "오늘 먼저 처리할 메모입니다."}
       </p>
       <button
-        className="mt-4 inline-flex min-h-10 w-full justify-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+        className="mt-4 inline-flex min-h-10 w-full justify-center rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm font-semibold text-ink-base hover:bg-surface-sunken sm:w-auto"
         onClick={openActionMemos}
         type="button"
       >
@@ -1136,19 +1136,19 @@ export function ActionMemoDrafts({
 
   return (
     <section
-      className="mt-8 rounded-md border border-slate-200 bg-white p-4 sm:p-6"
+      className="mt-8 rounded-card border border-line-base bg-surface-card p-4 sm:p-6"
       id="action-memos"
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-slate-500">저장된 기록</p>
-          <h2 className="mt-1 text-xl font-semibold text-slate-950">
+          <p className="text-sm font-medium text-ink-faint">저장된 기록</p>
+          <h2 className="mt-1 text-xl font-semibold text-ink-strong">
             관리 액션 메모 요약
           </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-ink-muted">
             후속 액션을 메모로 남기고 진행 상태를 처리합니다.
           </p>
-          <p className="mt-1 text-sm leading-6 text-slate-500">
+          <p className="mt-1 text-sm leading-6 text-ink-faint">
             완료: 처리한 메모로 남깁니다. 보관: 현재 목록에서 정리하지만
             기록은 보관합니다.
           </p>
@@ -1170,11 +1170,11 @@ export function ActionMemoDrafts({
           { label: "기한 지난 메모", value: summary.overdueCount },
         ].map((card) => (
           <div
-            className="min-w-0 rounded-md border border-slate-200 bg-slate-50 p-4"
+            className="min-w-0 rounded-card border border-line-base bg-surface-app p-4"
             key={card.label}
           >
-            <p className="text-xs font-medium text-slate-500">{card.label}</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-950">
+            <p className="text-xs font-medium text-ink-faint">{card.label}</p>
+            <p className="mt-2 text-2xl font-semibold text-ink-strong">
               {isLoading ? "..." : card.value}
             </p>
           </div>
@@ -1183,14 +1183,14 @@ export function ActionMemoDrafts({
 
       <div className="mt-5 flex flex-wrap gap-2">
         <button
-          className="min-h-10 w-full rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 sm:w-auto"
+          className="min-h-10 w-full rounded-control bg-navy-900 px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800 sm:w-auto"
           onClick={() => setIsFullViewOpen(true)}
           type="button"
         >
           메모 전체 보기
         </button>
         <button
-          className="min-h-10 w-full rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+          className="min-h-10 w-full rounded-md border border-line-base bg-surface-card px-4 py-2 text-sm font-semibold text-ink-base hover:bg-surface-sunken sm:w-auto"
           onClick={() => {
             setIsFullViewOpen(true);
             setShouldScrollToCreate(true);
@@ -1201,7 +1201,7 @@ export function ActionMemoDrafts({
         </button>
         {isFullViewOpen ? (
           <button
-            className="min-h-10 w-full rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+            className="min-h-10 w-full rounded-md border border-line-base bg-surface-card px-4 py-2 text-sm font-semibold text-ink-base hover:bg-surface-sunken sm:w-auto"
             onClick={() => setIsFullViewOpen(false)}
             type="button"
           >
@@ -1214,27 +1214,27 @@ export function ActionMemoDrafts({
         <div className="mt-6" id="action-memo-full">
           <div className="mb-4 flex flex-wrap gap-2 sm:hidden">
             <a
-              className="inline-flex min-h-10 flex-1 justify-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"
+              className="inline-flex min-h-10 flex-1 justify-center rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm font-semibold text-ink-base"
               href="#action-memo-create"
             >
               작성폼으로 이동
             </a>
             <a
-              className="inline-flex min-h-10 flex-1 justify-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"
+              className="inline-flex min-h-10 flex-1 justify-center rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm font-semibold text-ink-base"
               href="#action-memo-list"
             >
               목록으로 이동
             </a>
           </div>
       {attentionTargets.length > 0 ? (
-        <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-4">
+        <div className="mt-5 rounded-control border border-amber-200 bg-amber-50 p-4">
           <p className="text-sm font-semibold text-amber-900">
             관심 필요 대상자 내부 메모 작성
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {attentionTargets.map((target) => (
               <button
-                className="rounded-md border border-amber-300 bg-white px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-100"
+                className="rounded-md border border-amber-300 bg-surface-card px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-100"
                 key={`${target.targetUserId ?? target.targetName}-${target.targetName}`}
                 onClick={() => fillAttentionTarget(target)}
                 type="button"
@@ -1249,30 +1249,30 @@ export function ActionMemoDrafts({
       <div className="mt-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-slate-500">
+            <p className="text-sm font-medium text-ink-faint">
               오늘/이번 주 처리 필요
             </p>
-            <h3 className="mt-1 text-base font-semibold text-slate-950">
+            <h3 className="mt-1 text-base font-semibold text-ink-strong">
               처리 필요 요약
             </h3>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-ink-muted">
               전체 메모 기준의 상태, 우선순위, 팀/대상별 현황을 먼저 확인합니다.
             </p>
           </div>
           <button
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-control border border-line-base px-3 py-1.5 text-sm font-medium text-ink-base hover:bg-surface-sunken"
             onClick={() => void loadNotes(true)}
             type="button"
           >
             새로고침
           </button>
         </div>
-        <section className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4">
+        <section className="mt-4 rounded-card border border-line-base bg-surface-app p-4">
           <div>
-            <h4 className="text-sm font-semibold text-slate-950">
+            <h4 className="text-sm font-semibold text-ink-strong">
               코치/팀별 메모 요약
             </h4>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-ink-muted">
               현재 조회된 전체 메모 기준 요약입니다. 검색/필터와 독립적으로 계산됩니다.
             </p>
           </div>
@@ -1327,13 +1327,13 @@ export function ActionMemoDrafts({
               },
             ].map((card) => (
               <button
-                className="rounded-md border border-slate-200 bg-white p-3 text-left hover:bg-slate-50"
+                className="rounded-md border border-line-base bg-surface-card p-3 text-left hover:bg-surface-sunken"
                 key={card.label}
                 onClick={() => applyDrilldown(card.drilldown)}
                 type="button"
               >
-                <p className="text-xs font-medium text-slate-500">{card.label}</p>
-                <p className="mt-2 text-2xl font-semibold text-slate-950">
+                <p className="text-xs font-medium text-ink-faint">{card.label}</p>
+                <p className="mt-2 text-2xl font-semibold text-ink-strong">
                   {card.value}
                 </p>
               </button>
@@ -1341,23 +1341,23 @@ export function ActionMemoDrafts({
           </div>
 
           <div className="mt-4 grid gap-4 xl:grid-cols-3">
-            <div className="rounded-md border border-slate-200 bg-white p-4">
-              <h5 className="text-sm font-semibold text-slate-950">팀별 메모 요약</h5>
+            <div className="rounded-card border border-line-base bg-surface-card p-4">
+              <h5 className="text-sm font-semibold text-ink-strong">팀별 메모 요약</h5>
               {summary.teamSummaries.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">팀별 메모가 없습니다.</p>
+                <p className="mt-3 text-sm text-ink-faint">팀별 메모가 없습니다.</p>
               ) : (
                 <div className="mt-3 grid gap-2">
                   {summary.teamSummaries.map((team) => (
                     <button
-                      className="rounded-md border border-slate-200 bg-slate-50 p-3 text-left hover:bg-slate-100"
+                      className="rounded-md border border-line-base bg-surface-app p-3 text-left hover:bg-surface-sunken"
                       key={team.teamName}
                       onClick={() =>
                         applyDrilldown({ type: "team", value: team.teamName })
                       }
                       type="button"
                     >
-                      <p className="font-medium text-slate-950">{team.teamName}</p>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <p className="font-medium text-ink-strong">{team.teamName}</p>
+                      <p className="mt-1 text-sm text-ink-muted">
                         전체 {team.totalCount}개 · 미완료 {team.incompleteCount}개 · 높은 우선순위{" "}
                         {team.highPriorityCount}개
                       </p>
@@ -1367,17 +1367,17 @@ export function ActionMemoDrafts({
               )}
             </div>
 
-            <div className="rounded-md border border-slate-200 bg-white p-4">
-              <h5 className="text-sm font-semibold text-slate-950">
+            <div className="rounded-card border border-line-base bg-surface-card p-4">
+              <h5 className="text-sm font-semibold text-ink-strong">
                 대상별 메모 요약 상위 5개
               </h5>
               {summary.targetSummaries.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">대상별 메모가 없습니다.</p>
+                <p className="mt-3 text-sm text-ink-faint">대상별 메모가 없습니다.</p>
               ) : (
                 <div className="mt-3 grid gap-2">
                   {summary.targetSummaries.map((target) => (
                     <button
-                      className="rounded-md border border-slate-200 bg-slate-50 p-3 text-left hover:bg-slate-100"
+                      className="rounded-md border border-line-base bg-surface-app p-3 text-left hover:bg-surface-sunken"
                       key={target.targetName}
                       onClick={() =>
                         applyDrilldown({
@@ -1387,8 +1387,8 @@ export function ActionMemoDrafts({
                       }
                       type="button"
                     >
-                      <p className="font-medium text-slate-950">{target.targetName}</p>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <p className="font-medium text-ink-strong">{target.targetName}</p>
+                      <p className="mt-1 text-sm text-ink-muted">
                         메모 {target.totalCount}개
                       </p>
                     </button>
@@ -1397,19 +1397,19 @@ export function ActionMemoDrafts({
               )}
             </div>
 
-            <div className="rounded-md border border-slate-200 bg-white p-4">
-              <h5 className="text-sm font-semibold text-slate-950">
+            <div className="rounded-card border border-line-base bg-surface-card p-4">
+              <h5 className="text-sm font-semibold text-ink-strong">
                 대상 구분별 메모 요약
               </h5>
               {summary.targetTypeSummaries.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">
+                <p className="mt-3 text-sm text-ink-faint">
                   대상 구분별 메모가 없습니다.
                 </p>
               ) : (
                 <div className="mt-3 grid gap-2">
                   {summary.targetTypeSummaries.map((targetTypeSummary) => (
                     <button
-                      className="rounded-md border border-slate-200 bg-slate-50 p-3 text-left hover:bg-slate-100"
+                      className="rounded-md border border-line-base bg-surface-app p-3 text-left hover:bg-surface-sunken"
                       key={targetTypeSummary.targetType}
                       onClick={() =>
                         applyDrilldown({
@@ -1419,10 +1419,10 @@ export function ActionMemoDrafts({
                       }
                       type="button"
                     >
-                      <p className="font-medium text-slate-950">
+                      <p className="font-medium text-ink-strong">
                         {TARGET_TYPE_LABELS[targetTypeSummary.targetType]}
                       </p>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <p className="mt-1 text-sm text-ink-muted">
                         메모 {targetTypeSummary.totalCount}개
                       </p>
                     </button>
@@ -1443,7 +1443,7 @@ export function ActionMemoDrafts({
               </p>
             </div>
             <button
-              className="rounded-md border border-blue-300 bg-white px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-50"
+              className="rounded-md border border-blue-300 bg-surface-card px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-50"
               onClick={clearDrilldown}
               type="button"
             >
@@ -1451,29 +1451,29 @@ export function ActionMemoDrafts({
             </button>
           </div>
         ) : null}
-        <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-4 rounded-card border border-line-base bg-surface-app p-4">
           <div className="mb-4">
-            <h4 className="text-sm font-semibold text-slate-950">
+            <h4 className="text-sm font-semibold text-ink-strong">
               검색/필터/정렬
             </h4>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-ink-muted">
               드릴다운 조건과 검색, 상태, 우선순위, 대상 구분 필터가 함께 적용됩니다.
             </p>
           </div>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <label className="block md:col-span-2">
-              <span className="text-sm font-medium text-slate-700">검색</span>
+              <span className="text-sm font-medium text-ink-base">검색</span>
               <input
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="대상 이름, 팀명, 지역, 메모 내용"
                 value={searchQuery}
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">상태</span>
+              <span className="text-sm font-medium text-ink-base">상태</span>
               <select
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                 onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
                 value={statusFilter}
               >
@@ -1485,9 +1485,9 @@ export function ActionMemoDrafts({
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">우선순위</span>
+              <span className="text-sm font-medium text-ink-base">우선순위</span>
               <select
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                 onChange={(event) =>
                   setPriorityFilter(event.target.value as PriorityFilter)
                 }
@@ -1500,9 +1500,9 @@ export function ActionMemoDrafts({
               </select>
             </label>
             <label className="block md:col-span-2">
-              <span className="text-sm font-medium text-slate-700">대상 구분</span>
+              <span className="text-sm font-medium text-ink-base">대상 구분</span>
               <select
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                 onChange={(event) =>
                   setTargetTypeFilter(event.target.value as TargetTypeFilter)
                 }
@@ -1518,9 +1518,9 @@ export function ActionMemoDrafts({
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">정렬 기준</span>
+              <span className="text-sm font-medium text-ink-base">정렬 기준</span>
               <select
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                 onChange={(event) => {
                   setSortKey(event.target.value as SortKey);
                   setCurrentPage(1);
@@ -1536,9 +1536,9 @@ export function ActionMemoDrafts({
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">보기 개수</span>
+              <span className="text-sm font-medium text-ink-base">보기 개수</span>
               <select
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                 onChange={(event) => setPageSize(Number(event.target.value))}
                 value={pageSize}
               >
@@ -1549,19 +1549,19 @@ export function ActionMemoDrafts({
             </label>
           </div>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-ink-muted">
               전체 {notes.length}개 중 {filteredNotes.length}개 표시
             </p>
             <div className="flex flex-wrap gap-2">
               <button
-                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-md border border-line-base bg-surface-card px-3 py-1.5 text-sm font-medium text-ink-base hover:bg-surface-sunken"
                 onClick={() => toggleSort(sortKey)}
                 type="button"
               >
                 {sortDirection === "asc" ? "오름차순" : "내림차순"}
               </button>
               <button
-                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-md border border-line-base bg-surface-card px-3 py-1.5 text-sm font-medium text-ink-base hover:bg-surface-sunken"
                 onClick={resetFilters}
                 type="button"
               >
@@ -1571,14 +1571,14 @@ export function ActionMemoDrafts({
           </div>
         </div>
         <section
-          className="mt-4 rounded-md border border-slate-200 bg-white p-4"
+          className="mt-4 rounded-card border border-line-base bg-surface-card p-4"
           id="action-memo-create"
         >
           <div>
-            <h3 className="text-base font-semibold text-slate-950">
+            <h3 className="text-base font-semibold text-ink-strong">
               관리 액션 메모 작성
             </h3>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-ink-muted">
               대상과 액션을 정리해 저장하면 권한 범위 안에서 계속 확인할 수 있습니다.
             </p>
           </div>
@@ -1587,9 +1587,9 @@ export function ActionMemoDrafts({
             onSubmit={handleSubmit}
           >
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">대상 구분</span>
+              <span className="text-sm font-medium text-ink-base">대상 구분</span>
               <select
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                 onChange={(event) => setTargetType(event.target.value as TargetType)}
                 value={targetType}
               >
@@ -1602,40 +1602,40 @@ export function ActionMemoDrafts({
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-ink-base">
                 대상 이름 또는 팀명
               </span>
               <input
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                 onChange={(event) => setTargetName(event.target.value)}
                 placeholder="이름 또는 팀명"
                 value={targetName}
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">팀/목장</span>
+              <span className="text-sm font-medium text-ink-base">팀/목장</span>
               <input
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                 onChange={(event) => setTeamName(event.target.value)}
                 placeholder="선택 입력"
                 value={teamName}
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">지역</span>
+              <span className="text-sm font-medium text-ink-base">지역</span>
               <input
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                 onChange={(event) => setRegion(event.target.value)}
                 placeholder="선택 입력"
                 value={region}
               />
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-ink-base">
                 관리 액션 유형
               </span>
               <select
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                 onChange={(event) => setActionType(event.target.value as ActionType)}
                 value={actionType}
               >
@@ -1647,9 +1647,9 @@ export function ActionMemoDrafts({
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">우선순위</span>
+              <span className="text-sm font-medium text-ink-base">우선순위</span>
               <select
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                 onChange={(event) => setPriority(event.target.value as Priority)}
                 value={priority}
               >
@@ -1659,18 +1659,18 @@ export function ActionMemoDrafts({
               </select>
             </label>
             <label className="block">
-              <span className="text-sm font-medium text-slate-700">마감일</span>
+              <span className="text-sm font-medium text-ink-base">마감일</span>
               <input
-                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                 onChange={(event) => setDueDate(event.target.value)}
                 type="date"
                 value={dueDate}
               />
             </label>
             <label className="block md:col-span-2 xl:col-span-4">
-              <span className="text-sm font-medium text-slate-700">메모 내용</span>
+              <span className="text-sm font-medium text-ink-base">메모 내용</span>
               <textarea
-                className="mt-2 min-h-28 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                className="mt-2 min-h-28 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                 onChange={(event) => setContent(event.target.value)}
                 placeholder="후속 관리 액션 메모를 입력하세요."
                 value={content}
@@ -1678,7 +1678,7 @@ export function ActionMemoDrafts({
             </label>
             <div className="flex flex-wrap items-center gap-3 md:col-span-2 xl:col-span-4">
               <button
-                className="rounded-md bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                className="rounded-control bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-800 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={isSaving}
                 type="submit"
               >
@@ -1692,15 +1692,15 @@ export function ActionMemoDrafts({
         <div className="mt-4" id="action-memo-list">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="text-base font-semibold text-slate-950">
+              <h3 className="text-base font-semibold text-ink-strong">
                 관리 액션 메모 목록
               </h3>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-ink-muted">
                 검색/필터/정렬 결과를 기준으로 메모를 확인하고 빠르게 처리합니다.
               </p>
             </div>
             <button
-              className="inline-flex w-full justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+              className="inline-flex w-full justify-center rounded-md border border-line-base bg-surface-card px-4 py-2 text-sm font-semibold text-ink-base hover:bg-surface-sunken sm:w-auto"
               onClick={exportFilteredNotesToCsv}
               type="button"
             >
@@ -1709,11 +1709,11 @@ export function ActionMemoDrafts({
           </div>
         </div>
         {isLoading ? (
-          <p className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">
+          <p className="mt-3 rounded-md border border-line-base bg-surface-app px-4 py-5 text-center text-sm text-ink-faint">
             관리 액션 메모를 불러오는 중입니다.
           </p>
         ) : sortedNotes.length === 0 ? (
-          <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">
+          <div className="mt-3 rounded-md border border-line-base bg-surface-app px-4 py-5 text-center text-sm text-ink-faint">
             {notes.length === 0 ? (
               <p>아직 등록된 관리 메모가 없습니다.</p>
             ) : (
@@ -1725,7 +1725,7 @@ export function ActionMemoDrafts({
                   필터를 초기화하거나 다른 조건으로 다시 조회해 주세요.
                 </p>
                 <button
-                  className="mt-4 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  className="mt-4 rounded-md border border-line-base bg-surface-card px-3 py-1.5 text-sm font-medium text-ink-base hover:bg-surface-sunken"
                   onClick={resetFilters}
                   type="button"
                 >
@@ -1742,15 +1742,15 @@ export function ActionMemoDrafts({
 
               return (
               <article
-                className="rounded-md border border-slate-200 bg-slate-50 p-4"
+                className="rounded-card border border-line-base bg-surface-app p-4"
                 key={note.id}
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-slate-950">
+                    <p className="font-semibold text-ink-strong">
                       {TARGET_TYPE_LABELS[note.target_type]}: {note.target_name}
                     </p>
-                    <p className="mt-1 text-sm text-slate-600">
+                    <p className="mt-1 text-sm text-ink-muted">
                       {ACTION_TYPE_LABELS[note.action_type]}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
@@ -1770,20 +1770,20 @@ export function ActionMemoDrafts({
                         {dueDateInfo.label}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-ink-faint">
                       팀 {displayValue(note.team_name)} · 지역 {displayValue(note.region)}
                     </p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-ink-faint">
                       작성일: {formatDateTime(note.created_at)}
                       {note.due_date ? ` · 마감일: ${note.due_date}` : ""}
                     </p>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       <label className="block">
-                        <span className="text-xs font-medium text-slate-600">
+                        <span className="text-xs font-medium text-ink-muted">
                           상태 빠른 변경
                         </span>
                         <select
-                          className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="mt-1 w-full rounded-md border border-line-base bg-surface-card px-2 py-1.5 text-sm text-ink-base disabled:cursor-not-allowed disabled:opacity-60"
                           disabled={
                             quickUpdating?.id === note.id &&
                             quickUpdating.field === "status"
@@ -1806,11 +1806,11 @@ export function ActionMemoDrafts({
                         </select>
                       </label>
                       <label className="block">
-                        <span className="text-xs font-medium text-slate-600">
+                        <span className="text-xs font-medium text-ink-muted">
                           우선순위 빠른 변경
                         </span>
                         <select
-                          className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="mt-1 w-full rounded-md border border-line-base bg-surface-card px-2 py-1.5 text-sm text-ink-base disabled:cursor-not-allowed disabled:opacity-60"
                           disabled={
                             quickUpdating?.id === note.id &&
                             quickUpdating.field === "priority"
@@ -1840,7 +1840,7 @@ export function ActionMemoDrafts({
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
-                      className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-white"
+                      className="rounded-md border border-line-base bg-surface-card px-3 py-1.5 text-sm font-medium text-ink-base hover:bg-surface-card"
                       onClick={() => openDetail(note)}
                       type="button"
                     >
@@ -1848,7 +1848,7 @@ export function ActionMemoDrafts({
                     </button>
                     {note.status !== "completed" && note.status !== "archived" ? (
                       <button
-                        className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
+                        className="rounded-md border border-emerald-300 bg-surface-card px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
                         onClick={() => void completeNote(note.id)}
                         type="button"
                       >
@@ -1857,7 +1857,7 @@ export function ActionMemoDrafts({
                     ) : null}
                     {note.status !== "archived" ? (
                       <button
-                        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-white"
+                        className="rounded-md border border-line-base bg-surface-card px-3 py-1.5 text-sm font-medium text-ink-base hover:bg-surface-card"
                         disabled={archivingId === note.id}
                         onClick={() => void archiveNote(note.id)}
                         type="button"
@@ -1867,20 +1867,20 @@ export function ActionMemoDrafts({
                     ) : null}
                   </div>
                 </div>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-ink-base">
                   {note.note}
                 </p>
               </article>
               );
             })}
             </div>
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
-              <p className="text-sm text-slate-600">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line-soft pt-4">
+              <p className="text-sm text-ink-muted">
                 {normalizedCurrentPage} / {totalPages} 페이지 · 총 {sortedNotes.length}개
               </p>
               <div className="flex gap-2">
                 <button
-                  className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-md border border-line-base bg-surface-card px-3 py-1.5 text-sm font-medium text-ink-base hover:bg-surface-sunken disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={normalizedCurrentPage <= 1}
                   onClick={() =>
                     setCurrentPage((page) => Math.max(1, page - 1))
@@ -1890,7 +1890,7 @@ export function ActionMemoDrafts({
                   이전
                 </button>
                 <button
-                  className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-md border border-line-base bg-surface-card px-3 py-1.5 text-sm font-medium text-ink-base hover:bg-surface-sunken disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={normalizedCurrentPage >= totalPages}
                   onClick={() =>
                     setCurrentPage((page) => Math.min(totalPages, page + 1))
@@ -1906,18 +1906,18 @@ export function ActionMemoDrafts({
       </div>
 
       {selectedNote && editForm ? (
-        <aside className="mt-6 rounded-md border border-slate-300 bg-white">
-          <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-5 py-4">
+        <aside className="mt-6 rounded-md border border-line-base bg-surface-card">
+          <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line-soft bg-surface-card px-5 py-4">
             <div>
-              <h3 className="text-lg font-semibold text-slate-950">
+              <h3 className="text-lg font-semibold text-ink-strong">
                 관리 액션 메모 상세
               </h3>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-ink-faint">
                 상세 정보 확인과 제한된 필드 수정을 지원합니다.
               </p>
             </div>
             <button
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-control border border-line-base px-3 py-1.5 text-sm font-medium text-ink-base hover:bg-surface-sunken"
               onClick={closeDetail}
               type="button"
             >
@@ -1927,66 +1927,66 @@ export function ActionMemoDrafts({
 
           <div className="max-h-[75vh] overflow-y-auto p-5">
             <div className="grid gap-4 lg:grid-cols-2">
-              <section className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                <h4 className="text-sm font-semibold text-slate-950">기본정보</h4>
+              <section className="rounded-card border border-line-base bg-surface-app p-4">
+                <h4 className="text-sm font-semibold text-ink-strong">기본정보</h4>
                 <dl className="mt-3 grid gap-2 text-sm">
                   <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">대상 구분</dt>
-                    <dd className="font-medium text-slate-900">
+                    <dt className="text-ink-faint">대상 구분</dt>
+                    <dd className="font-medium text-ink-strong">
                       {TARGET_TYPE_LABELS[selectedNote.target_type]}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">대상 이름</dt>
-                    <dd className="font-medium text-slate-900">
+                    <dt className="text-ink-faint">대상 이름</dt>
+                    <dd className="font-medium text-ink-strong">
                       {selectedNote.target_name}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">팀명</dt>
-                    <dd className="font-medium text-slate-900">
+                    <dt className="text-ink-faint">팀명</dt>
+                    <dd className="font-medium text-ink-strong">
                       {displayValue(selectedNote.team_name)}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">지역</dt>
-                    <dd className="font-medium text-slate-900">
+                    <dt className="text-ink-faint">지역</dt>
+                    <dd className="font-medium text-ink-strong">
                       {displayValue(selectedNote.region)}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">작성일</dt>
-                    <dd className="font-medium text-slate-900">
+                    <dt className="text-ink-faint">작성일</dt>
+                    <dd className="font-medium text-ink-strong">
                       {formatDateTime(selectedNote.created_at)}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">수정일</dt>
-                    <dd className="font-medium text-slate-900">
+                    <dt className="text-ink-faint">수정일</dt>
+                    <dd className="font-medium text-ink-strong">
                       {formatDateTime(selectedNote.updated_at)}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="text-slate-500">완료일</dt>
-                    <dd className="font-medium text-slate-900">
+                    <dt className="text-ink-faint">완료일</dt>
+                    <dd className="font-medium text-ink-strong">
                       {formatDateTime(selectedNote.completed_at)}
                     </dd>
                   </div>
                 </dl>
               </section>
 
-              <section className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                <h4 className="text-sm font-semibold text-slate-950">
+              <section className="rounded-card border border-line-base bg-surface-app p-4">
+                <h4 className="text-sm font-semibold text-ink-strong">
                   상태/우선순위/마감일
                 </h4>
                 {isEditingDetail ? (
                   <div className="mt-3 grid gap-3">
                     <label className="block">
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-sm font-medium text-ink-base">
                         액션 유형
                       </span>
                       <select
-                        className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                        className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                         onChange={(event) =>
                           setEditForm({
                             ...editForm,
@@ -2003,11 +2003,11 @@ export function ActionMemoDrafts({
                       </select>
                     </label>
                     <label className="block">
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-sm font-medium text-ink-base">
                         우선순위
                       </span>
                       <select
-                        className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                        className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                         onChange={(event) =>
                           setEditForm({
                             ...editForm,
@@ -2022,9 +2022,9 @@ export function ActionMemoDrafts({
                       </select>
                     </label>
                     <label className="block">
-                      <span className="text-sm font-medium text-slate-700">상태</span>
+                      <span className="text-sm font-medium text-ink-base">상태</span>
                       <select
-                        className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                        className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                         onChange={(event) =>
                           setEditForm({
                             ...editForm,
@@ -2040,11 +2040,11 @@ export function ActionMemoDrafts({
                       </select>
                     </label>
                     <label className="block">
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-sm font-medium text-ink-base">
                         마감일
                       </span>
                       <input
-                        className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                        className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                         onChange={(event) =>
                           setEditForm({ ...editForm, dueDate: event.target.value })
                         }
@@ -2053,9 +2053,9 @@ export function ActionMemoDrafts({
                       />
                     </label>
                     <label className="block">
-                      <span className="text-sm font-medium text-slate-700">팀명</span>
+                      <span className="text-sm font-medium text-ink-base">팀명</span>
                       <input
-                        className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                        className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                         onChange={(event) =>
                           setEditForm({ ...editForm, teamName: event.target.value })
                         }
@@ -2063,9 +2063,9 @@ export function ActionMemoDrafts({
                       />
                     </label>
                     <label className="block">
-                      <span className="text-sm font-medium text-slate-700">지역</span>
+                      <span className="text-sm font-medium text-ink-base">지역</span>
                       <input
-                        className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                        className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                         onChange={(event) =>
                           setEditForm({ ...editForm, region: event.target.value })
                         }
@@ -2095,30 +2095,30 @@ export function ActionMemoDrafts({
               </section>
             </div>
 
-            <section className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4">
-              <h4 className="text-sm font-semibold text-slate-950">메모 내용</h4>
+            <section className="mt-4 rounded-card border border-line-base bg-surface-app p-4">
+              <h4 className="text-sm font-semibold text-ink-strong">메모 내용</h4>
               {isEditingDetail ? (
                 <textarea
-                  className="mt-3 min-h-36 w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+                  className="mt-3 min-h-36 w-full rounded-md border border-line-base bg-surface-card px-3 py-2"
                   onChange={(event) =>
                     setEditForm({ ...editForm, note: event.target.value })
                   }
                   value={editForm.note}
                 />
               ) : (
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-ink-base">
                   {selectedNote.note}
                 </p>
               )}
             </section>
 
-            <section className="mt-4 rounded-md border border-slate-200 bg-white p-4">
-              <h4 className="text-sm font-semibold text-slate-950">작업</h4>
+            <section className="mt-4 rounded-card border border-line-base bg-surface-card p-4">
+              <h4 className="text-sm font-semibold text-ink-strong">작업</h4>
               <div className="mt-3 flex flex-wrap gap-2">
                 {isEditingDetail ? (
                   <>
                     <button
-                      className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                      className="rounded-control bg-navy-900 px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800 disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={isUpdatingDetail}
                       onClick={() => void saveDetailEdit()}
                       type="button"
@@ -2126,7 +2126,7 @@ export function ActionMemoDrafts({
                       {isUpdatingDetail ? "저장 중" : "수정 저장"}
                     </button>
                     <button
-                      className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      className="rounded-control border border-line-base px-4 py-2 text-sm font-medium text-ink-base hover:bg-surface-sunken"
                       onClick={cancelEditingDetail}
                       type="button"
                     >
@@ -2136,7 +2136,7 @@ export function ActionMemoDrafts({
                 ) : (
                   <>
                     <button
-                      className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                      className="rounded-control bg-navy-900 px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800"
                       onClick={startEditingDetail}
                       type="button"
                     >
@@ -2154,7 +2154,7 @@ export function ActionMemoDrafts({
                     ) : null}
                     {selectedNote.status !== "archived" ? (
                       <button
-                        className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        className="rounded-control border border-line-base px-4 py-2 text-sm font-medium text-ink-base hover:bg-surface-sunken"
                         disabled={archivingId === selectedNote.id}
                         onClick={() => void archiveNote(selectedNote.id)}
                         type="button"

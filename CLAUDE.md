@@ -395,4 +395,29 @@ UI 리뉴얼 작업 시 아래 규칙을 반드시 지킨다.
 - Supabase query 의미 변경 금지
 - DB schema/RLS/API route 수정 금지
 - package.json 수정 금지
-- 
+- 기존 컴포넌트 public props 변경 금지
+- mission/vision/core_values 필드 추정 금지
+- build 오류를 해결하기 위해 기능을 삭제하지 말 것
+
+허용:
+
+- UI 레이아웃 변경
+- className 정리
+- 신규 presentational component 생성
+- 기존 데이터 표시 방식 개선
+- 기존 props를 유지하는 optional prop 추가
+- 접근성 aria-label 추가
+- 모바일 반응형 className 추가
+
+
+---
+
+## 16. 한 줄 요약
+
+Claude는 이 프로젝트에서:
+
+- **새 기능만 만든다**
+- **한 번에 한 기능만 다룬다**
+- **허용된 파일만 수정한다**
+- **작동 중인 흐름은 재작성하지 않는다**
+- **AI_WORKFLOW.md를 먼저 읽고 따른다**

@@ -204,11 +204,11 @@ export function AdminUserAffiliationFields({
   return (
     <>
       <label className="grid gap-1 text-sm">
-        <span className="font-medium text-slate-700">
+        <span className="font-medium text-ink-base">
           <I18nText k="members.country" fallback="소속 국가" />
         </span>
         <select
-          className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+          className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
           name="country_id"
           onChange={(event) => handleCountryChange(event.currentTarget.value)}
           value={countryId}
@@ -235,11 +235,11 @@ export function AdminUserAffiliationFields({
 
       {hasRegionOptions ? (
         <label className="grid gap-1 text-sm">
-          <span className="font-medium text-slate-700">
+          <span className="font-medium text-ink-base">
             <I18nText k="members.regionCity" fallback="지역/도시" />
           </span>
           <select
-            className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+            className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
             name="region_id"
             onChange={(event) => setRegionId(event.currentTarget.value)}
             value={regionId}
@@ -260,10 +260,10 @@ export function AdminUserAffiliationFields({
       ) : (
         <div className="grid gap-1 text-sm">
           <input name="region_id" type="hidden" value={regionId} />
-          <span className="font-medium text-slate-700">
+          <span className="font-medium text-ink-base">
             <I18nText k="members.regionCity" fallback="지역/도시" />
           </span>
-          <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">
+          <p className="rounded-md border border-line-base bg-surface-app px-3 py-2 text-xs leading-5 text-ink-faint">
             등록된 지역/도시 목록이 없습니다. 현재는 소속 기관/교회 기준으로
             먼저 관리하세요.
           </p>
@@ -274,11 +274,11 @@ export function AdminUserAffiliationFields({
       )}
 
       <label className="grid gap-1 text-sm">
-        <span className="font-medium text-slate-700">
+        <span className="font-medium text-ink-base">
           소속 기관/교회
         </span>
         <select
-          className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+          className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
           name="organization_id"
           onChange={(event) => handleOrganizationChange(event.currentTarget.value)}
           value={organizationId}
@@ -300,11 +300,11 @@ export function AdminUserAffiliationFields({
 
       {hasChurchOptions ? (
         <label className="grid gap-1 text-sm">
-          <span className="font-medium text-slate-700">
+          <span className="font-medium text-ink-base">
             세부 교회
           </span>
           <select
-            className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+            className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
             name="church_id"
             onChange={(event) => handleChurchChange(event.currentTarget.value)}
             value={churchId}
@@ -329,10 +329,10 @@ export function AdminUserAffiliationFields({
       ) : (
         <div className="grid gap-1 text-sm">
           <input name="church_id" type="hidden" value={churchId} />
-          <span className="font-medium text-slate-700">
+          <span className="font-medium text-ink-base">
             세부 교회
           </span>
-          <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">
+          <p className="rounded-md border border-line-base bg-surface-app px-3 py-2 text-xs leading-5 text-ink-faint">
             등록된 세부 교회 목록이 없습니다. 소속은 위의 소속 기관/교회에서
             선택해 주세요.
           </p>
@@ -344,11 +344,11 @@ export function AdminUserAffiliationFields({
 
       {hasGroupOptions ? (
         <label className="grid gap-1 text-sm">
-          <span className="font-medium text-slate-700">
+          <span className="font-medium text-ink-base">
             <I18nText k="members.groupTeam" fallback="그룹/팀/목장" />
           </span>
           <select
-            className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+            className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
             name="group_id"
             onChange={(event) => setGroupId(event.currentTarget.value)}
             value={groupId}
@@ -369,10 +369,10 @@ export function AdminUserAffiliationFields({
       ) : (
         <div className="grid gap-1 text-sm">
           <input name="group_id" type="hidden" value={groupId} />
-          <span className="font-medium text-slate-700">
+          <span className="font-medium text-ink-base">
             <I18nText k="members.groupTeam" fallback="그룹/팀/목장" />
           </span>
-          <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-500">
+          <p className="rounded-md border border-line-base bg-surface-app px-3 py-2 text-xs leading-5 text-ink-faint">
             등록된 그룹/팀/목장 목록이 없습니다. 먼저 소속 기관/교회를 선택해
             관리하세요.
           </p>

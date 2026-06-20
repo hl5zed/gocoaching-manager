@@ -168,7 +168,7 @@ function personName({
 
 function EmptyState({ children }: { children?: string }) {
   return (
-    <p className="report-card rounded-md border border-slate-200 px-4 py-5 text-center text-sm text-slate-500 print:border-slate-300">
+    <p className="report-card rounded-control border border-line-base px-4 py-5 text-center text-sm text-ink-faint print:border-line-base">
       {children ?? "표시할 목표/목실기 데이터가 없습니다."}
     </p>
   );
@@ -177,7 +177,7 @@ function EmptyState({ children }: { children?: string }) {
 function GoalSection({ goals }: { goals: MyCoachingGoal[] }) {
   return (
     <section className="report-section mt-8">
-      <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
+      <h2 className="report-section-title border-b border-line-base pb-2 text-xl font-semibold print:text-lg">
         목표
       </h2>
       {goals.length === 0 ? (
@@ -188,44 +188,44 @@ function GoalSection({ goals }: { goals: MyCoachingGoal[] }) {
         <div className="mt-4 grid gap-4">
           {goals.map((goal) => (
             <article
-              className="report-card rounded-md border border-slate-200 bg-white p-4"
+              className="report-card rounded-card border border-line-base bg-surface-card p-4"
               key={goal.id}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold">{goal.title}</h3>
-                  <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">
+                  <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-ink-base">
                     {displayValue(goal.description)}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs">
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1">
+                  <span className="rounded-full border border-line-base bg-surface-app px-2.5 py-1">
                     {GOAL_STATUS_LABELS[goal.status]}
                   </span>
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1">
+                  <span className="rounded-full border border-line-base bg-surface-app px-2.5 py-1">
                     {GOAL_PRIORITY_LABELS[goal.priority]}
                   </span>
                 </div>
               </div>
               <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <dt className="font-medium text-slate-500">분류</dt>
+                  <dt className="font-medium text-ink-faint">분류</dt>
                   <dd className="mt-1">{displayValue(goal.category)}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-slate-500">목표값</dt>
+                  <dt className="font-medium text-ink-faint">목표값</dt>
                   <dd className="mt-1">
                     {displayValue(goal.target_value)} {displayValue(goal.unit)}
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-slate-500">현재값</dt>
+                  <dt className="font-medium text-ink-faint">현재값</dt>
                   <dd className="mt-1">
                     {displayValue(goal.current_value)} {displayValue(goal.unit)}
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-slate-500">마감일</dt>
+                  <dt className="font-medium text-ink-faint">마감일</dt>
                   <dd className="mt-1">{formatDate(goal.due_date)}</dd>
                 </div>
               </dl>
@@ -251,7 +251,7 @@ function MoksilgiSection({
 
   return (
     <section className="report-section mt-8">
-      <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
+      <h2 className="report-section-title border-b border-line-base pb-2 text-xl font-semibold print:text-lg">
         목실기
       </h2>
       {!plan ? (
@@ -260,49 +260,49 @@ function MoksilgiSection({
         </div>
       ) : (
         <div className="mt-4 grid gap-4">
-          <article className="report-card rounded-md border border-slate-200 bg-white p-4">
+          <article className="report-card rounded-card border border-line-base bg-surface-card p-4">
             <h3 className="text-lg font-semibold">{plan.title}</h3>
-            <p className="mt-1 text-sm text-slate-600">{displayValue(plan.subtitle)}</p>
+            <p className="mt-1 text-sm text-ink-muted">{displayValue(plan.subtitle)}</p>
             <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
               <div>
-                <dt className="font-medium text-slate-500">기간</dt>
+                <dt className="font-medium text-ink-faint">기간</dt>
                 <dd className="mt-1">
                   {formatDate(plan.period_start)} ~ {formatDate(plan.period_end)}
                 </dd>
               </div>
               <div>
-                <dt className="font-medium text-slate-500">작성일</dt>
+                <dt className="font-medium text-ink-faint">작성일</dt>
                 <dd className="mt-1">{formatDate(plan.written_at)}</dd>
               </div>
               <div>
-                <dt className="font-medium text-slate-500">코치</dt>
+                <dt className="font-medium text-ink-faint">코치</dt>
                 <dd className="mt-1">{displayValue(plan.coach_name)}</dd>
               </div>
               <div>
-                <dt className="font-medium text-slate-500">상태</dt>
+                <dt className="font-medium text-ink-faint">상태</dt>
                 <dd className="mt-1">{plan.status}</dd>
               </div>
             </dl>
           </article>
 
-          <article className="report-card rounded-md border border-slate-200 bg-white p-4">
+          <article className="report-card rounded-card border border-line-base bg-surface-card p-4">
             <h3 className="font-semibold">사명과 비전</h3>
             <div className="mt-3 grid gap-4 text-sm md:grid-cols-2">
               <div>
-                <p className="font-medium text-slate-500">사명선언서</p>
+                <p className="font-medium text-ink-faint">사명선언서</p>
                 <p className="mt-2 whitespace-pre-wrap break-words leading-6">
                   {displayValue(plan.mission_statement)}
                 </p>
               </div>
               <div>
-                <p className="font-medium text-slate-500">비전</p>
+                <p className="font-medium text-ink-faint">비전</p>
                 <p className="mt-2 whitespace-pre-wrap break-words leading-6">
                   {displayValue(plan.vision_statement)}
                 </p>
               </div>
             </div>
             <div className="mt-4">
-              <p className="font-medium text-slate-500">전체 목표</p>
+              <p className="font-medium text-ink-faint">전체 목표</p>
               <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6">
                 {displayValue(plan.main_goal)}
               </p>
@@ -310,16 +310,16 @@ function MoksilgiSection({
           </article>
 
           {coreValues.length > 0 ? (
-            <article className="report-card rounded-md border border-slate-200 bg-white p-4">
+            <article className="report-card rounded-card border border-line-base bg-surface-card p-4">
               <h3 className="font-semibold">핵심가치</h3>
               <div className="mt-3 grid gap-3 md:grid-cols-3">
                 {coreValues.map((value, index) => (
-                  <div className="rounded-md border border-slate-200 p-3" key={`${value.value_name}-${index}`}>
+                  <div className="rounded-md border border-line-base p-3" key={`${value.value_name}-${index}`}>
                     <p className="font-medium">{displayValue(value.value_name)}</p>
-                    <p className="mt-2 break-words text-sm text-slate-700">
+                    <p className="mt-2 break-words text-sm text-ink-base">
                       {displayValue(value.meaning)}
                     </p>
-                    <p className="mt-2 break-words text-xs text-slate-600">
+                    <p className="mt-2 break-words text-xs text-ink-muted">
                       {displayValue(value.practice_example)}
                     </p>
                   </div>
@@ -328,10 +328,10 @@ function MoksilgiSection({
             </article>
           ) : null}
 
-          <article className="report-card rounded-md border border-slate-200 bg-white p-4">
+          <article className="report-card rounded-card border border-line-base bg-surface-card p-4">
             <h3 className="font-semibold">목표에 따른 실행전략 기획안</h3>
             {detailGoals.length === 0 ? (
-              <p className="mt-3 text-sm text-slate-600">표시할 세부 목표가 없습니다.</p>
+              <p className="mt-3 text-sm text-ink-muted">표시할 세부 목표가 없습니다.</p>
             ) : (
               <div className="mt-4 grid gap-4">
                 {areas.map((area) => {
@@ -340,9 +340,9 @@ function MoksilgiSection({
                   if (goals.length === 0) return null;
 
                   return (
-                    <section className="rounded-md border border-slate-200 p-4" key={area.id}>
+                    <section className="rounded-md border border-line-base p-4" key={area.id}>
                       <h4 className="font-semibold">{areaTitle(area)}</h4>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <p className="mt-1 text-sm text-ink-muted">
                         {displayValue(area.area_subtitle)}
                       </p>
                       <div className="mt-3 grid gap-3">
@@ -350,22 +350,22 @@ function MoksilgiSection({
                           const strategies = normalizeStrategies(goal.strategies_json);
 
                           return (
-                            <div className="rounded-md bg-slate-50 p-3" key={goal.id}>
+                            <div className="rounded-md bg-surface-app p-3" key={goal.id}>
                               <p className="font-medium">{goal.title}</p>
-                              <p className="mt-2 whitespace-pre-wrap break-words text-sm text-slate-700">
+                              <p className="mt-2 whitespace-pre-wrap break-words text-sm text-ink-base">
                                 {displayValue(goal.description)}
                               </p>
                               <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
                                 <div>
-                                  <dt className="font-medium text-slate-500">연간 목표</dt>
+                                  <dt className="font-medium text-ink-faint">연간 목표</dt>
                                   <dd>{displayValue(goal.annual_target)} {displayValue(goal.unit)}</dd>
                                 </div>
                                 <div>
-                                  <dt className="font-medium text-slate-500">월 목표</dt>
+                                  <dt className="font-medium text-ink-faint">월 목표</dt>
                                   <dd>{displayValue(goal.monthly_target)} {displayValue(goal.unit)}</dd>
                                 </div>
                                 <div>
-                                  <dt className="font-medium text-slate-500">측정 방식</dt>
+                                  <dt className="font-medium text-ink-faint">측정 방식</dt>
                                   <dd>{MEASUREMENT_TYPE_LABELS[goal.measurement_type]}</dd>
                                 </div>
                               </dl>
@@ -407,7 +407,7 @@ function SummaryTable({
 }) {
   return (
     <section className="report-section mt-8">
-      <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
+      <h2 className="report-section-title border-b border-line-base pb-2 text-xl font-semibold print:text-lg">
         월간 진행 내용
       </h2>
       {!hasSummaryData ? (
@@ -418,7 +418,7 @@ function SummaryTable({
         <div className="mt-4 overflow-x-auto print:overflow-visible">
           <table className="report-table w-full min-w-[760px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-300 bg-slate-50">
+              <tr className="border-b border-line-base bg-surface-sunken">
                 <th className="px-3 py-2">월</th>
                 <th className="px-3 py-2">영적 성장</th>
                 <th className="px-3 py-2">지적 성장</th>
@@ -430,7 +430,7 @@ function SummaryTable({
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr className="border-b border-slate-100" key={row.month}>
+                <tr className="border-b border-line-soft" key={row.month}>
                   <th className="px-3 py-2 font-medium">{row.monthLabel}</th>
                   <td className="px-3 py-2">{formatPercent(row.spiritual_rate)}</td>
                   <td className="px-3 py-2">{formatPercent(row.intellectual_rate)}</td>
@@ -440,7 +440,7 @@ function SummaryTable({
                   <td className="px-3 py-2">{formatPercent(row.average_rate)}</td>
                 </tr>
               ))}
-              <tr className="border-b border-slate-300 bg-slate-100 font-semibold">
+              <tr className="border-b border-line-base bg-surface-sunken font-semibold">
                 <th className="px-3 py-2">{cumulativeRow.monthLabel}</th>
                 <td className="px-3 py-2">{formatPercent(cumulativeRow.spiritual_rate)}</td>
                 <td className="px-3 py-2">{formatPercent(cumulativeRow.intellectual_rate)}</td>
@@ -451,7 +451,7 @@ function SummaryTable({
               </tr>
             </tbody>
           </table>
-          <p className="mt-3 text-sm text-slate-600">
+          <p className="mt-3 text-sm text-ink-muted">
             {year}년 총 달성률: {formatPercent(cumulativeRow.average_rate)}
           </p>
         </div>
@@ -463,7 +463,7 @@ function SummaryTable({
 function FeedbackSection({ feedback }: { feedback: MyCoachingFeedbackItem[] }) {
   return (
     <section className="report-section mt-8">
-      <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
+      <h2 className="report-section-title border-b border-line-base pb-2 text-xl font-semibold print:text-lg">
         코치 피드백
       </h2>
       {feedback.length === 0 ? (
@@ -474,29 +474,29 @@ function FeedbackSection({ feedback }: { feedback: MyCoachingFeedbackItem[] }) {
         <div className="mt-4 grid gap-4">
           {feedback.slice(0, 5).map((item) => (
             <article
-              className="report-card rounded-md border border-slate-200 bg-white p-4"
+              className="report-card rounded-card border border-line-base bg-surface-card p-4"
               key={item.id}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm font-medium text-slate-500">주간 기간</p>
+                  <p className="text-sm font-medium text-ink-faint">주간 기간</p>
                   <p className="mt-1 font-semibold">
                     {formatDate(item.week_start)} ~ {formatDate(item.week_end)}
                   </p>
                 </div>
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-ink-muted">
                   코치: {displayValue(item.coach_display_name ?? item.coach_full_name ?? item.coach_email)}
                 </p>
               </div>
               <div className="mt-4 grid gap-3 text-sm">
                 <div>
-                  <p className="font-medium text-slate-500">피드백</p>
+                  <p className="font-medium text-ink-faint">피드백</p>
                   <p className="mt-1 whitespace-pre-wrap break-words leading-6">
                     {displayValue(item.feedback_text)}
                   </p>
                 </div>
                 <div>
-                  <p className="font-medium text-slate-500">다음 단계</p>
+                  <p className="font-medium text-ink-faint">다음 단계</p>
                   <p className="mt-1 whitespace-pre-wrap break-words leading-6">
                     {displayValue(item.next_step)}
                   </p>
@@ -555,7 +555,7 @@ export default async function CoacheeReportPage() {
   });
 
   return (
-    <main className="min-h-screen bg-slate-100 px-6 py-8 text-slate-950 print:bg-white print:px-0 print:py-0">
+    <main className="min-h-screen bg-surface-sunken px-6 py-8 text-ink-strong print:bg-surface-card print:px-0 print:py-0">
       <style>
         {`
           @page {
@@ -640,10 +640,10 @@ export default async function CoacheeReportPage() {
           }
         `}
       </style>
-      <section className="print-report-shell mx-auto max-w-[210mm] rounded-md bg-white p-8 shadow-sm print:max-w-none print:rounded-none print:p-0 print:shadow-none">
+      <section className="print-report-shell mx-auto max-w-[210mm] rounded-control bg-surface-card p-8 shadow-sm print:max-w-none print:rounded-none print:p-0 print:shadow-none">
         <div className="report-controls mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
           <Link
-            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="rounded-md border border-line-base bg-surface-card px-4 py-2 text-sm font-semibold text-ink-base hover:bg-surface-sunken"
             href="/coachee"
           >
             코치이 공간으로 돌아가기
@@ -651,14 +651,14 @@ export default async function CoacheeReportPage() {
           <PrintCoacheeReportButton />
         </div>
 
-        <header className="border-b border-slate-300 pb-6">
-          <p className="text-sm font-semibold text-slate-500 print:text-slate-700">
+        <header className="border-b border-line-base pb-6">
+          <p className="text-sm font-semibold text-ink-faint print:text-ink-base">
             코치이 보고서
           </p>
-          <h1 className="mt-2 text-3xl font-bold text-slate-950 print:text-2xl">
+          <h1 className="mt-2 text-3xl font-bold text-ink-strong print:text-2xl">
             목표와 목실기 인쇄용 보고서
           </h1>
-          <div className="mt-4 grid gap-2 text-sm text-slate-600 print:text-slate-800 sm:grid-cols-2">
+          <div className="mt-4 grid gap-2 text-sm text-ink-muted print:text-ink-base sm:grid-cols-2">
             <p>생성일: {formatDateTime(new Date().toISOString())}</p>
             <p>코치이: {coacheeName}</p>
             <p>이메일: {displayValue(profile?.email ?? authEmail)}</p>
@@ -684,7 +684,7 @@ export default async function CoacheeReportPage() {
           />
         ) : (
           <section className="report-section mt-8">
-            <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
+            <h2 className="report-section-title border-b border-line-base pb-2 text-xl font-semibold print:text-lg">
               월간 진행 내용
             </h2>
             <div className="mt-4">

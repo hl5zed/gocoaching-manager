@@ -102,7 +102,7 @@ function formatText(value: string | null) {
 
 function renderPageShell(children: React.ReactNode) {
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <div className="mx-auto max-w-5xl">{children}</div>
     </main>
   );
@@ -152,7 +152,7 @@ function renderNotFound(id: string) {
   return renderPageShell(
     <>
       {renderTopLinks(id)}
-      <p className="mt-6 rounded-md border border-slate-200 bg-white px-4 py-6 text-slate-700">
+      <p className="mt-6 rounded-md border border-line-base bg-surface-card px-4 py-6 text-ink-base">
         해당 주간 기록을 찾을 수 없습니다.
       </p>
     </>,
@@ -163,7 +163,7 @@ function renderLoadError(id: string) {
   return renderPageShell(
     <>
       {renderTopLinks(id)}
-      <p className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-6 text-red-700">
+      <p className="mt-6 rounded-control border border-red-200 bg-red-50 px-4 py-6 text-red-700">
         지금 피드백 화면을 불러올 수 없습니다.
       </p>
     </>,
@@ -175,30 +175,30 @@ function renderWeeklyLogSummary(data: CoachWeeklyLogFeedbackForm) {
     data.coachee?.display_name ?? data.coachee?.full_name ?? data.coachee?.email ?? "-";
 
   return (
-    <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
+    <section className="mt-6 rounded-card border border-line-base bg-surface-card p-6">
       <h2 className="text-lg font-semibold">주간 기록 요약</h2>
       <dl className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
-          <dt className="text-sm font-medium text-slate-500">코치이</dt>
-          <dd className="mt-1 text-slate-950">{coacheeName}</dd>
-          <dd className="mt-1 text-sm text-slate-600">{data.coachee?.email ?? "-"}</dd>
+          <dt className="text-sm font-medium text-ink-faint">코치이</dt>
+          <dd className="mt-1 text-ink-strong">{coacheeName}</dd>
+          <dd className="mt-1 text-sm text-ink-muted">{data.coachee?.email ?? "-"}</dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">주간 기간</dt>
-          <dd className="mt-1 text-slate-950">
+          <dt className="text-sm font-medium text-ink-faint">주간 기간</dt>
+          <dd className="mt-1 text-ink-strong">
             {formatDate(data.weeklyLog.week_start)} ~{" "}
             {formatDate(data.weeklyLog.week_end)}
           </dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">상태</dt>
-          <dd className="mt-1 text-slate-950">
+          <dt className="text-sm font-medium text-ink-faint">상태</dt>
+          <dd className="mt-1 text-ink-strong">
             {STATUS_LABEL[data.weeklyLog.status] ?? data.weeklyLog.status}
           </dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">제출일</dt>
-          <dd className="mt-1 text-slate-950">
+          <dt className="text-sm font-medium text-ink-faint">제출일</dt>
+          <dd className="mt-1 text-ink-strong">
             {formatDate(data.weeklyLog.submitted_at)}
           </dd>
         </div>
@@ -206,32 +206,32 @@ function renderWeeklyLogSummary(data: CoachWeeklyLogFeedbackForm) {
 
       <dl className="mt-6 grid gap-5">
         <div>
-          <dt className="text-sm font-medium text-slate-500">감사 제목</dt>
-          <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+          <dt className="text-sm font-medium text-ink-faint">감사 제목</dt>
+          <dd className="mt-1 whitespace-pre-wrap text-ink-strong">
             {formatText(data.weeklyLog.gratitude)}
           </dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">기도 제목</dt>
-          <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+          <dt className="text-sm font-medium text-ink-faint">기도 제목</dt>
+          <dd className="mt-1 whitespace-pre-wrap text-ink-strong">
             {formatText(data.weeklyLog.prayer_request)}
           </dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">진행 상황</dt>
-          <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+          <dt className="text-sm font-medium text-ink-faint">진행 상황</dt>
+          <dd className="mt-1 whitespace-pre-wrap text-ink-strong">
             {formatText(data.weeklyLog.progress_summary)}
           </dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">어려웠던 점</dt>
-          <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+          <dt className="text-sm font-medium text-ink-faint">어려웠던 점</dt>
+          <dd className="mt-1 whitespace-pre-wrap text-ink-strong">
             {formatText(data.weeklyLog.difficulty)}
           </dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">코치에게 남긴 말</dt>
-          <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+          <dt className="text-sm font-medium text-ink-faint">코치에게 남긴 말</dt>
+          <dd className="mt-1 whitespace-pre-wrap text-ink-strong">
             {formatText(data.weeklyLog.message_to_coach)}
           </dd>
         </div>
@@ -257,11 +257,11 @@ function renderFeedbackForm(
 
       {renderWeeklyLogSummary(data)}
 
-      <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
+      <section className="mt-6 rounded-card border border-line-base bg-surface-card p-6">
         <h2 className="text-lg font-semibold">피드백</h2>
 
         {errorMessage ? (
-          <p className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <p className="mt-4 rounded-control border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {errorMessage}
           </p>
         ) : null}
@@ -270,35 +270,35 @@ function renderFeedbackForm(
           <input type="hidden" name="logId" value={id} />
 
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">피드백</span>
+            <span className="text-sm font-medium text-ink-base">피드백</span>
             <textarea
               name="feedback_text"
               rows={7}
               maxLength={3000}
               defaultValue={data.feedback?.feedback_text ?? ""}
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className="rounded-control border border-line-base px-3 py-2 text-sm text-ink-strong shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">격려</span>
+            <span className="text-sm font-medium text-ink-base">격려</span>
             <textarea
               name="encouragement"
               rows={4}
               maxLength={2000}
               defaultValue={data.feedback?.encouragement ?? ""}
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className="rounded-control border border-line-base px-3 py-2 text-sm text-ink-strong shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">다음 단계</span>
+            <span className="text-sm font-medium text-ink-base">다음 단계</span>
             <textarea
               name="next_step"
               rows={4}
               maxLength={2000}
               defaultValue={data.feedback?.next_step ?? ""}
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-950 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className="rounded-control border border-line-base px-3 py-2 text-sm text-ink-strong shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
           </label>
 
@@ -307,7 +307,7 @@ function renderFeedbackForm(
               type="submit"
               name="intent"
               value="draft"
-              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
+              className="rounded-md border border-line-base bg-surface-card px-4 py-2 text-sm font-medium text-ink-base hover:bg-surface-sunken"
             >
               임시 저장
             </button>

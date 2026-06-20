@@ -7,7 +7,7 @@ import type {
 import { cn } from "@/lib/ui/cn";
 
 const fieldClass =
-  "min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-sans text-sm tracking-normal text-slate-950 shadow-sm transition placeholder:text-slate-400 focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500";
+  "min-h-10 w-full rounded-control border border-line-base bg-surface-card px-3 py-2 font-sans text-sm tracking-normal text-ink-strong shadow-sm transition placeholder:text-ink-faint focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:text-ink-muted";
 
 export function FieldLabel({
   className,
@@ -24,7 +24,7 @@ export function FieldText({
 }: LabelHTMLAttributes<HTMLSpanElement>) {
   return (
     <span
-      className={cn("break-words font-semibold leading-snug text-slate-700", className)}
+      className={cn("break-words font-semibold leading-snug text-ink-base", className)}
       {...props}
     />
   );
@@ -61,6 +61,6 @@ export function FieldHint({
   ...props
 }: LabelHTMLAttributes<HTMLSpanElement>) {
   return (
-    <span className={cn("text-xs leading-5 text-slate-500", className)} {...props} />
+    <span className={cn("text-xs leading-5 text-ink-muted", className)} {...props} />
   );
 }

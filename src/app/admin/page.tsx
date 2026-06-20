@@ -71,10 +71,10 @@ function SummaryCard({
   value: number | string;
 }) {
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-5">
-      <p className="text-sm font-medium text-slate-500">{title}</p>
-      <p className="mt-3 text-3xl font-semibold text-slate-950">{value}</p>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+    <div className="rounded-card border border-line-base bg-surface-card p-5">
+      <p className="text-sm font-medium text-ink-faint">{title}</p>
+      <p className="mt-3 text-3xl font-semibold text-ink-strong">{value}</p>
+      <p className="mt-2 text-sm leading-6 text-ink-muted">{description}</p>
     </div>
   );
 }
@@ -130,13 +130,13 @@ export default async function AdminPage() {
   const canAccessSettings = admin.roles.includes("super_admin");
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <section className="mx-auto w-full max-w-7xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <Badge icon="settings" tone="info">관리자 전용</Badge>
             <h1 className="mt-3 text-3xl font-semibold">관리자 센터</h1>
-            <p className="mt-4 max-w-3xl leading-7 text-slate-600">
+            <p className="mt-4 max-w-3xl leading-7 text-ink-muted">
               회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간입니다.
             </p>
           </div>
@@ -154,24 +154,24 @@ export default async function AdminPage() {
           </div>
         </div>
 
-        <section className="mt-8 rounded-md border border-slate-200 bg-white p-5">
+        <section className="mt-8 rounded-card border border-line-base bg-surface-card p-5">
           <div>
-            <h2 className="text-lg font-semibold text-slate-950">
+            <h2 className="text-lg font-semibold text-ink-strong">
               관리자 전용 메뉴
             </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+            <p className="mt-2 text-sm leading-6 text-ink-muted">
               운영 관리에 필요한 기능을 이곳에서 확인하고 이동합니다.
             </p>
           </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {adminMenuCards.map((card) => (
               <Link
-                className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
+                className="rounded-card border border-line-base bg-surface-app p-4 transition hover:border-line-base hover:bg-surface-card"
                 href={card.href}
                 key={`${card.title}-${card.href}`}
               >
-                <h3 className="font-semibold text-slate-950">{card.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
+                <h3 className="font-semibold text-ink-strong">{card.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-ink-muted">
                   {card.description}
                 </p>
               </Link>
@@ -180,7 +180,7 @@ export default async function AdminPage() {
         </section>
 
         {error ? (
-          <div className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <div className="mt-8 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
             지금 회원관리 현황을 불러올 수 없습니다.
           </div>
         ) : (
@@ -203,31 +203,31 @@ export default async function AdminPage() {
               />
             </section>
 
-            <section className="mt-6 rounded-md border border-slate-200 bg-white p-5">
+            <section className="mt-6 rounded-card border border-line-base bg-surface-card p-5">
               <div>
-                <h2 className="text-lg font-semibold text-slate-950">
+                <h2 className="text-lg font-semibold text-ink-strong">
                   역할별 회원 수
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
+                <p className="mt-2 text-sm leading-6 text-ink-muted">
                   현재 회원 프로필의 role 값을 기준으로 자동 집계한 수입니다.
                 </p>
               </div>
 
               {roleStats.length === 0 ? (
-                <p className="mt-5 rounded-md bg-slate-50 p-4 text-sm text-slate-600">
+                <p className="mt-5 rounded-md bg-surface-app p-4 text-sm text-ink-muted">
                   역할 정보가 있는 회원이 없습니다.
                 </p>
               ) : (
                 <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {roleStats.map((roleStat) => (
                     <div
-                      className="rounded-md border border-slate-200 bg-slate-50 p-4"
+                      className="rounded-card border border-line-base bg-surface-app p-4"
                       key={roleStat.role}
                     >
-                      <p className="text-sm font-medium text-slate-600">
+                      <p className="text-sm font-medium text-ink-muted">
                         {getRoleDisplayLabel(roleStat.role)}
                       </p>
-                      <p className="mt-2 text-2xl font-semibold text-slate-950">
+                      <p className="mt-2 text-2xl font-semibold text-ink-strong">
                         {roleStat.count}명
                       </p>
                     </div>

@@ -126,19 +126,19 @@ export default async function NewAdminCoachingRelationshipPage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <section className="mx-auto w-full max-w-4xl">
-        <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+        <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
           관리자
         </p>
         <h1 className="mt-3 text-3xl font-semibold">코칭 관계 생성</h1>
-        <p className="mt-4 max-w-2xl leading-7 text-slate-600">
+        <p className="mt-4 max-w-2xl leading-7 text-ink-muted">
           코치와 코치이를 선택해 새로운 활성 코칭 관계를 생성합니다.
         </p>
 
         <div className="mt-6">
           <Link
-            className="text-sm font-medium text-slate-700 underline"
+            className="text-sm font-medium text-brand-600 underline"
             href="/admin/users"
           >
             관리자 사용자로 돌아가기
@@ -146,19 +146,19 @@ export default async function NewAdminCoachingRelationshipPage({
         </div>
 
         {!optionsResult.ok ? (
-          <section className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <section className="mt-8 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
             지금 코칭 관계 생성 옵션을 불러올 수 없습니다.
           </section>
         ) : (
-          <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
+          <section className="mt-8 rounded-card border border-line-base bg-surface-card p-6">
             {errorMessage && (
-              <div className="mb-5 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+              <div className="mb-5 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
                 {errorMessage}
               </div>
             )}
 
             {optionsResult.data.coachees.length === 0 && (
-              <div className="mb-5 rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-900">
+              <div className="mb-5 rounded-control border border-amber-200 bg-amber-50 p-4 text-amber-900">
                 사용 가능한 코치이가 없습니다. 먼저 코치이를 초대해 주세요.
               </div>
             )}
@@ -166,13 +166,13 @@ export default async function NewAdminCoachingRelationshipPage({
             <form action={createRelationship} className="space-y-5">
               <div>
                 <label
-                  className="block text-sm font-medium text-slate-700"
+                  className="block text-sm font-medium text-ink-base"
                   htmlFor="coach_profile_id"
                 >
                   코치
                 </label>
                 <select
-                  className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                  className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
                   defaultValue=""
                   id="coach_profile_id"
                   name="coach_profile_id"
@@ -189,13 +189,13 @@ export default async function NewAdminCoachingRelationshipPage({
 
               <div>
                 <label
-                  className="block text-sm font-medium text-slate-700"
+                  className="block text-sm font-medium text-ink-base"
                   htmlFor="coachee_profile_id"
                 >
                   코치이
                 </label>
                 <select
-                  className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700 disabled:bg-slate-100 disabled:text-slate-500"
+                  className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600 disabled:bg-surface-sunken disabled:text-ink-faint"
                   defaultValue=""
                   disabled={optionsResult.data.coachees.length === 0}
                   id="coachee_profile_id"
@@ -214,13 +214,13 @@ export default async function NewAdminCoachingRelationshipPage({
               <div className="grid gap-5 md:grid-cols-2">
                 <div>
                   <label
-                    className="block text-sm font-medium text-slate-700"
+                    className="block text-sm font-medium text-ink-base"
                     htmlFor="relationship_type"
                   >
                     관계 유형
                   </label>
                   <select
-                    className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                    className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
                     defaultValue="individual_coaching"
                     id="relationship_type"
                     name="relationship_type"
@@ -235,13 +235,13 @@ export default async function NewAdminCoachingRelationshipPage({
 
                 <div>
                   <label
-                    className="block text-sm font-medium text-slate-700"
+                    className="block text-sm font-medium text-ink-base"
                     htmlFor="scope_type"
                   >
                     범위 유형
                   </label>
                   <select
-                    className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                    className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
                     defaultValue="global"
                     id="scope_type"
                     name="scope_type"
@@ -258,13 +258,13 @@ export default async function NewAdminCoachingRelationshipPage({
               <div className="grid gap-5 md:grid-cols-2">
                 <div>
                   <label
-                    className="block text-sm font-medium text-slate-700"
+                    className="block text-sm font-medium text-ink-base"
                     htmlFor="scope_id"
                   >
                     범위 ID (선택)
                   </label>
                   <input
-                    className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                    className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
                     id="scope_id"
                     name="scope_id"
                     placeholder="전체 범위이면 비워 두세요"
@@ -274,13 +274,13 @@ export default async function NewAdminCoachingRelationshipPage({
 
                 <div>
                   <label
-                    className="block text-sm font-medium text-slate-700"
+                    className="block text-sm font-medium text-ink-base"
                     htmlFor="started_at"
                   >
                     시작일 (선택)
                   </label>
                   <input
-                    className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 outline-none focus:border-slate-700"
+                    className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
                     id="started_at"
                     name="started_at"
                     type="date"
@@ -290,14 +290,14 @@ export default async function NewAdminCoachingRelationshipPage({
 
               <div className="flex flex-wrap items-center gap-3">
                 <button
-                  className="rounded-md bg-slate-950 px-5 py-2.5 font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+                  className="rounded-control bg-navy-900 px-5 py-2.5 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={optionsResult.data.coachees.length === 0}
                   type="submit"
                 >
                   코칭 관계 생성
                 </button>
                 <Link
-                  className="rounded-md border border-slate-300 px-5 py-2.5 font-medium text-slate-700"
+                  className="rounded-md border border-line-base px-5 py-2.5 font-medium text-ink-base"
                   href="/admin/users"
                 >
                   취소

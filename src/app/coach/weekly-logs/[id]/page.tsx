@@ -123,88 +123,88 @@ function renderContent(log: CoachWeeklyLogDetail) {
     log.coachee_display_name ?? log.coachee_full_name ?? log.coachee_email ?? "-";
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <div className="mx-auto max-w-5xl">
         <TopLinks id={log.id} />
 
         <h1 className="mt-6 text-2xl font-semibold">주간 기록 상세</h1>
 
-        <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
+        <section className="mt-6 rounded-card border border-line-base bg-surface-card p-6">
           <h2 className="text-lg font-semibold">기본 정보</h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <dt className="text-sm font-medium text-slate-500">코치이</dt>
-              <dd className="mt-1 text-slate-950">{coacheeName}</dd>
+              <dt className="text-sm font-medium text-ink-faint">코치이</dt>
+              <dd className="mt-1 text-ink-strong">{coacheeName}</dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-slate-500">주간 기간</dt>
-              <dd className="mt-1 text-slate-950">
+              <dt className="text-sm font-medium text-ink-faint">주간 기간</dt>
+              <dd className="mt-1 text-ink-strong">
                 {formatDate(log.week_start)} ~ {formatDate(log.week_end)}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-slate-500">상태</dt>
-              <dd className="mt-1 text-slate-950">{statusLabel(log.status)}</dd>
+              <dt className="text-sm font-medium text-ink-faint">상태</dt>
+              <dd className="mt-1 text-ink-strong">{statusLabel(log.status)}</dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-slate-500">관계 유형</dt>
-              <dd className="mt-1 text-slate-950">
+              <dt className="text-sm font-medium text-ink-faint">관계 유형</dt>
+              <dd className="mt-1 text-ink-strong">
                 {relationshipTypeLabel(log.relationship_type)}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-slate-500">제출일</dt>
-              <dd className="mt-1 text-slate-950">{formatDate(log.submitted_at)}</dd>
+              <dt className="text-sm font-medium text-ink-faint">제출일</dt>
+              <dd className="mt-1 text-ink-strong">{formatDate(log.submitted_at)}</dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-slate-500">수정일</dt>
-              <dd className="mt-1 text-slate-950">{formatDate(log.updated_at)}</dd>
+              <dt className="text-sm font-medium text-ink-faint">수정일</dt>
+              <dd className="mt-1 text-ink-strong">{formatDate(log.updated_at)}</dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-slate-500">범위</dt>
-              <dd className="mt-1 text-slate-950">
+              <dt className="text-sm font-medium text-ink-faint">범위</dt>
+              <dd className="mt-1 text-ink-strong">
                 {formatScope(log.scope_type, log.scope_id)}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-slate-500">버전</dt>
-              <dd className="mt-1 text-slate-950">{log.version}</dd>
+              <dt className="text-sm font-medium text-ink-faint">버전</dt>
+              <dd className="mt-1 text-ink-strong">{log.version}</dd>
             </div>
           </dl>
         </section>
 
-        <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
+        <section className="mt-6 rounded-card border border-line-base bg-surface-card p-6">
           <h2 className="text-lg font-semibold">주간 기록 내용</h2>
           <dl className="mt-4 grid gap-5">
             <div>
-              <dt className="text-sm font-medium text-slate-500">감사 제목</dt>
-              <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+              <dt className="text-sm font-medium text-ink-faint">감사 제목</dt>
+              <dd className="mt-1 whitespace-pre-wrap text-ink-strong">
                 {emptyText(log.gratitude)}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-slate-500">기도 제목</dt>
-              <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+              <dt className="text-sm font-medium text-ink-faint">기도 제목</dt>
+              <dd className="mt-1 whitespace-pre-wrap text-ink-strong">
                 {emptyText(log.prayer_request)}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-slate-500">진행 상황</dt>
-              <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+              <dt className="text-sm font-medium text-ink-faint">진행 상황</dt>
+              <dd className="mt-1 whitespace-pre-wrap text-ink-strong">
                 {emptyText(log.progress_summary)}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-slate-500">어려웠던 점</dt>
-              <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+              <dt className="text-sm font-medium text-ink-faint">어려웠던 점</dt>
+              <dd className="mt-1 whitespace-pre-wrap text-ink-strong">
                 {emptyText(log.difficulty)}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-slate-500">
+              <dt className="text-sm font-medium text-ink-faint">
                 코치에게 남긴 말
               </dt>
-              <dd className="mt-1 whitespace-pre-wrap text-slate-950">
+              <dd className="mt-1 whitespace-pre-wrap text-ink-strong">
                 {emptyText(log.message_to_coach)}
               </dd>
             </div>
@@ -217,7 +217,7 @@ function renderContent(log: CoachWeeklyLogDetail) {
 
 function renderProfileMissing() {
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <div className="mx-auto max-w-5xl">
         <p className="rounded-md border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800">
           아직 프로필이 생성되지 않았습니다.
@@ -235,7 +235,7 @@ function renderProfileMissing() {
 
 function renderNotFound() {
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <Link
@@ -248,7 +248,7 @@ function renderNotFound() {
             대시보드
           </Link>
         </div>
-        <p className="mt-6 rounded-md border border-slate-200 bg-white px-4 py-6 text-slate-700">
+        <p className="mt-6 rounded-md border border-line-base bg-surface-card px-4 py-6 text-ink-base">
           해당 주간 기록을 찾을 수 없습니다.
         </p>
       </div>
@@ -258,7 +258,7 @@ function renderNotFound() {
 
 function renderLoadError() {
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <Link
@@ -271,7 +271,7 @@ function renderLoadError() {
             대시보드
           </Link>
         </div>
-        <p className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-6 text-red-700">
+        <p className="mt-6 rounded-control border border-red-200 bg-red-50 px-4 py-6 text-red-700">
           지금 주간 기록을 불러올 수 없습니다.
         </p>
       </div>

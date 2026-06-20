@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n/useI18n";
 import { getClientTimezone, getTodayDateInTimezone } from "@/lib/timezone";
@@ -30,6 +31,7 @@ type DailyRecord = {
 type FormState = {
   record_date: string;
   title: string;
+  gratitude: string;
   reflection: string;
   practice: string;
   prayer_request: string;
@@ -44,6 +46,7 @@ function createInitialFormState(): FormState {
   return {
     record_date: getTodayDateInTimezone(timezone),
     title: "",
+    gratitude: "",
     reflection: "",
     practice: "",
     prayer_request: "",
@@ -168,6 +171,25 @@ function toNullableText(value: string) {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+function buildReflectionWithGratitude(gratitude: string, reflection: string) {
+  const gratitudeText = gratitude.trim();
+  const reflectionText = reflection.trim();
+
+  if (gratitudeText.length === 0 && reflectionText.length === 0) {
+    return null;
+  }
+
+  if (gratitudeText.length === 0) {
+    return reflectionText;
+  }
+
+  if (reflectionText.length === 0) {
+    return `감사한 일: ${gratitudeText}`;
+  }
+
+  return `감사한 일: ${gratitudeText}\n\n오늘 배운 점: ${reflectionText}`;
+}
+
 function getErrorMessage(payload: unknown, fallback: string) {
   if (
     typeof payload === "object" &&
@@ -213,6 +235,7 @@ function toFormState(record: DailyRecord): FormState {
   return {
     record_date: record.record_date,
     title: record.title ?? "",
+    gratitude: "",
     reflection: record.reflection ?? "",
     practice: record.practice ?? "",
     prayer_request: record.prayer_request ?? "",
@@ -222,7 +245,14 @@ function toFormState(record: DailyRecord): FormState {
   };
 }
 
-export function DailyRecordsClient() {
+export function DailyRecordsClient({
+  mode = "full",
+  returnTo,
+}: {
+  mode?: "full" | "today";
+  returnTo?: string;
+}) {
+  const router = useRouter();
   const { t } = useI18n();
   const [records, setRecords] = useState<DailyRecord[]>([]);
   const [form, setForm] = useState<FormState>(() => createInitialFormState());
@@ -348,7 +378,7 @@ export function DailyRecordsClient() {
     const payload = {
       record_date: form.record_date,
       title: toNullableText(form.title),
-      reflection: toNullableText(form.reflection),
+      reflection: buildReflectionWithGratitude(form.gratitude, form.reflection),
       practice: toNullableText(form.practice),
       prayer_request: toNullableText(form.prayer_request),
       visibility: form.visibility,
@@ -386,6 +416,10 @@ export function DailyRecordsClient() {
           : t("myCoaching.records.dailyPage.form.saved", "하루 기록이 저장되었습니다."),
       );
       resetForm();
+      if (mode === "today" && !editingId && returnTo) {
+        router.push(returnTo);
+        return;
+      }
       await loadRecords();
     } catch (error) {
       setErrorMessage(
@@ -463,9 +497,150 @@ export function DailyRecordsClient() {
     }
   }
 
+  if (mode === "today") {
+    return (
+      <div className="mt-5">
+        <section className="rounded-card border border-line-base bg-surface-card p-4">
+          {message ? (
+            <div className="mb-3 rounded-control border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+              {message}
+            </div>
+          ) : null}
+          {errorMessage ? (
+            <div className="mb-3 rounded-control border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+              {errorMessage}
+            </div>
+          ) : null}
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <p className="text-xs leading-5 text-ink-muted">
+              오늘 하루를 짧게 돌아보며 남겨보세요. 한두 줄이면 충분해요. 남긴 내용은 코치와의 다음 코칭 준비에 쓰여요.
+            </p>
+            <div className="rounded-card border border-line-soft bg-surface-card p-3">
+              <label className="text-sm font-medium text-ink-base" htmlFor="gratitude">
+                감사한 일
+              </label>
+              <textarea
+                className="mt-1 min-h-20 w-full rounded-control border border-line-base px-3 py-2 text-sm"
+                id="gratitude"
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    gratitude: event.target.value,
+                  }))
+                }
+                placeholder="오늘 감사했던 일을 한두 줄로 적어보세요. 예) 말씀 묵상 시간을 지킬 수 있어 감사했어요."
+                value={form.gratitude}
+              />
+            </div>
+
+            <div className="rounded-card border border-line-soft bg-surface-card p-3">
+              <label className="text-sm font-medium text-ink-base" htmlFor="reflection">
+                오늘 배운 점
+              </label>
+              <textarea
+                className="mt-1 min-h-24 w-full rounded-control border border-line-base px-3 py-2 text-sm"
+                id="reflection"
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    reflection: event.target.value,
+                  }))
+                }
+                placeholder="오늘 새롭게 배운 점을 짧게 남겨보세요."
+                value={form.reflection}
+              />
+            </div>
+
+            <details className="rounded-card border border-line-base bg-surface-card">
+              <summary className="cursor-pointer list-none px-3 py-2.5 text-sm font-medium text-ink-base">
+                기도 제목 · 실행 메모 더 남기기 (선택)
+              </summary>
+              <div className="space-y-4 px-3 pb-3 pt-1">
+            <div>
+              <label className="text-sm font-medium text-ink-base" htmlFor="prayer_request">
+                기도 제목
+              </label>
+              <textarea
+                className="mt-1 min-h-20 w-full rounded-control border border-line-base px-3 py-2 text-sm"
+                id="prayer_request"
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    prayer_request: event.target.value,
+                  }))
+                }
+                placeholder="기도가 필요한 내용을 적어보세요."
+                value={form.prayer_request}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-ink-base" htmlFor="practice">
+                실행 메모
+              </label>
+              <textarea
+                className="mt-1 min-h-20 w-full rounded-control border border-line-base px-3 py-2 text-sm"
+                id="practice"
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    practice: event.target.value,
+                  }))
+                }
+                placeholder="오늘 바로 실천할 한 가지를 적어보세요."
+                value={form.practice}
+              />
+            </div>
+
+              </div>
+            </details>
+
+            <div className="rounded-control border border-line-soft bg-surface-sunken p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-ink-base">코치에게 공유</p>
+                  <p className="text-xs text-ink-muted">코치가 이 기록을 볼 수 있어요.</p>
+                </div>
+                <button
+                  aria-label={form.shared_with_coach ? "공유 켬" : "공유 끔"}
+                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition ${
+                    form.shared_with_coach ? "bg-brand-600" : "bg-ink-faint"
+                  }`}
+                  onClick={() =>
+                    setForm((current) => ({
+                      ...current,
+                      shared_with_coach: !current.shared_with_coach,
+                      visibility: !current.shared_with_coach ? "coach" : "private",
+                    }))
+                  }
+                  type="button"
+                >
+                  <span
+                    className={`inline-block h-6 w-6 transform rounded-full bg-surface-card transition ${
+                      form.shared_with_coach ? "translate-x-7" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            <button
+              className="w-full rounded-control bg-brand-600 px-4 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isSaving}
+              type="submit"
+            >
+              {isSaving ? "저장 중..." : "오늘 기록 저장"}
+            </button>
+          </form>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-      <section className="rounded-md border border-slate-200 bg-white p-6">
+      <section className="rounded-card border border-line-base bg-surface-card p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold">
@@ -473,7 +648,7 @@ export function DailyRecordsClient() {
                 ? t("myCoaching.records.dailyPage.form.editTitle", "하루 기록 수정")
                 : t("myCoaching.records.dailyPage.form.createTitle", "하루 기록 작성")}
             </h2>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-ink-muted">
               {t(
                 "myCoaching.records.dailyPage.form.description",
                 "기록 날짜와 오늘의 돌아봄을 남겨 주세요.",
@@ -482,7 +657,7 @@ export function DailyRecordsClient() {
           </div>
           {editingRecord ? (
             <button
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+              className="rounded-control border border-line-base px-3 py-2 text-sm font-medium text-ink-base"
             onClick={resetForm}
             type="button"
           >
@@ -492,12 +667,12 @@ export function DailyRecordsClient() {
         </div>
 
         {message ? (
-          <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+          <div className="mt-4 rounded-control border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
             {message}
           </div>
         ) : null}
         {errorMessage ? (
-          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          <div className="mt-4 rounded-control border border-red-200 bg-red-50 p-3 text-sm text-red-800">
             {errorMessage}
           </div>
         ) : null}
@@ -505,13 +680,13 @@ export function DailyRecordsClient() {
         <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
           <div>
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-ink-base"
               htmlFor="record_date"
             >
               {t("myCoaching.records.dailyPage.form.recordDate", "기록 날짜")}
             </label>
             <input
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
               id="record_date"
               onChange={(event) =>
                 setForm((current) => ({
@@ -526,13 +701,13 @@ export function DailyRecordsClient() {
 
           <div>
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-ink-base"
               htmlFor="title"
             >
               {t("myCoaching.records.dailyPage.form.title", "제목")}
             </label>
             <input
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
               id="title"
               onChange={(event) =>
                 setForm((current) => ({
@@ -551,13 +726,34 @@ export function DailyRecordsClient() {
 
           <div>
             <label
-              className="text-sm font-medium text-slate-700"
-              htmlFor="reflection"
+              className="text-sm font-medium text-ink-base"
+              htmlFor="gratitude"
             >
-              {t("myCoaching.records.dailyPage.form.reflection", "오늘의 돌아봄")}
+              감사한 일
             </label>
             <textarea
-              className="mt-1 min-h-28 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 min-h-20 w-full rounded-control border border-line-base px-3 py-2 text-sm"
+              id="gratitude"
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  gratitude: event.target.value,
+                }))
+              }
+              placeholder="오늘 감사했던 일을 짧게 적어보세요."
+              value={form.gratitude}
+            />
+          </div>
+
+          <div>
+            <label
+              className="text-sm font-medium text-ink-base"
+              htmlFor="reflection"
+            >
+              오늘 배운 점
+            </label>
+            <textarea
+              className="mt-1 min-h-28 w-full rounded-control border border-line-base px-3 py-2 text-sm"
               id="reflection"
               onChange={(event) =>
                 setForm((current) => ({
@@ -571,13 +767,13 @@ export function DailyRecordsClient() {
 
           <div>
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-ink-base"
               htmlFor="practice"
             >
-              {t("myCoaching.records.dailyPage.form.practice", "실천/적용")}
+              실행 메모
             </label>
             <textarea
-              className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 min-h-24 w-full rounded-control border border-line-base px-3 py-2 text-sm"
               id="practice"
               onChange={(event) =>
                 setForm((current) => ({
@@ -591,13 +787,13 @@ export function DailyRecordsClient() {
 
           <div>
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-ink-base"
               htmlFor="prayer_request"
             >
-              {t("myCoaching.records.dailyPage.form.prayerRequest", "기도제목")}
+              기도 제목
             </label>
             <textarea
-              className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 min-h-24 w-full rounded-control border border-line-base px-3 py-2 text-sm"
               id="prayer_request"
               onChange={(event) =>
                 setForm((current) => ({
@@ -612,13 +808,13 @@ export function DailyRecordsClient() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="visibility"
               >
                 {t("myCoaching.records.dailyPage.form.visibility.label", "공유 옵션")}
               </label>
               <select
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="visibility"
                 onChange={(event) =>
                   setForm((current) => ({
@@ -640,13 +836,13 @@ export function DailyRecordsClient() {
 
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="status"
               >
                 {t("myCoaching.records.dailyPage.form.status.label", "상태")}
               </label>
               <select
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="status"
                 onChange={(event) =>
                   setForm((current) => ({
@@ -669,10 +865,10 @@ export function DailyRecordsClient() {
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-slate-700">
+          <label className="flex items-center gap-2 text-sm text-ink-base">
             <input
               checked={form.shared_with_coach}
-              className="h-4 w-4 rounded border-slate-300"
+              className="h-4 w-4 rounded border-line-base"
               onChange={(event) =>
                 setForm((current) => ({
                   ...current,
@@ -682,11 +878,11 @@ export function DailyRecordsClient() {
               }
               type="checkbox"
             />
-            {t("myCoaching.records.dailyPage.form.shareWithCoach", "코치에게 공유")}
+            코치에게 공유 (코치가 이 기록을 볼 수 있어요)
           </label>
 
           <button
-            className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="w-full rounded-control bg-navy-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isSaving}
             type="submit"
           >
@@ -699,12 +895,12 @@ export function DailyRecordsClient() {
         </form>
       </section>
 
-      <section className="rounded-md border border-slate-200 bg-white p-6">
+      <section className="rounded-card border border-line-base bg-surface-card p-6">
         <div>
           <h2 className="text-lg font-semibold">
             {t("myCoaching.records.dailyPage.form.listTitle", "나의 하루 기록 목록")}
           </h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-ink-muted">
             {t(
               "myCoaching.records.dailyPage.form.listDescription",
               "최신 기록 날짜순으로 표시됩니다.",
@@ -712,16 +908,16 @@ export function DailyRecordsClient() {
           </p>
         </div>
 
-        <div className="mt-4 grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-4 grid gap-3 rounded-control border border-line-base bg-surface-sunken p-4">
           <div>
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-ink-base"
               htmlFor="daily-search"
             >
               {t("myCoaching.records.dailyPage.form.search", "검색")}
             </label>
             <input
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
               id="daily-search"
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder={t(
@@ -736,13 +932,13 @@ export function DailyRecordsClient() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="daily-status-filter"
               >
                 {t("myCoaching.records.dailyPage.form.status.label", "상태")}
               </label>
               <select
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="daily-status-filter"
                 onChange={(event) =>
                   setStatusFilter(event.target.value as StatusFilter)
@@ -766,13 +962,13 @@ export function DailyRecordsClient() {
 
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="daily-visibility-filter"
               >
                 {t("myCoaching.records.dailyPage.form.visibility.filterLabel", "공유")}
               </label>
               <select
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="daily-visibility-filter"
                 onChange={(event) =>
                   setVisibilityFilter(event.target.value as VisibilityFilter)
@@ -793,13 +989,13 @@ export function DailyRecordsClient() {
 
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="daily-sort-key"
               >
                 {t("myCoaching.records.dailyPage.form.sortBy", "정렬 기준")}
               </label>
               <select
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="daily-sort-key"
                 onChange={(event) =>
                   setSortKey(event.target.value as DailySortKey)
@@ -823,13 +1019,13 @@ export function DailyRecordsClient() {
 
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="daily-sort-direction"
               >
                 {t("myCoaching.records.dailyPage.form.sortDirection", "정렬 방향")}
               </label>
               <select
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="daily-sort-direction"
                 onChange={(event) =>
                   setSortDirection(event.target.value as SortDirection)
@@ -847,7 +1043,7 @@ export function DailyRecordsClient() {
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-ink-muted">
               {t("myCoaching.records.dailyPage.form.resultLabel", "하루 기록")}:{" "}
               {t("myCoaching.records.dailyPage.form.resultCountPrefix", "전체")}{" "}
               {records.length}
@@ -856,7 +1052,7 @@ export function DailyRecordsClient() {
               {t("myCoaching.records.dailyPage.form.resultCountSuffix", "개 표시")}
             </p>
             <button
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700"
+              className="rounded-control border border-line-base bg-surface-card px-3 py-2 text-sm font-medium text-ink-base"
               onClick={resetListFilters}
               type="button"
             >
@@ -866,15 +1062,15 @@ export function DailyRecordsClient() {
         </div>
 
         {isLoading ? (
-          <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+          <div className="mt-5 rounded-control border border-line-base bg-surface-sunken p-4 text-sm text-ink-muted">
             {t("myCoaching.records.dailyPage.form.loading", "하루 기록을 불러오는 중입니다.")}
           </div>
         ) : records.length === 0 ? (
-          <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+          <div className="mt-5 rounded-control border border-line-base bg-surface-sunken p-4 text-sm text-ink-muted">
             {t("myCoaching.records.dailyPage.form.empty", "아직 작성한 하루 기록이 없습니다.")}
           </div>
         ) : visibleRecords.length === 0 ? (
-          <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+          <div className="mt-5 rounded-control border border-line-base bg-surface-sunken p-4 text-sm text-ink-muted">
             {t(
               "myCoaching.records.dailyPage.form.noResults",
               "선택한 조건에 해당하는 하루 기록이 없습니다.",
@@ -884,15 +1080,15 @@ export function DailyRecordsClient() {
           <div className="mt-5 space-y-4">
             {visibleRecords.map((record) => (
               <article
-                className="rounded-md border border-slate-200 bg-slate-50 p-4"
+                className="rounded-control border border-line-base bg-surface-sunken p-4"
                 key={record.id}
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium text-slate-500">
+                    <p className="text-sm font-medium text-ink-faint">
                       {formatDate(record.record_date)}
                     </p>
-                    <h3 className="mt-1 font-semibold text-slate-950">
+                    <h3 className="mt-1 font-semibold text-ink-strong">
                       {displayText(record.title)}
                     </h3>
                   </div>
@@ -908,32 +1104,32 @@ export function DailyRecordsClient() {
 
                 <dl className="mt-4 grid gap-4 text-sm">
                   <div>
-                    <dt className="font-medium text-slate-500">
+                    <dt className="font-medium text-ink-faint">
                       {t("myCoaching.records.dailyPage.form.reflection", "오늘의 돌아봄")}
                     </dt>
-                    <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                    <dd className="mt-1 whitespace-pre-wrap text-ink-base">
                       {displayText(record.reflection)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-slate-500">
+                    <dt className="font-medium text-ink-faint">
                       {t("myCoaching.records.dailyPage.form.practice", "실천/적용")}
                     </dt>
-                    <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                    <dd className="mt-1 whitespace-pre-wrap text-ink-base">
                       {displayText(record.practice)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-slate-500">
+                    <dt className="font-medium text-ink-faint">
                       {t("myCoaching.records.dailyPage.form.prayerRequest", "기도제목")}
                     </dt>
-                    <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                    <dd className="mt-1 whitespace-pre-wrap text-ink-base">
                       {displayText(record.prayer_request)}
                     </dd>
                   </div>
                 </dl>
 
-                <dl className="mt-4 grid gap-3 border-t border-slate-200 pt-4 text-xs text-slate-600 sm:grid-cols-2">
+                <dl className="mt-4 grid gap-3 border-t border-line-base pt-4 text-xs text-ink-muted sm:grid-cols-2">
                   <div>
                     <dt className="font-medium">
                       {t("myCoaching.records.dailyPage.form.createdAt", "작성일")}
@@ -950,14 +1146,14 @@ export function DailyRecordsClient() {
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700"
+                    className="rounded-control border border-line-base bg-surface-card px-3 py-2 text-sm font-medium text-ink-base"
                     onClick={() => startEdit(record)}
                     type="button"
                   >
                     {t("myCoaching.records.dailyPage.form.edit", "수정")}
                   </button>
                   <button
-                    className="rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700"
+                    className="rounded-control border border-red-200 bg-surface-card px-3 py-2 text-sm font-medium text-red-700"
                     disabled={deletingId === record.id}
                     onClick={() => void removeRecord(record)}
                     type="button"

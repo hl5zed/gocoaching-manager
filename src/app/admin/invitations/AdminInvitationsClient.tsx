@@ -398,16 +398,16 @@ export function AdminInvitationsClient({
 
   return (
     <div className="mt-8 grid gap-8">
-      <section className="rounded-md border border-slate-200 bg-white p-6">
+      <section className="rounded-card border border-line-base bg-surface-card p-6">
         <h2 className="text-xl font-semibold">새 사용자 초대</h2>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <label className="grid gap-2 md:col-span-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-base">
               invited_email
             </span>
             <input
-              className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+              className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
               onChange={(event) => setInvitedEmail(event.target.value)}
               placeholder="newuser@example.com"
               type="email"
@@ -416,11 +416,11 @@ export function AdminInvitationsClient({
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-base">
               invited_role
             </span>
             <select
-              className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+              className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
               onChange={(event) =>
                 setInvitedRole(event.target.value as UserRole)
               }
@@ -435,11 +435,11 @@ export function AdminInvitationsClient({
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-base">
               scope_type
             </span>
             <select
-              className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+              className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
               onChange={(event) => {
                 setScopeType(event.target.value as ScopeType);
                 if (event.target.value === "global") {
@@ -457,9 +457,9 @@ export function AdminInvitationsClient({
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">scope_id</span>
+            <span className="text-sm font-medium text-ink-base">scope_id</span>
             <input
-              className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
+              className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal disabled:bg-surface-sunken disabled:text-ink-faint"
               disabled={scopeType === "global"}
               onChange={(event) => setScopeId(event.target.value)}
               placeholder={
@@ -472,11 +472,11 @@ export function AdminInvitationsClient({
           </label>
 
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-ink-base">
               expires_in_days
             </span>
             <input
-              className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+              className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
               max="30"
               min="1"
               onChange={(event) => setExpiresInDays(event.target.value)}
@@ -487,7 +487,7 @@ export function AdminInvitationsClient({
         </div>
 
         <button
-          className="mt-6 rounded-md bg-slate-950 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+          className="mt-6 rounded-control bg-navy-900 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isSubmitting}
           onClick={handleSubmit}
           type="button"
@@ -496,7 +496,7 @@ export function AdminInvitationsClient({
         </button>
 
         {success && (
-          <div className="mt-6 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+          <div className="mt-6 rounded-control border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
             <p className="font-semibold">초대가 생성되었습니다.</p>
             <p className="mt-2 text-sm">
               생성된 링크를 복사해서 전달해 주세요. 최근 목록은 자동으로
@@ -522,7 +522,7 @@ export function AdminInvitationsClient({
         )}
 
         {error && (
-          <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <div className="mt-6 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
             <p className="font-semibold">초대 생성 실패</p>
             <p className="mt-2 text-sm">error.code: {error.code}</p>
             <p className="mt-1 text-sm">error.message: {error.message}</p>
@@ -530,30 +530,30 @@ export function AdminInvitationsClient({
         )}
 
         {reinviteMessage && (
-          <div className="mt-6 rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-900">
+          <div className="mt-6 rounded-control border border-amber-200 bg-amber-50 p-4 text-amber-900">
             <p className="font-semibold">재초대 준비 완료</p>
             <p className="mt-2 text-sm">{reinviteMessage}</p>
           </div>
         )}
       </section>
 
-      <section className="rounded-md border border-slate-200 bg-white p-6">
+      <section className="rounded-card border border-line-base bg-surface-card p-6">
         <h2 className="text-xl font-semibold">최근 초대 목록</h2>
 
         {loadError && (
-          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <div className="mt-4 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
             최근 초대 목록을 불러오지 못했습니다. {loadError}
           </div>
         )}
 
         {revokeSuccessMessage && (
-          <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+          <div className="mt-4 rounded-control border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
             {revokeSuccessMessage}
           </div>
         )}
 
         {revokeError && (
-          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
+          <div className="mt-4 rounded-control border border-red-200 bg-red-50 p-4 text-red-800">
             <p className="font-semibold">초대 취소 실패</p>
             <p className="mt-2 text-sm">error.code: {revokeError.code}</p>
             <p className="mt-1 text-sm">
@@ -572,8 +572,8 @@ export function AdminInvitationsClient({
                   <button
                     className={`rounded-md border px-3 py-1.5 text-sm font-medium ${
                       isSelected
-                        ? "border-slate-950 bg-slate-950 text-white"
-                        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                        ? "border-navy-900 bg-navy-900 text-white"
+                        : "border-line-base bg-surface-card text-ink-base hover:bg-surface-sunken"
                     }`}
                     key={option.value}
                     onClick={() => pushListQuery(option.value, initialSearch)}
@@ -585,7 +585,7 @@ export function AdminInvitationsClient({
               })}
 
               <button
-                className="rounded-md border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
+                className="rounded-md border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 disabled:cursor-not-allowed disabled:border-line-base disabled:text-ink-faint"
                 disabled={
                   visiblePendingInvitations.length === 0 || isBulkRevoking
                 }
@@ -600,14 +600,14 @@ export function AdminInvitationsClient({
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <input
-                className="w-full max-w-md rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                className="w-full max-w-md rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                 onChange={(event) => setSearchInput(event.target.value)}
                 placeholder="이메일 검색"
                 type="text"
                 value={searchInput}
               />
               <button
-                className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-control border border-line-base px-3 py-2 text-sm font-medium text-ink-base hover:bg-surface-sunken"
                 onClick={() => pushListQuery(initialStatus, searchInput)}
                 type="button"
               >
@@ -615,7 +615,7 @@ export function AdminInvitationsClient({
               </button>
               {searchInput.length > 0 && (
                 <button
-                  className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  className="rounded-control border border-line-base px-3 py-2 text-sm font-medium text-ink-base hover:bg-surface-sunken"
                   onClick={() => {
                     setSearchInput("");
                     pushListQuery(initialStatus, "");
@@ -630,14 +630,14 @@ export function AdminInvitationsClient({
         )}
 
         {!loadError && recentInvitations.length === 0 && (
-          <p className="mt-4 text-slate-600">표시할 초대가 없습니다.</p>
+          <p className="mt-4 text-ink-muted">표시할 초대가 없습니다.</p>
         )}
 
         {!loadError && recentInvitations.length > 0 && (
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[980px] border-collapse text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-500">
+                <tr className="border-b border-line-soft text-ink-faint">
                   <th className="py-3 pr-4 font-medium">invited_email</th>
                   <th className="py-3 pr-4 font-medium">invited_role</th>
                   <th className="py-3 pr-4 font-medium">scope_type</th>
@@ -651,7 +651,7 @@ export function AdminInvitationsClient({
               <tbody>
                 {recentInvitations.map((invitation) => (
                   <tr
-                    className="border-b border-slate-100 text-slate-800"
+                    className="border-b border-line-soft text-ink-base"
                     key={invitation.id}
                   >
                     <td className="py-3 pr-4">
@@ -679,14 +679,14 @@ export function AdminInvitationsClient({
                       {invitation.status === "pending" ? (
                         <div className="flex flex-wrap gap-2">
                           <button
-                            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                            className="rounded-control border border-line-base px-3 py-1.5 text-sm font-medium text-ink-base hover:bg-surface-sunken"
                             onClick={() => handleReinvite(invitation)}
                             type="button"
                           >
                             재초대 준비
                           </button>
                           <button
-                            className="rounded-md border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
+                            className="rounded-md border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 disabled:cursor-not-allowed disabled:border-line-base disabled:text-ink-faint"
                             disabled={
                               revokingId === invitation.id || isBulkRevoking
                             }
@@ -699,7 +699,7 @@ export function AdminInvitationsClient({
                           </button>
                         </div>
                       ) : (
-                        <span className="text-slate-400">-</span>
+                        <span className="text-ink-faint">-</span>
                       )}
                     </td>
                   </tr>

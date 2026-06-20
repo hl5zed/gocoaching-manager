@@ -764,9 +764,9 @@ function SummaryBox({
   value: number | string;
 }) {
   return (
-    <div className="report-card rounded-md border border-slate-200 p-4 print:break-inside-avoid print:border-slate-300 print:p-3">
-      <p className="text-sm text-slate-500 print:text-slate-700">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-slate-950 print:text-xl">
+    <div className="report-card rounded-md border border-line-base p-4 print:break-inside-avoid print:border-line-base print:p-3">
+      <p className="text-sm text-ink-faint print:text-ink-base">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-ink-strong print:text-xl">
         {value}
       </p>
     </div>
@@ -775,7 +775,7 @@ function SummaryBox({
 
 function EmptyState({ children }: { children: React.ReactNode }) {
   return (
-    <p className="report-card rounded-md border border-slate-200 px-4 py-5 text-center text-sm text-slate-500 print:border-slate-300">
+    <p className="report-card rounded-control border border-line-base px-4 py-5 text-center text-sm text-ink-faint print:border-line-base">
       {children}
     </p>
   );
@@ -892,7 +892,7 @@ export default async function CoachMakerReportPage({
   });
 
   return (
-    <main className="min-h-screen bg-slate-100 px-3 py-5 text-slate-950 sm:px-6 sm:py-8 print:bg-white print:px-0 print:py-0">
+    <main className="min-h-screen bg-surface-sunken px-3 py-5 text-ink-strong sm:px-6 sm:py-8 print:bg-surface-card print:px-0 print:py-0">
       <style>
         {`
           @page {
@@ -996,10 +996,10 @@ export default async function CoachMakerReportPage({
           }
         `}
       </style>
-      <section className="print-report-shell mx-auto max-w-[210mm] rounded-md bg-white p-4 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:p-0 print:shadow-none">
+      <section className="print-report-shell mx-auto max-w-[210mm] rounded-control bg-surface-card p-4 shadow-sm sm:p-8 print:max-w-none print:rounded-none print:p-0 print:shadow-none">
         <div className="report-controls mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
           <Link
-            className="inline-flex min-h-10 w-full justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+            className="inline-flex min-h-10 w-full justify-center rounded-md border border-line-base bg-surface-card px-4 py-2 text-sm font-semibold text-ink-base hover:bg-surface-sunken sm:w-auto"
             href="/coach-maker"
           >
             <I18nText
@@ -1012,27 +1012,27 @@ export default async function CoachMakerReportPage({
             <PrintReportButton />
           </div>
         </div>
-        <p className="report-controls mb-6 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600 print:hidden">
+        <p className="report-controls mb-6 rounded-md border border-line-base bg-surface-app px-4 py-3 text-sm leading-6 text-ink-muted print:hidden">
           인쇄 전 연도, 팀, 기간 기준을 확인해 주세요. 브라우저 인쇄창에서
           PDF 저장을 선택할 수 있습니다. 모바일 브라우저에서는 PDF 저장
           옵션이 기기와 브라우저에 따라 다르게 표시될 수 있습니다. 인쇄창이
           열리지 않으면 Safari 또는 Chrome에서 다시 열어 주세요.
         </p>
 
-        <header className="report-header border-b border-slate-300 pb-6">
-          <p className="text-sm font-semibold text-slate-500 print:text-slate-700">
+        <header className="report-header border-b border-line-soft pb-6">
+          <p className="text-sm font-semibold text-ink-faint print:text-ink-base">
             <I18nText
               k="coachMaker.report.badge"
               fallback="코치메이커 보고서"
             />
           </p>
-          <h1 className="mt-2 text-3xl font-bold text-slate-950 print:text-2xl">
+          <h1 className="mt-2 text-3xl font-bold text-ink-strong print:text-2xl">
             <I18nText
               k="coachMaker.report.title"
               fallback="코치메이커 운영 보고서"
             />
           </h1>
-          <div className="mt-4 grid gap-2 text-sm text-slate-600 print:text-slate-800 sm:grid-cols-2">
+          <div className="mt-4 grid gap-2 text-sm text-ink-muted print:text-ink-base sm:grid-cols-2">
             <p>
               <I18nText k="coachMaker.report.generatedAt" fallback="생성일" />:{" "}
               {formatGeneratedAt(generatedAt, effectiveTimezone)}
@@ -1046,16 +1046,16 @@ export default async function CoachMakerReportPage({
               {effectiveTimezone}
             </p>
           </div>
-          <p className="mt-3 text-sm leading-6 text-slate-600 print:text-slate-800">
+          <p className="mt-3 text-sm leading-6 text-ink-muted print:text-ink-base">
             <I18nText
               k="coachMaker.report.description"
               fallback="목실기 성취 현황, 관심 필요 대상자, 관리 액션 메모의 핵심 운영 지표를 인쇄용으로 정리합니다."
             />
           </p>
-          <p className="mt-4 rounded-md border border-slate-200 bg-white p-4 text-sm leading-7 text-slate-800 print:border-slate-300 print:p-3">
+          <p className="mt-4 rounded-card border border-line-base bg-surface-card p-4 text-sm leading-7 text-ink-base print:border-line-base print:p-3">
             {autoSummary}
           </p>
-          <div className="report-card mt-4 grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 print:bg-white print:text-slate-900 sm:grid-cols-2">
+          <div className="report-card mt-4 grid gap-2 rounded-card border border-line-base bg-surface-app p-4 text-sm text-ink-base print:bg-surface-card print:text-ink-strong sm:grid-cols-2">
             {filterSummary.map((item) => (
               <p key={item.key}>
                 <I18nText k={item.key} fallback={item.fallback} />: {item.value}
@@ -1073,7 +1073,7 @@ export default async function CoachMakerReportPage({
           }}
           teamOptions={teamOptions}
         />
-        <p className="report-controls mt-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600 print:hidden">
+        <p className="report-controls mt-3 rounded-md border border-line-base bg-surface-app px-4 py-3 text-sm leading-6 text-ink-muted print:hidden">
           목실기 성취 현황은 선택한 연도 기준으로 표시하고, 관리 액션
           메모는 작성일 기간 기준으로 필터링합니다. 현황 분석은 전체 목실기
           성취 현황에서 확인하고, 제출·공유용 출력은 이 보고서 화면에서
@@ -1081,7 +1081,7 @@ export default async function CoachMakerReportPage({
         </p>
 
         {moksilgiResult.error ? (
-          <section className="report-card mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800 print:border-slate-300 print:bg-white print:text-slate-900">
+          <section className="report-card mt-6 rounded-control border border-red-200 bg-red-50 p-4 text-sm text-red-800 print:border-line-base print:bg-surface-card print:text-ink-strong">
             {moksilgiResult.error.code === "PROFILE_NOT_FOUND"
               ? "아직 프로필이 생성되지 않았습니다."
               : moksilgiResult.error.code === "ACCESS_DENIED"
@@ -1091,14 +1091,14 @@ export default async function CoachMakerReportPage({
         ) : (
           <>
             <section className="report-section report-section-first mt-8 print:break-inside-auto">
-              <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
+              <h2 className="report-section-title border-b border-line-soft pb-2 text-xl font-semibold print:text-lg">
                 <I18nText
                   k="coachMaker.report.scopeSummary"
                   fallback="코치메이커 담당 범위 요약"
                 />
               </h2>
               {coachStatsResult.error ? (
-                <p className="report-card mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-5 text-center text-sm text-red-800 print:border-slate-300 print:bg-white print:text-slate-900">
+                <p className="report-card mt-4 rounded-control border border-red-200 bg-red-50 px-4 py-5 text-center text-sm text-red-800 print:border-line-base print:bg-surface-card print:text-ink-strong">
                   {coachStatsErrorMessage(coachStatsResult.error.code)}
                 </p>
               ) : !coachStats ? (
@@ -1112,7 +1112,7 @@ export default async function CoachMakerReportPage({
                 </div>
               ) : (
                 <>
-                  <div className="report-card mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 print:border-slate-300 print:bg-white print:text-slate-900">
+                  <div className="report-card mt-4 rounded-card border border-line-base bg-surface-app p-4 text-sm text-ink-base print:border-line-base print:bg-surface-card print:text-ink-strong">
                     <p>담당 범위: {coachStats.scopeLabel}</p>
                     <p className="mt-1">이번 주 기준: {formatWeekRange(coachStats.weekRange)}</p>
                   </div>
@@ -1129,17 +1129,17 @@ export default async function CoachMakerReportPage({
             </section>
 
             <section className="report-section mt-8 print:break-inside-auto">
-              <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
+              <h2 className="report-section-title border-b border-line-soft pb-2 text-xl font-semibold print:text-lg">
                 <I18nText
                   k="coachMaker.report.coachAssignmentStatus"
                   fallback="코치별 담당 코치이 현황"
                 />
               </h2>
-              <p className="mt-2 text-sm text-slate-600 print:text-slate-800">
+              <p className="mt-2 text-sm text-ink-muted print:text-ink-base">
                 이번 주 제출, 미제출, 피드백 대기 현황을 코치별로 요약합니다.
               </p>
               {coachStatsResult.error ? (
-                <p className="report-card mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-5 text-center text-sm text-red-800 print:border-slate-300 print:bg-white print:text-slate-900">
+                <p className="report-card mt-4 rounded-control border border-red-200 bg-red-50 px-4 py-5 text-center text-sm text-red-800 print:border-line-base print:bg-surface-card print:text-ink-strong">
                   {coachStatsErrorMessage(coachStatsResult.error.code)}
                 </p>
               ) : !coachStats || coachStats.coaches.length === 0 ? (
@@ -1155,7 +1155,7 @@ export default async function CoachMakerReportPage({
                 <div className="mt-4 overflow-x-auto print:overflow-visible">
                   <table className="report-table w-full border-collapse text-left text-sm">
                     <thead>
-                      <tr className="border-b border-slate-300">
+                      <tr className="border-b border-line-soft">
                         <th className="py-2 pr-3">코치</th>
                         <th className="py-2 pr-3">담당 코치이</th>
                         <th className="py-2 pr-3">이번 주 제출</th>
@@ -1166,11 +1166,11 @@ export default async function CoachMakerReportPage({
                     </thead>
                     <tbody>
                       {coachStats.coaches.map((coach) => (
-                        <tr className="border-b border-slate-100 align-top" key={coach.coachId}>
+                        <tr className="border-b border-line-soft align-top" key={coach.coachId}>
                           <td className="py-2 pr-3">
                             <p className="font-medium">{coach.coachName}</p>
                             {coach.coachEmail ? (
-                              <p className="text-xs text-slate-500 print:text-slate-700">
+                              <p className="text-xs text-ink-faint print:text-ink-base">
                                 {coach.coachEmail}
                               </p>
                             ) : null}
@@ -1189,7 +1189,7 @@ export default async function CoachMakerReportPage({
             </section>
 
             <section className="report-section mt-8 print:break-inside-auto">
-              <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
+              <h2 className="report-section-title border-b border-line-soft pb-2 text-xl font-semibold print:text-lg">
                 <I18nText
                   k="coachMaker.report.moksilgiSummary"
                   fallback="목실기 성취 요약"
@@ -1223,7 +1223,7 @@ export default async function CoachMakerReportPage({
             </section>
 
             <section className="report-section mt-8 print:break-inside-auto">
-              <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
+              <h2 className="report-section-title border-b border-line-soft pb-2 text-xl font-semibold print:text-lg">
                 <I18nText
                   k="coachMaker.report.attentionTargets"
                   fallback="관심 필요 대상자"
@@ -1246,7 +1246,7 @@ export default async function CoachMakerReportPage({
                 <div className="mt-4 overflow-x-auto print:overflow-visible">
                   <table className="report-table w-full border-collapse text-left text-sm">
                     <thead>
-                      <tr className="border-b border-slate-300">
+                      <tr className="border-b border-line-soft">
                         <th className="py-2 pr-3">이름</th>
                         <th className="py-2 pr-3">국가/소속</th>
                         <th className="py-2 pr-3">공동체/팀</th>
@@ -1255,7 +1255,7 @@ export default async function CoachMakerReportPage({
                     </thead>
                     <tbody>
                       {attention.attentionRows.map((item) => (
-                        <tr className="border-b border-slate-100" key={item.row.plan_id}>
+                        <tr className="border-b border-line-soft" key={item.row.plan_id}>
                           <td className="py-2 pr-3 font-medium">{personName(item.row)}</td>
                           <td className="py-2 pr-3">{displayValue(item.row.region_name)}</td>
                           <td className="py-2 pr-3">{displayValue(item.row.team_name)}</td>
@@ -1271,19 +1271,19 @@ export default async function CoachMakerReportPage({
         )}
 
         <section className="report-section mt-8 print:break-inside-auto">
-          <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
+          <h2 className="report-section-title border-b border-line-soft pb-2 text-xl font-semibold print:text-lg">
             <I18nText
               k="coachMaker.report.actionMemoSummary"
               fallback="관리 액션 메모 요약"
             />
           </h2>
           {!actionNotesResult.ok ? (
-            <p className="report-card mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-5 text-center text-sm text-red-800 print:border-slate-300 print:bg-white print:text-slate-900">
+            <p className="report-card mt-4 rounded-control border border-red-200 bg-red-50 px-4 py-5 text-center text-sm text-red-800 print:border-line-base print:bg-surface-card print:text-ink-strong">
               보고서 데이터를 불러오지 못했습니다.
             </p>
           ) : (
             <>
-              <p className="mt-2 text-sm text-slate-600 print:text-slate-800">
+              <p className="mt-2 text-sm text-ink-muted print:text-ink-base">
                 진행 전/진행 중/완료/보관됨 상태를 기준으로 집계합니다.
               </p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -1298,13 +1298,13 @@ export default async function CoachMakerReportPage({
         </section>
 
         <section className="report-section mt-8">
-          <h2 className="report-section-title border-b border-slate-200 pb-2 text-xl font-semibold print:text-lg">
+          <h2 className="report-section-title border-b border-line-soft pb-2 text-xl font-semibold print:text-lg">
             <I18nText
               k="coachMaker.report.priorityActionList"
               fallback="우선 조치 목록"
             />
           </h2>
-          <p className="mt-2 text-sm text-slate-600 print:text-slate-800">
+          <p className="mt-2 text-sm text-ink-muted print:text-ink-base">
             높은 우선순위 미완료 메모와 기한 지난 미완료 메모를 최대 10개까지 표시합니다.
           </p>
           {priorityActionNotes.length === 0 ? (
@@ -1320,7 +1320,7 @@ export default async function CoachMakerReportPage({
             <div className="mt-4 overflow-x-auto print:overflow-visible">
               <table className="report-table w-full border-collapse text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-300">
+                  <tr className="border-b border-line-soft">
                     <th className="py-2 pr-3">대상</th>
                     <th className="py-2 pr-3">액션 유형</th>
                     <th className="py-2 pr-3">우선순위</th>
@@ -1331,10 +1331,10 @@ export default async function CoachMakerReportPage({
                 </thead>
                 <tbody>
                   {priorityActionNotes.map((note) => (
-                    <tr className="border-b border-slate-100 align-top" key={note.id}>
+                    <tr className="border-b border-line-soft align-top" key={note.id}>
                       <td className="py-2 pr-3">
                         <p className="font-medium">{note.target_name}</p>
-                        <p className="text-slate-500">
+                        <p className="text-ink-faint">
                           {reportLabelText(TARGET_TYPE_LABELS[note.target_type])}
                         </p>
                       </td>

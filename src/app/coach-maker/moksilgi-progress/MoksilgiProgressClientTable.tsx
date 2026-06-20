@@ -432,7 +432,7 @@ function SortButton({
   onClick: () => void;
 }) {
   return (
-    <button className="inline-flex items-center gap-1 font-semibold hover:text-slate-950" onClick={onClick} type="button">
+    <button className="inline-flex items-center gap-1 font-semibold hover:text-ink-strong" onClick={onClick} type="button">
       {children}
     </button>
   );
@@ -450,20 +450,20 @@ function ProgressDetailModal({
   year: number;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white p-4 shadow-xl sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-900/40 p-4">
+      <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-surface-card p-4 shadow-xl sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-slate-500">목실기 상세</p>
-            <h2 className="mt-1 text-2xl font-semibold text-slate-950">{profileName(row)}</h2>
-            <p className="mt-1 text-sm text-slate-500">{displayText(row.email)}</p>
+            <p className="text-sm font-medium text-ink-faint">목실기 상세</p>
+            <h2 className="mt-1 text-2xl font-semibold text-ink-strong">{profileName(row)}</h2>
+            <p className="mt-1 text-sm text-ink-faint">{displayText(row.email)}</p>
           </div>
           <Button onClick={onClose} size="sm" type="button" variant="secondary">
             닫기
           </Button>
         </div>
 
-        <dl className="mt-6 grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+        <dl className="mt-6 grid gap-3 rounded-card border border-line-base bg-surface-app p-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <DetailItem label="국가" value={displayText(countryLabel(row))} />
           <DetailItem label="지역/도시" value={displayText(rowRegion(row))} />
           <DetailItem label="소속 기관/교회" value={displayText(rowOrganizationChurch(row))} />
@@ -477,7 +477,7 @@ function ProgressDetailModal({
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-left text-slate-600">
+              <tr className="border-b border-line-soft bg-surface-sunken text-left text-ink-muted">
                 <th className="px-3 py-2">월</th>
                 {MONTHS.map((month) => (
                   <th className="px-3 py-2 text-right" key={month}>
@@ -488,7 +488,7 @@ function ProgressDetailModal({
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-slate-100">
+              <tr className="border-b border-line-soft">
                 <th className="px-3 py-2 text-left font-medium">성취율</th>
                 {MONTHS.map((month) => (
                   <td className="px-3 py-2 text-right" key={month}>
@@ -510,8 +510,8 @@ function ProgressDetailModal({
 function DetailItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-xs font-medium text-slate-500">{label}</dt>
-      <dd className="mt-1 font-medium text-slate-800">{value}</dd>
+      <dt className="text-xs font-medium text-ink-faint">{label}</dt>
+      <dd className="mt-1 font-medium text-ink-base">{value}</dd>
     </div>
   );
 }
@@ -573,17 +573,17 @@ function ActionNoteModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
-      <form className="w-full max-w-lg rounded-lg bg-white p-4 shadow-xl sm:p-6" onSubmit={handleSubmit}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-900/40 p-4">
+      <form className="w-full max-w-lg rounded-lg bg-surface-card p-4 shadow-xl sm:p-6" onSubmit={handleSubmit}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-slate-500">내부 관리 메모</p>
-            <h2 className="mt-1 text-xl font-semibold text-slate-950">{profileName(row)}</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="text-sm font-medium text-ink-faint">내부 관리 메모</p>
+            <h2 className="mt-1 text-xl font-semibold text-ink-strong">{profileName(row)}</h2>
+            <p className="mt-1 text-sm text-ink-faint">
               코치이 본인에게 공개되는 피드백이 아니라 관리자/코치 내부 관리 메모입니다.
             </p>
           </div>
-          <button className="text-sm font-medium text-slate-500 hover:text-slate-900" onClick={onClose} type="button">
+          <button className="text-sm font-medium text-ink-faint hover:text-ink-strong" onClick={onClose} type="button">
             닫기
           </button>
         </div>
@@ -594,7 +594,7 @@ function ActionNoteModal({
           placeholder="필요한 돌봄 내용이나 다음 조치를 기록해 주세요."
           value={note}
         />
-        {message ? <p className="mt-3 text-sm text-slate-600">{message}</p> : null}
+        {message ? <p className="mt-3 text-sm text-ink-muted">{message}</p> : null}
         <div className="mt-5 flex justify-end gap-2">
           <Button
             disabled={submitting}
@@ -627,7 +627,7 @@ function RelationshipProgressTable({
   if (rows.length === 0) {
     return (
       <Card>
-        <CardContent className="px-4 py-6 text-center text-slate-500">
+        <CardContent className="px-4 py-6 text-center text-ink-faint">
           코치-코치이 관계별 목실기 데이터가 없습니다.
         </CardContent>
       </Card>
@@ -639,7 +639,7 @@ function RelationshipProgressTable({
       <CardContent className="p-0">
     <div className="overflow-x-auto">
       <table className="w-full min-w-[1500px] border-collapse text-sm">
-        <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <thead className="bg-surface-sunken text-left text-xs font-semibold uppercase tracking-wide text-ink-faint">
           <tr>
             <th className="px-3 py-3">코치명</th>
             <th className="px-3 py-3">코치이명</th>
@@ -659,7 +659,7 @@ function RelationshipProgressTable({
             <th className="px-3 py-3 text-right">현재까지 평균</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-line-soft">
           {rows.map((row) => {
             const currentRates = MONTHS.slice(0, currentMonthCutoff(year))
               .map((month) => monthRate(row, month))
@@ -667,8 +667,8 @@ function RelationshipProgressTable({
             const currentAverage = average(currentRates);
 
             return (
-              <tr className="align-top hover:bg-slate-50/70" key={row.relationship_id}>
-                <td className="px-3 py-3 font-medium text-slate-900">
+              <tr className="align-top hover:bg-surface-sunken/70" key={row.relationship_id}>
+                <td className="px-3 py-3 font-medium text-ink-strong">
                   {personName({
                     displayName: row.coach_display_name,
                     email: row.coach_email,
@@ -676,14 +676,14 @@ function RelationshipProgressTable({
                   })}
                 </td>
                 <td className="px-3 py-3">
-                  <p className="font-medium text-slate-900">
+                  <p className="font-medium text-ink-strong">
                     {personName({
                       displayName: row.coachee_display_name,
                       email: row.coachee_email,
                       fullName: row.coachee_full_name,
                     })}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">{displayText(row.coachee_email)}</p>
+                  <p className="mt-1 text-xs text-ink-faint">{displayText(row.coachee_email)}</p>
                 </td>
                 <td className="px-3 py-3">{displayText(row.relationship_status)}</td>
                 <td className="px-3 py-3">{displayText(relationshipCountryLabel(row))}</td>
@@ -754,7 +754,7 @@ function CareNeededTable({
             현재 월까지 성취율 50% 미만, 미입력 또는 기록 부족 대상을 우선 확인합니다.
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-4 pb-6 text-center text-slate-500">
+        <CardContent className="px-4 pb-6 text-center text-ink-faint">
           관심 필요 대상자가 없습니다.
         </CardContent>
       </Card>
@@ -772,7 +772,7 @@ function CareNeededTable({
       <CardContent className="p-0">
     <div className="overflow-x-auto">
       <table className="w-full min-w-[840px] border-collapse text-sm">
-        <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <thead className="bg-surface-sunken text-left text-xs font-semibold uppercase tracking-wide text-ink-faint">
           <tr>
             <th className="px-3 py-3">이름</th>
             <th className="px-3 py-3">소속/팀</th>
@@ -781,16 +781,16 @@ function CareNeededTable({
             <th className="px-3 py-3">상세보기</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-line-soft">
           {careRows.map(({ assessment, row }) => (
-            <tr className="align-top hover:bg-slate-50/70" key={row.profile_id}>
+            <tr className="align-top hover:bg-surface-sunken/70" key={row.profile_id}>
               <td className="px-3 py-3">
-                <p className="font-medium text-slate-900">{profileName(row)}</p>
-                <p className="mt-1 text-xs text-slate-500">{displayText(row.email)}</p>
+                <p className="font-medium text-ink-strong">{profileName(row)}</p>
+                <p className="mt-1 text-xs text-ink-faint">{displayText(row.email)}</p>
               </td>
               <td className="px-3 py-3">
                 <p>{displayText(countryLabel(row))}</p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-ink-faint">
                   {displayText(rowRegion(row))} · {displayText(rowOrganizationChurch(row))} ·{" "}
                   {displayText(rowGroup(row))}
                 </p>
@@ -800,7 +800,7 @@ function CareNeededTable({
               </td>
               <td className="px-3 py-3">
                 <StatusBadge assessment={assessment} row={row} />
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-ink-faint">
                   최근 기록: {formatMonthLabel(assessment.recentRecordMonth)}
                 </p>
               </td>
@@ -864,9 +864,9 @@ function ProgressRowsTable({
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1540px] border-collapse text-sm">
-            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <thead className="bg-surface-sunken text-left text-xs font-semibold uppercase tracking-wide text-ink-faint">
               <tr>
-                <th className="sticky left-0 z-10 bg-slate-50 px-3 py-3 shadow-[1px_0_0_#e2e8f0]">
+                <th className="sticky left-0 z-10 bg-surface-app px-3 py-3 shadow-[1px_0_0_#e2e8f0]">
                   {renderHeader("이름", "name")}
                 </th>
                 <th className="px-3 py-3">소속</th>
@@ -884,22 +884,22 @@ function ProgressRowsTable({
                 {onViewDetail || detailHrefBuilder ? <th className="px-3 py-3">상세보기</th> : null}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line-soft">
               {rows.map((row) => {
                 const assessment = assessCare(row, year);
 
                 return (
-                  <tr className="align-top hover:bg-slate-50/70" key={row.plan_id}>
-                    <td className="sticky left-0 z-10 bg-white px-3 py-3 shadow-[1px_0_0_#e2e8f0]">
-                      <p className="font-medium text-slate-900">{profileName(row)}</p>
-                      <p className="mt-1 text-xs text-slate-500">{displayText(row.email)}</p>
+                  <tr className="align-top hover:bg-surface-sunken/70" key={row.plan_id}>
+                    <td className="sticky left-0 z-10 bg-surface-card px-3 py-3 shadow-[1px_0_0_#e2e8f0]">
+                      <p className="font-medium text-ink-strong">{profileName(row)}</p>
+                      <p className="mt-1 text-xs text-ink-faint">{displayText(row.email)}</p>
                     </td>
                     <td className="px-3 py-3">
                       <p>{displayText(rowOrganizationChurch(row))}</p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-ink-faint">
                         {displayText(countryLabel(row))} · {displayText(rowGroup(row))}
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-ink-faint">
                         담당 코치: {displayText(coachNameByCoacheeId.get(row.profile_id))}
                       </p>
                     </td>
@@ -985,7 +985,7 @@ function PaginationControls({
 
   return (
     <Card className="print-hidden">
-      <CardContent className="flex flex-col gap-3 p-4 text-sm text-slate-600 lg:flex-row lg:items-center lg:justify-between">
+      <CardContent className="flex flex-col gap-3 p-4 text-sm text-ink-muted lg:flex-row lg:items-center lg:justify-between">
         <p>
           현재 {pagination.page}페이지 / 전체 {pagination.totalPages}페이지 · 전체{" "}
           {pagination.totalRows}명
@@ -1346,7 +1346,7 @@ export function MoksilgiProgressClientTable({
             <FilterSelect label="세대" onChange={setGenerationFilter} options={generationOptions} value={generationFilter} />
             <FilterSelect label="담당 코치" onChange={setCoachFilter} options={coachOptions} value={coachFilter} />
           </div>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-ink-faint">
             <p>
               {filteredRows.length}명 표시 / 현재 페이지 {rows.length}명 · 전체 필터 결과 {pagination.totalRows}명
             </p>
@@ -1375,7 +1375,7 @@ export function MoksilgiProgressClientTable({
           />
         ) : filteredRows.length === 0 ? (
           <Card>
-            <CardContent className="px-4 py-6 text-center text-slate-500">
+            <CardContent className="px-4 py-6 text-center text-ink-faint">
               <p>선택한 조건에 해당하는 목실기 기록이 없습니다.</p>
               <p className="mt-1">필터를 초기화하거나 다른 조건으로 다시 조회해 주세요.</p>
             </CardContent>

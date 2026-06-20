@@ -72,7 +72,7 @@ export function RevokeInvitationButton({
   return (
     <div className="flex flex-col gap-1">
       <button
-        className="rounded-md border border-rose-300 px-3 py-1.5 text-sm font-medium text-rose-700 disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
+        className="rounded-control border border-rose-300 px-3 py-1.5 text-sm font-medium text-rose-700 disabled:cursor-not-allowed disabled:border-line-base disabled:text-ink-faint"
         disabled={isSubmitting}
         onClick={handleClick}
         type="button"

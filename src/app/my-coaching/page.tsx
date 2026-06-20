@@ -1,602 +1,494 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { I18nText } from "@/lib/i18n/I18nProvider";
-import { getSession } from "@/lib/auth/getSession";
+import { TodayAreaCard } from "@/components/coachee/TodayAreaCard";
+import { Badge } from "@/components/ui/Badge";
+import { ButtonLink } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { getMyCoachingMe } from "@/lib/api/my-coaching/me";
-import type {
-  CoachingRelationshipStatus,
-  RelationshipType,
-  ScopeType,
-} from "@/types/database";
+import type { MoksilgiCoreValue } from "@/lib/api/my-coaching/moksilgi";
+import {
+  calculateTodayProgressSnapshot,
+  type TodayAreaProgress,
+} from "@/lib/coaching/progress";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import {
+  getCurrentMonthInTimezone,
+  getCurrentYearInTimezone,
+  getTodayDateInTimezone,
+  resolveTimezoneFallback,
+} from "@/lib/timezone";
+import type { Json, Tables } from "@/types/database";
+import { revalidatePath } from "next/cache";
+import { saveMyMoksilgiMonthlyRecord } from "@/lib/api/my-coaching/moksilgi-monthly";
+import { TodayTodoList, type TodayTodo } from "@/components/coachee/TodayTodoList";
 
 export const dynamic = "force-dynamic";
 
-function displayValue(value: string | null) {
-  return value && value.trim().length > 0 ? value : "-";
-}
+type ProfileTimezoneRow = Pick<
+  Tables<"profiles">,
+  "id" | "timezone" | "organization_id" | "display_name" | "full_name" | "email"
+>;
+type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
+type PlanRow = Pick<Tables<"moksilgi_plans">, "id" | "title" | "core_values_json">;
+type GoalAreaRow = Pick<
+  Tables<"moksilgi_goal_areas">,
+  "id" | "area_key" | "area_title" | "sort_order"
+>;
+type DetailGoalRow = Pick<
+  Tables<"moksilgi_detail_goals">,
+  "id" | "area_id" | "title" | "sort_order" | "measurement_type"
+>;
+type MonthlyRecordRow = Pick<
+  Tables<"moksilgi_monthly_records">,
+  "detail_goal_id" | "daily_checks_json"
+>;
 
-function formatDate(value: string | null) {
-  if (!value) {
-    return "-";
-  }
+const FOUR_AREA_KEYS = ["spiritual", "intellectual", "physical", "social"] as const;
 
-  const date = new Date(value);
+const FALLBACK_AREA_TITLES: Record<(typeof FOUR_AREA_KEYS)[number], string> = {
+  spiritual: "영적 목표",
+  intellectual: "지적 목표",
+  physical: "신체적 목표",
+  social: "사회적 목표",
+};
 
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
+function formatTodayLabel(todayDateKey: string, timezone: string) {
+  const date = new Date(`${todayDateKey}T00:00:00`);
   return new Intl.DateTimeFormat("ko-KR", {
     year: "numeric",
-    month: "short",
+    month: "long",
     day: "numeric",
+    timeZone: timezone,
+    weekday: "short",
   }).format(date);
 }
 
-function relationshipStatusBadgeClass(status: CoachingRelationshipStatus) {
-  switch (status) {
-    case "active":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
-    case "paused":
-      return "border-amber-200 bg-amber-50 text-amber-700";
-    case "ended":
-      return "border-slate-300 bg-slate-50 text-slate-700";
-    case "archived":
-      return "border-slate-300 bg-slate-100 text-slate-600";
-    default:
-      return "border-slate-200 bg-slate-100 text-slate-700";
-  }
+function ensureFourAreas(areas: TodayAreaProgress[]): TodayAreaProgress[] {
+  const areaByKey = new Map(areas.map((area) => [area.areaKey, area]));
+
+  return FOUR_AREA_KEYS.map((key) => {
+    const existing = areaByKey.get(key);
+
+    if (existing) {
+      return existing;
+    }
+
+    return {
+      areaId: key,
+      areaKey: key,
+      areaTitle: FALLBACK_AREA_TITLES[key],
+      completedGoals: 0,
+      totalGoals: 0,
+      completionRate: 0,
+    };
+  });
 }
 
-function relationshipTypeBadgeClass(type: RelationshipType) {
-  switch (type) {
-    case "individual_coaching":
-      return "border-sky-200 bg-sky-50 text-sky-700";
-    case "group_coaching":
-      return "border-violet-200 bg-violet-50 text-violet-700";
-    case "leadership_coaching":
-      return "border-indigo-200 bg-indigo-50 text-indigo-700";
-    case "pastoral_coaching":
-      return "border-teal-200 bg-teal-50 text-teal-700";
-    case "missionary_coaching":
-      return "border-rose-200 bg-rose-50 text-rose-700";
-    default:
-      return "border-slate-200 bg-slate-100 text-slate-700";
-  }
-}
-
-const RELATIONSHIP_TYPE_LABELS: Record<
-  RelationshipType,
-  { fallback: string; key: string }
-> = {
-  group_coaching: {
-    fallback: "그룹 코칭",
-    key: "myCoaching.relationships.type.group_coaching",
-  },
-  individual_coaching: {
-    fallback: "개인 코칭",
-    key: "myCoaching.relationships.type.individual_coaching",
-  },
-  leadership_coaching: {
-    fallback: "리더십 코칭",
-    key: "myCoaching.relationships.type.leadership_coaching",
-  },
-  missionary_coaching: {
-    fallback: "선교사 코칭",
-    key: "myCoaching.relationships.type.missionary_coaching",
-  },
-  pastoral_coaching: {
-    fallback: "목회 코칭",
-    key: "myCoaching.relationships.type.pastoral_coaching",
-  },
-};
-
-const RELATIONSHIP_STATUS_LABELS: Record<
-  CoachingRelationshipStatus,
-  { fallback: string; key: string }
-> = {
-  active: {
-    fallback: "활성",
-    key: "myCoaching.relationships.status.active",
-  },
-  archived: {
-    fallback: "보관됨",
-    key: "myCoaching.relationships.status.archived",
-  },
-  ended: {
-    fallback: "종료",
-    key: "myCoaching.relationships.status.ended",
-  },
-  paused: {
-    fallback: "일시중지",
-    key: "myCoaching.relationships.status.paused",
-  },
-};
-
-const SCOPE_LABELS: Record<ScopeType, { fallback: string; key: string }> = {
-  church: {
-    fallback: "교회",
-    key: "myCoaching.relationships.scope.church",
-  },
-  coach: {
-    fallback: "코치",
-    key: "myCoaching.relationships.scope.coach",
-  },
-  cohort: {
-    fallback: "코호트",
-    key: "myCoaching.relationships.scope.cohort",
-  },
-  country: {
-    fallback: "국가",
-    key: "myCoaching.relationships.scope.country",
-  },
-  global: {
-    fallback: "전체",
-    key: "myCoaching.relationships.scope.global",
-  },
-  group: {
-    fallback: "그룹",
-    key: "myCoaching.relationships.scope.group",
-  },
-  organization: {
-    fallback: "기관",
-    key: "myCoaching.relationships.scope.organization",
-  },
-  region: {
-    fallback: "지역",
-    key: "myCoaching.relationships.scope.region",
-  },
-};
-
-function shortenScopeId(scopeId: string) {
-  if (scopeId.length <= 12) {
-    return scopeId;
+function parseCoreValues(value: Json): MoksilgiCoreValue[] {
+  if (!Array.isArray(value)) {
+    return [];
   }
 
-  return `${scopeId.slice(0, 8)}...${scopeId.slice(-4)}`;
+  return value
+    .map((item) => {
+      if (typeof item !== "object" || item === null || Array.isArray(item)) {
+        return null;
+      }
+
+      return {
+        value_name: typeof item.value_name === "string" ? item.value_name : "",
+        meaning: typeof item.meaning === "string" ? item.meaning : "",
+        practice_example:
+          typeof item.practice_example === "string" ? item.practice_example : "",
+      };
+    })
+    .filter((item): item is MoksilgiCoreValue => item !== null)
+    .filter((item) => item.value_name.trim().length > 0);
 }
 
-function RelationshipTypeLabel({ type }: { type: RelationshipType }) {
-  const label = RELATIONSHIP_TYPE_LABELS[type];
+const TODO_AREA_KEYS = ["spiritual", "intellectual", "physical", "social"] as const;
 
-  return <I18nText k={label.key} fallback={label.fallback} />;
+function isTodoAreaKey(
+  value: string,
+): value is (typeof TODO_AREA_KEYS)[number] {
+  return (TODO_AREA_KEYS as readonly string[]).includes(value);
 }
 
-function RelationshipStatusLabel({
-  status,
+function collectCheckedDays(value: Json, year: number, month: number): Set<number> {
+  const days = new Set<number>();
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return days;
+  }
+  const monthPrefix = `${year}-${String(month).padStart(2, "0")}-`;
+  for (const [key, checked] of Object.entries(value)) {
+    if (!checked) {
+      continue;
+    }
+    if (/^\d{1,2}$/.test(key)) {
+      const day = Number(key);
+      if (day >= 1 && day <= 31) {
+        days.add(day);
+      }
+    } else if (key.startsWith(monthPrefix)) {
+      const day = Number(key.slice(-2));
+      if (day >= 1 && day <= 31) {
+        days.add(day);
+      }
+    }
+  }
+  return days;
+}
+
+function buildTodayTodos({
+  areas,
+  detailGoals,
+  records,
+  year,
+  month,
+  todayDay,
 }: {
-  status: CoachingRelationshipStatus;
-}) {
-  const label = RELATIONSHIP_STATUS_LABELS[status];
-
-  return <I18nText k={label.key} fallback={label.fallback} />;
-}
-
-function ScopeLabel({
-  scopeId,
-  scopeType,
-}: {
-  scopeId: string | null | undefined;
-  scopeType: ScopeType;
-}) {
-  const label = SCOPE_LABELS[scopeType];
-
-  if (scopeType === "global") {
-    return <I18nText k="myCoaching.relationships.scope.all" fallback="전체" />;
-  }
-
-  if (!scopeId) {
-    return <I18nText k={label.key} fallback={label.fallback} />;
-  }
-
-  return (
-    <>
-      <I18nText k={label.key} fallback={label.fallback} />:{" "}
-      {shortenScopeId(scopeId)}
-    </>
+  areas: GoalAreaRow[];
+  detailGoals: DetailGoalRow[];
+  records: MonthlyRecordRow[];
+  year: number;
+  month: number;
+  todayDay: number;
+}): TodayTodo[] {
+  const areaById = new Map(areas.map((area) => [area.id, area]));
+  const recordByGoal = new Map(
+    records.map((record) => [record.detail_goal_id, record]),
   );
+
+  const todos: TodayTodo[] = [];
+  for (const goal of detailGoals) {
+    if (goal.measurement_type !== "daily_check") {
+      continue;
+    }
+    const area = areaById.get(goal.area_id);
+    if (!area) {
+      continue;
+    }
+    const areaKey = area.area_key;
+    if (!isTodoAreaKey(areaKey)) {
+      continue;
+    }
+    const record = recordByGoal.get(goal.id);
+    const checkedDays = record
+      ? collectCheckedDays(record.daily_checks_json, year, month)
+      : new Set<number>();
+    const otherCheckedDays = Array.from(checkedDays).filter(
+      (day) => day !== todayDay,
+    );
+    todos.push({
+      detailGoalId: goal.id,
+      title: goal.title,
+      areaKey,
+      areaTitle: area.area_title,
+      checkedToday: checkedDays.has(todayDay),
+      otherCheckedDays,
+    });
+  }
+  return todos;
+}
+
+async function toggleTodayCheckAction(formData: FormData) {
+  "use server";
+
+  await saveMyMoksilgiMonthlyRecord(formData);
+  revalidatePath("/my-coaching");
 }
 
 export default async function MyCoachingPage() {
-  const session = await getSession();
+  const me = await getMyCoachingMe();
 
-  if (!session.user) {
+  if (!me.ok && me.error.code === "UNAUTHORIZED") {
     redirect("/login?redirectTo=%2Fmy-coaching");
   }
 
-  const result = await getMyCoachingMe();
-
-  if (!result.ok && result.error.code === "UNAUTHORIZED") {
-    redirect("/login?redirectTo=%2Fmy-coaching");
-  }
-
-  if (!result.ok) {
+  if (!me.ok) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
-        <section className="mx-auto w-full max-w-5xl">
-          <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-            <I18nText k="myCoaching.badge" fallback="코칭" />
-          </p>
-          <h1 className="mt-3 text-3xl font-semibold">
-            <I18nText k="myCoaching.title" fallback="내 코칭 공간" />
-          </h1>
-          <div className="mt-8 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
-            <I18nText k="myCoaching.loadFailed" fallback="지금 코칭 공간을 불러올 수 없습니다." />
-          </div>
-        </section>
+      <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4 text-sm text-red-700">
+            지금 오늘의 목표를 불러올 수 없습니다.
+          </CardContent>
+        </Card>
       </main>
     );
   }
 
-  const { authEmail, profile, relationships } = result.data;
-  const welcomeName =
-    profile?.display_name ??
-    profile?.full_name ??
-    profile?.email ??
-    authEmail ??
-    "사용자";
+  if (!me.data.profile) {
+    return (
+      <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
+        <Card className="border-line-base bg-surface-card">
+          <CardContent className="space-y-3 p-4">
+            <p className="text-sm text-ink-base">아직 프로필이 없어요.</p>
+            <ButtonLink href="/profile" size="sm" variant="secondary">
+              프로필 확인하기
+            </ButtonLink>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+  const { client: serviceClient, error: serviceClientError } =
+    createSupabaseServiceClient();
+
+  if (!serviceClient) {
+    console.error("[MY_COACHING_HOME_SERVICE_CLIENT_UNAVAILABLE]", serviceClientError);
+    return (
+      <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4 text-sm text-red-700">
+            지금 오늘의 목표를 준비할 수 없습니다.
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+  const profileId = me.data.profile.id;
+  const { data: profileRow } = await serviceClient
+    .from("profiles")
+    .select("id, timezone, organization_id, display_name, full_name, email")
+    .eq("id", profileId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  const safeProfile = (profileRow as ProfileTimezoneRow | null) ?? null;
+
+  let organizationTimezone: string | null = null;
+  if (safeProfile?.organization_id) {
+    const { data: organizationRow } = await serviceClient
+      .from("organizations")
+      .select("default_timezone")
+      .eq("id", safeProfile.organization_id)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    organizationTimezone =
+      (organizationRow as OrganizationTimezoneRow | null)?.default_timezone ?? null;
+  }
+
+  const effectiveTimezone = resolveTimezoneFallback(
+    safeProfile?.timezone ?? null,
+    organizationTimezone,
+    null,
+  );
+  const todayDateKey = getTodayDateInTimezone(effectiveTimezone);
+  const todayLabel = formatTodayLabel(todayDateKey, effectiveTimezone);
+  const currentYear = getCurrentYearInTimezone(effectiveTimezone);
+  const currentMonth = getCurrentMonthInTimezone(effectiveTimezone);
+  const currentDay = Number(todayDateKey.slice(-2));
+
+  const { data: activePlan } = await serviceClient
+    .from("moksilgi_plans")
+    .select("id, title, core_values_json")
+    .eq("profile_id", profileId)
+    .eq("status", "active")
+    .is("deleted_at", null)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const plan = (activePlan as PlanRow | null) ?? null;
+  let areaCards = ensureFourAreas([]);
+  let totalGoals = 0;
+  let totalCompletedGoals = 0;
+  let overallRate = 0;
+  let todayTodos: TodayTodo[] = [];
+
+  if (plan) {
+    const [areasResult, detailGoalsResult, recordsResult] = await Promise.all([
+      serviceClient
+        .from("moksilgi_goal_areas")
+        .select("id, area_key, area_title, sort_order")
+        .eq("plan_id", plan.id)
+        .is("deleted_at", null)
+        .order("sort_order", { ascending: true }),
+      serviceClient
+        .from("moksilgi_detail_goals")
+        .select("id, area_id, title, sort_order, measurement_type")
+        .eq("plan_id", plan.id)
+        .is("deleted_at", null)
+        .order("sort_order", { ascending: true }),
+      serviceClient
+        .from("moksilgi_monthly_records")
+        .select("detail_goal_id, daily_checks_json")
+        .eq("plan_id", plan.id)
+        .eq("profile_id", profileId)
+        .eq("year", currentYear)
+        .eq("month", currentMonth)
+        .is("deleted_at", null),
+    ]);
+
+    const progress = calculateTodayProgressSnapshot({
+      areas: ((areasResult.data ?? []) as GoalAreaRow[]).filter(
+        (area) => area.area_key !== "other",
+      ),
+      detailGoals: (detailGoalsResult.data ?? []) as DetailGoalRow[],
+      monthlyRecords: (recordsResult.data ?? []) as MonthlyRecordRow[],
+      todayDateKey,
+      todayDayOfMonth: currentDay,
+    });
+
+    areaCards = ensureFourAreas(progress.areas);
+    totalGoals = progress.totalGoals;
+    totalCompletedGoals = progress.totalCompletedGoals;
+    overallRate = progress.overallRate;
+    todayTodos = buildTodayTodos({
+      areas: (areasResult.data ?? []) as GoalAreaRow[],
+      detailGoals: (detailGoalsResult.data ?? []) as DetailGoalRow[],
+      records: (recordsResult.data ?? []) as MonthlyRecordRow[],
+      year: currentYear,
+      month: currentMonth,
+      todayDay: currentDay,
+    });
+  }
+
+  const userName =
+    safeProfile?.display_name ??
+    safeProfile?.full_name ??
+    safeProfile?.email ??
+    me.data.authEmail ??
+    "피코치";
+
+  const coreValues = plan ? parseCoreValues(plan.core_values_json) : [];
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
-      <section className="mx-auto w-full max-w-5xl">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-              <I18nText k="myCoaching.badge" fallback="코칭" />
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold">
-              <I18nText k="myCoaching.title" fallback="내 코칭 공간" />
-            </h1>
-            <p className="mt-3 max-w-3xl text-slate-600">
-              <I18nText
-                k="myCoaching.subtitle"
-                fallback="내 계정에 연결된 코칭 관계를 읽기 전용으로 확인할 수 있습니다."
-              />
-            </p>
-          </div>
-          <div className="flex flex-col items-start gap-2 text-sm">
-            <LanguageSwitcher />
-            <Link
-              className="font-medium text-slate-700 underline"
-              href="/dashboard"
-            >
-              <I18nText k="myCoaching.backToDashboard" fallback="대시보드로 돌아가기" />
-            </Link>
-            <Link
-              className="font-medium text-slate-700 underline"
-              href="/my-coaching/records"
-            >
-              <I18nText k="myCoaching.myRecords" fallback="나의 기록" />
-            </Link>
-            <Link
-              className="font-medium text-slate-700 underline"
-              href="/profile"
-            >
-              <I18nText k="myCoaching.viewProfile" fallback="프로필 보기" />
-            </Link>
-          </div>
-        </div>
+    <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
+      <section className="mx-auto w-full max-w-md space-y-4">
+        <Card className="border-line-base bg-surface-card">
+          <CardHeader className="border-line-soft px-4 py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-2">
+                <Badge tone="info">오늘의 목표</Badge>
+                <CardTitle className="text-xl">{userName}님의 오늘</CardTitle>
+                <p className="text-xs text-ink-muted">
+                  {todayLabel} · {effectiveTimezone}
+                </p>
+              </div>
+              <LanguageSwitcher />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3 p-4">
+            <div className="rounded-control border border-line-soft bg-surface-sunken p-3">
+              <p className="text-sm font-semibold text-ink-base">오늘 전체 실행률</p>
+              <p className="mt-1 text-xs text-ink-muted">
+                완료 {totalCompletedGoals} / 대상 {totalGoals}
+              </p>
+              <ProgressBar className="mt-2" showValue value={overallRate} />
+            </div>
 
-        <section className="mt-8 rounded-md border border-slate-200 bg-white p-6">
-          <h2 className="text-lg font-semibold">
-            <I18nText k="myCoaching.welcome" fallback="환영합니다" />
-          </h2>
-          <p className="mt-3 text-slate-700">
-            <I18nText k="myCoaching.hello" fallback="안녕하세요" />,{" "}
-            <span className="font-medium text-slate-950">{welcomeName}</span>
-            <I18nText k="myCoaching.nameSuffix" fallback="님." />
-          </p>
-          <p className="mt-2 text-slate-600">
-            <I18nText k="myCoaching.intro" fallback="여기는 내 코칭 공간입니다." />
-          </p>
+            {totalGoals > 0 && totalCompletedGoals < totalGoals ? (
+              <div className="rounded-control border border-amber-200 bg-amber-50 p-3">
+                <p className="text-sm font-semibold text-amber-800">
+                  오늘 미완료 {totalGoals - totalCompletedGoals}개가 남아 있어요
+                </p>
+                <p className="mt-1 text-xs text-amber-700">
+                  남은 목표를 마무리하고 오늘 기록을 완성해 보세요.
+                </p>
+              </div>
+            ) : null}
+
+            {totalGoals > 0 && totalCompletedGoals === totalGoals ? (
+              <div className="rounded-control border border-emerald-200 bg-emerald-50 p-3">
+                <p className="text-sm font-semibold text-emerald-800">
+                  오늘 목표를 모두 완료했어요
+                </p>
+              </div>
+            ) : null}
+
+            {totalGoals === 0 ? (
+              <Card className="border-line-base bg-surface-card">
+                <CardContent className="p-4">
+                  <p className="text-sm font-semibold text-ink-base">
+                    아직 목표가 없어요
+                  </p>
+                  <p className="mt-1 text-xs text-ink-muted">
+                    목실기에서 4영역 목표를 먼저 작성해 주세요.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        {coreValues.length > 0 ? (
+          <Card className="border-line-base bg-surface-card">
+            <CardContent className="space-y-2 p-4">
+              <p className="text-sm font-semibold text-ink-base">
+                오늘 기억할 핵심가치
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {coreValues.map((value, index) => (
+                  <Badge key={`${value.value_name}-${index}`} tone="info">
+                    {value.value_name}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {areaCards.map((area) => (
+            <TodayAreaCard area={area} key={area.areaKey} />
+          ))}
         </section>
 
-        {profile === null ? (
-          <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-            <p className="text-slate-700">
-              <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
-            </p>
-            <p className="mt-2 text-slate-600">
-              <I18nText k="dashboard.acceptInvitationFirst" fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요." />
-            </p>
-            <div className="mt-4">
-              <Link
-                className="text-sm font-medium text-slate-700 underline"
-                href="/profile"
+        {todayTodos.length > 0 ? (
+          <TodayTodoList
+            action={toggleTodayCheckAction}
+            month={currentMonth}
+            today={currentDay}
+            todos={todayTodos}
+            year={currentYear}
+          />
+        ) : null}
+
+        <Card className="border-line-base bg-surface-card">
+          <CardContent className="space-y-3 p-4">
+            <ButtonLink
+              className="w-full"
+              href="/my-coaching/records/daily"
+              size="md"
+              variant="primary"
+            >
+              오늘 기록하기
+            </ButtonLink>
+
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <ButtonLink
+                className="w-full"
+                href="/my-coaching/moksilgi/monthly"
+                size="sm"
+                variant="secondary"
               >
-                <I18nText k="myCoaching.viewProfile" fallback="프로필 보기" />
-              </Link>
+                이번 달 체크
+              </ButtonLink>
+              <ButtonLink
+                className="w-full"
+                href="/my-coaching/moksilgi/summary"
+                size="sm"
+                variant="secondary"
+              >
+                월별 요약
+              </ButtonLink>
             </div>
-          </section>
-        ) : (
-          <>
-            <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-              <h2 className="text-lg font-semibold">
-                <I18nText k="myCoaching.myCoach" fallback="내 코치" />
-              </h2>
-              {relationships.length === 0 ? (
-                <p className="mt-4 text-slate-700">
-                  <I18nText k="myCoaching.noCoach" fallback="아직 배정된 코치가 없습니다." />
-                </p>
-              ) : (
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  {relationships.map((relationship) => (
-                    <div
-                      className="rounded-md border border-slate-200 bg-slate-50 p-4"
-                      key={`coach-${relationship.id}`}
-                    >
-                      <p className="text-sm font-medium text-slate-500">
-                        <I18nText k="roles.coach" fallback="코치" />
-                      </p>
-                      <p className="mt-2 font-medium text-slate-950">
-                        {relationship.coach_display_name ??
-                          relationship.coach_full_name ??
-                          relationship.coach_email ??
-                          "알 수 없음"}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-600">
-                        {relationship.coach_email ?? "-"}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
 
-            <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-              <h2 className="text-lg font-semibold">
-                <I18nText k="myCoaching.myRelationships" fallback="내 코칭 관계" />
-              </h2>
-              {relationships.length === 0 ? (
-                <p className="mt-4 text-slate-700">
-                  <I18nText k="myCoaching.noCoach" fallback="아직 배정된 코치가 없습니다." />
-                </p>
-              ) : (
-                <div className="mt-4 grid gap-4">
-                  {relationships.map((relationship) => (
-                    <article
-                      className="rounded-md border border-slate-200 p-5"
-                      key={relationship.id}
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${relationshipTypeBadgeClass(
-                            relationship.relationshipType,
-                          )}`}
-                        >
-                          <RelationshipTypeLabel
-                            type={relationship.relationshipType}
-                          />
-                        </span>
-                        <span
-                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${relationshipStatusBadgeClass(
-                            relationship.status,
-                          )}`}
-                        >
-                          <RelationshipStatusLabel
-                            status={relationship.status}
-                          />
-                        </span>
-                      </div>
-
-                      <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <div>
-                          <dt className="text-sm font-medium text-slate-500">
-                            <I18nText
-                              k="myCoaching.relationships.scope"
-                              fallback="범위"
-                            />
-                          </dt>
-                          <dd className="mt-1 text-slate-950">
-                            <ScopeLabel
-                              scopeId={relationship.scopeId}
-                              scopeType={relationship.scopeType}
-                            />
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-sm font-medium text-slate-500">
-                            <I18nText
-                              k="myCoaching.relationships.startDate"
-                              fallback="시작일"
-                            />
-                          </dt>
-                          <dd className="mt-1 text-slate-950">
-                            {formatDate(relationship.startedAt)}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-sm font-medium text-slate-500">
-                            <I18nText
-                              k="myCoaching.relationships.createdAt"
-                              fallback="생성일"
-                            />
-                          </dt>
-                          <dd className="mt-1 text-slate-950">
-                            {formatDate(relationship.createdAt)}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-sm font-medium text-slate-500">
-                            <I18nText
-                              k="myCoaching.relationships.endedAt"
-                              fallback="종료일"
-                            />
-                          </dt>
-                          <dd className="mt-1 text-slate-950">
-                            {formatDate(relationship.endedAt)}
-                          </dd>
-                        </div>
-                      </dl>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-              <h2 className="text-lg font-semibold">
-                <I18nText k="myCoaching.myMoksilgi" fallback="나의 목실기" />
-              </h2>
-              <p className="mt-2 text-sm text-slate-600">
-                <I18nText
-                  k="myCoaching.myMoksilgiDescription"
-                  fallback="목실기 목표 작성, 월별 점검, 연간 성취표를 한곳에서 확인합니다."
-                />
-              </p>
-              <div className="mt-4 grid gap-4 md:grid-cols-3">
-                <Link
-                  className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
-                  href="/my-coaching/moksilgi"
-                >
-                  <p className="font-medium text-slate-950">
-                    <I18nText k="myCoaching.writeMoksilgi" fallback="목실기 작성하기" />
-                  </p>
-                  <p className="mt-2 text-sm text-slate-600">
-                    <I18nText
-                      k="myCoaching.writeMoksilgiDescription"
-                      fallback="나의 목실기 목표와 세부 내용을 작성합니다."
-                    />
-                  </p>
-                </Link>
-                <Link
-                  className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
-                  href="/my-coaching/moksilgi/monthly"
-                >
-                  <p className="font-medium text-slate-950">
-                    <I18nText k="myCoaching.monthlyMoksilgi" fallback="월별 목실기 점검" />
-                  </p>
-                  <p className="mt-2 text-sm text-slate-600">
-                    <I18nText
-                      k="myCoaching.monthlyMoksilgiDescription"
-                      fallback="월별 실행 기록과 달성률을 점검합니다."
-                    />
-                  </p>
-                </Link>
-                <Link
-                  className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
-                  href="/my-coaching/moksilgi/summary"
-                >
-                  <p className="font-medium text-slate-950">
-                    <I18nText k="myCoaching.viewAchievement" fallback="나의 성취표 보기" />
-                  </p>
-                  <p className="mt-2 text-sm text-slate-600">
-                    <I18nText
-                      k="myCoaching.viewAchievementDescription"
-                      fallback="연간 목실기 성취 현황을 확인합니다."
-                    />
-                  </p>
-                </Link>
-              </div>
-            </section>
-
-            <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-              <h2 className="text-lg font-semibold">
-                <I18nText k="myCoaching.myRecords" fallback="나의 기록" />
-              </h2>
-              <p className="mt-2 text-sm text-slate-600">
-                <I18nText
-                  k="myCoaching.recordsDescription"
-                  fallback="하루, 주간, 월간 단위로 나의 코칭 여정과 실천 내용을 기록합니다."
-                />
-              </p>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <Link
-                  className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
-                  href="/my-coaching/records"
-                >
-                  <p className="font-medium text-slate-950">
-                    <I18nText k="myCoaching.chooseRecord" fallback="기록 선택하기" />
-                  </p>
-                  <p className="mt-2 text-sm text-slate-600">
-                    <I18nText
-                      k="myCoaching.chooseRecordDescription"
-                      fallback="하루 기록, 주간 기록, 월간 기록 중 필요한 기록 방식을 선택합니다."
-                    />
-                  </p>
-                </Link>
-                <Link
-                  className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
-                  href="/my-coaching/spiritual-companion"
-                >
-                  <p className="font-medium text-slate-950">
-                    <I18nText
-                      k="myCoaching.spiritualCompanion.cardTitle"
-                      fallback="AI 영적 형성 도우미"
-                    />
-                  </p>
-                  <p className="mt-2 text-sm text-slate-600">
-                    <I18nText
-                      k="myCoaching.spiritualCompanion.cardDescription"
-                      fallback="기도 제목, 감사 제목, 묵상 주제를 바탕으로 짧은 묵상 질문을 받아볼 수 있습니다."
-                    />
-                  </p>
-                </Link>
-              </div>
-            </section>
-
-            <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-              <h2 className="text-lg font-semibold">
-                <I18nText k="myCoaching.coachFeedback" fallback="코치 피드백" />
-              </h2>
-              <p className="mt-2 text-sm text-slate-600">
-                <I18nText
-                  k="myCoaching.coachFeedbackDescription"
-                  fallback="코치가 남긴 피드백을 확인하고 다음 실행을 준비합니다."
-                />
-              </p>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <Link
-                  className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white"
-                  href="/my-coaching/feedback"
-                >
-                  <p className="font-medium text-slate-950">
-                    <I18nText k="myCoaching.viewFeedback" fallback="피드백 보기" />
-                  </p>
-                  <p className="mt-2 text-sm text-slate-600">
-                    <I18nText
-                      k="myCoaching.viewFeedbackDescription"
-                      fallback="공개된 코치 피드백을 확인합니다."
-                    />
-                  </p>
-                </Link>
-              </div>
-            </section>
-
-            <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold">
-                  <I18nText k="dashboard.profile" fallback="프로필" />
-                </h2>
-                <Link
-                  className="text-sm font-medium text-slate-700 underline"
-                  href="/profile"
-                >
-                  <I18nText k="myCoaching.viewProfile" fallback="프로필 보기" />
-                </Link>
-              </div>
-              <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-                <div>
-                  <dt className="text-sm font-medium text-slate-500">
-                    <I18nText k="dashboard.displayName" fallback="표시 이름" />
-                  </dt>
-                  <dd className="mt-1 text-slate-950">
-                    {displayValue(profile.display_name)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-slate-500">
-                    <I18nText k="members.email" fallback="이메일" />
-                  </dt>
-                  <dd className="mt-1 text-slate-950">
-                    {displayValue(profile.email)}
-                  </dd>
-                </div>
-              </dl>
-            </section>
-          </>
-        )}
+            <ButtonLink
+              className="w-full"
+              href="/my-coaching/goals"
+              size="sm"
+              variant="secondary"
+            >
+              나의 성장 보기
+            </ButtonLink>
+          </CardContent>
+        </Card>
       </section>
     </main>
   );

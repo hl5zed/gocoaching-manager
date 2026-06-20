@@ -112,14 +112,14 @@ export function SpiritualCompanionClient() {
   return (
     <section className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
       <form
-        className="rounded-md border border-slate-200 bg-white p-6"
+        className="rounded-card border border-line-base bg-surface-card p-6"
         onSubmit={handleSubmit}
       >
         <div>
-          <h2 className="text-lg font-semibold text-slate-950">
+          <h2 className="text-lg font-semibold text-ink-strong">
             {t("myCoaching.spiritualCompanion.inputTitle", "오늘의 마음 나누기")}
           </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-ink-muted">
             {t(
               "myCoaching.spiritualCompanion.inputDescription",
               "감사한 일, 기도 제목, 묵상 주제 중 하나를 짧게 적어 주세요.",
@@ -128,7 +128,7 @@ export function SpiritualCompanionClient() {
         </div>
 
         <label
-          className="mt-5 block text-sm font-medium text-slate-700"
+          className="mt-5 block text-sm font-medium text-ink-base"
           htmlFor="spiritual-companion-message"
         >
           {t("myCoaching.spiritualCompanion.messageLabel", "나눌 내용")}
@@ -136,7 +136,7 @@ export function SpiritualCompanionClient() {
         <div className="mt-3 flex flex-wrap gap-2">
           {EXAMPLE_PROMPTS.map((prompt) => (
             <button
-              className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-full border border-line-base bg-surface-sunken px-3 py-1.5 text-xs font-medium text-ink-base transition hover:border-line-base hover:bg-surface-card disabled:cursor-not-allowed disabled:opacity-60"
               disabled={isLoading}
               key={prompt.key}
               onClick={() => setMessage(t(prompt.key, prompt.fallback))}
@@ -147,7 +147,7 @@ export function SpiritualCompanionClient() {
           ))}
         </div>
         <textarea
-          className="mt-2 min-h-48 w-full rounded-md border border-slate-300 px-3 py-2 text-sm leading-6 text-slate-900"
+          className="mt-2 min-h-48 w-full rounded-control border border-line-base px-3 py-2 text-sm leading-6 text-ink-strong"
           id="spiritual-companion-message"
           maxLength={MAX_VISIBLE_INPUT_LENGTH}
           onChange={(event) => setMessage(event.target.value)}
@@ -157,7 +157,7 @@ export function SpiritualCompanionClient() {
           )}
           value={message}
         />
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-ink-faint">
           <span>
             {t(
               "myCoaching.spiritualCompanion.privateNotice",
@@ -170,7 +170,7 @@ export function SpiritualCompanionClient() {
         </div>
 
         <button
-          className="mt-5 w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+          className="mt-5 w-full rounded-control bg-navy-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isSubmitDisabled}
           type="submit"
         >
@@ -180,20 +180,20 @@ export function SpiritualCompanionClient() {
         </button>
 
         {remainingToday !== null ? (
-          <p className="mt-3 text-sm text-slate-600">
+          <p className="mt-3 text-sm text-ink-muted">
             {t("myCoaching.spiritualCompanion.remainingPrefix", "오늘 남은 생성 횟수")}:{" "}
-            <span className="font-medium text-slate-900">{remainingToday}</span>
+            <span className="font-medium text-ink-strong">{remainingToday}</span>
             {t("myCoaching.spiritualCompanion.remainingSuffix", "회")}
           </p>
         ) : null}
       </form>
 
-      <section className="rounded-md border border-slate-200 bg-white p-6">
+      <section className="rounded-card border border-line-base bg-surface-card p-6">
         <div>
-          <h2 className="text-lg font-semibold text-slate-950">
+          <h2 className="text-lg font-semibold text-ink-strong">
             {t("myCoaching.spiritualCompanion.answerTitle", "AI 영적 형성 응답")}
           </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-ink-muted">
             {t(
               "myCoaching.spiritualCompanion.answerDescription",
               "응답은 목회적 조언이 아닌 개인 묵상을 돕는 짧은 질문과 실천 제안입니다.",
@@ -202,24 +202,24 @@ export function SpiritualCompanionClient() {
         </div>
 
         {errorMessage ? (
-          <div className="mt-5 rounded-md border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-800">
+          <div className="mt-5 rounded-control border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-800">
             {errorMessage}
           </div>
         ) : null}
 
         {answer ? (
-          <div className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 p-4">
+          <div className="mt-5 rounded-control border border-emerald-200 bg-emerald-50 p-4">
             {providerLabel ? (
               <p className="mb-3 text-xs font-medium uppercase tracking-wide text-emerald-700">
                 {providerLabel}
               </p>
             ) : null}
-            <p className="whitespace-pre-wrap text-sm leading-6 text-slate-800">
+            <p className="whitespace-pre-wrap text-sm leading-6 text-ink-base">
               {answer}
             </p>
           </div>
         ) : (
-          <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+          <div className="mt-5 rounded-control border border-line-base bg-surface-sunken p-4 text-sm leading-6 text-ink-muted">
             {t(
               "myCoaching.spiritualCompanion.emptyAnswer",
               "묵상 가이드를 생성하면 이곳에 응답이 표시됩니다.",
@@ -227,11 +227,11 @@ export function SpiritualCompanionClient() {
           </div>
         )}
 
-        <div className="mt-6 border-t border-slate-200 pt-5">
-          <h3 className="text-sm font-semibold text-slate-950">
+        <div className="mt-6 border-t border-line-soft pt-5">
+          <h3 className="text-sm font-semibold text-ink-strong">
             {t("myCoaching.spiritualCompanion.savedMessagesTitle", "최근 저장된 대화")}
           </h3>
-          <p className="mt-1 text-xs leading-5 text-slate-500">
+          <p className="mt-1 text-xs leading-5 text-ink-faint">
             {t(
               "myCoaching.spiritualCompanion.savedMessagesDescription",
               "최근 20개 메시지를 시간순으로 표시합니다.",
@@ -239,15 +239,15 @@ export function SpiritualCompanionClient() {
           </p>
 
           {isLoadingMessages ? (
-            <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            <div className="mt-4 rounded-control border border-line-base bg-surface-sunken p-4 text-sm text-ink-muted">
               {t("myCoaching.spiritualCompanion.messagesLoading", "저장된 대화를 불러오는 중입니다.")}
             </div>
           ) : messagesError ? (
-            <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-800">
+            <div className="mt-4 rounded-control border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-800">
               {messagesError}
             </div>
           ) : savedMessages.length === 0 ? (
-            <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            <div className="mt-4 rounded-control border border-line-base bg-surface-sunken p-4 text-sm text-ink-muted">
               {t("myCoaching.spiritualCompanion.noSavedMessages", "아직 저장된 대화가 없습니다.")}
             </div>
           ) : (
@@ -257,9 +257,9 @@ export function SpiritualCompanionClient() {
 
                 return (
                   <article
-                    className={`rounded-md border p-3 ${
+                    className={`rounded-card border p-3 ${
                       isUserMessage
-                        ? "border-slate-200 bg-white"
+                        ? "border-line-base bg-surface-card"
                         : "border-emerald-200 bg-emerald-50"
                     }`}
                     key={savedMessage.id}
@@ -267,7 +267,7 @@ export function SpiritualCompanionClient() {
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs">
                       <span
                         className={`font-semibold ${
-                          isUserMessage ? "text-slate-700" : "text-emerald-700"
+                          isUserMessage ? "text-ink-base" : "text-emerald-700"
                         }`}
                       >
                         {isUserMessage
@@ -278,12 +278,12 @@ export function SpiritualCompanionClient() {
                             )}
                       </span>
                       {savedMessage.createdAt ? (
-                        <time className="text-slate-500" dateTime={savedMessage.createdAt}>
+                        <time className="text-ink-faint" dateTime={savedMessage.createdAt}>
                           {new Date(savedMessage.createdAt).toLocaleString()}
                         </time>
                       ) : null}
                     </div>
-                    <p className="whitespace-pre-wrap text-sm leading-6 text-slate-800">
+                    <p className="whitespace-pre-wrap text-sm leading-6 text-ink-base">
                       {savedMessage.content}
                     </p>
                   </article>

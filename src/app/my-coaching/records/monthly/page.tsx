@@ -15,23 +15,23 @@ export default async function MonthlyReflectionsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
-      <section className="mx-auto w-full max-w-6xl">
+    <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
+      <section className="mx-auto w-full max-w-md">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+            <p className="text-sm font-medium uppercase tracking-wide text-ink-muted">
               <I18nText k="myCoaching.records.monthlyPage.badge" fallback="나의 기록" />
             </p>
-            <h1 className="mt-3 text-3xl font-semibold">
+            <h1 className="mt-2 text-2xl font-semibold">
               <I18nText k="myCoaching.records.monthlyPage.title" fallback="월간 회고" />
             </h1>
-            <p className="mt-3 max-w-3xl text-slate-600">
+            <p className="mt-2 text-sm text-ink-muted">
               <I18nText
                 k="myCoaching.records.monthlyPage.description"
                 fallback="한 달 동안의 성장, 어려움, 감사, 다음 달 계획을 정리합니다."
               />
             </p>
-            <div className="mt-4 rounded-md border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">
+            <div className="mt-4 rounded-control border border-line-soft bg-surface-sunken p-3 text-xs leading-5 text-ink-muted">
               <p>
                 <I18nText
                   k="myCoaching.records.monthlyPage.moksilgiNotice"
@@ -49,30 +49,12 @@ export default async function MonthlyReflectionsPage() {
           <div className="flex flex-col items-start gap-2 text-sm">
             <LanguageSwitcher />
             <Link
-              className="font-medium text-slate-700 underline"
+              className="font-medium text-ink-base underline"
               href="/my-coaching/records"
             >
               <I18nText
                 k="myCoaching.records.monthlyPage.backToRecords"
                 fallback="나의 기록으로 돌아가기"
-              />
-            </Link>
-            <Link
-              className="font-medium text-slate-700 underline"
-              href="/my-coaching"
-            >
-              <I18nText
-                k="myCoaching.records.monthlyPage.backToMyCoaching"
-                fallback="내 코칭 공간으로 돌아가기"
-              />
-            </Link>
-            <Link
-              className="font-medium text-slate-700 underline"
-              href="/my-coaching/moksilgi/monthly"
-            >
-              <I18nText
-                k="myCoaching.records.monthlyPage.goMonthlyMoksilgi"
-                fallback="목실기 월별 점검으로 이동"
               />
             </Link>
           </div>

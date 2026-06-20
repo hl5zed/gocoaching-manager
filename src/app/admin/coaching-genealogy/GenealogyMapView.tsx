@@ -28,7 +28,7 @@ const LeafletGenealogyMap = dynamic(
     ),
   {
     loading: () => (
-      <div className="flex h-[620px] items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-sm text-slate-600">
+      <div className="flex h-[620px] items-center justify-center rounded-md border border-line-base bg-surface-sunken text-sm text-ink-muted">
         지도를 불러오는 중입니다.
       </div>
     ),
@@ -171,9 +171,9 @@ function MarkerDetail({
 }) {
   if (!marker) {
     return (
-      <div className="rounded-md border border-slate-200 bg-white p-5">
+      <div className="rounded-card border border-line-base bg-surface-card p-5">
         <h2 className="text-lg font-semibold">선택 지역</h2>
-        <p className="mt-3 text-sm text-slate-600">
+        <p className="mt-3 text-sm text-ink-muted">
           지도 마커를 선택하면 지역별 상세 통계가 표시됩니다.
         </p>
       </div>
@@ -181,44 +181,44 @@ function MarkerDetail({
   }
 
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-5">
+    <div className="rounded-card border border-line-base bg-surface-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-slate-500">
+          <p className="text-sm font-medium text-ink-faint">
             {getMarkerTypeLabel(marker.markerType)}
           </p>
           <h2 className="mt-1 text-lg font-semibold">{marker.name}</h2>
         </div>
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+        <span className="rounded-full border border-line-base bg-surface-app px-2.5 py-1 text-xs font-medium text-ink-muted">
           {marker.code ?? "코드 없음"}
         </span>
       </div>
 
       <dl className="mt-4 space-y-2 text-sm">
         <div className="flex justify-between gap-3">
-          <dt className="text-slate-500">전체 프로필 수</dt>
+          <dt className="text-ink-faint">전체 프로필 수</dt>
           <dd className="font-medium">{marker.profileCount}명</dd>
         </div>
         <div className="flex justify-between gap-3">
-          <dt className="text-slate-500">코치 수</dt>
+          <dt className="text-ink-faint">코치 수</dt>
           <dd className="font-medium">{marker.coachCount}명</dd>
         </div>
         <div className="flex justify-between gap-3">
-          <dt className="text-slate-500">코치이 수</dt>
+          <dt className="text-ink-faint">코치이 수</dt>
           <dd className="font-medium">{marker.coacheeCount}명</dd>
         </div>
         <div className="flex justify-between gap-3">
-          <dt className="text-slate-500">활성 관계 수</dt>
+          <dt className="text-ink-faint">활성 관계 수</dt>
           <dd className="font-medium">{marker.relationshipCount}개</dd>
         </div>
       </dl>
 
-      <p className="mt-4 rounded-md bg-slate-50 p-3 text-sm text-slate-600">
+      <p className="mt-4 rounded-md bg-surface-app p-3 text-sm text-ink-muted">
         {formatGenerationBreakdown(marker.generationBreakdown)}
       </p>
 
       <Link
-        className="mt-4 inline-flex rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white"
+        className="mt-4 inline-flex rounded-control bg-navy-900 px-4 py-2 text-sm font-medium text-white"
         href={buildTreeHref(searchParams, marker)}
       >
         트리로 보기
@@ -284,17 +284,17 @@ export function GenealogyMapView({ data }: GenealogyMapViewProps) {
 
   return (
     <div className="genealogy-map-print-layout grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-      <section className="map-screen-map-section rounded-md border border-slate-200 bg-white p-5">
+      <section className="map-screen-map-section rounded-card border border-line-base bg-surface-card p-5">
         <div className="map-screen-filter mb-5 flex flex-wrap items-end gap-4">
           <div className="min-w-44">
             <label
-              className="block text-sm font-medium text-slate-600"
+              className="block text-sm font-medium text-ink-muted"
               htmlFor="marker-type-filter"
             >
               마커 표시 기준
             </label>
             <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
               id="marker-type-filter"
               onChange={(event) =>
                 updateMapFilter("markerType", event.target.value)
@@ -310,7 +310,7 @@ export function GenealogyMapView({ data }: GenealogyMapViewProps) {
         </div>
 
         {data.mapMarkers.length === 0 ? (
-          <div className="rounded-md border border-slate-200 bg-slate-50 p-8 text-slate-600">
+          <div className="rounded-md border border-line-base bg-surface-app p-8 text-ink-muted">
             지도에 표시할 코칭 지역 데이터가 없습니다.
           </div>
         ) : (
@@ -326,7 +326,7 @@ export function GenealogyMapView({ data }: GenealogyMapViewProps) {
               selectedMarkerType={selectedMarkerType}
             />
             {coordinateMissingCount > 0 ? (
-              <p className="genealogy-map-coordinate-warning no-print mt-2 text-xs text-slate-400">
+              <p className="genealogy-map-coordinate-warning no-print mt-2 text-xs text-ink-faint">
                 좌표 미등록 {coordinateMissingCount}개 항목은 지도에 표시되지 않습니다.
               </p>
             ) : null}
@@ -337,29 +337,29 @@ export function GenealogyMapView({ data }: GenealogyMapViewProps) {
       <aside className="map-screen-aside space-y-5">
         <MarkerDetail marker={selectedMarker} searchParams={searchParams} />
 
-        <section className="rounded-md border border-slate-200 bg-white p-5">
+        <section className="rounded-card border border-line-base bg-surface-card p-5">
           <h2 className="text-lg font-semibold">지도 전체 현황</h2>
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-              <p className="text-slate-500">전체 코치</p>
+            <div className="rounded-md border border-line-base bg-surface-app p-3">
+              <p className="text-ink-faint">전체 코치</p>
               <p className="mt-1 text-xl font-semibold">
                 {data.summaryStats.totalCoaches}
               </p>
             </div>
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-              <p className="text-slate-500">전체 코치이</p>
+            <div className="rounded-md border border-line-base bg-surface-app p-3">
+              <p className="text-ink-faint">전체 코치이</p>
               <p className="mt-1 text-xl font-semibold">
                 {data.summaryStats.totalCoachees}
               </p>
             </div>
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-              <p className="text-slate-500">활성 관계</p>
+            <div className="rounded-md border border-line-base bg-surface-app p-3">
+              <p className="text-ink-faint">활성 관계</p>
               <p className="mt-1 text-xl font-semibold">
                 {data.summaryStats.totalActiveRelationships}
               </p>
             </div>
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-              <p className="text-slate-500">활동 국가</p>
+            <div className="rounded-md border border-line-base bg-surface-app p-3">
+              <p className="text-ink-faint">활동 국가</p>
               <p className="mt-1 text-xl font-semibold">
                 {data.summaryStats.totalCountries}
               </p>
@@ -367,9 +367,9 @@ export function GenealogyMapView({ data }: GenealogyMapViewProps) {
           </div>
         </section>
 
-        <section className="rounded-md border border-slate-200 bg-white p-5">
+        <section className="rounded-card border border-line-base bg-surface-card p-5">
           <h2 className="text-lg font-semibold">세대별 분포</h2>
-          <div className="mt-3 space-y-2 text-sm text-slate-700">
+          <div className="mt-3 space-y-2 text-sm text-ink-base">
             {data.generationStats.length > 0 ? (
               data.generationStats.map((generation) => (
                 <div
@@ -381,7 +381,7 @@ export function GenealogyMapView({ data }: GenealogyMapViewProps) {
                 </div>
               ))
             ) : (
-              <p className="text-slate-600">세대 통계가 없습니다.</p>
+              <p className="text-ink-muted">세대 통계가 없습니다.</p>
             )}
           </div>
         </section>

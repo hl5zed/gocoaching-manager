@@ -56,9 +56,9 @@ function statusBadgeClass(status: GoalStatus) {
     case "completed":
       return "bg-blue-100 text-blue-700";
     case "archived":
-      return "bg-slate-200 text-slate-600";
+      return "bg-surface-sunken text-ink-muted";
     default:
-      return "bg-slate-100 text-slate-600";
+      return "bg-surface-sunken text-ink-muted";
   }
 }
 
@@ -67,11 +67,11 @@ function priorityBadgeClass(priority: GoalPriority) {
     case "high":
       return "bg-rose-100 text-rose-700";
     case "normal":
-      return "bg-slate-100 text-slate-700";
+      return "bg-surface-sunken text-ink-base";
     case "low":
       return "bg-teal-100 text-teal-700";
     default:
-      return "bg-slate-100 text-slate-600";
+      return "bg-surface-sunken text-ink-muted";
   }
 }
 
@@ -81,7 +81,7 @@ function Nav() {
       <Link href="/coach" className="text-blue-600 hover:underline">
         코치 홈으로 돌아가기
       </Link>
-      <span className="text-slate-300">/</span>
+      <span className="text-ink-faint">/</span>
       <Link href="/dashboard" className="text-blue-600 hover:underline">
         대시보드
       </Link>
@@ -98,7 +98,7 @@ export default async function CoachGoalsPage() {
 
   if (result.error?.code === "PROFILE_NOT_FOUND") {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+      <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
         <div className="mx-auto max-w-5xl">
           <p className="rounded-md border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800">
             아직 프로필이 생성되지 않았습니다.
@@ -116,10 +116,10 @@ export default async function CoachGoalsPage() {
 
   if (result.error?.code === "ACCESS_DENIED") {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+      <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
         <div className="mx-auto max-w-5xl">
           <Nav />
-          <p className="mt-8 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+          <p className="mt-8 rounded-control border border-red-200 bg-red-50 px-4 py-3 text-red-700">
             코치 권한이 없습니다.
           </p>
         </div>
@@ -129,10 +129,10 @@ export default async function CoachGoalsPage() {
 
   if (result.error) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+      <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
         <div className="mx-auto max-w-5xl">
           <Nav />
-          <p className="mt-8 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+          <p className="mt-8 rounded-control border border-red-200 bg-red-50 px-4 py-3 text-red-700">
             지금 코치이 목표를 불러올 수 없습니다.
           </p>
         </div>
@@ -143,17 +143,17 @@ export default async function CoachGoalsPage() {
   const goals = result.data;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <div className="mx-auto max-w-5xl">
         <Nav />
 
         <h1 className="mt-6 text-2xl font-semibold">코치이 목표</h1>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm text-ink-muted">
           담당 코치이들이 작성한 목표를 확인합니다.
         </p>
 
         {goals.length === 0 ? (
-          <p className="mt-8 rounded-md border border-slate-200 bg-white px-4 py-6 text-center text-slate-500">
+          <p className="mt-8 rounded-md border border-line-base bg-surface-card px-4 py-6 text-center text-ink-faint">
             아직 확인할 코치이 목표가 없습니다.
           </p>
         ) : (
@@ -161,15 +161,15 @@ export default async function CoachGoalsPage() {
             {goals.map((goal) => (
               <article
                 key={goal.id}
-                className="rounded-md border border-slate-200 bg-white p-5"
+                className="rounded-card border border-line-base bg-surface-card p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-sm font-medium text-slate-500">코치이</p>
-                    <p className="mt-1 text-lg font-semibold text-slate-950">
+                    <p className="text-sm font-medium text-ink-faint">코치이</p>
+                    <p className="mt-1 text-lg font-semibold text-ink-strong">
                       {coacheeName(goal)}
                     </p>
-                    <p className="mt-1 text-sm text-slate-600">
+                    <p className="mt-1 text-sm text-ink-muted">
                       {goal.coachee_email ?? "-"}
                     </p>
                   </div>
@@ -192,57 +192,57 @@ export default async function CoachGoalsPage() {
                 </div>
 
                 <section className="mt-5">
-                  <h2 className="text-lg font-semibold text-slate-950">
+                  <h2 className="text-lg font-semibold text-ink-strong">
                     {goal.title}
                   </h2>
-                  <p className="mt-2 whitespace-pre-wrap text-slate-700">
+                  <p className="mt-2 whitespace-pre-wrap text-ink-base">
                     {displayValue(goal.description)}
                   </p>
                 </section>
 
                 <dl className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <div>
-                    <dt className="text-sm font-medium text-slate-500">분류</dt>
-                    <dd className="mt-1 text-slate-950">
+                    <dt className="text-sm font-medium text-ink-faint">분류</dt>
+                    <dd className="mt-1 text-ink-strong">
                       {displayValue(goal.category)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-slate-500">
+                    <dt className="text-sm font-medium text-ink-faint">
                       현재값 / 목표값 / 단위
                     </dt>
-                    <dd className="mt-1 text-slate-950">
+                    <dd className="mt-1 text-ink-strong">
                       {displayValue(goal.current_value)} /{" "}
                       {displayValue(goal.target_value)} / {displayValue(goal.unit)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-slate-500">시작일</dt>
-                    <dd className="mt-1 text-slate-950">
+                    <dt className="text-sm font-medium text-ink-faint">시작일</dt>
+                    <dd className="mt-1 text-ink-strong">
                       {formatDate(goal.start_date)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-slate-500">마감일</dt>
-                    <dd className="mt-1 text-slate-950">
+                    <dt className="text-sm font-medium text-ink-faint">마감일</dt>
+                    <dd className="mt-1 text-ink-strong">
                       {formatDate(goal.due_date)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-slate-500">완료일</dt>
-                    <dd className="mt-1 text-slate-950">
+                    <dt className="text-sm font-medium text-ink-faint">완료일</dt>
+                    <dd className="mt-1 text-ink-strong">
                       {formatDate(goal.completed_at)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-slate-500">작성일</dt>
-                    <dd className="mt-1 text-slate-950">
+                    <dt className="text-sm font-medium text-ink-faint">작성일</dt>
+                    <dd className="mt-1 text-ink-strong">
                       {formatDate(goal.created_at)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-sm font-medium text-slate-500">수정일</dt>
-                    <dd className="mt-1 text-slate-950">
+                    <dt className="text-sm font-medium text-ink-faint">수정일</dt>
+                    <dd className="mt-1 text-ink-strong">
                       {formatDate(goal.updated_at)}
                     </dd>
                   </div>

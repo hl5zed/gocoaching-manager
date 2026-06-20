@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOThriveCoaching · UI 리뉴얼 프로토타입</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  /* Brand */
+  --navy:#1d2b4f; --navy-700:#243763; --navy-50:#eef1f8;
+  /* Domain accents */
+  --intel:#3a4ea8;  --intel-50:#eaeefb;   /* 지성 */
+  --body:#e0612f;   --body-50:#fbeee7;     /* 신체 */
+  --spirit:#6a5ae0; --spirit-50:#efedfd;   /* 영성 */
+  --social:#c08a2a; --social-50:#faf1dc;   /* 사회 */
+  --green:#16a37a;  --green-50:#e4f6ef; --teal:#0f8a68;
+  --coral:#e0612f;  --coral-50:#fbeee7;
+  --gold:#c08a2a;   --gold-50:#faf1dc;
+  /* Neutrals (modern light) */
+  --bg:#f4f6fa;
+  --surface:#ffffff;
+  --surface-2:#f6f8fb;
+  --surface-3:#eef1f6;
+  --line:#e7eaf0;
+  --line-2:#dfe3ec;
+  --text:#1a2236;
+  --text-2:#5b6478;
+  --text-3:#8b93a7;
+  /* Shape */
+  --r-sm:10px; --r-md:14px; --r-lg:18px; --r-xl:24px;
+  --sh-1:0 1px 2px rgba(20,28,48,.05), 0 1px 3px rgba(20,28,48,.05);
+  --sh-2:0 4px 16px rgba(20,28,48,.08);
+  --sh-3:0 12px 40px rgba(20,28,48,.14);
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:var(--bg);color:var(--text);
+  -webkit-font-smoothing:antialiased;line-height:1.45;
+}
+button{font-family:inherit;}
+.hidden{display:none !important;}
+
+/* ============ LOGIN / ONBOARDING (entry) ============ */
+#entry{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:24px;background:
+   radial-gradient(1200px 600px at 15% -10%, #eaf0ff 0%, transparent 55%),
+   radial-gradient(900px 500px at 110% 110%, #e7f6ef 0%, transparent 50%),
+   var(--bg);
+}
+.auth-card{
+  width:100%;max-width:920px;background:var(--surface);
+  border-radius:var(--r-xl);box-shadow:var(--sh-3);
+  display:grid;grid-template-columns:1fr 1fr;overflow:hidden;
+  min-height:540px;
+}
+.auth-hero{
+  background:linear-gradient(155deg,#1d2b4f 0%,#2b3f73 60%,#34508c 100%);
+  color:#fff;padding:40px 38px;display:flex;flex-direction:column;position:relative;overflow:hidden;
+}
+.auth-hero::after{content:"";position:absolute;right:-80px;bottom:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(106,90,224,.5),transparent 70%);}
+.brand{display:flex;align-items:center;gap:12px;z-index:1;}
+.brand-badge{width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.14);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;letter-spacing:.02em;}
+.brand-name{font-size:16px;font-weight:600;}
+.brand-tag{font-size:12px;color:rgba(255,255,255,.6);margin-top:1px;}
+.hero-body{margin-top:auto;z-index:1;}
+.hero-h{font-size:27px;font-weight:700;line-height:1.3;letter-spacing:-.01em;}
+.hero-p{font-size:13.5px;color:rgba(255,255,255,.72);margin-top:12px;line-height:1.65;}
+.hero-feats{margin-top:26px;display:flex;flex-direction:column;gap:13px;}
+.hero-feat{display:flex;align-items:center;gap:11px;font-size:13px;color:rgba(255,255,255,.85);}
+.hero-feat .fi{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.hero-dots{display:flex;gap:6px;margin-top:28px;}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.28);}
+.hero-dot.on{background:#5fe0b0;width:20px;border-radius:4px;}
+
+.auth-form{padding:46px 42px;display:flex;flex-direction:column;justify-content:center;}
+.af-title{font-size:22px;font-weight:700;letter-spacing:-.01em;}
+.af-sub{font-size:13.5px;color:var(--text-2);margin-top:5px;margin-bottom:26px;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12.5px;color:var(--text-2);margin-bottom:7px;font-weight:500;}
+.input-wrap{position:relative;}
+.input{
+  width:100%;padding:12px 14px;border-radius:var(--r-md);
+  border:1px solid var(--line-2);background:var(--surface-2);
+  font-size:14px;color:var(--text);transition:.15s var(--ease);
+}
+.input:focus{outline:none;border-color:var(--navy);background:#fff;box-shadow:0 0 0 3px var(--navy-50);}
+.input-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-3);cursor:pointer;font-size:17px;}
+.forgot{font-size:12px;color:var(--teal);text-align:right;margin-top:8px;cursor:pointer;}
+.forgot:hover{text-decoration:underline;}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  border:none;cursor:pointer;font-weight:600;border-radius:var(--r-md);
+  transition:.15s var(--ease);font-size:14px;
+}
+.btn-primary{background:var(--navy);color:#fff;padding:13px;width:100%;}
+.btn-primary:hover{background:var(--navy-700);box-shadow:var(--sh-2);}
+.btn-primary:active{transform:translateY(1px);}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:22px 0 16px;}
+.auth-divider .ln{flex:1;height:1px;background:var(--line);}
+.auth-divider span{font-size:12px;color:var(--text-3);}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.role-chip{
+  display:flex;align-items:center;gap:9px;padding:11px 12px;border-radius:var(--r-md);
+  border:1px solid var(--line-2);background:var(--surface);cursor:pointer;font-size:12.5px;
+  color:var(--text);font-weight:500;text-align:left;transition:.15s var(--ease);
+}
+.role-chip:hover{border-color:var(--navy);box-shadow:var(--sh-1);transform:translateY(-1px);}
+.role-chip .ri{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.auth-foot{margin-top:22px;font-size:12.5px;color:var(--text-2);text-align:center;}
+.auth-foot a{color:var(--teal);cursor:pointer;font-weight:600;}
+.auth-foot a:hover{text-decoration:underline;}
+
+/* Onboarding */
+#onboarding{width:100%;max-width:560px;}
+.ob-card{background:var(--surface);border-radius:var(--r-xl);box-shadow:var(--sh-3);overflow:hidden;}
+.ob-head{background:linear-gradient(155deg,#1d2b4f,#2b3f73);padding:26px 30px;color:#fff;}
+.ob-steps{display:flex;align-items:center;margin-bottom:16px;}
+.ob-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;transition:.2s;}
+.ob-dot.done{background:#5fe0b0;color:#10302a;}
+.ob-dot.active{background:#fff;color:var(--navy);}
+.ob-dot.idle{background:rgba(255,255,255,.15);color:rgba(255,255,255,.55);}
+.ob-ln{flex:1;height:2px;background:rgba(255,255,255,.15);margin:0 4px;border-radius:2px;transition:.2s;}
+.ob-ln.done{background:#5fe0b0;}
+.ob-steplabels{display:flex;justify-content:space-between;}
+.ob-sl{font-size:11px;color:rgba(255,255,255,.55);width:72px;text-align:center;transition:.2s;}
+.ob-sl.active{color:#fff;font-weight:600;}
+.ob-title{font-size:18px;font-weight:700;margin-top:18px;}
+.ob-sub{font-size:12.5px;color:rgba(255,255,255,.65);margin-top:4px;}
+.ob-body{padding:24px 30px;}
+.ob-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.ob-field{margin-bottom:14px;}
+.ob-field label{display:block;font-size:12.5px;color:var(--text-2);margin-bottom:6px;font-weight:500;}
+.ob-foot{display:flex;justify-content:space-between;padding:16px 30px;border-top:1px solid var(--line);}
+.btn-ghost{background:var(--surface-2);color:var(--text-2);border:1px solid var(--line-2);padding:11px 18px;border-radius:var(--r-md);font-size:13px;cursor:pointer;font-weight:600;}
+.btn-ghost:hover{background:var(--surface-3);}
+.btn-ghost:disabled{opacity:.4;cursor:not-allowed;}
+.btn-next{background:var(--navy);color:#fff;border:none;padding:11px 22px;border-radius:var(--r-md);font-size:13px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:6px;}
+.btn-next:hover{background:var(--navy-700);}
+.domain-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.dpick{display:flex;align-items:center;gap:10px;padding:13px;border-radius:var(--r-md);border:1.5px solid var(--line-2);background:var(--surface);cursor:pointer;transition:.15s var(--ease);}
+.dpick.picked{border-color:var(--navy);background:var(--navy-50);}
+.dpick .dpi{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.dpick .dpn{font-size:13px;font-weight:600;}
+.dpick .dpd{font-size:11px;color:var(--text-2);}
+.ob-welcome{text-align:center;padding:34px 30px;}
+.welcome-ring{width:82px;height:82px;border-radius:50%;background:var(--green-50);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:36px;color:var(--teal);}
+.welcome-t{font-size:19px;font-weight:700;}
+.welcome-d{font-size:13.5px;color:var(--text-2);margin:8px 0 22px;line-height:1.6;}
+.welcome-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px;}
+.wc{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 10px;}
+.wc i{font-size:20px;color:var(--navy);}
+.wc-t{font-size:12.5px;font-weight:600;margin-top:7px;}
+.wc-d{font-size:10.5px;color:var(--text-2);margin-top:3px;}
+
+/* ============ APP SHELL ============ */
+#app{display:none;min-height:100vh;}
+.shell{display:flex;min-height:100vh;}
+
+.sidebar{
+  width:248px;flex-shrink:0;background:var(--surface);
+  border-right:1px solid var(--line);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+  transition:transform .26s var(--ease);z-index:60;
+}
+.sb-logo{display:flex;align-items:center;gap:11px;padding:20px 18px 16px;}
+.sb-badge{width:38px;height:38px;border-radius:11px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+.sb-name{font-size:14.5px;font-weight:700;letter-spacing:-.01em;}
+.sb-tag{font-size:11px;color:var(--text-3);margin-top:1px;}
+.sb-nav{flex:1;overflow-y:auto;padding:6px 12px;}
+.sb-group{margin-bottom:6px;}
+.sb-glabel{font-size:10.5px;font-weight:600;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;padding:12px 10px 6px;}
+.sb-item{
+  display:flex;align-items:center;gap:11px;width:100%;border:none;background:transparent;
+  padding:10px 11px;border-radius:var(--r-md);font-size:13.5px;color:var(--text-2);
+  cursor:pointer;text-align:left;font-weight:500;margin-bottom:2px;transition:.13s var(--ease);
+}
+.sb-item i{font-size:19px;flex-shrink:0;}
+.sb-item:hover{background:var(--surface-2);color:var(--text);}
+.sb-item.active{background:var(--navy);color:#fff;box-shadow:var(--sh-1);}
+.sb-item.active i{color:#fff;}
+.sb-count{margin-left:auto;background:var(--coral);color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px;}
+.sb-item.active .sb-count{background:rgba(255,255,255,.25);}
+.sb-foot{padding:12px;border-top:1px solid var(--line);}
+.sb-user{display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--r-md);}
+.sb-user:hover{background:var(--surface-2);}
+.sb-av{width:34px;height:34px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
+.sb-uinfo{flex:1;min-width:0;}
+.sb-uname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-urole{font-size:11px;color:var(--text-3);}
+.sb-logout{border:none;background:transparent;color:var(--text-3);cursor:pointer;font-size:18px;padding:4px;border-radius:8px;}
+.sb-logout:hover{color:var(--coral);background:var(--coral-50);}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+.topbar{
+  position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;
+  padding:14px 24px;background:rgba(244,246,250,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.hamburger{display:none;border:none;background:var(--surface);border:1px solid var(--line);width:38px;height:38px;border-radius:11px;color:var(--text);font-size:20px;cursor:pointer;align-items:center;justify-content:center;}
+.crumb{font-size:13.5px;color:var(--text-3);}
+.crumb b{color:var(--text);font-weight:600;}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.tb-search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:8px 13px;font-size:13px;color:var(--text-3);min-width:200px;cursor:text;}
+.tb-icon{position:relative;width:38px;height:38px;border-radius:11px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--text-2);cursor:pointer;}
+.tb-icon:hover{color:var(--text);}
+.tb-dot{position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--coral);border:1.5px solid var(--surface);}
+.tb-av{width:38px;height:38px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;cursor:pointer;}
+
+.content{padding:24px;max-width:1180px;width:100%;margin:0 auto;}
+.page{display:none;animation:fade .3s var(--ease);}
+.page.show{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+.page-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+.page-title{font-size:22px;font-weight:700;letter-spacing:-.01em;}
+.page-sub{font-size:13.5px;color:var(--text-2);margin-top:4px;}
+.head-actions{margin-left:auto;display:flex;gap:8px;}
+.btn-nav-sm{background:var(--navy);color:#fff;border:none;padding:10px 16px;border-radius:var(--r-md);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.btn-nav-sm:hover{background:var(--navy-700);}
+.btn-out-sm{background:var(--surface);color:var(--text);border:1px solid var(--line-2);padding:10px 15px;border-radius:var(--r-md);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.btn-out-sm:hover{background:var(--surface-2);}
+
+/* generic card */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh-1);}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.card-t{font-size:14px;font-weight:600;}
+.card-a{border:none;background:transparent;color:var(--teal);font-size:12.5px;cursor:pointer;font-weight:600;}
+.card-a:hover{text-decoration:underline;}
+
+/* alert */
+.alert{display:flex;align-items:center;gap:12px;background:var(--gold-50);border:1px solid #ecd7a6;border-radius:var(--r-md);padding:13px 16px;margin-bottom:18px;}
+.alert i{font-size:18px;color:var(--gold);}
+.alert-tx{flex:1;font-size:13px;color:#6b4d12;}
+.alert-tx b{color:#5a3f0c;}
+.alert-btn{background:#fff;border:1px solid #e3c382;color:var(--gold);font-size:12px;font-weight:600;padding:6px 13px;border-radius:20px;cursor:pointer;}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px;}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 17px;box-shadow:var(--sh-1);}
+.kpi-top{display:flex;align-items:center;gap:8px;color:var(--text-2);font-size:12.5px;margin-bottom:10px;}
+.kpi-ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.kpi-val{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1;}
+.kpi-d{font-size:12px;margin-top:7px;display:flex;align-items:center;gap:3px;}
+.up{color:var(--teal);}.dn{color:var(--coral);}
+.kpi-d .neutral{color:var(--text-3);}
+
+.grid-2{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:14px;margin-bottom:14px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+
+.legend{display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;}
+.lg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);}
+.lg .d{width:9px;height:9px;border-radius:3px;}
+
+.mrow{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line);}
+.mrow:last-child{border-bottom:none;}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;}
+.av-32{width:34px;height:34px;font-size:12px;}
+.minfo{flex:1;min-width:0;}
+.mname{font-size:13.5px;font-weight:600;}
+.mmeta{font-size:11.5px;color:var(--text-2);}
+.mbar{height:5px;border-radius:3px;background:var(--surface-3);margin-top:6px;overflow:hidden;}
+.mfill{height:100%;border-radius:3px;}
+.mpct{font-size:13px;font-weight:700;flex-shrink:0;}
+
+.actrow{display:flex;align-items:flex-start;gap:11px;padding:10px 0;border-bottom:1px solid var(--line);}
+.actrow:last-child{border-bottom:none;}
+.act-ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.act-t{font-size:12.5px;line-height:1.45;}
+.act-m{font-size:11px;color:var(--text-3);margin-top:1px;}
+
+.genrow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);}
+.genrow:last-child{border-bottom:none;}
+.gen-n{font-size:13px;font-weight:600;width:34px;}
+.gen-w{flex:1;}
+.gen-bg{height:7px;border-radius:4px;background:var(--surface-3);overflow:hidden;}
+.gen-f{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--navy),var(--intel));}
+.gen-num{font-size:12px;color:var(--text-2);min-width:34px;text-align:right;}
+.stat-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.stat-i{background:var(--surface-2);border-radius:var(--r-md);padding:12px 14px;}
+.stat-n{font-size:20px;font-weight:700;}
+.stat-l{font-size:11.5px;color:var(--text-2);margin-top:2px;}
+.sdot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;}
+
+/* filters */
+.filters{display:flex;align-items:center;gap:9px;margin-bottom:16px;flex-wrap:wrap;}
+.search-inp{flex:1;min-width:180px;padding:10px 14px;border-radius:var(--r-md);border:1px solid var(--line-2);background:var(--surface);font-size:13px;color:var(--text);}
+.search-inp:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px var(--navy-50);}
+.pill{padding:8px 15px;border-radius:20px;font-size:12.5px;border:1px solid var(--line-2);background:var(--surface);color:var(--text-2);cursor:pointer;font-weight:500;transition:.13s var(--ease);}
+.pill:hover{border-color:var(--navy);color:var(--text);}
+.pill.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+/* sessions */
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,360px);gap:14px;align-items:start;}
+.srow{display:flex;align-items:flex-start;gap:13px;padding:13px;border-radius:var(--r-md);cursor:pointer;border:1px solid transparent;transition:.13s var(--ease);}
+.srow:hover{background:var(--surface-2);}
+.srow.sel{background:var(--navy-50);border-color:#cfd9ef;}
+.sdate{width:42px;text-align:center;flex-shrink:0;}
+.sday{font-size:19px;font-weight:700;line-height:1;}
+.smon{font-size:10.5px;color:var(--text-3);}
+.sinfo{flex:1;min-width:0;}
+.stitle{font-size:13.5px;font-weight:600;}
+.smeta{font-size:11.5px;color:var(--text-2);margin-top:2px;}
+.sright{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
+.tag-pill{font-size:10.5px;padding:3px 9px;border-radius:20px;font-weight:600;white-space:nowrap;}
+.t-done{background:var(--green-50);color:var(--teal);}
+.t-up{background:var(--navy-50);color:var(--navy);}
+.t-pend{background:var(--gold-50);color:var(--gold);}
+.t-cancel{background:var(--coral-50);color:var(--coral);}
+.t-rest{background:var(--surface-3);color:var(--text-2);}
+.stime{font-size:11px;color:var(--text-3);}
+
+.detail{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-1);}
+.detail-hd{background:linear-gradient(155deg,#1d2b4f,#2b3f73);padding:18px;color:#fff;}
+.detail-badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.16);margin-bottom:9px;}
+.detail-t{font-size:15.5px;font-weight:700;}
+.detail-m{font-size:12px;color:rgba(255,255,255,.7);margin-top:4px;}
+.detail-b{padding:16px;}
+.det-sec{margin-bottom:14px;}
+.det-st{font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:9px;}
+.prow{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.pname{font-size:13px;font-weight:500;}
+.prole{font-size:11px;color:var(--text-2);}
+.hr{height:1px;background:var(--line);margin:13px 0;}
+.note{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-md);padding:12px;font-size:12.5px;line-height:1.6;color:var(--text);}
+.chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{font-size:11px;padding:4px 11px;border-radius:20px;font-weight:500;}
+.c-intel{background:var(--intel-50);color:var(--intel);}
+.c-body{background:var(--body-50);color:var(--body);}
+.c-spirit{background:var(--spirit-50);color:var(--spirit);}
+.c-social{background:var(--social-50);color:var(--social);}
+.det-actions{display:flex;gap:8px;margin-top:14px;}
+.det-actions .btn-nav-sm,.det-actions .btn-out-sm{flex:1;justify-content:center;}
+
+/* mini calendar */
+.cal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.cal-nav{border:none;background:var(--surface-2);width:30px;height:30px;border-radius:9px;color:var(--text-2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.cal-nav:hover{background:var(--surface-3);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cdow{font-size:10.5px;text-align:center;color:var(--text-3);padding-bottom:6px;font-weight:600;}
+.cday{height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-2);cursor:pointer;position:relative;}
+.cday:hover{background:var(--surface-2);}
+.cday.has{color:var(--text);font-weight:600;}
+.cday.has:not(.today)::after{content:"";position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--green);}
+.cday.today{background:var(--navy);color:#fff;}
+.cday.muted{color:var(--line-2);}
+
+/* coaches */
+.coach-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.coach-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;cursor:pointer;box-shadow:var(--sh-1);transition:.13s var(--ease);}
+.coach-card:hover{transform:translateY(-2px);box-shadow:var(--sh-2);}
+.coach-card.sel{border:2px solid var(--navy);}
+.cc-top{display:flex;align-items:center;gap:11px;margin-bottom:12px;}
+.cc-name{font-size:14.5px;font-weight:600;}
+.cc-role{font-size:11.5px;color:var(--text-2);}
+.cc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:11px;}
+.cc-stat{background:var(--surface-2);border-radius:var(--r-sm);padding:9px 6px;text-align:center;}
+.cc-sv{font-size:15px;font-weight:700;}
+.cc-sl{font-size:10px;color:var(--text-2);margin-top:1px;}
+.cc-bar{height:5px;border-radius:3px;background:var(--surface-3);overflow:hidden;margin-bottom:10px;}
+.cc-fill{height:100%;border-radius:3px;background:var(--green);}
+.cc-foot{display:flex;align-items:center;justify-content:space-between;}
+.cc-date{font-size:11px;color:var(--text-3);}
+.coachee-chip{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r-md);background:var(--surface-2);margin-bottom:7px;}
+.chip-name{font-size:12.5px;flex:1;}
+.chip-bar{width:54px;height:4px;border-radius:2px;background:var(--surface-3);overflow:hidden;}
+.chip-fill{height:100%;border-radius:2px;}
+.chip-pct{font-size:11.5px;font-weight:700;}
+.mini-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px;}
+.mini-kpi{background:var(--surface-2);border-radius:var(--r-md);padding:11px 8px;text-align:center;}
+.mk-v{font-size:17px;font-weight:700;}
+.mk-l{font-size:10px;color:var(--text-2);margin-top:2px;}
+
+/* coachee profile */
+.prof-hero{background:linear-gradient(155deg,#1d2b4f,#2b3f73);border-radius:var(--r-xl);padding:24px;color:#fff;display:flex;align-items:center;gap:22px;margin-bottom:18px;box-shadow:var(--sh-2);}
+.ph-ring{position:relative;width:92px;height:92px;flex-shrink:0;}
+.ph-ring svg{transform:rotate(-90deg);}
+.ph-ring .lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ph-pct{font-size:23px;font-weight:700;line-height:1;}
+.ph-sub{font-size:10.5px;color:rgba(255,255,255,.6);}
+.ph-text{flex:1;min-width:0;}
+.ph-title{font-size:17px;font-weight:700;}
+.ph-desc{font-size:13px;color:rgba(255,255,255,.72);margin-top:6px;line-height:1.55;}
+.ph-days{display:flex;gap:24px;margin-top:14px;}
+.phd-n{font-size:17px;font-weight:700;}
+.phd-l{font-size:10.5px;color:rgba(255,255,255,.55);}
+.prof-card-top{display:flex;align-items:flex-start;gap:16px;}
+.prof-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;}
+.ptag{font-size:11px;padding:4px 11px;border-radius:20px;border:1px solid var(--line-2);color:var(--text-2);}
+.ptag.green{background:var(--green-50);color:var(--teal);border-color:#a7e3cd;}
+.ptag.navy{background:var(--navy-50);color:var(--navy);border-color:#cdd6ec;}
+.prof-stats{margin-left:auto;text-align:right;flex-shrink:0;}
+.badge-active{display:inline-block;font-size:11px;font-weight:600;padding:5px 11px;border-radius:8px;background:var(--green-50);color:var(--teal);}
+.dplus{font-size:11px;color:var(--text-2);margin-top:7px;}
+.dom-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.dom-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;box-shadow:var(--sh-1);}
+.dom-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;}
+.dom-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.dom-pct{font-size:19px;font-weight:700;}
+.dom-name{font-size:12.5px;color:var(--text-2);margin-bottom:8px;}
+.dom-bg{height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden;margin-bottom:9px;}
+.dom-fill{height:100%;border-radius:3px;}
+.dom-goal{font-size:11.5px;color:var(--text-2);}
+.dom-goal b{color:var(--text);}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;}
+.wday{height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-2);background:var(--surface-2);}
+.wday.done{background:var(--green);color:#fff;font-weight:600;}
+.wday.today{background:var(--navy);color:#fff;font-weight:600;}
+.wlabels{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+.wlbl{font-size:10px;text-align:center;color:var(--text-3);}
+.goal-row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line);}
+.goal-row:last-child{border-bottom:none;}
+.gdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.gtext{flex:1;font-size:13px;}
+.gbadge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;}
+.b-done{background:var(--green-50);color:var(--teal);}
+.b-prog{background:var(--gold-50);color:var(--gold);}
+.b-new{background:var(--spirit-50);color:var(--spirit);}
+.prof-sub{display:none;}
+.prof-sub.show{display:block;}
+
+/* empty */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 24px;text-align:center;}
+.empty-ic{width:72px;height:72px;border-radius:20px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--text-3);margin-bottom:16px;}
+.empty-t{font-size:16px;font-weight:600;}
+.empty-d{font-size:13px;color:var(--text-2);margin-top:6px;line-height:1.6;}
+
+.section-label{font-size:12px;font-weight:600;color:var(--text-3);letter-spacing:.05em;text-transform:uppercase;margin:6px 0 11px;}
+
+/* settings */
+.set-row{display:flex;align-items:center;gap:14px;padding:15px 0;border-bottom:1px solid var(--line);}
+.set-row:last-child{border-bottom:none;}
+.set-ic{width:38px;height:38px;border-radius:11px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--navy);flex-shrink:0;}
+.set-info{flex:1;}
+.set-t{font-size:13.5px;font-weight:600;}
+.set-d{font-size:12px;color:var(--text-2);margin-top:1px;}
+.switch{width:44px;height:25px;border-radius:20px;background:var(--surface-3);position:relative;cursor:pointer;flex-shrink:0;transition:.2s;}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:var(--sh-1);transition:.2s var(--ease);}
+.switch.on{background:var(--green);}
+.switch.on::after{left:22px;}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(20,28,48,.45);z-index:55;}
+.overlay.show{display:block;}
+
+/* responsive */
+@media(max-width:1024px){
+  .kpis{grid-template-columns:repeat(2,1fr);}
+  .grid-2,.grid-3,.split,.coach-grid,.dom-grid{grid-template-columns:1fr;}
+}
+@media(max-width:768px){
+  .sidebar{position:fixed;top:0;left:0;transform:translateX(-100%);box-shadow:var(--sh-3);}
+  .sidebar.open{transform:translateX(0);}
+  .hamburger{display:flex;}
+  .tb-search{display:none;}
+  .content{padding:16px;}
+  .auth-card{grid-template-columns:1fr;max-width:440px;}
+  .auth-hero{display:none;}
+  .auth-form{padding:34px 26px;}
+  .ph-days{gap:16px;}
+}
+@media(max-width:480px){
+  .kpis{grid-template-columns:1fr;}
+  .ob-row{grid-template-columns:1fr;}
+  .domain-pick,.welcome-cards{grid-template-columns:1fr;}
+  .prof-hero{flex-direction:column;text-align:center;align-items:center;}
+  .prof-card-top{flex-direction:column;}
+  .prof-stats{margin-left:0;text-align:left;align-self:flex-start;}
+  .page-title{font-size:19px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================ ENTRY (Login + Onboarding) ============================ -->
+<div id="entry">
+
+  <!-- LOGIN -->
+  <div class="auth-card" id="loginCard">
+    <div class="auth-hero">
+      <div class="brand">
+        <div class="brand-badge">GO</div>
+        <div>
+          <div class="brand-name">GOThriveCoaching</div>
+          <div class="brand-tag">삶의 4대 영역 코칭 플랫폼</div>
+        </div>
+      </div>
+      <div class="hero-body">
+        <div class="hero-h">삶의 색깔을<br>함께 그려갑니다</div>
+        <div class="hero-p">지성 · 신체 · 영성 · 사회 네 영역에서<br>코치와 함께 연간 100% 달성을 향해.</div>
+        <div class="hero-feats">
+          <div class="hero-feat"><span class="fi"><i class="ti ti-chart-line"></i></span> 실시간 달성률 시각화</div>
+          <div class="hero-feat"><span class="fi"><i class="ti ti-users"></i></span> 1:1 맞춤 코칭 세션</div>
+          <div class="hero-feat"><span class="fi"><i class="ti ti-circle-check"></i></span> 일일 점검 &amp; 목표 관리</div>
+        </div>
+        <div class="hero-dots"><span class="hero-dot on"></span><span class="hero-dot"></span><span class="hero-dot"></span></div>
+      </div>
+    </div>
+    <div class="auth-form">
+      <div class="af-title">다시 오셨군요</div>
+      <div class="af-sub">이메일과 비밀번호로 로그인하세요</div>
+      <div class="field">
+        <label><i class="ti ti-mail" style="font-size:13px;vertical-align:-2px"></i> 이메일</label>
+        <input class="input" type="email" value="changwhan@gothrive.org">
+      </div>
+      <div class="field" style="margin-bottom:6px">
+        <label><i class="ti ti-lock" style="font-size:13px;vertical-align:-2px"></i> 비밀번호</label>
+        <div class="input-wrap">
+          <input class="input" id="pw" type="password" value="gothrive123">
+          <span class="input-icon" id="pwToggle"><i class="ti ti-eye"></i></span>
+        </div>
+        <div class="forgot">비밀번호를 잊으셨나요?</div>
+      </div>
+      <button class="btn btn-primary" onclick="enterApp('dashboard')">로그인</button>
+      <div class="auth-divider"><span class="ln"></span><span>또는 역할로 입장</span><span class="ln"></span></div>
+      <div class="role-grid">
+        <button class="role-chip" onclick="enterApp('profile')"><span class="ri" style="background:var(--green-50);color:var(--teal)"><i class="ti ti-user"></i></span> 코치이로 입장</button>
+        <button class="role-chip" onclick="enterApp('sessions')"><span class="ri" style="background:var(--navy-50);color:var(--navy)"><i class="ti ti-user-check"></i></span> 코치로 입장</button>
+        <button class="role-chip" onclick="enterApp('coaches')"><span class="ri" style="background:var(--spirit-50);color:var(--spirit)"><i class="ti ti-users"></i></span> 코치메이커</button>
+        <button class="role-chip" onclick="enterApp('dashboard')"><span class="ri" style="background:var(--coral-50);color:var(--coral)"><i class="ti ti-shield-check"></i></span> 관리자</button>
+      </div>
+      <div class="auth-foot">처음 오셨나요? <a onclick="showOnboarding()">온보딩 둘러보기</a></div>
+    </div>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div id="onboarding" class="hidden">
+    <div class="ob-card">
+      <div class="ob-head">
+        <div class="ob-steps">
+          <div class="ob-dot" id="d1">1</div>
+          <div class="ob-ln" id="l1"></div>
+          <div class="ob-dot idle" id="d2">2</div>
+          <div class="ob-ln" id="l2"></div>
+          <div class="ob-dot idle" id="d3">3</div>
+        </div>
+        <div class="ob-steplabels">
+          <span class="ob-sl active" id="sl1">프로필</span>
+          <span class="ob-sl" id="sl2">목표 설정</span>
+          <span class="ob-sl" id="sl3">코치 배정</span>
+        </div>
+        <div class="ob-title" id="obTitle">기본 정보를 입력해 주세요</div>
+        <div class="ob-sub" id="obSub">코칭 여정을 시작하기 위한 첫 단계입니다</div>
+      </div>
+
+      <!-- step 1 -->
+      <div class="ob-body" id="obStep1">
+        <div class="ob-row">
+          <div class="ob-field"><label>이름</label><input class="input" value="김민준"></div>
+          <div class="ob-field"><label>소속 기수</label>
+            <select class="input"><option>2기 (2024년 3월)</option><option>3기 (2024년 9월)</option><option>4기 (2025년 3월)</option></select>
+          </div>
+        </div>
+        <div class="ob-row">
+          <div class="ob-field"><label>거주 지역</label><input class="input" value="치앙라이, 태국"></div>
+          <div class="ob-field"><label>소속 노회</label>
+            <select class="input"><option>CCT 22노회</option><option>CCT 23노회</option><option>기타</option></select>
+          </div>
+        </div>
+        <div class="ob-field"><label>한 줄 소개 (선택)</label><input class="input" value="말씀과 함께 성장하고 싶은 선교사입니다"></div>
+      </div>
+
+      <!-- step 2 -->
+      <div class="ob-body hidden" id="obStep2">
+        <div class="domain-pick">
+          <button class="dpick picked" onclick="this.classList.toggle('picked')"><span class="dpi" style="background:var(--intel-50);color:var(--intel)"><i class="ti ti-brain"></i></span><div><div class="dpn">지성</div><div class="dpd">독서·학습·사고력</div></div></button>
+          <button class="dpick picked" onclick="this.classList.toggle('picked')"><span class="dpi" style="background:var(--body-50);color:var(--body)"><i class="ti ti-run"></i></span><div><div class="dpn">신체</div><div class="dpd">운동·건강·식단</div></div></button>
+          <button class="dpick picked" onclick="this.classList.toggle('picked')"><span class="dpi" style="background:var(--spirit-50);color:var(--spirit)"><i class="ti ti-heart"></i></span><div><div class="dpn">영성</div><div class="dpd">QT·기도·말씀</div></div></button>
+          <button class="dpick picked" onclick="this.classList.toggle('picked')"><span class="dpi" style="background:var(--social-50);color:var(--social)"><i class="ti ti-users"></i></span><div><div class="dpn">사회</div><div class="dpd">관계·섬김·공동체</div></div></button>
+        </div>
+        <div class="ob-field"><label>올해 가장 중점을 두고 싶은 영역</label>
+          <select class="input"><option>영성 (QT·기도·말씀)</option><option>지성 (독서·학습)</option><option>신체 (운동·건강)</option><option>사회 (관계·공동체)</option></select>
+        </div>
+        <div class="ob-field"><label>연간 목표 한 줄 선언</label><input class="input" value="4개 영역 고르게 성장하여 하나님께 영광을 돌리겠습니다"></div>
+      </div>
+
+      <!-- step 3 -->
+      <div class="ob-welcome hidden" id="obStep3">
+        <div class="welcome-ring"><i class="ti ti-check"></i></div>
+        <div class="welcome-t">김민준님, 환영합니다!</div>
+        <div class="welcome-d">담당 코치 <b style="color:var(--text)">이수진</b> 코치님과<br>함께하는 코칭 여정이 시작됩니다.</div>
+        <div class="welcome-cards">
+          <div class="wc"><i class="ti ti-calendar-check"></i><div class="wc-t">첫 세션</div><div class="wc-d">7일 이내 진행</div></div>
+          <div class="wc"><i class="ti ti-circle-check"></i><div class="wc-t">일일 점검</div><div class="wc-d">4개 영역 체크인</div></div>
+          <div class="wc"><i class="ti ti-chart-bar"></i><div class="wc-t">목표 추적</div><div class="wc-d">실시간 달성률</div></div>
+        </div>
+        <button class="btn btn-primary" onclick="enterApp('profile')">대시보드 시작하기 ↗</button>
+      </div>
+
+      <div class="ob-foot" id="obFoot">
+        <button class="btn-ghost" id="obBack" onclick="obNav(-1)" disabled>이전</button>
+        <button class="btn-next" id="obNext" onclick="obNav(1)">다음 단계 <i class="ti ti-arrow-right" style="font-size:14px"></i></button>
+      </div>
+    </div>
+    <div class="auth-foot" style="margin-top:16px"><a onclick="showLogin()" style="color:rgba(91,100,120,1)">← 로그인으로 돌아가기</a></div>
+  </div>
+
+</div>
+
+<!-- ============================ APP ============================ -->
+<div id="app">
+<div class="shell">
+  <div class="overlay" id="overlay" onclick="toggleSidebar(false)"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-badge">GO</div>
+      <div><div class="sb-name">GOThriveCoaching</div><div class="sb-tag">삶의 4대 영역 코칭</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-group">
+        <div class="sb-glabel">메인</div>
+        <button class="sb-item active" data-page="dashboard" onclick="nav('dashboard','대시보드')"><i class="ti ti-layout-dashboard"></i> 대시보드</button>
+        <button class="sb-item" data-page="profile" onclick="nav('profile','내 프로필')"><i class="ti ti-user"></i> 내 프로필</button>
+      </div>
+      <div class="sb-group">
+        <div class="sb-glabel">코칭</div>
+        <button class="sb-item" data-page="sessions" onclick="nav('sessions','세션 관리')"><i class="ti ti-calendar"></i> 세션 관리 <span class="sb-count">3</span></button>
+        <button class="sb-item" data-page="coaches" onclick="nav('coaches','코치 관리')"><i class="ti ti-users"></i> 코치 관리</button>
+        <button class="sb-item" data-page="goals" onclick="nav('goals','목표 & 점검')"><i class="ti ti-target"></i> 목표 &amp; 점검</button>
+      </div>
+      <div class="sb-group">
+        <div class="sb-glabel">관리</div>
+        <button class="sb-item" data-page="reports" onclick="nav('reports','리포트')"><i class="ti ti-chart-bar"></i> 리포트</button>
+        <button class="sb-item" data-page="settings" onclick="nav('settings','설정')"><i class="ti ti-settings"></i> 설정</button>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-user">
+        <div class="sb-av">최창</div>
+        <div class="sb-uinfo"><div class="sb-uname">최창환</div><div class="sb-urole">관리자 · 코치메이커</div></div>
+        <button class="sb-logout" title="로그아웃" onclick="logout()"><i class="ti ti-logout"></i></button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <button class="hamburger" onclick="toggleSidebar(true)"><i class="ti ti-menu-2"></i></button>
+      <div class="crumb">GOThriveCoaching / <b id="crumb">대시보드</b></div>
+      <div class="tb-right">
+        <div class="tb-search"><i class="ti ti-search" style="font-size:15px"></i> 검색...</div>
+        <div class="tb-icon"><i class="ti ti-bell"></i><span class="tb-dot"></span></div>
+        <div class="tb-av">최</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ===== DASHBOARD ===== -->
+      <section class="page show" id="page-dashboard">
+        <div class="page-head">
+          <div>
+            <div class="page-title">안녕하세요, 최창환 목사님 👋</div>
+            <div class="page-sub">오늘 3개의 새 세션 요청이 있습니다 · 2025년 6월 19일</div>
+          </div>
+          <div class="head-actions">
+            <button class="btn-nav-sm"><i class="ti ti-plus" style="font-size:15px"></i> 코치이 등록</button>
+          </div>
+        </div>
+
+        <div class="alert">
+          <i class="ti ti-alert-triangle"></i>
+          <div class="alert-tx">영성 영역 달성률이 60% 미만인 코치이가 <b>5명</b> 있습니다. 코치 배정을 검토해 보세요.</div>
+          <button class="alert-btn">확인하기</button>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><div class="kpi-top"><span class="kpi-ic" style="background:var(--navy-50);color:var(--navy)"><i class="ti ti-users"></i></span> 전체 코치이</div><div class="kpi-val">47</div><div class="kpi-d up"><i class="ti ti-trending-up" style="font-size:13px"></i> 지난달 +3명</div></div>
+          <div class="kpi"><div class="kpi-top"><span class="kpi-ic" style="background:var(--green-50);color:var(--teal)"><i class="ti ti-user-check"></i></span> 활성 코치</div><div class="kpi-val">12</div><div class="kpi-d up"><i class="ti ti-trending-up" style="font-size:13px"></i> 신규 +2명</div></div>
+          <div class="kpi"><div class="kpi-top"><span class="kpi-ic" style="background:var(--spirit-50);color:var(--spirit)"><i class="ti ti-chart-pie"></i></span> 평균 달성률</div><div class="kpi-val">68%</div><div class="kpi-d up"><i class="ti ti-trending-up" style="font-size:13px"></i> +4%</div></div>
+          <div class="kpi"><div class="kpi-top"><span class="kpi-ic" style="background:var(--gold-50);color:var(--gold)"><i class="ti ti-calendar"></i></span> 이번 달 세션</div><div class="kpi-val">38</div><div class="kpi-d dn"><i class="ti ti-trending-down" style="font-size:13px"></i> -2건</div></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-hd"><span class="card-t">월별 코치이 달성률 추이</span><button class="card-a">상세 보기</button></div>
+            <div class="legend">
+              <div class="lg"><span class="d" style="background:var(--intel)"></span>지성</div>
+              <div class="lg"><span class="d" style="background:var(--green)"></span>신체</div>
+              <div class="lg"><span class="d" style="background:var(--spirit)"></span>영성</div>
+              <div class="lg"><span class="d" style="background:var(--coral)"></span>사회</div>
+            </div>
+            <div style="position:relative;height:200px"><canvas id="trendChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><span class="card-t">기수별 현황</span><button class="card-a">전체</button></div>
+            <div class="genrow"><span class="gen-n">1기</span><div class="gen-w"><div class="gen-bg"><div class="gen-f" style="width:88%"></div></div></div><span class="gen-num">11명</span></div>
+            <div class="genrow"><span class="gen-n">2기</span><div class="gen-w"><div class="gen-bg"><div class="gen-f" style="width:72%"></div></div></div><span class="gen-num">18명</span></div>
+            <div class="genrow"><span class="gen-n">3기</span><div class="gen-w"><div class="gen-bg"><div class="gen-f" style="width:40%"></div></div></div><span class="gen-num">10명</span></div>
+            <div class="genrow"><span class="gen-n">4기</span><div class="gen-w"><div class="gen-bg"><div class="gen-f" style="width:20%"></div></div></div><span class="gen-num">8명</span></div>
+            <div class="stat-2">
+              <div class="stat-i"><div class="stat-n">3</div><div class="stat-l"><span class="sdot" style="background:var(--green)"></span>진행 중 기수</div></div>
+              <div class="stat-i"><div class="stat-n">5</div><div class="stat-l"><span class="sdot" style="background:var(--coral)"></span>관리 필요</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-hd"><span class="card-t">상위 달성 코치이</span><button class="card-a">전체</button></div>
+            <div class="mrow"><div class="av av-32" style="background:var(--navy-50);color:var(--navy)">김민</div><div class="minfo"><div class="mname">김민준</div><div class="mmeta">2기 · 이수진 코치</div><div class="mbar"><div class="mfill" style="width:82%;background:var(--green)"></div></div></div><span class="mpct" style="color:var(--teal)">82%</span></div>
+            <div class="mrow"><div class="av av-32" style="background:var(--spirit-50);color:var(--spirit)">박서</div><div class="minfo"><div class="mname">박서연</div><div class="mmeta">1기 · 강현우 코치</div><div class="mbar"><div class="mfill" style="width:78%;background:var(--green)"></div></div></div><span class="mpct" style="color:var(--teal)">78%</span></div>
+            <div class="mrow"><div class="av av-32" style="background:var(--coral-50);color:var(--coral)">이준</div><div class="minfo"><div class="mname">이준혁</div><div class="mmeta">2기 · 이수진 코치</div><div class="mbar"><div class="mfill" style="width:74%;background:var(--green)"></div></div></div><span class="mpct" style="color:var(--teal)">74%</span></div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><span class="card-t">집중 관리 필요</span><button class="card-a">전체 ↗</button></div>
+            <div class="mrow"><div class="av av-32" style="background:var(--gold-50);color:var(--gold)">정하</div><div class="minfo"><div class="mname">정하은</div><div class="mmeta">3기 · 영성 38%</div><div class="mbar"><div class="mfill" style="width:38%;background:var(--coral)"></div></div></div><span class="mpct" style="color:var(--coral)">38%</span></div>
+            <div class="mrow"><div class="av av-32" style="background:var(--gold-50);color:var(--gold)">최동</div><div class="minfo"><div class="mname">최동훈</div><div class="mmeta">3기 · 신체 41%</div><div class="mbar"><div class="mfill" style="width:41%;background:var(--coral)"></div></div></div><span class="mpct" style="color:var(--coral)">41%</span></div>
+            <div class="mrow"><div class="av av-32" style="background:var(--gold-50);color:var(--gold)">한수</div><div class="minfo"><div class="mname">한수진</div><div class="mmeta">4기 · 사회 32%</div><div class="mbar"><div class="mfill" style="width:32%;background:var(--coral)"></div></div></div><span class="mpct" style="color:var(--coral)">32%</span></div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><span class="card-t">최근 활동</span></div>
+            <div class="actrow"><div class="act-ic" style="background:var(--green-50);color:var(--teal)"><i class="ti ti-check"></i></div><div><div class="act-t">김민준 오늘 일일 점검 완료</div><div class="act-m">10분 전</div></div></div>
+            <div class="actrow"><div class="act-ic" style="background:var(--navy-50);color:var(--navy)"><i class="ti ti-calendar"></i></div><div><div class="act-t">박서연 세션 일정 등록</div><div class="act-m">32분 전</div></div></div>
+            <div class="actrow"><div class="act-ic" style="background:var(--coral-50);color:var(--coral)"><i class="ti ti-alert-circle"></i></div><div><div class="act-t">정하은 3일 연속 점검 미완료</div><div class="act-m">2시간 전</div></div></div>
+            <div class="actrow"><div class="act-ic" style="background:var(--spirit-50);color:var(--spirit)"><i class="ti ti-user-plus"></i></div><div><div class="act-t">4기 신규 코치이 윤재원 등록</div><div class="act-m">어제 오후 4:12</div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SESSIONS ===== -->
+      <section class="page" id="page-sessions">
+        <div class="page-head">
+          <div><div class="page-title">세션 관리</div><div class="page-sub">이번 달 22건 완료 · 8건 예정</div></div>
+          <div class="head-actions">
+            <button class="btn-out-sm"><i class="ti ti-download" style="font-size:15px"></i> 내보내기</button>
+            <button class="btn-nav-sm"><i class="ti ti-plus" style="font-size:15px"></i> 세션 등록</button>
+          </div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="kpi-top"><span class="kpi-ic" style="background:var(--green-50);color:var(--teal)"><i class="ti ti-calendar-check"></i></span> 이번 달 완료</div><div class="kpi-val">22</div><div class="kpi-d"><span class="neutral">목표 30건 중</span></div></div>
+          <div class="kpi"><div class="kpi-top"><span class="kpi-ic" style="background:var(--navy-50);color:var(--navy)"><i class="ti ti-clock"></i></span> 예정 세션</div><div class="kpi-val">8</div><div class="kpi-d"><span class="neutral">이번 주 3건 포함</span></div></div>
+          <div class="kpi"><div class="kpi-top"><span class="kpi-ic" style="background:var(--gold-50);color:var(--gold)"><i class="ti ti-alert-circle"></i></span> 확인 대기</div><div class="kpi-val">3</div><div class="kpi-d" style="color:var(--gold)">코치이 미확인</div></div>
+          <div class="kpi"><div class="kpi-top"><span class="kpi-ic" style="background:var(--coral-50);color:var(--coral)"><i class="ti ti-x"></i></span> 취소 / 변경</div><div class="kpi-val">2</div><div class="kpi-d"><span class="neutral">이번 달 누계</span></div></div>
+        </div>
+        <div class="filters">
+          <input class="search-inp" id="sessSearch" placeholder="코치이·코치 이름으로 검색..." oninput="filterSessions()">
+          <button class="pill active" data-f="all" onclick="setSessFilter(this)">전체</button>
+          <button class="pill" data-f="up" onclick="setSessFilter(this)">예정</button>
+          <button class="pill" data-f="done" onclick="setSessFilter(this)">완료</button>
+          <button class="pill" data-f="pend" onclick="setSessFilter(this)">대기 중</button>
+          <button class="pill" data-f="cancel" onclick="setSessFilter(this)">취소</button>
+        </div>
+        <div class="split">
+          <div class="card">
+            <div class="card-hd"><span class="card-t">6월 세션 목록</span><span class="card-a" id="sessCount">7건</span></div>
+            <div id="sessList"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="cal-hd"><span class="card-t">2025년 6월</span><div style="display:flex;gap:4px"><button class="cal-nav"><i class="ti ti-chevron-left"></i></button><button class="cal-nav"><i class="ti ti-chevron-right"></i></button></div></div>
+              <div class="cal-grid">
+                <div class="cdow">일</div><div class="cdow">월</div><div class="cdow">화</div><div class="cdow">수</div><div class="cdow">목</div><div class="cdow">금</div><div class="cdow">토</div>
+                <div class="cday muted">1</div><div class="cday muted">2</div><div class="cday muted">3</div><div class="cday muted">4</div><div class="cday muted">5</div><div class="cday muted">6</div><div class="cday muted">7</div>
+                <div class="cday">1</div><div class="cday">2</div><div class="cday">3</div><div class="cday">4</div><div class="cday">5</div><div class="cday">6</div><div class="cday">7</div>
+                <div class="cday">8</div><div class="cday">9</div><div class="cday has">10</div><div class="cday">11</div><div class="cday">12</div><div class="cday has">13</div><div class="cday">14</div>
+                <div class="cday has">15</div><div class="cday">16</div><div class="cday has">17</div><div class="cday has">18</div><div class="cday today">19</div><div class="cday">20</div><div class="cday">21</div>
+                <div class="cday has">22</div><div class="cday">23</div><div class="cday">24</div><div class="cday">25</div><div class="cday has">26</div><div class="cday">27</div><div class="cday">28</div>
+                <div class="cday">29</div><div class="cday">30</div>
+              </div>
+            </div>
+            <div class="detail" id="sessDetail"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== COACHES ===== -->
+      <section class="page" id="page-coaches">
+        <div class="page-head">
+          <div><div class="page-title">코치 관리</div><div class="page-sub">전체 12명 · 활성 9명 · 평균 달성률 71%</div></div>
+          <div class="head-actions">
+            <button class="btn-out-sm"><i class="ti ti-chart-bar" style="font-size:15px"></i> 성과 리포트</button>
+            <button class="btn-nav-sm"><i class="ti ti-plus" style="font-size:15px"></i> 코치 등록</button>
+          </div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="kpi-top"><span class="kpi-ic" style="background:var(--navy-50);color:var(--navy)"><i class="ti ti-user-check"></i></span> 전체 코치</div><div class="kpi-val">12</div><div class="kpi-d"><span class="neutral">활성 9 · 휴식 3</span></div></div>
+          <div class="kpi"><div class="kpi-top"><span class="kpi-ic" style="background:var(--green-50);color:var(--teal)"><i class="ti ti-users"></i></span> 코치당 평균</div><div class="kpi-val">3.9</div><div class="kpi-d"><span class="neutral">최대 담당 6명</span></div></div>
+          <div class="kpi"><div class="kpi-top"><span class="kpi-ic" style="background:var(--gold-50);color:var(--gold)"><i class="ti ti-star"></i></span> 평균 달성률</div><div class="kpi-val">71%</div><div class="kpi-d up"><i class="ti ti-trending-up" style="font-size:13px"></i> +3%</div></div>
+          <div class="kpi"><div class="kpi-top"><span class="kpi-ic" style="background:var(--spirit-50);color:var(--spirit)"><i class="ti ti-calendar"></i></span> 이번 달 세션</div><div class="kpi-val">38</div><div class="kpi-d"><span class="neutral">코치당 평균 3.2건</span></div></div>
+        </div>
+        <div class="filters">
+          <button class="pill active" onclick="pillToggle(this)">전체</button>
+          <button class="pill" onclick="pillToggle(this)">활성</button>
+          <button class="pill" onclick="pillToggle(this)">휴식 중</button>
+          <button class="pill" onclick="pillToggle(this)">달성률 높은 순</button>
+          <button class="pill" onclick="pillToggle(this)">담당 많은 순</button>
+        </div>
+        <div class="split">
+          <div class="coach-grid" id="coachGrid"></div>
+          <div class="detail" id="coachDetail"></div>
+        </div>
+      </section>
+
+      <!-- ===== PROFILE (coachee) ===== -->
+      <section class="page" id="page-profile">
+        <div class="page-head">
+          <div><div class="page-title">내 프로필</div><div class="page-sub">코치이 진행 현황 및 달성률</div></div>
+          <div class="head-actions filters" style="margin-bottom:0">
+            <button class="pill active" data-sub="status" onclick="profSub(this)">현황</button>
+            <button class="pill" data-sub="goals" onclick="profSub(this)">목표</button>
+            <button class="pill" data-sub="record" onclick="profSub(this)">기록</button>
+          </div>
+        </div>
+
+        <!-- sub: status -->
+        <div class="prof-sub show" id="prof-status">
+          <div class="card" style="margin-bottom:18px">
+            <div class="prof-card-top">
+              <div class="av" style="width:56px;height:56px;font-size:18px;background:var(--navy);color:#fff">김민</div>
+              <div>
+                <div class="ph-title" style="color:var(--text)">김민준</div>
+                <div class="page-sub" style="margin-top:2px">코치이 · 2기 · 2024년 3월 입과</div>
+                <div class="prof-tags">
+                  <span class="ptag green"><i class="ti ti-user" style="font-size:11px;vertical-align:-1px"></i> 코치: 이수진</span>
+                  <span class="ptag navy">22노회 소속</span>
+                  <span class="ptag">치앙라이</span>
+                </div>
+              </div>
+              <div class="prof-stats"><span class="badge-active">활성 진행 중</span><div class="dplus">D+127 진행일</div></div>
+            </div>
+          </div>
+
+          <div class="prof-hero">
+            <div class="ph-ring">
+              <svg width="92" height="92" viewBox="0 0 92 92">
+                <circle cx="46" cy="46" r="38" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="8"/>
+                <circle cx="46" cy="46" r="38" fill="none" stroke="#5fe0b0" stroke-width="8" stroke-dasharray="238.8" stroke-dashoffset="71.6" stroke-linecap="round"/>
+              </svg>
+              <div class="lbl"><span class="ph-pct">70%</span><span class="ph-sub">달성률</span></div>
+            </div>
+            <div class="ph-text">
+              <div class="ph-title">연간 목표 달성 현황</div>
+              <div class="ph-desc">4개 삶의 영역에서 꾸준히 성장하고 있어요. 영성 영역을 조금 더 집중해 보세요.</div>
+              <div class="ph-days">
+                <div><div class="phd-n">89</div><div class="phd-l">연속 점검일</div></div>
+                <div><div class="phd-n">14</div><div class="phd-l">남은 세션</div></div>
+                <div><div class="phd-n">238</div><div class="phd-l">남은 일수</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-label">삶의 4대 영역</div>
+          <div class="dom-grid">
+            <div class="dom-card"><div class="dom-hd"><div class="dom-ic" style="background:var(--intel-50);color:var(--intel)"><i class="ti ti-brain"></i></div><span class="dom-pct">82%</span></div><div class="dom-name">지성 영역</div><div class="dom-bg"><div class="dom-fill" style="width:82%;background:var(--intel)"></div></div><div class="dom-goal">목표: <b>독서 24권</b> · 달성 20권</div></div>
+            <div class="dom-card"><div class="dom-hd"><div class="dom-ic" style="background:var(--body-50);color:var(--body)"><i class="ti ti-run"></i></div><span class="dom-pct">75%</span></div><div class="dom-name">신체 영역</div><div class="dom-bg"><div class="dom-fill" style="width:75%;background:var(--body)"></div></div><div class="dom-goal">목표: <b>운동 150회</b> · 달성 113회</div></div>
+            <div class="dom-card"><div class="dom-hd"><div class="dom-ic" style="background:var(--spirit-50);color:var(--spirit)"><i class="ti ti-heart"></i></div><span class="dom-pct">58%</span></div><div class="dom-name">영성 영역</div><div class="dom-bg"><div class="dom-fill" style="width:58%;background:var(--spirit)"></div></div><div class="dom-goal">목표: <b>QT 300일</b> · 달성 174일</div></div>
+            <div class="dom-card"><div class="dom-hd"><div class="dom-ic" style="background:var(--social-50);color:var(--social)"><i class="ti ti-users"></i></div><span class="dom-pct">64%</span></div><div class="dom-name">사회 영역</div><div class="dom-bg"><div class="dom-fill" style="width:64%;background:var(--social)"></div></div><div class="dom-goal">목표: <b>관계 기록 50건</b> · 달성 32건</div></div>
+          </div>
+        </div>
+
+        <!-- sub: goals -->
+        <div class="prof-sub" id="prof-goals">
+          <div class="card">
+            <div class="card-hd"><span class="card-t">이번 달 핵심 목표</span><button class="card-a"><i class="ti ti-plus" style="font-size:13px"></i> 목표 추가</button></div>
+            <div class="goal-row"><span class="gdot" style="background:var(--green)"></span><span class="gtext">성경 마태복음 완독</span><span class="gbadge b-done">완료</span></div>
+            <div class="goal-row"><span class="gdot" style="background:var(--gold)"></span><span class="gtext">주 4회 조깅 30분 이상</span><span class="gbadge b-prog">진행 중 · 3/4</span></div>
+            <div class="goal-row"><span class="gdot" style="background:var(--spirit)"></span><span class="gtext">독서 『탁월한 사유의 시선』 완독</span><span class="gbadge b-prog">진행 중 · 70%</span></div>
+            <div class="goal-row"><span class="gdot" style="background:var(--teal)"></span><span class="gtext">가족 식사 감사 일기 30일 기록</span><span class="gbadge b-new">시작 전</span></div>
+          </div>
+        </div>
+
+        <!-- sub: record -->
+        <div class="prof-sub" id="prof-record">
+          <div class="card">
+            <div class="card-hd"><span class="card-t">이번 주 일일 점검</span></div>
+            <div class="week-grid">
+              <div class="wday done">✓</div><div class="wday done">✓</div><div class="wday done">✓</div><div class="wday"></div><div class="wday done">✓</div><div class="wday today">오늘</div><div class="wday"></div>
+            </div>
+            <div class="wlabels"><div class="wlbl">월</div><div class="wlbl">화</div><div class="wlbl">수</div><div class="wlbl">목</div><div class="wlbl">금</div><div class="wlbl">토</div><div class="wlbl">일</div></div>
+            <div class="hr"></div>
+            <div class="det-actions">
+              <button class="btn-nav-sm" style="flex:1;justify-content:center"><i class="ti ti-check"></i> 오늘 점검 기록</button>
+              <button class="btn-out-sm" style="flex:1;justify-content:center"><i class="ti ti-send"></i> 코치에게 공유</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== GOALS ===== -->
+      <section class="page" id="page-goals">
+        <div class="page-head"><div><div class="page-title">목표 &amp; 점검</div><div class="page-sub">연간 목표 설정 및 4대 영역 일일 점검</div></div></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-hd"><span class="card-t">연간 목표 진행률</span><button class="card-a">목표 편집</button></div>
+            <div class="dom-grid" style="grid-template-columns:1fr 1fr">
+              <div class="dom-card" style="box-shadow:none;background:var(--surface-2)"><div class="dom-hd"><div class="dom-ic" style="background:var(--intel-50);color:var(--intel)"><i class="ti ti-brain"></i></div><span class="dom-pct">82%</span></div><div class="dom-name">지성</div><div class="dom-bg"><div class="dom-fill" style="width:82%;background:var(--intel)"></div></div></div>
+              <div class="dom-card" style="box-shadow:none;background:var(--surface-2)"><div class="dom-hd"><div class="dom-ic" style="background:var(--body-50);color:var(--body)"><i class="ti ti-run"></i></div><span class="dom-pct">75%</span></div><div class="dom-name">신체</div><div class="dom-bg"><div class="dom-fill" style="width:75%;background:var(--body)"></div></div></div>
+              <div class="dom-card" style="box-shadow:none;background:var(--surface-2)"><div class="dom-hd"><div class="dom-ic" style="background:var(--spirit-50);color:var(--spirit)"><i class="ti ti-heart"></i></div><span class="dom-pct">58%</span></div><div class="dom-name">영성</div><div class="dom-bg"><div class="dom-fill" style="width:58%;background:var(--spirit)"></div></div></div>
+              <div class="dom-card" style="box-shadow:none;background:var(--surface-2)"><div class="dom-hd"><div class="dom-ic" style="background:var(--social-50);color:var(--social)"><i class="ti ti-users"></i></div><span class="dom-pct">64%</span></div><div class="dom-name">사회</div><div class="dom-bg"><div class="dom-fill" style="width:64%;background:var(--social)"></div></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><span class="card-t">이번 달 핵심 목표</span></div>
+            <div class="goal-row"><span class="gdot" style="background:var(--green)"></span><span class="gtext">성경 마태복음 완독</span><span class="gbadge b-done">완료</span></div>
+            <div class="goal-row"><span class="gdot" style="background:var(--gold)"></span><span class="gtext">주 4회 조깅</span><span class="gbadge b-prog">3/4</span></div>
+            <div class="goal-row"><span class="gdot" style="background:var(--spirit)"></span><span class="gtext">『탁월한 사유의 시선』 완독</span><span class="gbadge b-prog">70%</span></div>
+            <div class="goal-row"><span class="gdot" style="background:var(--teal)"></span><span class="gtext">감사 일기 30일</span><span class="gbadge b-new">시작 전</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== REPORTS ===== -->
+      <section class="page" id="page-reports">
+        <div class="page-head">
+          <div><div class="page-title">리포트</div><div class="page-sub">성과 분석 및 통계</div></div>
+          <div class="head-actions"><button class="btn-out-sm"><i class="ti ti-download" style="font-size:15px"></i> PDF 내보내기</button></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-hd"><span class="card-t">기수별 평균 달성률</span></div>
+            <div style="position:relative;height:220px"><canvas id="reportChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-hd"><span class="card-t">영역별 평균 (전체 코치이)</span></div>
+            <div style="position:relative;height:220px"><canvas id="domainChart"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SETTINGS ===== -->
+      <section class="page" id="page-settings">
+        <div class="page-head"><div><div class="page-title">설정</div><div class="page-sub">계정 · 알림 · 언어</div></div></div>
+        <div class="card">
+          <div class="set-row"><div class="set-ic"><i class="ti ti-user"></i></div><div class="set-info"><div class="set-t">프로필 정보</div><div class="set-d">최창환 · changwhan@gothrive.org</div></div><button class="btn-out-sm">수정</button></div>
+          <div class="set-row"><div class="set-ic"><i class="ti ti-bell"></i></div><div class="set-info"><div class="set-t">세션 알림</div><div class="set-d">예정 세션 24시간 전 알림</div></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="set-row"><div class="set-ic"><i class="ti ti-mail"></i></div><div class="set-info"><div class="set-t">이메일 리포트</div><div class="set-d">주간 달성률 요약 발송</div></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="set-row"><div class="set-ic"><i class="ti ti-alert-circle"></i></div><div class="set-info"><div class="set-t">관리 필요 알림</div><div class="set-d">달성률 60% 미만 코치이 자동 알림</div></div><div class="switch" onclick="this.classList.toggle('on')"></div></div>
+          <div class="set-row"><div class="set-ic"><i class="ti ti-language"></i></div><div class="set-info"><div class="set-t">언어</div><div class="set-d">한국어 (Korean)</div></div><button class="btn-out-sm">변경</button></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+/* ---------- ENTRY ---------- */
+document.getElementById('pwToggle').addEventListener('click',function(){
+  var i=document.getElementById('pw');
+  var on=i.type==='password';
+  i.type=on?'text':'password';
+  this.innerHTML='<i class="ti '+(on?'ti-eye-off':'ti-eye')+'"></i>';
+});
+function showOnboarding(){document.getElementById('loginCard').classList.add('hidden');document.getElementById('onboarding').classList.remove('hidden');obStep=1;renderOb();}
+function showLogin(){document.getElementById('onboarding').classList.add('hidden');document.getElementById('loginCard').classList.remove('hidden');}
+
+/* ---------- ONBOARDING ---------- */
+var obStep=1;
+var obMeta=[
+  ['기본 정보를 입력해 주세요','코칭 여정을 시작하기 위한 첫 단계입니다'],
+  ['올해 집중할 영역을 선택하세요','4개 영역 모두 선택하면 균형 잡힌 코칭을 받을 수 있어요'],
+  ['코치가 배정되었습니다','이제 코칭 여정을 시작할 준비가 됐어요']
+];
+function obNav(dir){obStep=Math.min(3,Math.max(1,obStep+dir));renderOb();}
+function renderOb(){
+  for(var s=1;s<=3;s++){document.getElementById('obStep'+s).classList.toggle('hidden',s!==obStep);}
+  document.getElementById('obTitle').textContent=obMeta[obStep-1][0];
+  document.getElementById('obSub').textContent=obMeta[obStep-1][1];
+  // steps
+  [1,2,3].forEach(function(n){
+    var d=document.getElementById('d'+n),sl=document.getElementById('sl'+n);
+    d.className='ob-dot '+(n<obStep?'done':n===obStep?'active':'idle');
+    d.innerHTML=n<obStep?'<i class="ti ti-check" style="font-size:13px"></i>':n;
+    sl.className='ob-sl'+(n===obStep?' active':'');
+  });
+  document.getElementById('l1').className='ob-ln'+(obStep>1?' done':'');
+  document.getElementById('l2').className='ob-ln'+(obStep>2?' done':'');
+  document.getElementById('obBack').disabled=obStep===1;
+  document.getElementById('obFoot').style.display=obStep===3?'none':'flex';
+  var nx=document.getElementById('obNext');
+  nx.innerHTML=obStep===2?'코치 배정 완료 <i class="ti ti-arrow-right" style="font-size:14px"></i>':'다음 단계 <i class="ti ti-arrow-right" style="font-size:14px"></i>';
+}
+
+/* ---------- ENTER / EXIT APP ---------- */
+function enterApp(page){
+  document.getElementById('entry').style.display='none';
+  document.getElementById('app').style.display='block';
+  initCharts();
+  renderSessions();renderCoaches();
+  nav(page||'dashboard',crumbMap[page]||'대시보드');
+  window.scrollTo(0,0);
+}
+function logout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('entry').style.display='flex';
+  showLogin();
+  window.scrollTo(0,0);
+}
+var crumbMap={dashboard:'대시보드',profile:'내 프로필',sessions:'세션 관리',coaches:'코치 관리',goals:'목표 & 점검',reports:'리포트',settings:'설정'};
+
+/* ---------- NAV ---------- */
+function nav(page,label){
+  document.querySelectorAll('.sb-item').forEach(function(b){b.classList.toggle('active',b.dataset.page===page);});
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('show');});
+  document.getElementById('page-'+page).classList.add('show');
+  document.getElementById('crumb').textContent=label||crumbMap[page]||page;
+  toggleSidebar(false);
+  window.scrollTo(0,0);
+}
+function toggleSidebar(open){
+  var sb=document.getElementById('sidebar'),ov=document.getElementById('overlay');
+  if(open===undefined)open=!sb.classList.contains('open');
+  sb.classList.toggle('open',open);ov.classList.toggle('show',open);
+}
+function pillToggle(el){el.parentNode.querySelectorAll('.pill').forEach(function(p){p.classList.remove('active');});el.classList.add('active');}
+function profSub(el){
+  pillToggle(el);
+  document.querySelectorAll('.prof-sub').forEach(function(s){s.classList.remove('show');});
+  document.getElementById('prof-'+el.dataset.sub).classList.add('show');
+}
+
+/* ---------- SESSIONS DATA ---------- */
+var sessions=[
+  {d:19,t:'김민준 · 2기 월간 점검 세션',coach:'이수진 코치',dur:60,time:'오후 2:00',st:'up',
+   badge:'예정 · 오늘 오후 2:00',people:[['김민','김민준','코치이 · 2기','navy'],['이수','이수진','담당 코치','green']],
+   focus:[['영성','c-spirit'],['지성','c-intel']],
+   note:'영성 영역 QT 달성률이 58%로 목표 대비 낮음. 이번 세션에서 장애 요인 파악 및 구체적 실천 계획 수립 필요. 지난 세션 액션 아이템 점검도 병행.'},
+  {d:18,t:'박서연 · 영성 영역 집중 코칭',coach:'강현우 코치',dur:90,time:'오전 10:00',st:'done',
+   badge:'완료 · 6월 18일',people:[['박서','박서연','코치이 · 1기','spirit'],['강현','강현우','담당 코치','navy']],
+   focus:[['영성','c-spirit']],note:'영성 영역 집중 코칭 완료. QT 루틴 재정비 및 주간 말씀 묵상 계획 수립.'},
+  {d:17,t:'정하은 · 목표 점검 및 재설정',coach:'이수진 코치',dur:60,time:'오후 4:00',st:'pend',
+   badge:'대기 중 · 6월 17일',people:[['정하','정하은','코치이 · 3기','gold'],['이수','이수진','담당 코치','green']],
+   focus:[['사회','c-social']],note:'전체 목표 재설정 필요. 코치이 확인 대기 중.'},
+  {d:15,t:'이준혁 · 신체 영역 1:1 코칭',coach:'강현우 코치',dur:60,time:'오전 11:00',st:'done',
+   badge:'완료 · 6월 15일',people:[['이준','이준혁','코치이 · 2기','coral'],['강현','강현우','담당 코치','navy']],
+   focus:[['신체','c-body']],note:'운동 루틴 점검. 주 4회 조깅 목표 순항 중.'},
+  {d:13,t:'최동훈 · 입과 후 첫 번째 세션',coach:'이수진 코치',dur:60,time:'오후 3:00',st:'done',
+   badge:'완료 · 6월 13일',people:[['최동','최동훈','코치이 · 3기','gold'],['이수','이수진','담당 코치','green']],
+   focus:[['지성','c-intel'],['신체','c-body']],note:'입과 오리엔테이션 및 4대 영역 목표 초기 설정 완료.'},
+  {d:10,t:'한수진 · 사회 영역 심화 코칭',coach:'강현우 코치',dur:45,time:'오전 9:00',st:'cancel',
+   badge:'취소 · 6월 10일',people:[['한수','한수진','코치이 · 4기','gold'],['강현','강현우','담당 코치','navy']],
+   focus:[['사회','c-social']],note:'코치이 사정으로 취소. 6월 말 재일정 예정.'},
+  {d:22,t:'윤재원 · 4기 오리엔테이션 세션',coach:'이수진 코치',dur:90,time:'오후 1:00',st:'up',
+   badge:'예정 · 6월 22일 오후 1:00',people:[['윤재','윤재원','코치이 · 4기','spirit'],['이수','이수진','담당 코치','green']],
+   focus:[['지성','c-intel']],note:'신규 입과 오리엔테이션. 4대 영역 소개 및 첫 목표 수립.'}
+];
+var stMap={up:['예정','t-up'],done:['완료','t-done'],pend:['대기 중','t-pend'],cancel:['취소','t-cancel']};
+var avBg={navy:'background:var(--navy-50);color:var(--navy)',green:'background:var(--green-50);color:var(--teal)',spirit:'background:var(--spirit-50);color:var(--spirit)',coral:'background:var(--coral-50);color:var(--coral)',gold:'background:var(--gold-50);color:var(--gold)'};
+var sessFilter='all',selSess=0;
+function renderSessions(){
+  var q=(document.getElementById('sessSearch').value||'').trim();
+  var html='',count=0;
+  sessions.forEach(function(s,i){
+    if(sessFilter!=='all'&&s.st!==sessFilter)return;
+    if(q&&s.t.indexOf(q)<0&&s.coach.indexOf(q)<0)return;
+    count++;
+    var st=stMap[s.st];
+    html+='<div class="srow'+(i===selSess?' sel':'')+'" onclick="selectSession('+i+')">'+
+      '<div class="sdate"><div class="sday">'+s.d+'</div><div class="smon">6월</div></div>'+
+      '<div class="sinfo"><div class="stitle">'+s.t+'</div><div class="smeta"><i class="ti ti-user" style="font-size:11px;vertical-align:-1px"></i> '+s.coach+' · '+s.dur+'분</div></div>'+
+      '<div class="sright"><span class="tag-pill '+st[1]+'">'+st[0]+'</span><span class="stime">'+s.time+'</span></div></div>';
+  });
+  document.getElementById('sessList').innerHTML=html||'<div class="empty"><div class="empty-ic"><i class="ti ti-calendar-off"></i></div><div class="empty-t">결과 없음</div><div class="empty-d">조건에 맞는 세션이 없습니다.</div></div>';
+  document.getElementById('sessCount').textContent=count+'건';
+  renderSessDetail();
+}
+function renderSessDetail(){
+  var s=sessions[selSess];if(!s){document.getElementById('sessDetail').innerHTML='';return;}
+  var ppl=s.people.map(function(p){return '<div class="prow"><div class="av av-32" style="'+avBg[p[3]]+'">'+p[0]+'</div><div><div class="pname">'+p[1]+'</div><div class="prole">'+p[2]+'</div></div></div>';}).join('');
+  var chips=s.focus.map(function(f){return '<span class="chip '+f[1]+'">'+f[0]+'</span>';}).join('');
+  document.getElementById('sessDetail').innerHTML=
+    '<div class="detail-hd"><div class="detail-badge"><i class="ti ti-clock" style="font-size:11px"></i> '+s.badge+'</div>'+
+    '<div class="detail-t">'+s.t+'</div><div class="detail-m"><i class="ti ti-calendar" style="font-size:11px;vertical-align:-1px"></i> 2025년 6월 '+s.d+'일 · '+s.dur+'분</div></div>'+
+    '<div class="detail-b"><div class="det-sec"><div class="det-st">참여자</div>'+ppl+'</div><div class="hr"></div>'+
+    '<div class="det-sec"><div class="det-st">집중 영역</div><div class="chips">'+chips+'</div></div><div class="hr"></div>'+
+    '<div class="det-sec"><div class="det-st">사전 노트</div><div class="note">'+s.note+'</div></div>'+
+    '<div class="det-actions"><button class="btn-nav-sm"><i class="ti ti-notes"></i> 노트 작성</button><button class="btn-out-sm"><i class="ti ti-edit"></i> 세션 수정</button></div></div>';
+}
+function selectSession(i){selSess=i;renderSessions();}
+function setSessFilter(el){pillToggle(el);sessFilter=el.dataset.f;
+  var first=sessions.findIndex(function(s){return sessFilter==='all'||s.st===sessFilter;});
+  if(first>=0)selSess=first;renderSessions();}
+function filterSessions(){renderSessions();}
+
+/* ---------- COACHES DATA ---------- */
+var coaches=[
+  {av:'이수',avc:'navy',name:'이수진',role:'코치 · 1기 수료',coachees:5,pct:76,sess:14,st:'active',date:'최근 세션 어제',
+   meta:'코치 · 1기 수료 · 담당 코치이 5명',badges:['치앙라이','CCT 22노회','영성·지성 전문'],
+   kpis:[['76%','평균 달성률'],['14','이번 달 세션'],['89%','세션 이행률']],
+   domains:[['영성','dom-spirit'],['지성','dom-intel'],['사회','dom-social']],
+   list:[['김민','김민준 · 2기',82,'navy','var(--green)','var(--teal)'],['정하','정하은 · 3기',38,'coral','var(--coral)','var(--coral)'],['최동','최동훈 · 3기',55,'spirit','var(--green)','var(--text-2)'],['윤재','윤재원 · 4기',22,'gold','var(--green)','var(--text-2)']]},
+  {av:'강현',avc:'spirit',name:'강현우',role:'코치 · 2기 수료',coachees:6,pct:68,sess:12,st:'active',date:'최근 세션 2일 전',
+   meta:'코치 · 2기 수료 · 담당 코치이 6명',badges:['방콕','CCT 23노회','신체·사회 전문'],
+   kpis:[['68%','평균 달성률'],['12','이번 달 세션'],['83%','세션 이행률']],
+   domains:[['신체','dom-body'],['사회','dom-social']],
+   list:[['박서','박서연 · 1기',78,'spirit','var(--green)','var(--teal)'],['이준','이준혁 · 2기',74,'coral','var(--green)','var(--teal)'],['한수','한수진 · 4기',32,'gold','var(--coral)','var(--coral)']]},
+  {av:'박지',avc:'coral',name:'박지현',role:'코치 · 1기 수료',coachees:4,pct:82,sess:10,st:'active',date:'최근 세션 오늘',
+   meta:'코치 · 1기 수료 · 담당 코치이 4명',badges:['치앙마이','CCT 22노회','지성 전문'],
+   kpis:[['82%','평균 달성률'],['10','이번 달 세션'],['95%','세션 이행률']],
+   domains:[['지성','dom-intel'],['영성','dom-spirit']],
+   list:[['장','장은비 · 2기',88,'navy','var(--green)','var(--teal)'],['오','오세훈 · 3기',71,'spirit','var(--green)','var(--teal)']]},
+  {av:'김태',avc:'gold',name:'김태양',role:'코치 · 2기 수료',coachees:0,pct:0,sess:0,st:'rest',date:'복귀 예정 7월',
+   meta:'코치 · 2기 수료 · 휴식 중',badges:['치앙라이','CCT 23노회'],
+   kpis:[['—','평균 달성률'],['0','이번 달 세션'],['—','세션 이행률']],
+   domains:[['사회','dom-social']],list:[]}
+];
+var selCoach=0;
+function renderCoaches(){
+  var html='';
+  coaches.forEach(function(c,i){
+    var st=c.st==='active'?['활성','t-done']:['휴식 중','t-rest'];
+    html+='<div class="coach-card'+(i===selCoach?' sel':'')+'" onclick="selectCoach('+i+')">'+
+      '<div class="cc-top"><div class="av av-32" style="width:42px;height:42px;font-size:13px;'+avBg[c.avc]+'">'+c.av+'</div><div><div class="cc-name">'+c.name+'</div><div class="cc-role">'+c.role+'</div></div></div>'+
+      '<div class="cc-stats"><div class="cc-stat"><div class="cc-sv">'+c.coachees+'</div><div class="cc-sl">코치이</div></div><div class="cc-stat"><div class="cc-sv">'+(c.pct?c.pct+'%':'—')+'</div><div class="cc-sl">평균 달성</div></div><div class="cc-stat"><div class="cc-sv">'+c.sess+'</div><div class="cc-sl">세션</div></div></div>'+
+      '<div class="cc-bar"><div class="cc-fill" style="width:'+c.pct+'%"></div></div>'+
+      '<div class="cc-foot"><span class="tag-pill '+st[1]+'">'+st[0]+'</span><span class="cc-date">'+c.date+'</span></div></div>';
+  });
+  document.getElementById('coachGrid').innerHTML=html;
+  renderCoachDetail();
+}
+function renderCoachDetail(){
+  var c=coaches[selCoach];
+  var kp=c.kpis.map(function(k){return '<div class="mini-kpi"><div class="mk-v">'+k[0]+'</div><div class="mk-l">'+k[1]+'</div></div>';}).join('');
+  var dm=c.domains.map(function(d){return '<span class="chip '+d[1].replace('dom-','c-')+'">'+d[0]+'</span>';}).join('');
+  var bd=c.badges.map(function(b){return '<span class="detail-badge" style="margin:0 4px 0 0">'+b+'</span>';}).join('');
+  var list=c.list.length?c.list.map(function(p){return '<div class="coachee-chip"><div class="av" style="width:26px;height:26px;font-size:9px;'+avBg[p[3]]+'">'+p[0]+'</div><span class="chip-name">'+p[1]+'</span><div class="chip-bar"><div class="chip-fill" style="width:'+p[2]+'%;background:'+p[4]+'"></div></div><span class="chip-pct" style="color:'+p[5]+'">'+p[2]+'%</span></div>';}).join(''):'<div class="page-sub">배정된 코치이가 없습니다.</div>';
+  document.getElementById('coachDetail').innerHTML=
+    '<div class="detail-hd"><div class="av" style="width:48px;height:48px;font-size:16px;margin-bottom:10px;'+avBg[c.avc]+'">'+c.av+'</div>'+
+    '<div class="detail-t">'+c.name+'</div><div class="detail-m">'+c.meta+'</div><div style="margin-top:9px">'+bd+'</div></div>'+
+    '<div class="detail-b"><div class="mini-kpis">'+kp+'</div>'+
+    '<div class="det-st">전문 코칭 영역</div><div class="chips" style="margin-bottom:14px">'+dm+'</div><div class="hr"></div>'+
+    '<div class="det-st">담당 코치이 현황</div>'+list+
+    '<div class="det-actions"><button class="btn-nav-sm"><i class="ti ti-file-analytics"></i> 리포트 생성</button><button class="btn-out-sm"><i class="ti ti-edit"></i> 정보 수정</button></div></div>';
+}
+function selectCoach(i){selCoach=i;renderCoaches();}
+
+/* ---------- CHARTS ---------- */
+var charted=false;
+function initCharts(){
+  if(charted||typeof Chart==='undefined')return;charted=true;
+  var grid='rgba(20,28,48,.06)',tick='#8b93a7';
+  new Chart(document.getElementById('trendChart'),{type:'line',
+    data:{labels:['1월','2월','3월','4월','5월','6월'],datasets:[
+      {label:'지성',data:[58,62,66,70,74,78],borderColor:'#3a4ea8',backgroundColor:'rgba(58,78,168,.06)',borderWidth:2,pointRadius:0,tension:.4,fill:true},
+      {label:'신체',data:[55,60,63,68,70,75],borderColor:'#16a37a',borderWidth:2,pointRadius:0,tension:.4},
+      {label:'영성',data:[50,52,54,55,57,58],borderColor:'#6a5ae0',borderWidth:2,pointRadius:0,tension:.4},
+      {label:'사회',data:[48,54,58,60,62,64],borderColor:'#e0612f',borderWidth:2,pointRadius:0,tension:.4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:11},color:tick}},y:{min:40,max:90,grid:{color:grid},ticks:{font:{size:11},color:tick,callback:function(v){return v+'%';},stepSize:10}}}}});
+
+  var rc=document.getElementById('reportChart');
+  if(rc)new Chart(rc,{type:'bar',data:{labels:['1기','2기','3기','4기'],datasets:[{data:[81,72,52,34],backgroundColor:['#1d2b4f','#3a4ea8','#6a5ae0','#c08a2a'],borderRadius:8,barThickness:34}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:tick}},y:{min:0,max:100,grid:{color:grid},ticks:{font:{size:11},color:tick,callback:function(v){return v+'%';}}}}}});
+
+  var dc=document.getElementById('domainChart');
+  if(dc)new Chart(dc,{type:'doughnut',data:{labels:['지성','신체','영성','사회'],datasets:[{data:[78,75,58,64],backgroundColor:['#3a4ea8','#16a37a','#6a5ae0','#c08a2a'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{font:{size:12},color:tick,padding:14,boxWidth:12,boxHeight:12,usePointStyle:true}}}}});
+}
+</script>
+</body>
+</html>

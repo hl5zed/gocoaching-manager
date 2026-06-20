@@ -140,8 +140,8 @@ function InfoGrid({
     <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item, index) => (
         <div className="min-w-0" key={index}>
-          <dt className="text-sm font-medium text-slate-500">{item.label}</dt>
-          <dd className="mt-1 whitespace-pre-wrap break-words text-slate-950">
+          <dt className="text-sm font-medium text-ink-faint">{item.label}</dt>
+          <dd className="mt-1 whitespace-pre-wrap break-words text-ink-strong">
             {displayValue(item.value)}
           </dd>
         </div>
@@ -213,7 +213,7 @@ function ErrorShell({
   year: number;
 }) {
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10 text-slate-950">
+    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <div className="mx-auto max-w-6xl">
         <PageNav planId={planId} year={year} />
         <div className="mt-8">{children}</div>
@@ -242,7 +242,7 @@ function Section({
 function CoreValuesSection({ values }: { values: CoreValueItem[] }) {
   if (values.length === 0) {
     return (
-      <p className="text-slate-500">
+      <p className="text-ink-faint">
         <I18nText k="coach.moksilgi.detail.noCoreValues" fallback="등록된 핵심가치가 없습니다." />
       </p>
     );
@@ -252,20 +252,20 @@ function CoreValuesSection({ values }: { values: CoreValueItem[] }) {
     <div className="grid gap-4 md:grid-cols-3">
       {values.map((value, index) => (
         <Card
-          className="print-card bg-slate-50"
+          className="print-card bg-surface-sunken"
           key={`${value.value_name}-${index}`}
         >
           <CardContent className="p-4">
-          <h3 className="break-words font-semibold text-slate-950">
+          <h3 className="break-words font-semibold text-ink-strong">
             {displayValue(value.value_name)}
           </h3>
-          <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
+          <p className="mt-2 whitespace-pre-wrap text-sm text-ink-base">
             {displayValue(value.meaning)}
           </p>
-          <p className="mt-3 text-sm font-medium text-slate-500">
+          <p className="mt-3 text-sm font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.detail.practiceExample" fallback="실천 모습" />
           </p>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">
+          <p className="mt-1 whitespace-pre-wrap text-sm text-ink-base">
             {displayValue(value.practice_example)}
           </p>
           </CardContent>
@@ -281,52 +281,52 @@ function DetailGoalCard({ goal }: { goal: CoachMoksilgiDetailGoal }) {
   return (
     <Card className="print-card">
       <CardContent className="p-4">
-      <h4 className="break-words font-semibold text-slate-950">{goal.title}</h4>
-      <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
+      <h4 className="break-words font-semibold text-ink-strong">{goal.title}</h4>
+      <p className="mt-2 whitespace-pre-wrap text-sm text-ink-base">
         {displayValue(goal.description)}
       </p>
       <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <dt className="text-xs font-medium text-slate-500">
+          <dt className="text-xs font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.detail.annualTarget" fallback="연간 목표량" />
           </dt>
-          <dd className="mt-1 text-sm text-slate-950">
+          <dd className="mt-1 text-sm text-ink-strong">
             {displayValue(goal.annual_target)}
           </dd>
         </div>
         <div>
-          <dt className="text-xs font-medium text-slate-500">
+          <dt className="text-xs font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.detail.monthlyTarget" fallback="월 목표량" />
           </dt>
-          <dd className="mt-1 text-sm text-slate-950">
+          <dd className="mt-1 text-sm text-ink-strong">
             {displayValue(goal.monthly_target)}
           </dd>
         </div>
         <div>
-          <dt className="text-xs font-medium text-slate-500">
+          <dt className="text-xs font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.detail.unit" fallback="단위" />
           </dt>
-          <dd className="mt-1 text-sm text-slate-950">{displayValue(goal.unit)}</dd>
+          <dd className="mt-1 text-sm text-ink-strong">{displayValue(goal.unit)}</dd>
         </div>
         <div>
-          <dt className="text-xs font-medium text-slate-500">
+          <dt className="text-xs font-medium text-ink-faint">
             <I18nText k="coach.moksilgi.detail.measurementType" fallback="측정 방식" />
           </dt>
-          <dd className="mt-1 text-sm text-slate-950">
+          <dd className="mt-1 text-sm text-ink-strong">
             {MEASUREMENT_LABEL[goal.measurement_type] ?? goal.measurement_type}
           </dd>
         </div>
       </dl>
       <div className="mt-4">
-        <p className="text-sm font-medium text-slate-500">
+        <p className="text-sm font-medium text-ink-faint">
           <I18nText k="coach.moksilgi.detail.actionStrategies" fallback="실행전략" />
         </p>
         {strategies.length === 0 ? (
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-ink-faint">
             <I18nText k="coach.moksilgi.detail.noActionStrategies" fallback="등록된 실행전략이 없습니다." />
           </p>
         ) : (
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-base">
             {strategies.map((strategy, index) => (
               <li key={`${strategy}-${index}`}>{strategy}</li>
             ))}
@@ -347,7 +347,7 @@ function GoalAreasSection({
 }) {
   if (areas.length === 0) {
     return (
-      <p className="text-slate-500">
+      <p className="text-ink-faint">
         <I18nText k="coach.moksilgi.detail.noGoalAreas" fallback="등록된 목표 영역이 없습니다." />
       </p>
     );
@@ -359,18 +359,18 @@ function GoalAreasSection({
         const goals = detailGoals.filter((goal) => goal.area_id === area.id);
 
         return (
-          <Card className="print-card bg-slate-50" key={area.id}>
+          <Card className="print-card bg-surface-sunken" key={area.id}>
             <CardContent className="p-5">
             <div>
-              <h3 className="break-words font-semibold text-slate-950">
+              <h3 className="break-words font-semibold text-ink-strong">
                 <I18nText k="coach.moksilgi.detail.goalPrefix" fallback="목표" /> {index + 1}: {area.area_title}
               </h3>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-ink-muted">
                 {displayValue(area.area_subtitle)}
               </p>
             </div>
             {goals.length === 0 ? (
-              <p className="mt-4 text-sm text-slate-500">
+              <p className="mt-4 text-sm text-ink-faint">
                 <I18nText k="coach.moksilgi.detail.noDetailGoals" fallback="등록된 세부 목표가 없습니다." />
               </p>
             ) : (
@@ -407,7 +407,7 @@ function SummaryTable({
     <div className="overflow-x-auto">
       <table className="min-w-[860px] w-full border-collapse text-sm">
         <thead>
-          <tr className="border-b border-slate-200 bg-slate-100 text-left text-slate-600">
+          <tr className="border-b border-line-base bg-surface-sunken text-left text-ink-muted">
             <th className="px-3 py-2 font-semibold">
               <I18nText k="coach.moksilgi.detail.goalAchievement" fallback="목표 / 성취" />
             </th>
@@ -439,10 +439,10 @@ function SummaryTable({
             const isCumulative = row.month === "cumulative";
             const isCurrentMonth = row.month === currentMonth;
             const rowClass = isCumulative
-              ? "bg-slate-950 font-semibold text-white"
+              ? "bg-navy-900 font-semibold text-white"
               : isCurrentMonth
-                ? "border-b border-slate-200 bg-slate-100 font-medium"
-                : "border-b border-slate-100";
+                ? "border-b border-line-base bg-surface-sunken font-medium"
+                : "border-b border-line-soft";
 
             return (
               <tr className={rowClass} key={row.month}>
@@ -505,7 +505,7 @@ export default async function CoachMoksilgiDetailPage({
   if (result.error?.code === "ACCESS_DENIED") {
     return (
       <ErrorShell planId={planId} year={year}>
-        <p className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
+        <p className="rounded-control border border-red-200 bg-red-50 p-4 text-red-700">
           <I18nText k="coach.moksilgi.accessDenied" fallback="코치 권한이 없습니다." />
         </p>
       </ErrorShell>
@@ -515,7 +515,7 @@ export default async function CoachMoksilgiDetailPage({
   if (result.error?.code === "NOT_FOUND") {
     return (
       <ErrorShell planId={planId} year={year}>
-        <p className="rounded-md border border-slate-200 bg-white p-6 text-slate-700">
+        <p className="rounded-card border border-line-base bg-surface-card p-6 text-ink-base">
           <I18nText k="coach.moksilgi.detail.notFound" fallback="해당 목실기를 찾을 수 없습니다." />
         </p>
       </ErrorShell>
@@ -525,7 +525,7 @@ export default async function CoachMoksilgiDetailPage({
   if (result.error) {
     return (
       <ErrorShell planId={planId} year={year}>
-        <p className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
+        <p className="rounded-control border border-red-200 bg-red-50 p-4 text-red-700">
           <I18nText k="coach.moksilgi.detail.loadFailed" fallback="지금 목실기 상세 정보를 불러올 수 없습니다." />
         </p>
       </ErrorShell>
@@ -537,7 +537,7 @@ export default async function CoachMoksilgiDetailPage({
   const coreValues = coreValuesFromJson(plan.core_values_json);
 
   return (
-    <main className="print-root min-h-screen bg-[var(--trust-bg)] px-4 py-8 text-slate-950 sm:px-6 lg:py-10">
+    <main className="print-root min-h-screen bg-[var(--trust-bg)] px-4 py-8 text-ink-strong sm:px-6 lg:py-10">
       <div className="mx-auto max-w-6xl">
         <PageNav planId={planId} year={year} />
 
@@ -570,7 +570,7 @@ export default async function CoachMoksilgiDetailPage({
               <CardDescription className="text-base">
                 <I18nText k="coach.moksilgi.detail.subtitle" fallback="목표와 실행전략 기획안" />
               </CardDescription>
-              <p className="mt-3 max-w-3xl break-words text-slate-600">
+              <p className="mt-3 max-w-3xl break-words text-ink-muted">
                 <I18nText
                   k="coach.moksilgi.detail.description"
                   fallback="담당 코치이가 작성한 목실기와 연간 성취 요약을 확인합니다."
@@ -582,7 +582,7 @@ export default async function CoachMoksilgiDetailPage({
               fileName={`moksilgi-coachee-detail-${year}-${planId.slice(0, 8)}`}
               label="코치이 목실기 상세 인쇄/PDF 저장"
             />
-            <p className="print-hidden text-sm leading-6 text-slate-500 lg:max-w-xs lg:text-right">
+            <p className="print-hidden text-sm leading-6 text-ink-faint lg:max-w-xs lg:text-right">
               <I18nText
                 k="coach.moksilgi.mobilePrintNotice"
                 fallback="모바일 브라우저에서는 PDF 저장 옵션이 기기와 브라우저에 따라 다르게 표시될 수 있습니다. 인쇄창이 열리지 않으면 Safari 또는 Chrome에서 다시 열어 주세요."
@@ -595,7 +595,7 @@ export default async function CoachMoksilgiDetailPage({
           <CardContent>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-slate-500">
+                <p className="text-sm font-medium text-ink-faint">
                   {year}
                   <I18nText k="coach.moksilgi.totalAchievementSuffix" fallback="년 총 달성률" />
                 </p>
@@ -694,7 +694,7 @@ export default async function CoachMoksilgiDetailPage({
           </Section>
 
           <Section title={<I18nText k="coach.moksilgi.detail.achievementTableSection" fallback="개인 목표와 실행전략 성취표" />}>
-            <p className="mb-4 text-sm text-slate-600">
+            <p className="mb-4 text-sm text-ink-muted">
               {year}
               <I18nText
                 k="coach.moksilgi.detail.achievementTableHelp"

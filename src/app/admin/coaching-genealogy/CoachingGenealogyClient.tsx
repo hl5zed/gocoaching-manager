@@ -140,11 +140,11 @@ function PrintReportHeader({
 }) {
   return (
     <div className="genealogy-print-header">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <p className="text-xs font-medium uppercase tracking-wide text-ink-faint">
         GO Coaching Genealogy Report
       </p>
-      <h1 className="mt-1 text-2xl font-semibold text-slate-950">{title}</h1>
-      <div className="mt-3 grid gap-1 text-sm text-slate-600 sm:grid-cols-2">
+      <h1 className="mt-1 text-2xl font-semibold text-ink-strong">{title}</h1>
+      <div className="mt-3 grid gap-1 text-sm text-ink-muted sm:grid-cols-2">
         <p>{printedAtLabel}: {printedAt || printedAtPlaceholder}</p>
         <p>{filterSummary}</p>
       </div>
@@ -323,9 +323,9 @@ function PlaceholderPanel({ view }: { view: GenealogyView }) {
         : "세대 변경 이력은 다음 단계에서 구현됩니다.";
 
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-8">
+    <section className="rounded-md border border-line-base bg-surface-card p-8">
       <h2 className="text-xl font-semibold">{label}</h2>
-      <p className="mt-3 text-slate-600">{message}</p>
+      <p className="mt-3 text-ink-muted">{message}</p>
     </section>
   );
 }
@@ -990,8 +990,8 @@ export function CoachingGenealogyClient({
               <Link
                 className={`rounded-md border px-4 py-2 text-sm font-medium ${
                   isActive
-                    ? "border-slate-950 bg-slate-950 text-white"
-                    : "border-slate-300 bg-white text-slate-700 hover:border-slate-500"
+                    ? "border-navy-900 bg-navy-900 text-white"
+                    : "border-line-base bg-surface-card text-ink-base hover:border-line-base"
                 }`}
                 href={buildHref(searchParams, tab.value)}
                 key={tab.value}
@@ -1004,7 +1004,7 @@ export function CoachingGenealogyClient({
 
         {printTarget ? (
           <button
-            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-500"
+            className="rounded-md border border-line-base bg-surface-card px-4 py-2 text-sm font-medium text-ink-base hover:border-line-base"
             onClick={() => handlePrint(printTarget)}
             type="button"
           >
@@ -1015,17 +1015,17 @@ export function CoachingGenealogyClient({
         ) : null}
       </div>
 
-      <section className="no-print rounded-md border border-slate-200 bg-white p-5">
+      <section className="no-print rounded-card border border-line-base bg-surface-card p-5">
         <div className="flex flex-wrap items-end gap-4">
           <div className="min-w-48">
             <label
-              className="block text-sm font-medium text-slate-600"
+              className="block text-sm font-medium text-ink-muted"
               htmlFor="country-filter"
             >
               {t("genealogy.country", "국가")}
             </label>
             <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
               id="country-filter"
               onChange={(event) => updateFilter("countryId", event.target.value)}
               value={data.filters.countryId ?? ""}
@@ -1043,13 +1043,13 @@ export function CoachingGenealogyClient({
 
           <div className="min-w-48">
             <label
-              className="block text-sm font-medium text-slate-600"
+              className="block text-sm font-medium text-ink-muted"
               htmlFor="church-filter"
             >
               {t("genealogy.church", "교회")}
             </label>
             <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
               id="church-filter"
               onChange={(event) => updateFilter("churchId", event.target.value)}
               value={data.filters.churchId ?? ""}
@@ -1065,13 +1065,13 @@ export function CoachingGenealogyClient({
 
           <div className="min-w-40">
             <label
-              className="block text-sm font-medium text-slate-600"
+              className="block text-sm font-medium text-ink-muted"
               htmlFor="generation-filter"
             >
               {t("genealogy.generation", "세대")}
             </label>
             <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
               id="generation-filter"
               onChange={(event) =>
                 updateFilter("generationNumber", event.target.value)
@@ -1091,7 +1091,7 @@ export function CoachingGenealogyClient({
           </div>
 
           <button
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            className="rounded-control border border-line-base px-4 py-2 text-sm font-medium text-ink-base"
             onClick={resetFilters}
             type="button"
           >
@@ -1099,7 +1099,7 @@ export function CoachingGenealogyClient({
           </button>
         </div>
         {!hasFilterOptions ? (
-          <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <div className="mt-4 rounded-control border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
             <p>
               {t(
                 "genealogy.noFilterOptions",
@@ -1107,7 +1107,7 @@ export function CoachingGenealogyClient({
               )}
             </p>
             <Link
-              className="mt-3 inline-flex rounded-md border border-amber-300 bg-white px-3 py-2 text-sm font-semibold text-amber-900"
+              className="mt-3 inline-flex rounded-md border border-amber-300 bg-surface-card px-3 py-2 text-sm font-semibold text-amber-900"
               href="/admin/coaching-genealogy?view=assign"
             >
               {t("genealogy.goAssign", "배정 관리로 이동")}
@@ -1126,11 +1126,11 @@ export function CoachingGenealogyClient({
               printedAtPlaceholder={t("genealogy.generatedOnPrint", "인쇄 시 생성")}
               title={t("genealogy.title", "세대별 코칭 계보도")}
             />
-            <section className="rounded-md border border-slate-200 bg-white p-8">
+            <section className="rounded-md border border-line-base bg-surface-card p-8">
               <h2 className="text-xl font-semibold">
                 {t("genealogy.tree", "계보 트리")}
               </h2>
-              <p className="mt-3 text-slate-600">
+              <p className="mt-3 text-ink-muted">
                 {t("genealogy.noRelationships", "표시할 코칭 관계가 없습니다. 아직 활성 코칭 관계가 없습니다.")}
               </p>
             </section>
@@ -1145,12 +1145,12 @@ export function CoachingGenealogyClient({
               title={t("genealogy.title", "세대별 코칭 계보도")}
             />
             <div className="genealogy-print-content grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-              <section className="genealogy-print-main min-h-[680px] rounded-md border border-slate-200 bg-white p-4">
+              <section className="genealogy-print-main min-h-[680px] rounded-card border border-line-base bg-surface-card p-4">
                 <div className="mb-4">
                   <h2 className="text-xl font-semibold">
                     {t("genealogy.tree", "계보 트리")}
                   </h2>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <p className="mt-1 text-sm text-ink-muted">
                     {t("genealogy.nodeClickHelp", "노드를 클릭하면 오른쪽 패널에서 상세 정보를 확인할 수 있습니다.")}
                     {" "}
                     {t("genealogy.currentSelection", "현재 선택")}: {getNodeLabel(selectedNode)}

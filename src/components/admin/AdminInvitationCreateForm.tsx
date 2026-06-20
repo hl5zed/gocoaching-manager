@@ -267,14 +267,14 @@ export function AdminInvitationCreateForm({
   }
 
   return (
-    <section className="mt-6 rounded-md border border-slate-200 bg-white p-6">
+    <section className="mt-6 rounded-card border border-line-base bg-surface-card p-6">
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2 md:col-span-2">
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-ink-base">
             {t("admin.invitations.new.form.email", "이메일")}
           </span>
           <input
-            className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+            className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
             onChange={(event) => setEmail(event.target.value)}
             placeholder="newuser@example.com"
             type="email"
@@ -283,14 +283,14 @@ export function AdminInvitationCreateForm({
         </label>
 
         <label className="grid gap-2 md:col-span-2">
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-ink-base">
             {t(
               "admin.invitations.new.form.organizationDefaults",
               "조직 기본값 제안",
             )}
           </span>
           <select
-            className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+            className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
             onChange={(event) => handleSelectOrganization(event.target.value)}
             value={selectedOrganizationId}
           >
@@ -311,14 +311,14 @@ export function AdminInvitationCreateForm({
           </select>
           {selectedOrganization ? (
             isOrganizationPolicyActive ? (
-              <span className="text-xs leading-5 text-slate-600">
+              <span className="text-xs leading-5 text-ink-muted">
                 {t(
                   "admin.invitations.new.form.organizationPolicyApplied",
                   "이 조직의 기본 초대 권한이 적용됩니다. 역할: 코칭 대상자 / 범위: 선택한 조직",
                 )}
               </span>
             ) : (
-              <span className="text-xs leading-5 text-slate-600">
+              <span className="text-xs leading-5 text-ink-muted">
                 {t(
                   "admin.invitations.new.form.organizationPolicyMissing",
                   "이 조직에는 아직 기본 권한 정책이 없습니다. 직접 권한과 범위를 선택해 주세요.",
@@ -326,7 +326,7 @@ export function AdminInvitationCreateForm({
               </span>
             )
           ) : (
-            <span className="text-xs leading-5 text-slate-500">
+            <span className="text-xs leading-5 text-ink-faint">
               {t(
                 "admin.invitations.new.form.manualPermissionHelp",
                 "조직 기본값을 사용하지 않고 직접 권한과 범위를 선택합니다.",
@@ -351,11 +351,11 @@ export function AdminInvitationCreateForm({
         </div>
 
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-ink-base">
             {t("admin.invitations.new.form.role", "초대 역할")}
           </span>
           <select
-            className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
+            className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal disabled:bg-surface-sunken disabled:text-ink-faint"
             disabled={isOrganizationPolicyActive}
             onChange={(event) => setInvitedRole(event.target.value as UserRole)}
             value={invitedRole}
@@ -369,11 +369,11 @@ export function AdminInvitationCreateForm({
         </label>
 
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-ink-base">
             {t("admin.invitations.new.form.scopeType", "범위 유형")}
           </span>
           <select
-            className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
+            className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal disabled:bg-surface-sunken disabled:text-ink-faint"
             disabled={isOrganizationPolicyActive}
             onChange={(event) => {
               const nextScopeType = event.target.value as ScopeType;
@@ -394,11 +394,11 @@ export function AdminInvitationCreateForm({
         </label>
 
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-ink-base">
             {t("admin.invitations.new.form.scopeId", "범위 ID")}
           </span>
           <input
-            className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
+            className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal disabled:bg-surface-sunken disabled:text-ink-faint"
             disabled={scopeType === "global" || isOrganizationPolicyActive}
             onChange={(event) => setScopeId(event.target.value)}
             placeholder={
@@ -418,11 +418,11 @@ export function AdminInvitationCreateForm({
         </label>
 
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-ink-base">
             {t("admin.invitations.new.form.expiresInDays", "만료 기간")}
           </span>
           <select
-            className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+            className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
             onChange={(event) => setExpiresInDays(event.target.value)}
             value={expiresInDays}
           >
@@ -438,11 +438,11 @@ export function AdminInvitationCreateForm({
         <label className="flex items-center gap-3 md:col-span-2">
           <input
             checked={sendEmailNow}
-            className="h-4 w-4 rounded border-slate-300"
+            className="h-4 w-4 rounded border-line-base"
             onChange={(event) => setSendEmailNow(event.target.checked)}
             type="checkbox"
           />
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-ink-base">
             {t(
               "admin.invitations.new.form.sendEmailNow",
               "지금 초대 이메일 보내기",
@@ -453,13 +453,13 @@ export function AdminInvitationCreateForm({
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <Link
-          className="rounded-md border border-slate-300 px-4 py-2 font-medium text-slate-700 hover:bg-slate-100"
+          className="rounded-control border border-line-base px-4 py-2 font-medium text-ink-base hover:bg-surface-sunken"
           href="/admin/invitations"
         >
           {t("admin.invitations.new.form.cancel", "취소")}
         </Link>
         <button
-          className="rounded-md bg-slate-950 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+          className="rounded-control bg-navy-900 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isSubmitting}
           onClick={handleSubmit}
           type="button"
@@ -499,7 +499,7 @@ export function AdminInvitationCreateForm({
           {copyMessage && <p className="mt-2 text-sm">{copyMessage}</p>}
           <div className="mt-4 flex flex-wrap gap-2">
             <Link
-              className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-100"
+              className="rounded-md border border-emerald-300 bg-surface-card px-3 py-1.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-100"
               href="/admin/invitations"
             >
               {t(
@@ -508,7 +508,7 @@ export function AdminInvitationCreateForm({
               )}
             </Link>
             <button
-              className="rounded-md border border-emerald-300 bg-white px-3 py-1.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-100"
+              className="rounded-md border border-emerald-300 bg-surface-card px-3 py-1.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-100"
               onClick={resetFormForNextInvitation}
               type="button"
             >

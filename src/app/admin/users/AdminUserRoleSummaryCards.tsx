@@ -142,21 +142,21 @@ export function AdminUserRoleSummaryCards() {
         <Card key={card.label}>
           <CardContent>
             <div className="flex min-w-0 items-start justify-between gap-3">
-              <p className="break-words text-sm font-semibold text-slate-600">
+              <p className="break-words text-sm font-semibold text-ink-muted">
                 {card.label}
               </p>
               <Badge className="shrink-0" icon="users" tone="info">
                 <span className="sr-only">회원</span>
               </Badge>
             </div>
-          <p className="mt-2 text-2xl font-semibold text-slate-950">
+          <p className="mt-2 text-2xl font-semibold text-ink-strong">
             {isLoading ? (
-              <span className="inline-block h-8 w-14 animate-pulse rounded bg-slate-200 align-middle" />
+              <span className="inline-block h-8 w-14 animate-pulse rounded bg-surface-sunken align-middle" />
             ) : (
               formatCount(card.value)
             )}
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-ink-faint">
             {isLoading ? "요약 불러오는 중..." : card.description}
           </p>
           </CardContent>

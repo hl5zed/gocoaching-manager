@@ -68,18 +68,18 @@ function getHasActiveHistoryFilter(searchParams: URLSearchParams) {
 
 function SummaryCard({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-4">
-      <p className="text-xs font-medium text-slate-500">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-slate-950">{value}</p>
+    <div className="rounded-card border border-line-base bg-surface-card p-4">
+      <p className="text-xs font-medium text-ink-faint">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-ink-strong">{value}</p>
     </div>
   );
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-slate-100 py-2 text-sm last:border-b-0">
-      <span className="text-slate-500">{label}</span>
-      <span className="max-w-[70%] text-right font-medium text-slate-900">
+    <div className="flex items-start justify-between gap-4 border-b border-line-soft py-2 text-sm last:border-b-0">
+      <span className="text-ink-faint">{label}</span>
+      <span className="max-w-[70%] text-right font-medium text-ink-strong">
         {value}
       </span>
     </div>
@@ -287,9 +287,9 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-md border border-slate-200 bg-white p-5">
-        <h2 className="text-xl font-semibold text-slate-950">변경 이력</h2>
-        <p className="mt-2 text-sm text-slate-600">
+      <div className="rounded-card border border-line-base bg-surface-card p-5">
+        <h2 className="text-xl font-semibold text-ink-strong">변경 이력</h2>
+        <p className="mt-2 text-sm text-ink-muted">
           회원의 세대 변경 이력을 확인합니다. 세대 변경은 배정 관리 또는
           관리자 수정 시 자동으로 기록됩니다.
         </p>
@@ -318,17 +318,17 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
         />
       </div>
 
-      <div className="rounded-md border border-slate-200 bg-white p-5">
+      <div className="rounded-card border border-line-base bg-surface-card p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-slate-950">필터</h3>
-            <p className="mt-1 text-sm text-slate-600">
+            <h3 className="text-lg font-semibold text-ink-strong">필터</h3>
+            <p className="mt-1 text-sm text-ink-muted">
               필터 변경은 URL에 반영되어 브라우저 뒤로가기로 이전 상태를
               복구할 수 있습니다.
             </p>
           </div>
           <button
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+            className="rounded-control border border-line-base px-3 py-2 text-sm font-medium text-ink-base"
             onClick={resetFilters}
             type="button"
           >
@@ -338,7 +338,7 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <form
-            className="text-sm font-medium text-slate-700"
+            className="text-sm font-medium text-ink-base"
             onSubmit={(event) => {
               event.preventDefault();
               updateFilter("search", searchText.trim());
@@ -347,13 +347,13 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
             검색어
             <div className="mt-2 flex gap-2">
               <input
-                className="min-w-0 flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="min-w-0 flex-1 rounded-control border border-line-base px-3 py-2 text-sm"
                 onChange={(event) => setSearchText(event.target.value)}
                 placeholder="이름, 이메일, 국가, 교회"
                 value={searchText}
               />
               <button
-                className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-control border border-line-base px-3 py-2 text-sm"
                 type="submit"
               >
                 적용
@@ -361,10 +361,10 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
             </div>
           </form>
 
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-ink-base">
             국가
             <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
               onChange={(event) => updateFilter("countryId", event.target.value)}
               value={searchParams.get("countryId") ?? ""}
             >
@@ -381,10 +381,10 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
             </select>
           </label>
 
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-ink-base">
             기관
             <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
               onChange={(event) =>
                 updateFilter("organizationId", event.target.value)
               }
@@ -399,10 +399,10 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
             </select>
           </label>
 
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-ink-base">
             교회
             <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
               onChange={(event) => updateFilter("churchId", event.target.value)}
               value={searchParams.get("churchId") ?? ""}
             >
@@ -417,10 +417,10 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
             </select>
           </label>
 
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-ink-base">
             변경 전 세대
             <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
               onChange={(event) =>
                 updateFilter("oldGenerationNumber", event.target.value)
               }
@@ -440,10 +440,10 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
             </select>
           </label>
 
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-ink-base">
             변경 후 세대
             <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
               onChange={(event) =>
                 updateFilter("newGenerationNumber", event.target.value)
               }
@@ -463,10 +463,10 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
             </select>
           </label>
 
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-ink-base">
             변경자
             <select
-              className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
               onChange={(event) =>
                 updateFilter("changedByProfileId", event.target.value)
               }
@@ -481,20 +481,20 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
             </select>
           </label>
 
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-ink-base">
             기간 시작일
             <input
-              className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-control border border-line-base px-3 py-2 text-sm"
               onChange={(event) => updateFilter("dateFrom", event.target.value)}
               type="date"
               value={searchParams.get("dateFrom") ?? ""}
             />
           </label>
 
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-ink-base">
             기간 종료일
             <input
-              className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-control border border-line-base px-3 py-2 text-sm"
               onChange={(event) => updateFilter("dateTo", event.target.value)}
               type="date"
               value={searchParams.get("dateTo") ?? ""}
@@ -510,27 +510,27 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <section className="rounded-md border border-slate-200 bg-white p-5">
+        <section className="rounded-card border border-line-base bg-surface-card p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-lg font-semibold text-slate-950">
+              <h3 className="text-lg font-semibold text-ink-strong">
                 세대 변경 타임라인
               </h3>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-ink-muted">
                 최신 변경일수록 위에 표시됩니다.
               </p>
             </div>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-ink-faint">
               전체 {historyData?.pagination.totalItems ?? 0}건
             </p>
           </div>
 
           {isLoading ? (
-            <p className="mt-6 rounded-md bg-slate-50 p-4 text-sm text-slate-600">
+            <p className="mt-6 rounded-md bg-surface-app p-4 text-sm text-ink-muted">
               세대 변경 이력을 불러오는 중입니다.
             </p>
           ) : historyData && historyData.items.length === 0 ? (
-            <p className="mt-6 rounded-md bg-slate-50 p-4 text-sm text-slate-600">
+            <p className="mt-6 rounded-md bg-surface-app p-4 text-sm text-ink-muted">
               {hasActiveFilter
                 ? "선택한 조건에 해당하는 세대 변경 이력이 없습니다."
                 : "세대 변경 이력이 없습니다."}
@@ -545,38 +545,38 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
                     <button
                       className={`w-full rounded-md border p-4 text-left transition ${
                         isSelected
-                          ? "border-slate-950 bg-slate-50"
-                          : "border-slate-200 bg-white hover:border-slate-400"
+                          ? "border-navy-900 bg-surface-sunken"
+                          : "border-line-base bg-surface-card hover:border-line-base"
                       }`}
                       onClick={() => setSelectedHistoryId(item.id)}
                       type="button"
                     >
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                          <p className="font-semibold text-slate-950">
+                          <p className="font-semibold text-ink-strong">
                             {item.profileName}
                           </p>
-                          <p className="mt-1 text-sm text-slate-500">
+                          <p className="mt-1 text-sm text-ink-faint">
                             {displayValue(item.profileEmail)}
                           </p>
                         </div>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-ink-faint">
                           {formatDateTime(item.createdAt)}
                         </p>
                       </div>
                       <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-                        <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">
+                        <span className="rounded-full bg-surface-sunken px-3 py-1 font-medium text-ink-base">
                           {item.oldGenerationLabel}
                         </span>
-                        <span className="text-slate-400">→</span>
+                        <span className="text-ink-faint">→</span>
                         <span className="rounded-full bg-indigo-50 px-3 py-1 font-medium text-indigo-700">
                           {item.newGenerationLabel}
                         </span>
-                        <span className="text-slate-500">
+                        <span className="text-ink-faint">
                           변경자: {item.changedByName}
                         </span>
                       </div>
-                      <p className="mt-3 text-sm text-slate-600">
+                      <p className="mt-3 text-sm text-ink-muted">
                         {formatCountry(item)} · {displayValue(item.organizationName)} ·{" "}
                         {displayValue(item.churchName)}
                       </p>
@@ -588,14 +588,14 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
           )}
 
           {historyData && historyData.pagination.totalPages > 1 ? (
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-              <p className="text-sm text-slate-500">
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-line-soft pt-4">
+              <p className="text-sm text-ink-faint">
                 {historyData.pagination.page} / {historyData.pagination.totalPages}
                 페이지
               </p>
               <div className="flex gap-2">
                 <button
-                  className="rounded-md border border-slate-300 px-3 py-2 text-sm disabled:opacity-40"
+                  className="rounded-control border border-line-base px-3 py-2 text-sm disabled:opacity-40"
                   disabled={historyData.pagination.page <= 1}
                   onClick={() => updatePage(historyData.pagination.page - 1)}
                   type="button"
@@ -603,7 +603,7 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
                   이전
                 </button>
                 <button
-                  className="rounded-md border border-slate-300 px-3 py-2 text-sm disabled:opacity-40"
+                  className="rounded-control border border-line-base px-3 py-2 text-sm disabled:opacity-40"
                   disabled={
                     historyData.pagination.page >=
                     historyData.pagination.totalPages
@@ -618,8 +618,8 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
           ) : null}
         </section>
 
-        <aside className="rounded-md border border-slate-200 bg-white p-5">
-          <h3 className="text-lg font-semibold text-slate-950">이력 상세</h3>
+        <aside className="rounded-card border border-line-base bg-surface-card p-5">
+          <h3 className="text-lg font-semibold text-ink-strong">이력 상세</h3>
           {selectedHistory ? (
             <div className="mt-4">
               <DetailRow label="이력 ID" value={selectedHistory.id} />
@@ -669,7 +669,7 @@ export function GenerationHistoryPanel({ data }: GenerationHistoryPanelProps) {
               />
             </div>
           ) : (
-            <p className="mt-4 rounded-md bg-slate-50 p-4 text-sm text-slate-600">
+            <p className="mt-4 rounded-md bg-surface-app p-4 text-sm text-ink-muted">
               타임라인 항목을 선택하면 상세 정보가 표시됩니다.
             </p>
           )}

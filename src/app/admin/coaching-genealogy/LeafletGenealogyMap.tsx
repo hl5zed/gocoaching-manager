@@ -243,7 +243,7 @@ export function LeafletGenealogyMap({
   selectedMarkerType,
 }: LeafletGenealogyMapProps) {
   return (
-    <div className="genealogy-map-panel relative h-[620px] overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-blue-100 via-blue-200 to-emerald-100">
+    <div className="genealogy-map-panel relative h-[620px] overflow-hidden rounded-2xl border border-line-base bg-gradient-to-br from-blue-100 via-blue-200 to-emerald-100">
       <style>{`
         .genealogy-map-panel .leaflet-container {
           background: linear-gradient(160deg, #dbeafe 0%, #bfdbfe 35%, #a7f3d0 70%, #d1fae5 100%);
@@ -300,8 +300,8 @@ export function LeafletGenealogyMap({
           </Marker>
         ))}
       </MapContainer>
-      <div className="genealogy-map-legend pointer-events-none absolute bottom-4 left-4 z-[500] rounded-xl border border-white/70 bg-white/85 px-3 py-2 text-xs text-slate-700 shadow-sm backdrop-blur">
-        <p className="mb-1 font-semibold text-slate-900">파이 = 세대 비율</p>
+      <div className="genealogy-map-legend pointer-events-none absolute bottom-4 left-4 z-[500] rounded-xl border border-white/70 bg-surface-card/85 px-3 py-2 text-xs text-ink-base shadow-sm backdrop-blur">
+        <p className="mb-1 font-semibold text-ink-strong">파이 = 세대 비율</p>
         <div className="flex flex-wrap gap-2">
           {[1, 2, 3, 4].map((generation) => (
             <span className="inline-flex items-center gap-1" key={generation}>

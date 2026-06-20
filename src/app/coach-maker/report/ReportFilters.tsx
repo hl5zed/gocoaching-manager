@@ -69,9 +69,9 @@ export function ReportFilters({
   }
 
   return (
-    <section className="report-controls mt-6 rounded-md border border-slate-200 bg-slate-50 p-4 print:hidden">
-      <div className="mb-4 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
-        <p className="font-semibold text-slate-800">
+    <section className="report-controls mt-6 rounded-card border border-line-base bg-surface-app p-4 print:hidden">
+      <div className="mb-4 rounded-md border border-line-base bg-surface-card px-4 py-3 text-sm leading-6 text-ink-muted">
+        <p className="font-semibold text-ink-base">
           {t("coachMaker.report.filters.title", "보고서 기준")}
         </p>
         <p className="mt-1">
@@ -82,10 +82,10 @@ export function ReportFilters({
         </p>
       </div>
       <div className="grid gap-3 md:grid-cols-4">
-        <label className="text-sm font-medium text-slate-700">
+        <label className="text-sm font-medium text-ink-base">
           {t("coachMaker.report.filters.year", "연도")}
           <select
-            className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
             onChange={(event) => setYear(event.target.value)}
             value={year}
           >
@@ -98,10 +98,10 @@ export function ReportFilters({
           </select>
         </label>
 
-        <label className="text-sm font-medium text-slate-700">
+        <label className="text-sm font-medium text-ink-base">
           {t("coachMaker.report.filters.team", "팀")}
           <input
-            className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
             list="report-team-options"
             onChange={(event) => setTeam(event.target.value)}
             placeholder={t(
@@ -117,20 +117,20 @@ export function ReportFilters({
           </datalist>
         </label>
 
-        <label className="text-sm font-medium text-slate-700">
+        <label className="text-sm font-medium text-ink-base">
           {t("coachMaker.report.filters.from", "시작일")}
           <input
-            className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
             onChange={(event) => setFrom(event.target.value)}
             type="date"
             value={from}
           />
         </label>
 
-        <label className="text-sm font-medium text-slate-700">
+        <label className="text-sm font-medium text-ink-base">
           {t("coachMaker.report.filters.to", "종료일")}
           <input
-            className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-sm"
             onChange={(event) => setTo(event.target.value)}
             type="date"
             value={to}
@@ -140,14 +140,14 @@ export function ReportFilters({
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button
-          className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+          className="rounded-control bg-navy-900 px-4 py-2 text-sm font-semibold text-white hover:bg-navy-800"
           onClick={applyFilters}
           type="button"
         >
           {t("coachMaker.report.filters.apply", "필터 적용")}
         </button>
         <button
-          className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          className="rounded-md border border-line-base bg-surface-card px-4 py-2 text-sm font-semibold text-ink-base hover:bg-surface-sunken"
           onClick={resetFilters}
           type="button"
         >

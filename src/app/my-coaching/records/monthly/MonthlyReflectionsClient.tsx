@@ -568,8 +568,8 @@ export function MonthlyReflectionsClient() {
   }
 
   return (
-    <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-      <section className="rounded-md border border-slate-200 bg-white p-6">
+    <div className="mt-6 grid gap-4">
+      <section className="rounded-card border border-line-base bg-surface-card p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold">
@@ -577,7 +577,7 @@ export function MonthlyReflectionsClient() {
                 ? t("myCoaching.records.monthlyPage.form.editTitle", "월간 회고 수정")
                 : t("myCoaching.records.monthlyPage.form.createTitle", "월간 회고 작성")}
             </h2>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-ink-muted">
               {t(
                 "myCoaching.records.monthlyPage.form.description",
                 "한 달의 성장과 다음 달 계획을 정리해 주세요.",
@@ -586,7 +586,7 @@ export function MonthlyReflectionsClient() {
           </div>
           {editingRecord ? (
             <button
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+              className="rounded-control border border-line-base px-3 py-2 text-sm font-medium text-ink-base"
               onClick={resetForm}
               type="button"
             >
@@ -596,12 +596,12 @@ export function MonthlyReflectionsClient() {
         </div>
 
         {message ? (
-          <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+          <div className="mt-4 rounded-control border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
             {message}
           </div>
         ) : null}
         {errorMessage ? (
-          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          <div className="mt-4 rounded-control border border-red-200 bg-red-50 p-3 text-sm text-red-800">
             {errorMessage}
           </div>
         ) : null}
@@ -610,13 +610,13 @@ export function MonthlyReflectionsClient() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="year"
               >
                 {t("myCoaching.records.monthlyPage.form.year", "연도")}
               </label>
               <input
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="year"
                 max="2100"
                 min="2000"
@@ -632,13 +632,13 @@ export function MonthlyReflectionsClient() {
             </div>
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="month"
               >
                 {t("myCoaching.records.monthlyPage.form.month", "월")}
               </label>
               <select
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="month"
                 onChange={(event) =>
                   setForm((current) => ({
@@ -663,13 +663,13 @@ export function MonthlyReflectionsClient() {
 
           <div>
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-ink-base"
               htmlFor="summary"
             >
               {t("myCoaching.records.monthlyPage.form.summary", "한 달 요약")}
             </label>
             <textarea
-              className="mt-1 min-h-28 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 min-h-28 w-full rounded-control border border-line-base px-3 py-2 text-sm"
               id="summary"
               onChange={(event) =>
                 setForm((current) => ({
@@ -683,13 +683,13 @@ export function MonthlyReflectionsClient() {
 
           <div>
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-ink-base"
               htmlFor="growth_points"
             >
               {t("myCoaching.records.monthlyPage.form.growthPoints", "성장한 점")}
             </label>
             <textarea
-              className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 min-h-24 w-full rounded-control border border-line-base px-3 py-2 text-sm"
               id="growth_points"
               onChange={(event) =>
                 setForm((current) => ({
@@ -703,13 +703,13 @@ export function MonthlyReflectionsClient() {
 
           <div>
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-ink-base"
               htmlFor="difficulty"
             >
               {t("myCoaching.records.monthlyPage.form.difficulty", "어려웠던 점")}
             </label>
             <textarea
-              className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 min-h-24 w-full rounded-control border border-line-base px-3 py-2 text-sm"
               id="difficulty"
               onChange={(event) =>
                 setForm((current) => ({
@@ -723,13 +723,13 @@ export function MonthlyReflectionsClient() {
 
           <div>
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-ink-base"
               htmlFor="next_month_plan"
             >
               {t("myCoaching.records.monthlyPage.form.nextMonthPlan", "다음 달 계획")}
             </label>
             <textarea
-              className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 min-h-24 w-full rounded-control border border-line-base px-3 py-2 text-sm"
               id="next_month_plan"
               onChange={(event) =>
                 setForm((current) => ({
@@ -744,13 +744,13 @@ export function MonthlyReflectionsClient() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="visibility"
               >
                 {t("myCoaching.records.monthlyPage.form.visibility.label", "공유 옵션")}
               </label>
               <select
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="visibility"
                 onChange={(event) =>
                   setForm((current) => ({
@@ -773,13 +773,13 @@ export function MonthlyReflectionsClient() {
 
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="status"
               >
                 {t("myCoaching.records.monthlyPage.form.status.label", "상태")}
               </label>
               <select
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="status"
                 onChange={(event) =>
                   setForm((current) => ({
@@ -802,10 +802,10 @@ export function MonthlyReflectionsClient() {
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-slate-700">
+          <label className="flex items-center gap-2 text-sm text-ink-base">
             <input
               checked={form.shared_with_coach}
-              className="h-4 w-4 rounded border-slate-300"
+              className="h-4 w-4 rounded border-line-base"
               onChange={(event) =>
                 setForm((current) => ({
                   ...current,
@@ -819,7 +819,7 @@ export function MonthlyReflectionsClient() {
           </label>
 
           <button
-            className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="w-full rounded-control bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isSaving}
             type="submit"
           >
@@ -832,12 +832,12 @@ export function MonthlyReflectionsClient() {
         </form>
       </section>
 
-      <section className="rounded-md border border-slate-200 bg-white p-6">
+      <section className="rounded-card border border-line-base bg-surface-card p-4">
         <div>
           <h2 className="text-lg font-semibold">
             {t("myCoaching.records.monthlyPage.form.listTitle", "나의 월간 회고 목록")}
           </h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-ink-muted">
             {t(
               "myCoaching.records.monthlyPage.form.listDescription",
               "최신 연도와 월 순서로 표시됩니다.",
@@ -845,17 +845,17 @@ export function MonthlyReflectionsClient() {
           </p>
         </div>
 
-        <div className="mt-4 grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-4 grid gap-3 rounded-control border border-line-base bg-surface-sunken p-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="monthly-search"
               >
                 {t("myCoaching.records.monthlyPage.form.search", "검색")}
               </label>
               <input
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="monthly-search"
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder={t(
@@ -867,7 +867,7 @@ export function MonthlyReflectionsClient() {
               />
             </div>
             <div className="flex items-end">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-ink-muted">
                 {t("myCoaching.records.monthlyPage.form.resultLabel", "월간 회고")}:{" "}
                 {t("myCoaching.records.monthlyPage.form.resultCountPrefix", "전체")}{" "}
                 {records.length}
@@ -881,13 +881,13 @@ export function MonthlyReflectionsClient() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div>
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-ink-base"
               htmlFor="filter-year"
             >
               {t("myCoaching.records.monthlyPage.form.yearFilter", "연도 필터")}
             </label>
             <input
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
               id="filter-year"
               max="2100"
               min="2000"
@@ -899,13 +899,13 @@ export function MonthlyReflectionsClient() {
           </div>
             <div>
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-ink-base"
               htmlFor="filter-month"
             >
               {t("myCoaching.records.monthlyPage.form.monthFilter", "월 필터")}
             </label>
             <select
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
               id="filter-month"
               onChange={(event) => setFilterMonth(event.target.value)}
               value={filterMonth}
@@ -923,13 +923,13 @@ export function MonthlyReflectionsClient() {
           </div>
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="monthly-status-filter"
               >
                 {t("myCoaching.records.monthlyPage.form.status.label", "상태")}
               </label>
               <select
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="monthly-status-filter"
                 onChange={(event) =>
                   setStatusFilter(event.target.value as StatusFilter)
@@ -952,13 +952,13 @@ export function MonthlyReflectionsClient() {
             </div>
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="monthly-visibility-filter"
               >
                 {t("myCoaching.records.monthlyPage.form.visibility.filterLabel", "공유")}
               </label>
               <select
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="monthly-visibility-filter"
                 onChange={(event) =>
                   setVisibilityFilter(event.target.value as VisibilityFilter)
@@ -981,13 +981,13 @@ export function MonthlyReflectionsClient() {
           <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="monthly-sort-key"
               >
                 {t("myCoaching.records.monthlyPage.form.sortBy", "정렬 기준")}
               </label>
               <select
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="monthly-sort-key"
                 onChange={(event) =>
                   setSortKey(event.target.value as MonthlySortKey)
@@ -1010,13 +1010,13 @@ export function MonthlyReflectionsClient() {
             </div>
             <div>
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-ink-base"
                 htmlFor="monthly-sort-direction"
               >
                 {t("myCoaching.records.monthlyPage.form.sortDirection", "정렬 방향")}
               </label>
               <select
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
                 id="monthly-sort-direction"
                 onChange={(event) =>
                   setSortDirection(event.target.value as SortDirection)
@@ -1033,14 +1033,14 @@ export function MonthlyReflectionsClient() {
             </div>
             <div className="flex items-end gap-2">
             <button
-              className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white"
+              className="rounded-control bg-brand-600 px-3 py-2 text-sm font-medium text-white"
               onClick={() => void loadRecords()}
               type="button"
             >
               {t("myCoaching.records.monthlyPage.form.applyFilters", "필터 적용")}
             </button>
             <button
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700"
+              className="rounded-control border border-line-base bg-surface-card px-3 py-2 text-sm font-medium text-ink-base"
               onClick={resetFilters}
               type="button"
             >
@@ -1051,15 +1051,15 @@ export function MonthlyReflectionsClient() {
         </div>
 
         {isLoading ? (
-          <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+          <div className="mt-5 rounded-control border border-line-base bg-surface-sunken p-4 text-sm text-ink-muted">
             {t("myCoaching.records.monthlyPage.form.loading", "월간 회고를 불러오는 중입니다.")}
           </div>
         ) : records.length === 0 ? (
-          <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+          <div className="mt-5 rounded-control border border-line-base bg-surface-sunken p-4 text-sm text-ink-muted">
             {t("myCoaching.records.monthlyPage.form.empty", "아직 작성한 월간 회고가 없습니다.")}
           </div>
         ) : visibleRecords.length === 0 ? (
-          <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+          <div className="mt-5 rounded-control border border-line-base bg-surface-sunken p-4 text-sm text-ink-muted">
             {t(
               "myCoaching.records.monthlyPage.form.noResults",
               "선택한 조건에 해당하는 월간 회고가 없습니다.",
@@ -1069,18 +1069,18 @@ export function MonthlyReflectionsClient() {
           <div className="mt-5 space-y-4">
             {visibleRecords.map((record) => (
               <article
-                className="rounded-md border border-slate-200 bg-slate-50 p-4"
+                className="rounded-control border border-line-base bg-surface-sunken p-4"
                 key={record.id}
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium text-slate-500">
+                    <p className="text-sm font-medium text-ink-muted">
                       {record.year}
                       {t("myCoaching.records.monthlyPage.form.yearSuffix", "년")}{" "}
                       {record.month}
                       {t("myCoaching.records.monthlyPage.form.monthSuffix", "월")}
                     </p>
-                    <h3 className="mt-1 font-semibold text-slate-950">
+                    <h3 className="mt-1 font-semibold text-ink-strong">
                       {t("myCoaching.records.monthlyPage.form.cardTitle", "월간 회고")}
                     </h3>
                   </div>
@@ -1096,40 +1096,40 @@ export function MonthlyReflectionsClient() {
 
                 <dl className="mt-4 grid gap-4 text-sm">
                   <div>
-                    <dt className="font-medium text-slate-500">
+                    <dt className="font-medium text-ink-muted">
                       {t("myCoaching.records.monthlyPage.form.summary", "한 달 요약")}
                     </dt>
-                    <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                    <dd className="mt-1 whitespace-pre-wrap text-ink-base">
                       {displayText(record.summary)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-slate-500">
+                    <dt className="font-medium text-ink-muted">
                       {t("myCoaching.records.monthlyPage.form.growthPoints", "성장한 점")}
                     </dt>
-                    <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                    <dd className="mt-1 whitespace-pre-wrap text-ink-base">
                       {displayText(record.growth_points)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-slate-500">
+                    <dt className="font-medium text-ink-muted">
                       {t("myCoaching.records.monthlyPage.form.difficulty", "어려웠던 점")}
                     </dt>
-                    <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                    <dd className="mt-1 whitespace-pre-wrap text-ink-base">
                       {displayText(record.difficulty)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-slate-500">
+                    <dt className="font-medium text-ink-muted">
                       {t("myCoaching.records.monthlyPage.form.nextMonthPlan", "다음 달 계획")}
                     </dt>
-                    <dd className="mt-1 whitespace-pre-wrap text-slate-800">
+                    <dd className="mt-1 whitespace-pre-wrap text-ink-base">
                       {displayText(record.next_month_plan)}
                     </dd>
                   </div>
                 </dl>
 
-                <dl className="mt-4 grid gap-3 border-t border-slate-200 pt-4 text-xs text-slate-600 sm:grid-cols-2">
+                <dl className="mt-4 grid gap-3 border-t border-line-base pt-4 text-xs text-ink-muted sm:grid-cols-2">
                   <div>
                     <dt className="font-medium">
                       {t("myCoaching.records.monthlyPage.form.createdAt", "작성일")}
@@ -1160,14 +1160,14 @@ export function MonthlyReflectionsClient() {
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700"
+                    className="rounded-control border border-line-base bg-surface-card px-3 py-2 text-sm font-medium text-ink-base"
                     onClick={() => startEdit(record)}
                     type="button"
                   >
                     {t("myCoaching.records.monthlyPage.form.edit", "수정")}
                   </button>
                   <button
-                    className="rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700"
+                    className="rounded-control border border-red-200 bg-surface-card px-3 py-2 text-sm font-medium text-red-700"
                     disabled={deletingId === record.id}
                     onClick={() => void removeRecord(record)}
                     type="button"

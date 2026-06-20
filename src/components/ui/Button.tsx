@@ -10,11 +10,11 @@ const variantClass: Record<ButtonVariant, string> = {
   danger:
     "border-red-200 bg-red-50 text-red-700 hover:border-red-300 hover:bg-red-100",
   ghost:
-    "border-transparent bg-transparent text-slate-700 hover:bg-slate-100",
+    "border-transparent bg-transparent text-ink-base hover:bg-surface-sunken",
   primary:
-    "border-teal-700 bg-teal-700 text-white shadow-sm hover:border-teal-800 hover:bg-teal-800",
+    "border-brand-600 bg-brand-600 text-white shadow-sm hover:border-brand-700 hover:bg-brand-700",
   secondary:
-    "border-slate-300 bg-white text-slate-700 shadow-sm hover:border-teal-200 hover:bg-teal-50 hover:text-teal-800",
+    "border-line-base bg-surface-card text-ink-base shadow-sm hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700",
 };
 
 const sizeClass: Record<ButtonSize, string> = {
@@ -94,7 +94,7 @@ function buttonClassName({
   variant: ButtonVariant;
 }) {
   return cn(
-    "inline-flex max-w-full items-center justify-center gap-2 rounded-lg border font-semibold tracking-normal transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-not-allowed disabled:opacity-60",
+    "inline-flex max-w-full items-center justify-center gap-2 rounded-control border font-semibold tracking-normal transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:opacity-60",
     "whitespace-normal text-center",
     variantClass[variant],
     sizeClass[size],

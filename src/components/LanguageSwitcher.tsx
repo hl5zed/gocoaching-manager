@@ -68,7 +68,7 @@ export function LanguageSwitcher() {
       <Button
         aria-expanded={open}
         aria-haspopup="menu"
-        className="inline-flex h-10 min-h-10 min-w-[112px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border-slate-200 bg-white px-4 py-2 text-sm leading-none hover:bg-slate-50 [&_span]:whitespace-nowrap"
+        className="inline-flex h-10 min-h-10 min-w-[112px] items-center justify-center gap-2 whitespace-nowrap rounded-xl border-line-base bg-surface-card px-4 py-2 text-sm leading-none hover:bg-surface-sunken [&_span]:whitespace-nowrap"
         icon="globe"
         iconPosition="left"
         onClick={() => setOpen((value) => !value)}
@@ -83,16 +83,16 @@ export function LanguageSwitcher() {
 
       {open ? (
         <div
-          className="absolute right-0 z-50 mt-2 w-56 rounded-md border border-slate-200 bg-white p-2 text-sm shadow-lg"
+          className="absolute right-0 z-50 mt-2 w-56 rounded-md border border-line-base bg-surface-card p-2 text-sm shadow-lg"
           role="menu"
         >
-          <p className="px-2 py-1 text-xs font-medium text-slate-500">
+          <p className="px-2 py-1 text-xs font-medium text-ink-faint">
             {t("language.change", "언어 변경")}
           </p>
           {LOCALE_OPTIONS.filter((option) => option.status === "active").map((option) => (
             <button
-              className={`flex w-full items-center justify-between rounded-md px-2 py-2 text-left hover:bg-slate-50 ${
-                option.code === locale ? "font-semibold text-slate-950" : "text-slate-700"
+              className={`flex w-full items-center justify-between rounded-control px-2 py-2 text-left hover:bg-surface-sunken ${
+                option.code === locale ? "font-semibold text-ink-strong" : "text-ink-base"
               }`}
               key={option.code}
               onClick={() => {
@@ -111,12 +111,12 @@ export function LanguageSwitcher() {
             </button>
           ))}
 
-          <div className="my-2 border-t border-slate-200" />
+          <div className="my-2 border-t border-line-base" />
 
           {LOCALE_OPTIONS.slice(2).map((option) => (
             <button
               aria-disabled="true"
-              className="flex w-full cursor-not-allowed items-center justify-between rounded-md px-2 py-2 text-left text-slate-400"
+              className="flex w-full cursor-not-allowed items-center justify-between rounded-control px-2 py-2 text-left text-ink-faint"
               disabled
               key={option.code}
               role="menuitem"

@@ -211,7 +211,7 @@ function ScopeIdField({
   scopeType: ScopeType | "";
 }) {
   const sharedClassName =
-    "min-w-[180px] rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal disabled:bg-slate-100 disabled:text-slate-500";
+    "min-w-[180px] rounded-md border border-line-base px-2 py-1.5 font-sans text-xs tracking-normal disabled:bg-surface-sunken disabled:text-ink-faint";
 
   if (!scopeType) {
     return (
@@ -293,8 +293,8 @@ function DetailValue({
 }) {
   return (
     <div>
-      <dt className="text-sm font-medium text-slate-500">{label}</dt>
-      <dd className="mt-1 break-words text-slate-950">{value}</dd>
+      <dt className="text-sm font-medium text-ink-faint">{label}</dt>
+      <dd className="mt-1 break-words text-ink-strong">{value}</dd>
     </div>
   );
 }
@@ -304,7 +304,7 @@ function RoleChangeForm({ user }: { user: AdminUserSummary }) {
 
   if (!representativeRole || representativeRole.role === "super_admin") {
     return (
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-ink-faint">
         super_admin 역할은 이 화면에서 변경할 수 없습니다.
       </p>
     );
@@ -320,8 +320,8 @@ function RoleChangeForm({ user }: { user: AdminUserSummary }) {
   );
 
   return (
-    <div className="grid gap-2 rounded-md border border-dashed border-slate-200 bg-white p-3">
-      <p className="text-xs leading-5 text-slate-500">
+    <div className="grid gap-2 rounded-md border border-dashed border-line-base bg-surface-card p-3">
+      <p className="text-xs leading-5 text-ink-faint">
         역할만 변경되며 기존 권한 범위는 유지됩니다. 범위 변경이 필요하면
         권한을 다시 추가하거나 수정하세요.
       </p>
@@ -330,7 +330,7 @@ function RoleChangeForm({ user }: { user: AdminUserSummary }) {
         <input name="profile_id" type="hidden" value={user.id} />
         <input name="role_id" type="hidden" value={representativeRole.id} />
         <select
-          className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
+          className="rounded-md border border-line-base px-2 py-1.5 font-sans text-xs tracking-normal"
           defaultValue={representativeRole.role}
           name="role"
         >
@@ -341,7 +341,7 @@ function RoleChangeForm({ user }: { user: AdminUserSummary }) {
           ))}
         </select>
         <button
-          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700"
+          className="rounded-md border border-line-base px-2.5 py-1.5 text-xs font-medium text-ink-base"
           type="submit"
         >
           역할 변경
@@ -403,18 +403,18 @@ function RoleAddForm({ user }: { user: AdminUserSummary }) {
   }
 
   if (roleOptions.length === 0) {
-    return <p className="text-xs text-slate-500">추가로 부여할 수 있는 역할이 없습니다.</p>;
+    return <p className="text-xs text-ink-faint">추가로 부여할 수 있는 역할이 없습니다.</p>;
   }
 
   return (
     <form
       action="/api/admin/users"
-      className="grid gap-2 rounded-md border border-dashed border-slate-200 bg-white p-3"
+      className="grid gap-2 rounded-md border border-dashed border-line-base bg-surface-card p-3"
       method="post"
     >
       <input name="intent" type="hidden" value="add_role" />
       <input name="profile_id" type="hidden" value={user.id} />
-      <p className="text-xs leading-5 text-slate-500">
+      <p className="text-xs leading-5 text-ink-faint">
         권한 범위는 회원 소속 정보와 다를 수 있습니다. 관리자 권한은 해당
         범위의 사용자와 기록에 접근할 수 있으므로 신중히 선택하세요.
         super_admin은 이 화면에서 새로 추가할 수 없습니다.
@@ -426,7 +426,7 @@ function RoleAddForm({ user }: { user: AdminUserSummary }) {
       ) : null}
       <div className="flex flex-wrap items-start gap-2">
         <select
-          className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal"
+          className="rounded-md border border-line-base px-2 py-1.5 font-sans text-xs tracking-normal"
           name="role"
           onChange={(event) => {
             setSelectedRole(event.target.value as UserRole | "");
@@ -443,7 +443,7 @@ function RoleAddForm({ user }: { user: AdminUserSummary }) {
           ))}
         </select>
         <select
-          className="rounded-md border border-slate-300 px-2 py-1.5 font-sans text-xs tracking-normal disabled:bg-slate-100 disabled:text-slate-500"
+          className="rounded-md border border-line-base px-2 py-1.5 font-sans text-xs tracking-normal disabled:bg-surface-sunken disabled:text-ink-faint"
           disabled={!selectedRole}
           name="scope_type"
           onChange={(event) => setSelectedScopeType(event.target.value as ScopeType | "")}
@@ -466,7 +466,7 @@ function RoleAddForm({ user }: { user: AdminUserSummary }) {
           scopeType={selectedScopeType}
         />
         <button
-          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-md border border-line-base px-2.5 py-1.5 text-xs font-medium text-ink-base disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isLoadingOptions}
           type="submit"
         >
@@ -485,7 +485,7 @@ function RoleStatusToggleForm({
   user: AdminUserSummary;
 }) {
   if (roleItem.role === "super_admin") {
-    return <span className="text-xs text-slate-500">super_admin 보호</span>;
+    return <span className="text-xs text-ink-faint">super_admin 보호</span>;
   }
 
   const isActive = isActiveRole(roleItem);
@@ -521,11 +521,11 @@ function StatusChangeForm({ user }: { user: AdminUserSummary }) {
   const representativeRole = getRepresentativeRole(user);
 
   if (representativeRole?.role === "super_admin") {
-    return <span className="text-xs text-slate-500">super_admin 보호</span>;
+    return <span className="text-xs text-ink-faint">super_admin 보호</span>;
   }
 
   if (user.status !== "active" && user.status !== "inactive") {
-    return <span className="text-xs text-slate-500">확인 필요</span>;
+    return <span className="text-xs text-ink-faint">확인 필요</span>;
   }
 
   return (
@@ -652,22 +652,22 @@ function ProfileUpdateForm({
 
   return (
     <details
-      className="rounded-md border border-slate-200 bg-slate-50"
+      className="rounded-md border border-line-base bg-surface-sunken"
       onToggle={handleOptionsToggle}
     >
       <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 px-4 py-3">
         <div>
-          <h4 className="text-sm font-semibold text-slate-900">회원 정보 수정</h4>
-          <p className="mt-1 text-xs text-slate-500">
+          <h4 className="text-sm font-semibold text-ink-strong">회원 정보 수정</h4>
+          <p className="mt-1 text-xs text-ink-faint">
             이메일과 시스템 역할은 별도 관리 기능에서 변경합니다.
           </p>
         </div>
-        <span className="rounded-md bg-slate-950 px-3 py-2 text-xs font-semibold text-white">
+        <span className="rounded-control bg-navy-900 px-3 py-2 text-xs font-semibold text-white">
           수정 열기
         </span>
       </summary>
       {isLoadingOptions ? (
-        <div className="border-t border-slate-200 p-4 text-sm text-slate-600">
+        <div className="border-t border-line-base p-4 text-sm text-ink-muted">
           소속 선택값을 불러오는 중...
         </div>
       ) : null}
@@ -688,18 +688,18 @@ function ProfileUpdateForm({
       ) : null}
       {options ? (
       <form
-        className="grid gap-4 border-t border-slate-200 p-4"
+        className="grid gap-4 border-t border-line-base p-4"
         onSubmit={handleSubmit}
       >
         <input name="intent" type="hidden" value="update_profile" />
         <input name="profile_id" type="hidden" value={user.id} />
-        <fieldset className="grid gap-3 rounded-md border border-slate-200 bg-white p-4">
-          <legend className="px-1 text-sm font-semibold text-slate-800">기본 정보</legend>
+        <fieldset className="grid gap-3 rounded-card border border-line-base bg-surface-card p-4">
+          <legend className="px-1 text-sm font-semibold text-ink-base">기본 정보</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-700">이름</span>
+              <span className="font-medium text-ink-base">이름</span>
               <input
-                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                 defaultValue={user.full_name ?? ""}
                 maxLength={120}
                 name="full_name"
@@ -708,9 +708,9 @@ function ProfileUpdateForm({
               />
             </label>
             <label className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-700">표시 이름</span>
+              <span className="font-medium text-ink-base">표시 이름</span>
               <input
-                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                 defaultValue={user.display_name ?? ""}
                 maxLength={120}
                 name="display_name"
@@ -718,9 +718,9 @@ function ProfileUpdateForm({
               />
             </label>
             <label className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-700">전화번호</span>
+              <span className="font-medium text-ink-base">전화번호</span>
               <input
-                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                 defaultValue={user.phone ?? ""}
                 maxLength={40}
                 name="phone"
@@ -728,16 +728,16 @@ function ProfileUpdateForm({
               />
             </label>
             <div className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-700">이메일</span>
-              <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600">
+              <span className="font-medium text-ink-base">이메일</span>
+              <p className="rounded-md border border-line-base bg-surface-app px-3 py-2 text-ink-muted">
                 {formatEmail(user.email)}
               </p>
             </div>
           </div>
         </fieldset>
 
-        <fieldset className="grid gap-3 rounded-md border border-slate-200 bg-white p-4">
-          <legend className="px-1 text-sm font-semibold text-slate-800">소속 정보</legend>
+        <fieldset className="grid gap-3 rounded-card border border-line-base bg-surface-card p-4">
+          <legend className="px-1 text-sm font-semibold text-ink-base">소속 정보</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             <AdminUserAffiliationFields
               churchOptions={options.churches}
@@ -761,9 +761,9 @@ function ProfileUpdateForm({
               regionOptions={options.regions}
             />
             <label className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-700">소속 직분</span>
+              <span className="font-medium text-ink-base">소속 직분</span>
               <select
-                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                 defaultValue={user.ministry_position ?? ""}
                 name="ministry_position"
               >
@@ -778,13 +778,13 @@ function ProfileUpdateForm({
           </div>
         </fieldset>
 
-        <fieldset className="grid gap-3 rounded-md border border-slate-200 bg-white p-4">
-          <legend className="px-1 text-sm font-semibold text-slate-800">역할 및 세대</legend>
+        <fieldset className="grid gap-3 rounded-card border border-line-base bg-surface-card p-4">
+          <legend className="px-1 text-sm font-semibold text-ink-base">역할 및 세대</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-700">세대</span>
+              <span className="font-medium text-ink-base">세대</span>
               <select
-                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                 defaultValue={user.generation_number ?? ""}
                 name="generation_number"
               >
@@ -800,9 +800,9 @@ function ProfileUpdateForm({
               </select>
             </label>
             <label className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-700">회원 상태</span>
+              <span className="font-medium text-ink-base">회원 상태</span>
               <select
-                className="rounded-md border border-slate-300 px-3 py-2 font-sans tracking-normal"
+                className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal"
                 defaultValue={user.status}
                 name="status"
               >
@@ -818,14 +818,14 @@ function ProfileUpdateForm({
 
         <div className="flex flex-wrap gap-2">
           <button
-            className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-control bg-navy-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isSaving}
             type="submit"
           >
             {isSaving ? "저장 중..." : "회원 정보 저장"}
           </button>
           <button
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            className="rounded-control border border-line-base px-4 py-2 text-sm font-medium text-ink-base"
             type="reset"
           >
             수정 취소
@@ -848,13 +848,13 @@ function MemberDetailContent({
 
   return (
     <>
-      <section className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <section className="mt-6 rounded-card border border-line-base bg-surface-app p-4">
         <h3 className="text-base font-semibold">회원가입 입력 정보</h3>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
+        <p className="mt-2 text-sm leading-6 text-ink-muted">
           현재 선택한 회원의 기본 정보, 소속 정보, 세대와 시스템 자동 기록입니다.
         </p>
       </section>
-      <section className="mt-6 rounded-md border border-slate-200 p-4">
+      <section className="mt-6 rounded-md border border-line-base p-4">
         <h3 className="text-base font-semibold">기본 정보</h3>
         <dl className="mt-4 grid gap-4 sm:grid-cols-2">
           <DetailValue label="이름" value={displayProfileValue(user.full_name)} />
@@ -863,7 +863,7 @@ function MemberDetailContent({
           <DetailValue label="전화번호" value={displayProfileValue(user.phone)} />
         </dl>
       </section>
-      <section className="mt-4 rounded-md border border-slate-200 p-4">
+      <section className="mt-4 rounded-md border border-line-base p-4">
         <h3 className="text-base font-semibold">소속 정보</h3>
         <dl className="mt-4 grid gap-4 sm:grid-cols-2">
           <DetailValue label="소속 국가" value={formatCountryValue(user)} />
@@ -877,13 +877,13 @@ function MemberDetailContent({
           <DetailValue label="소속 직분" value={displayProfileValue(user.ministry_position)} />
         </dl>
       </section>
-      <section className="mt-4 rounded-md border border-slate-200 p-4">
+      <section className="mt-4 rounded-md border border-line-base p-4">
         <h3 className="text-base font-semibold">세대</h3>
         <dl className="mt-4 grid gap-4">
           <DetailValue label="세대" value={formatGeneration(user.generation_number)} />
         </dl>
       </section>
-      <section className="mt-4 rounded-md border border-slate-200 p-4">
+      <section className="mt-4 rounded-md border border-line-base p-4">
         <h3 className="text-base font-semibold">시스템 자동 기록</h3>
         <dl className="mt-4 grid gap-4 sm:grid-cols-2">
           <DetailValue label="회원 상태" value={getStatusLabel(user.status)} />
@@ -891,7 +891,7 @@ function MemberDetailContent({
           <DetailValue label="최근 수정일" value={formatDateTime(user.updated_at)} />
         </dl>
       </section>
-      <section className="mt-4 rounded-md border border-slate-200 p-4">
+      <section className="mt-4 rounded-md border border-line-base p-4">
         <h3 className="text-base font-semibold">회원 정보 관리</h3>
         <div className="mt-4 grid gap-4">
           <ProfileUpdateForm onUserUpdated={onUserUpdated} user={user} />
@@ -899,32 +899,32 @@ function MemberDetailContent({
           <StatusChangeForm user={user} />
         </div>
       </section>
-      <section className="mt-4 rounded-md border border-slate-200 p-4">
+      <section className="mt-4 rounded-md border border-line-base p-4">
         <h3 className="text-base font-semibold">시스템 역할 관리</h3>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
+        <p className="mt-2 text-sm leading-6 text-ink-muted">
           이 영역은 회원의 시스템 접근 권한을 관리하는 관리자 전용 기능입니다.
         </p>
         <div className="mt-4 grid gap-4">
-          <dl className="grid gap-4 rounded-md border border-slate-100 bg-slate-50 p-3">
+          <dl className="grid gap-4 rounded-md border border-line-soft bg-surface-app p-3">
             <DetailValue
               label="대표 시스템 역할"
               value={user.primary_role ? getRoleLabel(user.primary_role) : "미지정"}
             />
             <div>
-              <dt className="text-sm font-medium text-slate-500">시스템 역할</dt>
+              <dt className="text-sm font-medium text-ink-faint">시스템 역할</dt>
               <dd className="mt-2 flex flex-wrap gap-2">
                 {user.roles.length === 0 ? (
-                  <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                  <span className="inline-flex rounded-full border border-line-base bg-surface-sunken px-2.5 py-1 text-xs font-medium text-ink-muted">
                     미지정
                   </span>
                 ) : (
                   user.roles.map((roleItem) => (
                     <span
-                      className="inline-flex flex-col rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700"
+                      className="inline-flex flex-col rounded-md border border-line-base bg-surface-card px-2.5 py-1 text-xs font-medium text-ink-base"
                       key={roleItem.id}
                     >
                       <span>{getRoleLabel(roleItem.role)}</span>
-                      <span className="mt-0.5 text-[11px] font-normal text-slate-500">
+                      <span className="mt-0.5 text-[11px] font-normal text-ink-faint">
                         역할 상태: {getRoleActiveLabel(roleItem)}
                       </span>
                     </span>
@@ -935,22 +935,22 @@ function MemberDetailContent({
             <DetailValue label="역할 권한 범위" value={formatScopeSummary(user.roles)} />
           </dl>
           <RoleChangeForm user={user} />
-          <div className="grid gap-2 rounded-md border border-dashed border-slate-200 bg-white p-3">
-            <p className="text-xs font-semibold text-slate-700">시스템 역할 활성/비활성</p>
+          <div className="grid gap-2 rounded-md border border-dashed border-line-base bg-surface-card p-3">
+            <p className="text-xs font-semibold text-ink-base">시스템 역할 활성/비활성</p>
             {user.roles.length === 0 ? (
-              <p className="text-xs text-slate-500">미지정</p>
+              <p className="text-xs text-ink-faint">미지정</p>
             ) : (
               <div className="grid gap-2">
                 {user.roles.map((roleItem) => (
                   <div
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-100 bg-slate-50 px-3 py-2"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line-soft bg-surface-app px-3 py-2"
                     key={roleItem.id}
                   >
                     <div className="text-xs">
-                      <p className="font-semibold text-slate-800">
+                      <p className="font-semibold text-ink-base">
                         {getRoleLabel(roleItem.role)}
                       </p>
-                      <p className="mt-0.5 text-slate-500">
+                      <p className="mt-0.5 text-ink-faint">
                         역할 상태: {getRoleActiveLabel(roleItem)}
                       </p>
                     </div>
@@ -1006,7 +1006,7 @@ export function AdminUserDetailDrawer({ user }: { user: AdminUserSummary }) {
 
   return (
     <details className="group" onToggle={handleToggle}>
-      <summary className="cursor-pointer list-none rounded-md border border-slate-300 px-3 py-2 text-center text-sm font-medium text-slate-700 group-open:fixed group-open:right-4 group-open:top-4 group-open:z-50 group-open:border-slate-700 group-open:bg-white group-open:shadow-lg">
+      <summary className="cursor-pointer list-none rounded-control border border-line-base px-3 py-2 text-center text-sm font-medium text-ink-base group-open:fixed group-open:right-4 group-open:top-4 group-open:z-50 group-open:border-line-base group-open:bg-surface-card group-open:shadow-lg">
         <span className="group-open:hidden">
           <I18nText k="common.view" fallback="상세보기" />
         </span>
@@ -1014,26 +1014,26 @@ export function AdminUserDetailDrawer({ user }: { user: AdminUserSummary }) {
           <I18nText k="common.close" fallback="닫기" />
         </span>
       </summary>
-      <div className="fixed inset-x-0 bottom-0 top-0 z-40 w-full overflow-y-auto border-l border-slate-200 bg-white p-4 text-slate-950 shadow-xl sm:inset-x-auto sm:right-0 sm:max-w-xl sm:p-6 lg:max-w-2xl">
-        <div className="sticky top-0 z-10 -mx-4 -mt-4 flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:-mx-6 sm:-mt-6 sm:px-6">
+      <div className="fixed inset-x-0 bottom-0 top-0 z-40 w-full overflow-y-auto border-l border-line-base bg-surface-card p-4 text-ink-strong shadow-xl sm:inset-x-auto sm:right-0 sm:max-w-xl sm:p-6 lg:max-w-2xl">
+        <div className="sticky top-0 z-10 -mx-4 -mt-4 flex items-center justify-between gap-4 border-b border-line-soft bg-surface-card px-4 py-4 sm:-mx-6 sm:-mt-6 sm:px-6">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+            <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
               회원 상세정보
             </p>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-ink-muted">
               상세 정보와 수정 폼은 열 때마다 별도로 불러옵니다.
             </p>
           </div>
         </div>
 
         {isLoading ? (
-          <div className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+          <div className="mt-6 rounded-card border border-line-base bg-surface-app p-4 text-sm text-ink-muted">
             회원 정보를 불러오는 중...
           </div>
         ) : null}
 
         {error ? (
-          <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <div className="mt-6 rounded-control border border-red-200 bg-red-50 p-4 text-sm text-red-800">
             {error}
           </div>
         ) : null}

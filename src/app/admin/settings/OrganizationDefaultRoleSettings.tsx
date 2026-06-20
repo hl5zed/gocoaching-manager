@@ -142,7 +142,7 @@ export function OrganizationDefaultRoleSettings({
         </div>
       </CardHeader>
       <CardContent className="space-y-5">
-        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+        <p className="rounded-control border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
           이 설정은 초대 생성 화면의 기본값 제안에만 사용되며, 최종 초대
           생성 시 서버에서 다시 검증됩니다.
         </p>
@@ -160,7 +160,7 @@ export function OrganizationDefaultRoleSettings({
         ) : null}
 
         {organizations.length === 0 ? (
-          <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          <p className="rounded-card border border-line-base bg-surface-app px-4 py-3 text-sm text-ink-muted">
             활성 조직이 없습니다. 기관/교회 관리에서 활성 조직을 먼저
             등록해 주세요.
           </p>
@@ -193,14 +193,14 @@ export function OrganizationDefaultRoleSettings({
               </SelectInput>
             </FieldLabel>
 
-            <label className="flex min-h-[74px] items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+            <label className="flex min-h-[74px] items-center gap-3 rounded-card border border-line-base bg-surface-app px-4 py-3">
               <input
                 checked={enabled}
-                className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-600"
+                className="h-4 w-4 rounded border-line-base text-teal-700 focus:ring-teal-600"
                 onChange={(event) => setEnabled(event.target.checked)}
                 type="checkbox"
               />
-              <span className="text-sm font-semibold text-slate-700">
+              <span className="text-sm font-semibold text-ink-base">
                 초대 생성 기본값 제안 사용
               </span>
             </label>
@@ -208,8 +208,8 @@ export function OrganizationDefaultRoleSettings({
         )}
 
         {selectedOrganization ? (
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-            <p className="font-semibold text-slate-800">
+          <div className="rounded-card border border-line-base bg-surface-app px-4 py-3 text-sm leading-6 text-ink-muted">
+            <p className="font-semibold text-ink-base">
               적용 범위: {selectedOrganization.organization_name}
             </p>
             <p>
