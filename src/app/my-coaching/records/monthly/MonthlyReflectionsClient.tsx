@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n/useI18n";
+import { Badge } from "@/components/ui/Badge";
 import {
   getClientTimezone,
   getCurrentMonthInTimezone,
@@ -1085,12 +1086,8 @@ export function MonthlyReflectionsClient() {
                     </h3>
                   </div>
                   <div className="flex flex-wrap gap-2 text-xs">
-                    <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 font-medium text-sky-800">
-                      {getVisibilityLabel(record.visibility, t)}
-                    </span>
-                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 font-medium text-emerald-800">
-                      {getStatusLabel(record.status, t)}
-                    </span>
+                    <Badge tone="info">{getVisibilityLabel(record.visibility, t)}</Badge>
+                    <Badge tone="success">{getStatusLabel(record.status, t)}</Badge>
                   </div>
                 </div>
 

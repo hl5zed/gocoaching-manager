@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { getMyCoachingMe } from "@/lib/api/my-coaching/me";
 import { getMyCoachingFeedback } from "@/lib/api/my-coaching/feedback";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -33,10 +34,6 @@ function formatDateRange(weekStart: string, weekEnd: string) {
     day: "numeric",
   });
   return `${formatter.format(start)} - ${formatter.format(end)}`;
-}
-
-function barWidth(rate: number) {
-  return `${Math.max(4, Math.min(100, rate))}%`;
 }
 
 export default async function MyCoachingWeeklyReportPage() {
@@ -201,22 +198,14 @@ export default async function MyCoachingWeeklyReportPage() {
           <CardHeader className="border-line-soft px-4 py-3">
             <CardTitle className="text-base">요일별 실행률</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 p-4">
+          <CardContent className="space-y-3 p-4">
             {aggregate.dailyPoints.map((point) => (
-              <div className="space-y-1" key={point.dateKey}>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-ink-muted">{point.dayLabel}</span>
-                  <span className="font-semibold text-ink-base">
-                    {point.completionRate}%
-                  </span>
-                </div>
-                <div className="h-2 rounded-full bg-surface-sunken">
-                  <div
-                    className="h-2 rounded-full bg-brand-600"
-                    style={{ width: barWidth(point.completionRate) }}
-                  />
-                </div>
-              </div>
+              <ProgressBar
+                key={point.dateKey}
+                label={point.dayLabel}
+                showValue
+                value={point.completionRate}
+              />
             ))}
           </CardContent>
         </Card>
@@ -227,20 +216,12 @@ export default async function MyCoachingWeeklyReportPage() {
           </CardHeader>
           <CardContent className="space-y-3 p-4">
             {aggregate.areaPoints.map((area) => (
-              <div key={area.areaKey}>
-                <div className="mb-1 flex items-center justify-between text-xs">
-                  <span className="text-ink-muted">{area.areaTitle}</span>
-                  <span className="font-semibold text-ink-base">
-                    {area.completionRate}%
-                  </span>
-                </div>
-                <div className="h-2 rounded-full bg-surface-sunken">
-                  <div
-                    className="h-2 rounded-full bg-emerald-600"
-                    style={{ width: barWidth(area.completionRate) }}
-                  />
-                </div>
-              </div>
+              <ProgressBar
+                key={area.areaKey}
+                label={area.areaTitle}
+                showValue
+                value={area.completionRate}
+              />
             ))}
           </CardContent>
         </Card>

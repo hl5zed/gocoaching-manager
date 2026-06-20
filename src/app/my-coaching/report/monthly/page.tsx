@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { getMyCoachingFeedback } from "@/lib/api/my-coaching/feedback";
 import { getMyCoachingMe } from "@/lib/api/my-coaching/me";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -89,10 +90,6 @@ function monthNavigation(year: number, month: number) {
 function rateValue(value: number | null | undefined) {
   const safe = typeof value === "number" && Number.isFinite(value) ? value : 0;
   return Math.max(0, Math.min(100, Math.round(safe)));
-}
-
-function barWidth(rate: number) {
-  return `${Math.max(4, Math.min(100, rate))}%`;
 }
 
 function heatColor(rate: number) {
@@ -282,18 +279,12 @@ export default async function MyCoachingMonthlyReportPage({
           </CardHeader>
           <CardContent className="space-y-3 p-4">
             {(Object.entries(rates) as Array<[keyof typeof rates, number]>).map(([key, rate]) => (
-              <div key={key}>
-                <div className="mb-1 flex items-center justify-between text-xs">
-                  <span className="text-ink-muted">{AREA_LABEL[key]}</span>
-                  <span className="font-semibold text-ink-base">{rate}%</span>
-                </div>
-                <div className="h-2 rounded-full bg-surface-sunken">
-                  <div
-                    className="h-2 rounded-full bg-brand-600"
-                    style={{ width: barWidth(rate) }}
-                  />
-                </div>
-              </div>
+              <ProgressBar
+                key={key}
+                label={AREA_LABEL[key]}
+                showValue
+                value={rate}
+              />
             ))}
           </CardContent>
         </Card>
