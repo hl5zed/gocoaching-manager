@@ -45,7 +45,7 @@ export function GrowthSection({
   children,
 }: {
   title: string;
-  visibility: GrowthVisibility;
+  visibility?: GrowthVisibility;
   editHref?: string;
   editLabel?: string;
   children: ReactNode;
@@ -55,7 +55,7 @@ export function GrowthSection({
       <CardHeader className="border-line-soft space-y-3 px-4 py-4">
         <div className="flex items-start justify-between gap-3">
           <CardTitle className="text-base">{title}</CardTitle>
-          <VisibilityBadge visibility={visibility} />
+          {visibility ? <VisibilityBadge visibility={visibility} /> : null}
         </div>
         {editHref ? (
           <Link

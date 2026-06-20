@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "next dev",
+    "clean": "npx rimraf .next",
+    "clean:dev": "npm run clean && npm run dev",
     "check:debug-routes": "node --experimental-strip-types scripts/check-debug-routes.ts",
     "check:invitation-rules": "node --experimental-strip-types scripts/check-invitation-rules.ts",
     "check:all": "npm run typecheck && npm run check:debug-routes && npm run check:invitation-rules",

@@ -126,12 +126,21 @@ export function LoginForm({ translations }: LoginFormProps) {
         </div>
 
         <div>
-          <label
-            className="block text-sm font-medium text-ink-base"
-            htmlFor="password"
-          >
-            {passwordText}
-          </label>
+          <div className="flex items-center justify-between">
+            <label
+              className="block text-sm font-medium text-ink-base"
+              htmlFor="password"
+            >
+              {passwordText}
+            </label>
+            <a
+              className="text-sm font-medium text-brand-600 underline"
+              href="/password-reset"
+              tabIndex={-1}
+            >
+              비밀번호 재설정
+            </a>
+          </div>
           <input
             autoComplete="current-password"
             className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"

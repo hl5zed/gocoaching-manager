@@ -6,7 +6,7 @@ import {
 } from "@/components/coachee/GrowthSection";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardTitle } from "@/components/ui/Card";
 import { getMyMoksilgi, type MoksilgiCoreValue } from "@/lib/api/my-coaching/moksilgi";
 import { getMyCoachingMe } from "@/lib/api/my-coaching/me";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -225,17 +225,19 @@ export default async function MyCoachingGrowthPage() {
   return (
     <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
       <section className="mx-auto w-full max-w-md space-y-4">
+        {/* 헤더 */}
         <Card className="border-line-base bg-surface-card">
-          <CardHeader className="border-line-soft px-4 py-4">
+          <CardContent className="p-4">
             <Badge tone="info">나의 성장</Badge>
-            <CardTitle className="mt-2 text-xl">삶의 방향과 실천</CardTitle>
-            <p className="text-xs text-ink-muted">
+            <CardTitle className="mt-2 text-xl text-ink-strong">삶의 방향과 실천</CardTitle>
+            <p className="mt-1 text-xs text-ink-muted">
               {monthLabel(year, month)} 실행률 기준 · {timezone}
             </p>
-          </CardHeader>
+          </CardContent>
         </Card>
 
         {!plan ? (
+          /* 계획 없음 */
           <Card className="border-line-base bg-surface-card">
             <CardContent className="space-y-3 p-4">
               <p className="text-sm text-ink-base">
@@ -248,10 +250,19 @@ export default async function MyCoachingGrowthPage() {
           </Card>
         ) : (
           <>
+            {/* 안내 + 수정 CTA (단일 진입점) */}
             <Card className="border-line-base bg-surface-card">
               <CardContent className="space-y-3 p-4">
-                <p className="text-sm leading-6 text-ink-base">
-                  이 화면은 나의 미션·비전·핵심가치·목표를 <span className="font-semibold">기억하고 확인하는 곳</span>이에요. 내용을 고치거나 새로 추가할 때는 목표 설계 화면에서 수정해 주세요.
+                <p className="text-sm leading-6 text-ink-muted">
+                  미션·비전·핵심가치·목표를 <span className="font-medium text-ink-base">기억하고 확인하는 곳</span>이에요.{" "}
+                  내용을 고칠 때는 목표 설계 화면에서 수정해 주세요.
+                </p>
+                <p className="flex items-center gap-1.5 text-xs text-ink-faint">
+                  <svg aria-hidden className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" viewBox="0 0 24 24">
+                    <path d="M7 11V8a5 5 0 0 1 10 0v3" />
+                    <path d="M5 11h14v10H5z" />
+                  </svg>
+                  코치도 이 내용을 확인할 수 있어요
                 </p>
                 <ButtonLink className="w-full" href={editHref} size="sm" variant="primary">
                   목표 설계 화면 열기
@@ -259,12 +270,7 @@ export default async function MyCoachingGrowthPage() {
               </CardContent>
             </Card>
 
-            <GrowthSection
-              editHref={editHref}
-              editLabel="목표 설계에서 수정"
-              title="미션"
-              visibility="coach"
-            >
+            <GrowthSection title="미션">
               <p className="whitespace-pre-wrap">{displayValue(plan.mission_statement)}</p>
               {plan.mission_description?.trim() ? (
                 <p className="mt-2 whitespace-pre-wrap text-xs text-ink-muted">
@@ -273,12 +279,7 @@ export default async function MyCoachingGrowthPage() {
               ) : null}
             </GrowthSection>
 
-            <GrowthSection
-              editHref={editHref}
-              editLabel="목표 설계에서 수정"
-              title="비전"
-              visibility="coach"
-            >
+            <GrowthSection title="비전">
               <p className="whitespace-pre-wrap">{displayValue(plan.vision_statement)}</p>
               {plan.vision_description?.trim() ? (
                 <p className="mt-2 whitespace-pre-wrap text-xs text-ink-muted">
@@ -287,12 +288,7 @@ export default async function MyCoachingGrowthPage() {
               ) : null}
             </GrowthSection>
 
-            <GrowthSection
-              editHref={editHref}
-              editLabel="목표 설계에서 수정"
-              title="핵심가치"
-              visibility="coach"
-            >
+            <GrowthSection title="핵심가치">
               {coreValues.length === 0 ? (
                 <p className="text-ink-muted">등록된 핵심가치가 없습니다.</p>
               ) : (
@@ -309,12 +305,7 @@ export default async function MyCoachingGrowthPage() {
               )}
             </GrowthSection>
 
-            <GrowthSection
-              editHref={editHref}
-              editLabel="목표 설계에서 수정"
-              title="장기 목표"
-              visibility="coach"
-            >
+            <GrowthSection title="장기 목표">
               <p className="whitespace-pre-wrap">{displayValue(plan.main_goal)}</p>
               {plan.main_goal_description?.trim() ? (
                 <p className="mt-2 whitespace-pre-wrap text-xs text-ink-muted">
@@ -323,14 +314,9 @@ export default async function MyCoachingGrowthPage() {
               ) : null}
             </GrowthSection>
 
-            <GrowthSection
-              editHref={editHref}
-              editLabel="목표 설계에서 수정"
-              title="4영역 목표와 실행률"
-              visibility="coach"
-            >
+            <GrowthSection title="4영역 목표와 실행률">
               <p className="mb-3 text-xs text-ink-muted">
-                방향(목표)과 이번 달 실천(실행률)을 함께 확인할 수 있습니다.
+                방향(목표)과 이번 달 실천(실행률)을 함께 확인합니다.
                 {summary?.updated_at
                   ? ` 집계 최신: ${new Date(summary.updated_at).toLocaleString("ko-KR")}`
                   : ""}

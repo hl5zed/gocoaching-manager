@@ -17,7 +17,15 @@ import {
   STORAGE_KEY,
   type ActiveLocale,
 } from "./config";
-import { messages } from "./messages";
+import { ko } from "./ko";
+
+type MessageDictionary = Record<string, string>;
+
+async function loadLocaleDict(locale: ActiveLocale): Promise<MessageDictionary> {
+  if (locale === "ko") return ko;
+  const { en } = await import("./en");
+  return en;
+}
 
 type I18nContextValue = {
   locale: ActiveLocale;
@@ -38,6 +46,7 @@ function readLocaleFromPayload(payload: unknown) {
 export function I18nProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [locale, setLocaleState] = useState<ActiveLocale>(DEFAULT_LOCALE);
+  const [dict, setDict] = useState<MessageDictionary>(ko);
   const hasSyncedProfileLocaleRef = useRef(false);
 
   useEffect(() => {
@@ -89,6 +98,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     };
   }, [pathname]);
 
+  // When locale changes, load the matching dictionary
+  useEffect(() => {
+    let cancelled = false;
+    void loadLocaleDict(locale).then((d) => {
+      if (!cancelled) setDict(d);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
+
   const setLocale = useCallback((nextLocale: ActiveLocale) => {
     setLocaleState(nextLocale);
     if (typeof window !== "undefined") {
@@ -97,9 +117,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const t = useCallback(
-    (key: string, fallback?: string) =>
-      messages[locale][key] ?? fallback ?? key,
-    [locale],
+    (key: string, fallback?: string) => dict[key] ?? fallback ?? key,
+    [dict],
   );
 
   const value = useMemo(
@@ -123,5 +142,5 @@ export function I18nText({
 }) {
   const context = useContext(I18nContext);
 
-  return <>{context?.t(k, fallback) ?? messages[DEFAULT_LOCALE][k] ?? fallback ?? k}</>;
+  return <>{context?.t(k, fallback) ?? ko[k] ?? fallback ?? k}</>;
 }

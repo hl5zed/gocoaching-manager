@@ -3,7 +3,7 @@
 import { useContext } from "react";
 import { I18nContext } from "./I18nProvider";
 import { DEFAULT_LOCALE } from "./config";
-import { messages } from "./messages";
+import { ko } from "./ko";
 
 export function useI18n() {
   const context = useContext(I18nContext);
@@ -15,7 +15,6 @@ export function useI18n() {
   return {
     locale: DEFAULT_LOCALE,
     setLocale: () => undefined,
-    t: (key: string, fallback?: string) =>
-      messages[DEFAULT_LOCALE][key] ?? fallback ?? key,
+    t: (key: string, fallback?: string) => ko[key] ?? fallback ?? key,
   };
 }
