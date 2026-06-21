@@ -808,6 +808,33 @@ function profileMatchesScope(
   return false;
 }
 
+/**
+ * access.scopes를 기반으로 coaching_relationships 쿼리에
+ * DB 단 사전 필터를 적용한다.
+ * global 스코프가 하나라도 있으면 필터를 추가하지 않는다.
+ */
+function applyRelationshipScopeFilter<T extends { or: (filter: string) => T }>(
+  query: T,
+  scopes: AuthRoleScope[],
+): T {
+  if (scopes.some((scope) => scope.scope_type === "global")) {
+    return query;
+  }
+
+  const scopedFilters = scopes
+    .filter((scope) => scope.scope_type !== "global" && scope.scope_id !== null)
+    .map(
+      (scope) =>
+        `and(scope_type.eq.${scope.scope_type},scope_id.eq.${scope.scope_id})`,
+    );
+
+  if (scopedFilters.length === 0) {
+    return query.or("scope_type.eq.__none__") as T;
+  }
+
+  return query.or(scopedFilters.join(",")) as T;
+}
+
 function relationshipMatchesScope(
   relationship: RelationshipRow,
   coach: ProfileRow | undefined,
@@ -1979,6 +2006,11 @@ export async function getAdminCoachingGenealogy(
       );
     }
 
+    relationshipQuery = applyRelationshipScopeFilter(
+      relationshipQuery,
+      access.scopes,
+    );
+
     const { data: relationshipData, error: relationshipError } =
       await relationshipQuery;
     perf?.mark("data.relationships_query", relationshipData?.length ?? 0);
@@ -2543,7 +2575,7 @@ export async function getAdminGenerationHistory(
       .from("profile_generation_history")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(5000);
+      .limit(500);
 
     if (filters.profileId) {
       historyQuery = historyQuery.eq("profile_id", filters.profileId);
