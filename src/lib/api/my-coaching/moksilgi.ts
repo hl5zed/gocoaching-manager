@@ -1,6 +1,6 @@
 import { getSession } from "@/lib/auth/getSession";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import type { ServiceClient } from "./context";
 import type {
   InsertDto,
   Json,
@@ -70,9 +70,7 @@ const DEFAULT_AREAS: Array<{
   },
 ];
 
-type ServiceSupabaseClient = NonNullable<
-  ReturnType<typeof createSupabaseServiceClient>["client"]
->;
+type ServiceSupabaseClient = ServiceClient;
 
 type PostgrestErrorLike = {
   code?: string;
@@ -181,16 +179,18 @@ type CurrentProfileContext =
 type PlanTable = {
   select: (columns: typeof PLAN_SELECT) => {
     eq: (column: "profile_id", value: string) => {
-      is: (column: "deleted_at", value: null) => {
-        order: (
-          column: "updated_at",
-          options: { ascending: boolean },
-        ) => {
-          limit: (count: 1) => {
-            maybeSingle: () => Promise<{
-              data: MoksilgiPlan | null;
-              error: PostgrestErrorLike | null;
-            }>;
+      eq: (column: "status", value: MoksilgiStatus) => {
+        is: (column: "deleted_at", value: null) => {
+          order: (
+            column: "updated_at",
+            options: { ascending: boolean },
+          ) => {
+            limit: (count: 1) => {
+              maybeSingle: () => Promise<{
+                data: MoksilgiPlan | null;
+                error: PostgrestErrorLike | null;
+              }>;
+            };
           };
         };
       };
@@ -404,20 +404,7 @@ async function getCurrentProfileContext(): Promise<CurrentProfileContext> {
     };
   }
 
-  const { client, error } = createSupabaseServiceClient();
-
-  if (!client) {
-    console.error("[MOKSILGI_SERVICE_CLIENT_UNAVAILABLE]", error);
-    return {
-      ok: false,
-      error: {
-        code: "MOKSILGI_QUERY_FAILED",
-        message: "지금 목실기를 불러올 수 없습니다.",
-      },
-    };
-  }
-
-  return { ok: true, profileId: (profile as ProfileIdRow).id, serviceClient: client };
+  return { ok: true, profileId: (profile as ProfileIdRow).id, serviceClient: supabase };
 }
 
 async function getOwnedPlan(
@@ -427,6 +414,7 @@ async function getOwnedPlan(
   return planTable(serviceClient)
     .select(PLAN_SELECT)
     .eq("profile_id", profileId)
+    .eq("status", "active")
     .is("deleted_at", null)
     .order("updated_at", { ascending: false })
     .limit(1)
@@ -436,18 +424,19 @@ async function getOwnedPlan(
 async function ensureDefaultAreas(
   serviceClient: ServiceSupabaseClient,
   planId: string,
-) {
+): Promise<{ ok: boolean; areas: MoksilgiGoalArea[] }> {
   const { data: existingAreas, error } = await areaTable(serviceClient)
-    .select("id, area_key")
+    .select(AREA_SELECT)
     .eq("plan_id", planId)
     .is("deleted_at", null)
     .order("sort_order", { ascending: true });
 
   if (error) {
-    return { ok: false as const };
+    return { ok: false, areas: [] };
   }
 
-  const existingKeys = new Set((existingAreas ?? []).map((area) => area.area_key));
+  const areas = existingAreas ?? [];
+  const existingKeys = new Set(areas.map((area) => area.area_key));
   const now = new Date().toISOString();
   const missingAreas = DEFAULT_AREAS.filter(
     (area) => !existingKeys.has(area.area_key),
@@ -463,15 +452,51 @@ async function ensureDefaultAreas(
   }));
 
   if (missingAreas.length === 0) {
-    return { ok: true as const };
+    return { ok: true, areas };
   }
 
   const { error: insertError } = await areaTable(serviceClient).insert(missingAreas);
-  return { ok: !insertError as boolean };
+  if (insertError) {
+    return { ok: false, areas };
+  }
+
+  // INSERT 후 최신 목록 재조회
+  const { data: updatedAreas } = await areaTable(serviceClient)
+    .select(AREA_SELECT)
+    .eq("plan_id", planId)
+    .is("deleted_at", null)
+    .order("sort_order", { ascending: true });
+
+  return { ok: true, areas: updatedAreas ?? areas };
 }
 
-export async function getMyMoksilgi(): Promise<GetMyMoksilgiResult> {
-  const context = await getCurrentProfileContext();
+export async function getMyMoksilgi(knownProfileId?: string): Promise<GetMyMoksilgiResult> {
+  let context: CurrentProfileContext;
+
+  if (knownProfileId) {
+    const session = await getSession();
+    if (!session.user) {
+      return {
+        ok: false,
+        error: { code: "UNAUTHORIZED", message: "로그인이 필요합니다." },
+      };
+    }
+
+    let supabase: ServiceSupabaseClient;
+    try {
+      supabase = await createSupabaseServerClient();
+    } catch (error) {
+      console.error("[MOKSILGI_SERVER_CLIENT_UNAVAILABLE]", error);
+      return {
+        ok: false,
+        error: { code: "MOKSILGI_QUERY_FAILED", message: "지금 목실기를 불러올 수 없습니다." },
+      };
+    }
+
+    context = { ok: true, profileId: knownProfileId, serviceClient: supabase };
+  } else {
+    context = await getCurrentProfileContext();
+  }
 
   if (!context.ok) {
     return { ok: false, error: context.error };
@@ -504,15 +529,16 @@ export async function getMyMoksilgi(): Promise<GetMyMoksilgiResult> {
     };
   }
 
-  await ensureDefaultAreas(context.serviceClient, plan.id);
+  const [areasResult, detailGoalsResult] = await Promise.all([
+    ensureDefaultAreas(context.serviceClient, plan.id),
+    detailGoalTable(context.serviceClient)
+      .select(DETAIL_GOAL_SELECT)
+      .eq("plan_id", plan.id)
+      .is("deleted_at", null)
+      .order("sort_order", { ascending: true }),
+  ]);
 
-  const { data: areas, error: areasError } = await areaTable(context.serviceClient)
-    .select(AREA_SELECT)
-    .eq("plan_id", plan.id)
-    .is("deleted_at", null)
-    .order("sort_order", { ascending: true });
-
-  if (areasError) {
+  if (!areasResult.ok) {
     return {
       ok: false,
       error: {
@@ -522,15 +548,7 @@ export async function getMyMoksilgi(): Promise<GetMyMoksilgiResult> {
     };
   }
 
-  const { data: detailGoals, error: detailGoalsError } = await detailGoalTable(
-    context.serviceClient,
-  )
-    .select(DETAIL_GOAL_SELECT)
-    .eq("plan_id", plan.id)
-    .is("deleted_at", null)
-    .order("sort_order", { ascending: true });
-
-  if (detailGoalsError) {
+  if (detailGoalsResult.error) {
     return {
       ok: false,
       error: {
@@ -544,8 +562,8 @@ export async function getMyMoksilgi(): Promise<GetMyMoksilgiResult> {
     ok: true,
     data: {
       plan,
-      areas: areas ?? [],
-      detailGoals: detailGoals ?? [],
+      areas: areasResult.areas,
+      detailGoals: detailGoalsResult.data ?? [],
       defaultCoreValues: DEFAULT_CORE_VALUES,
     },
   };

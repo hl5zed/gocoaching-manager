@@ -18,7 +18,7 @@ export type MyCoachingRole = {
 
 export type MyCoachingProfile = Pick<
   ProfileRow,
-  "id" | "email" | "full_name" | "display_name" | "status"
+  "id" | "email" | "full_name" | "display_name" | "status" | "timezone" | "organization_id"
 >;
 
 type RoleRecord = {
@@ -88,7 +88,19 @@ export type MyCoachingMeResult =
       };
     };
 
-export async function getMyCoachingMe(): Promise<MyCoachingMeResult> {
+
+export type GetMyCoachingMeOptions = {
+  /** user_roles 쿼리 포함 여부 (기본: true). */
+  includeRoles?: boolean;
+  /** coaching_relationships 및 코치 프로필 쿼리 포함 여부 (기본: true). */
+  includeRelationships?: boolean;
+};
+
+export async function getMyCoachingMe(
+  options?: GetMyCoachingMeOptions,
+): Promise<MyCoachingMeResult> {
+  const includeRoles = options?.includeRoles ?? true;
+  const includeRelationships = options?.includeRelationships ?? true;
   const session = await getSession();
 
   if (!session.user) {
@@ -106,7 +118,7 @@ export async function getMyCoachingMe(): Promise<MyCoachingMeResult> {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id, email, full_name, display_name, status")
+      .select("id, email, full_name, display_name, status, timezone, organization_id")
       .eq("auth_user_id", session.user.id)
       .is("deleted_at", null)
       .neq("status", "anonymized")
@@ -135,17 +147,33 @@ export async function getMyCoachingMe(): Promise<MyCoachingMeResult> {
     }
 
     const profileRecord = profile as MyCoachingProfile;
+    const now = new Date().toISOString();
 
-    const { data: roles, error: rolesError } = await supabase
-      .from("user_roles")
-      .select("role, scope_type, scope_id, status")
-      .eq("profile_id", profileRecord.id)
-      .eq("status", "active")
-      .eq("is_active", true)
-      .is("deleted_at", null)
-      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+    const [rolesResult, relationshipsResult] = await Promise.all([
+      includeRoles
+        ? supabase
+            .from("user_roles")
+            .select("role, scope_type, scope_id, status")
+            .eq("profile_id", profileRecord.id)
+            .eq("status", "active")
+            .eq("is_active", true)
+            .is("deleted_at", null)
+            .or(`expires_at.is.null,expires_at.gt.${now}`)
+        : Promise.resolve({ data: [] as RoleRecord[], error: null }),
+      includeRelationships
+        ? supabase
+            .from("coaching_relationships")
+            .select(
+              "id, coach_profile_id, relationship_type, status, scope_type, scope_id, started_at, ended_at, created_at, updated_at",
+            )
+            .eq("coachee_profile_id", profileRecord.id)
+            .is("deleted_at", null)
+            .order("started_at", { ascending: false })
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] as RelationshipRecord[], error: null }),
+    ] as const);
 
-    if (rolesError) {
+    if (rolesResult.error) {
       return {
         ok: false,
         error: {
@@ -155,17 +183,7 @@ export async function getMyCoachingMe(): Promise<MyCoachingMeResult> {
       };
     }
 
-    const { data: relationshipRows, error: relationshipsError } = await supabase
-      .from("coaching_relationships")
-      .select(
-        "id, coach_profile_id, relationship_type, status, scope_type, scope_id, started_at, ended_at, created_at, updated_at",
-      )
-      .eq("coachee_profile_id", profileRecord.id)
-      .is("deleted_at", null)
-      .order("started_at", { ascending: false })
-      .order("created_at", { ascending: false });
-
-    if (relationshipsError) {
+    if (relationshipsResult.error) {
       return {
         ok: false,
         error: {
@@ -174,18 +192,23 @@ export async function getMyCoachingMe(): Promise<MyCoachingMeResult> {
         },
       };
     }
+
+    const roles = rolesResult.data;
+    const relationshipRows = relationshipsResult.data;
 
     const rows = (relationshipRows ?? []) as RelationshipRecord[];
-    const coachProfileIds = [
-      ...new Set(
-        rows
-          .map((row) => row.coach_profile_id)
-          .filter(
-            (coachProfileId): coachProfileId is string =>
-              typeof coachProfileId === "string" && coachProfileId.length > 0,
+    const coachProfileIds = includeRelationships
+      ? [
+          ...new Set(
+            rows
+              .map((row) => row.coach_profile_id)
+              .filter(
+                (coachProfileId): coachProfileId is string =>
+                  typeof coachProfileId === "string" && coachProfileId.length > 0,
+              ),
           ),
-      ),
-    ];
+        ]
+      : [];
 
     const coachProfileById = new Map<
       string,

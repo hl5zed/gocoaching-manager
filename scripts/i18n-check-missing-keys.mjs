@@ -2,7 +2,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const ROOT_DIR = process.cwd();
-const MESSAGES_PATH = path.join(ROOT_DIR, "src", "lib", "i18n", "messages.ts");
+const KO_PATH = path.join(ROOT_DIR, "src", "lib", "i18n", "ko.ts");
+const EN_PATH = path.join(ROOT_DIR, "src", "lib", "i18n", "en.ts");
 const REPORT_PATH = path.join(ROOT_DIR, "docs", "i18n-missing-keys-report.md");
 
 function formatTimestamp(date = new Date()) {
@@ -120,9 +121,10 @@ function buildReport({ missingInEn, missingInKo }) {
 }
 
 async function main() {
-  const source = await readFile(MESSAGES_PATH, "utf8");
-  const koKeys = extractKeys(findObjectBlock(source, "ko"));
-  const enKeys = extractKeys(findObjectBlock(source, "en"));
+  const koSource = await readFile(KO_PATH, "utf8");
+  const enSource = await readFile(EN_PATH, "utf8");
+  const koKeys = extractKeys(findObjectBlock(koSource, "ko"));
+  const enKeys = extractKeys(findObjectBlock(enSource, "en"));
   const missingInEn = compareKeys(koKeys, enKeys);
   const missingInKo = compareKeys(enKeys, koKeys);
   const report = buildReport({ missingInEn, missingInKo });

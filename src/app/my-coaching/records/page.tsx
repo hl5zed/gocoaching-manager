@@ -1,9 +1,8 @@
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/getSession";
+import { requireCoacheePageProfile } from "@/lib/api/my-coaching/coachee-page-auth";
 import { getDailyRecords } from "@/lib/api/my-coaching/daily-records";
+import { buildRecordsListDateRange } from "@/lib/api/my-coaching/records-list-range";
 import { getMonthlyReflections } from "@/lib/api/my-coaching/monthly-reflections";
 import { getRecentMyWeeklyLogs } from "@/lib/api/my-coaching/weekly-log";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   DEFAULT_TIMEZONE,
   formatDateInTimezone,
@@ -31,7 +30,7 @@ import { I18nText } from "@/lib/i18n/I18nProvider";
 
 export const dynamic = "force-dynamic";
 const RECENT_RECORDS_LIMIT = 3;
-const RECORDS_PAGE_LIST_LIMIT = 200;
+const RECORDS_PAGE_LIST_LIMIT = 50;
 
 type RecordTypeFilter = "all" | "daily" | "weekly" | "monthly";
 type StatusFilter = "all" | "draft" | "submitted" | "reviewed" | "unknown";
@@ -581,21 +580,25 @@ export default async function MyCoachingRecordsPage({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const session = await getSession();
+  const auth = await requireCoacheePageProfile("/my-coaching/records");
 
-  if (!session.user) {
-    redirect("/login?redirectTo=%2Fmy-coaching%2Frecords");
+  if (!auth.ok) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-10">
+        <Card>
+          <CardHeader>
+            <CardTitle>기록을 불러올 수 없습니다</CardTitle>
+            <CardDescription>
+              프로필 정보를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </main>
+    );
   }
 
-  const supabase = await createSupabaseServerClient();
-  const { data: profileTimezone } = await supabase
-    .from("profiles")
-    .select("timezone")
-    .eq("auth_user_id", session.user.id)
-    .is("deleted_at", null)
-    .maybeSingle();
-  const profileTimezoneRow = profileTimezone as { timezone: string | null } | null;
-  const effectiveTimezone = getEffectiveTimezone(profileTimezoneRow?.timezone);
+  const profileId = auth.profile.id;
+  const effectiveTimezone = getEffectiveTimezone(auth.profile.timezone);
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const query = normalizeParam(resolvedSearchParams.q);
   const typeFilter = normalizeRecordType(
@@ -619,9 +622,25 @@ export default async function MyCoachingRecordsPage({
   const recordsLimit = hasActiveSearchOrFilter
     ? RECORDS_PAGE_LIST_LIMIT
     : RECENT_RECORDS_LIMIT;
+  const listDateRange = buildRecordsListDateRange(
+    effectiveTimezone,
+    hasActiveSearchOrFilter,
+  );
+  const dailyFetchOptions = {
+    profileId,
+    defaultFrom: listDateRange.fromDate,
+    defaultTo: listDateRange.toDate,
+  };
+  const monthlyFetchOptions = {
+    profileId,
+    minYear: listDateRange.minYear,
+    minMonth: listDateRange.minMonth,
+  };
   const buildRecordParams = (recordType: RecordType) => {
     const params = new URLSearchParams({
       limit: String(recordsLimit),
+      from: listDateRange.fromDate,
+      to: listDateRange.toDate,
     });
 
     if (query.trim().length > 0) {
@@ -645,17 +664,29 @@ export default async function MyCoachingRecordsPage({
 
     return params;
   };
+  const shouldFetchDaily = typeFilter === "all" || typeFilter === "daily";
+  const shouldFetchWeekly = typeFilter === "all" || typeFilter === "weekly";
+  const shouldFetchMonthly = typeFilter === "all" || typeFilter === "monthly";
   const [dailyResult, weeklyResult, monthlyResult] = await Promise.all([
-    getDailyRecords(buildRecordParams("daily")),
-    getRecentMyWeeklyLogs({
-      limit: recordsLimit,
-      search: query,
-      status:
-        statusFilter !== "all" && statusFilter !== "unknown"
-          ? statusFilter
-          : null,
-    }),
-    getMonthlyReflections(buildRecordParams("monthly")),
+    shouldFetchDaily
+      ? getDailyRecords(buildRecordParams("daily"), dailyFetchOptions)
+      : Promise.resolve({ ok: true as const, data: [] }),
+    shouldFetchWeekly
+      ? getRecentMyWeeklyLogs({
+          limit: recordsLimit,
+          search: query,
+          status:
+            statusFilter !== "all" && statusFilter !== "unknown"
+              ? statusFilter
+              : null,
+          profileId,
+          weekStartFrom: listDateRange.fromDate,
+          weekStartTo: listDateRange.toDate,
+        })
+      : Promise.resolve({ ok: true as const, data: [] }),
+    shouldFetchMonthly
+      ? getMonthlyReflections(buildRecordParams("monthly"), monthlyFetchOptions)
+      : Promise.resolve({ ok: true as const, data: [] }),
   ]);
   const dailyRecords = dailyResult.ok ? dailyResult.data : [];
   const weeklyLogs = weeklyResult.ok ? weeklyResult.data : [];

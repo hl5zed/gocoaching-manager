@@ -359,10 +359,36 @@ async function getCurrentProfile(): Promise<CurrentProfileResult> {
   };
 }
 
+export type GetMonthlyReflectionsOptions = {
+  /** 페이지에서 이미 조회한 profile id — profiles 재조회 생략 */
+  profileId?: string;
+  /** year/month 미지정 시 이 연월 이후만 조회 (year.gt 또는 year+month.gte) */
+  minYear?: number;
+  minMonth?: number;
+};
+
+async function resolveMonthlyReflectionsProfile(
+  profileId?: string,
+): Promise<CurrentProfileResult> {
+  if (profileId) {
+    const session = await getSession();
+    if (!session.user) {
+      return {
+        ok: false,
+        status: 401,
+        message: "로그인이 필요합니다.",
+      };
+    }
+    return { ok: true, profileId };
+  }
+  return getCurrentProfile();
+}
+
 export async function getMonthlyReflections(
   searchParams: URLSearchParams,
+  options?: GetMonthlyReflectionsOptions,
 ): Promise<MonthlyReflectionResult<MonthlyReflectionItem[]>> {
-  const currentProfile = await getCurrentProfile();
+  const currentProfile = await resolveMonthlyReflectionsProfile(options?.profileId);
 
   if (!currentProfile.ok) {
     return currentProfile;
@@ -414,6 +440,17 @@ export async function getMonthlyReflections(
 
   if (month) {
     query = query.eq("month", month);
+  }
+
+  if (
+    !year &&
+    !month &&
+    options?.minYear !== undefined &&
+    options?.minMonth !== undefined
+  ) {
+    query = query.or(
+      `year.gt.${options.minYear},and(year.eq.${options.minYear},month.gte.${options.minMonth})`,
+    );
   }
 
   if (status) {

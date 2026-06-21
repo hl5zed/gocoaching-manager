@@ -262,6 +262,8 @@ type TablesMap = {
       status: ProfileStatus;
       preferred_language: string | null;
       timezone: string | null;
+      preferred_locale: string | null;
+      locale_updated_at: string | null;
       anonymized_at: string | null;
       anonymized_by: string | null;
       erasure_requested_at: string | null;
@@ -292,6 +294,8 @@ type TablesMap = {
       status?: ProfileStatus;
       preferred_language?: string | null;
       timezone?: string | null;
+      preferred_locale?: string | null;
+      locale_updated_at?: string | null;
       anonymized_at?: string | null;
       anonymized_by?: string | null;
       erasure_requested_at?: string | null;
@@ -322,6 +326,8 @@ type TablesMap = {
       status?: ProfileStatus;
       preferred_language?: string | null;
       timezone?: string | null;
+      preferred_locale?: string | null;
+      locale_updated_at?: string | null;
       anonymized_at?: string | null;
       anonymized_by?: string | null;
       erasure_requested_at?: string | null;
@@ -1656,6 +1662,191 @@ type TablesMap = {
       updated_at?: string;
     }
   >;
+  coach_action_notes: TableDefinition<
+    {
+      id: string;
+      organization_id: string | null;
+      church_id: string | null;
+      coach_id: string | null;
+      target_user_id: string | null;
+      target_type: string;
+      target_name: string;
+      team_id: string | null;
+      team_name: string | null;
+      region: string | null;
+      action_type: string;
+      priority: string;
+      status: string;
+      note: string;
+      due_date: string | null;
+      created_by: string;
+      created_at: string;
+      updated_at: string;
+      completed_at: string | null;
+      deleted_at: string | null;
+    },
+    {
+      id?: string;
+      organization_id?: string | null;
+      church_id?: string | null;
+      coach_id?: string | null;
+      target_user_id?: string | null;
+      target_type: string;
+      target_name: string;
+      team_id?: string | null;
+      team_name?: string | null;
+      region?: string | null;
+      action_type: string;
+      priority?: string;
+      status?: string;
+      note: string;
+      due_date?: string | null;
+      created_by: string;
+      created_at?: string;
+      updated_at?: string;
+      completed_at?: string | null;
+      deleted_at?: string | null;
+    },
+    {
+      id?: string;
+      organization_id?: string | null;
+      church_id?: string | null;
+      coach_id?: string | null;
+      target_user_id?: string | null;
+      target_type?: string;
+      target_name?: string;
+      team_id?: string | null;
+      team_name?: string | null;
+      region?: string | null;
+      action_type?: string;
+      priority?: string;
+      status?: string;
+      note?: string;
+      due_date?: string | null;
+      created_by?: string;
+      created_at?: string;
+      updated_at?: string;
+      completed_at?: string | null;
+      deleted_at?: string | null;
+    }
+  >;
+  spiritual_entries: TableDefinition<
+    {
+      id: string;
+      profile_id: string;
+      entry_date: string;
+      title: string | null;
+      content: string;
+      mood: string | null;
+      visibility: string;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+    },
+    {
+      id?: string;
+      profile_id: string;
+      entry_date: string;
+      title?: string | null;
+      content: string;
+      mood?: string | null;
+      visibility?: string;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    },
+    {
+      id?: string;
+      profile_id?: string;
+      entry_date?: string;
+      title?: string | null;
+      content?: string;
+      mood?: string | null;
+      visibility?: string;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    }
+  >;
+  prayer_requests: TableDefinition<
+    {
+      id: string;
+      profile_id: string;
+      request_text: string;
+      answered_text: string | null;
+      status: string;
+      visibility: string;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+    },
+    {
+      id?: string;
+      profile_id: string;
+      request_text: string;
+      answered_text?: string | null;
+      status?: string;
+      visibility?: string;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    },
+    {
+      id?: string;
+      profile_id?: string;
+      request_text?: string;
+      answered_text?: string | null;
+      status?: string;
+      visibility?: string;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    }
+  >;
+  ai_companion_messages: TableDefinition<
+    {
+      id: string;
+      profile_id: string;
+      conversation_id: string;
+      role: string;
+      content: string;
+      provider: string;
+      model: string | null;
+      input_tokens: number | null;
+      output_tokens: number | null;
+      user_local_date: string;
+      created_at: string;
+      deleted_at: string | null;
+    },
+    {
+      id?: string;
+      profile_id: string;
+      conversation_id?: string;
+      role: string;
+      content: string;
+      provider: string;
+      model?: string | null;
+      input_tokens?: number | null;
+      output_tokens?: number | null;
+      user_local_date: string;
+      created_at?: string;
+      deleted_at?: string | null;
+    },
+    {
+      id?: string;
+      profile_id?: string;
+      conversation_id?: string;
+      role?: string;
+      content?: string;
+      provider?: string;
+      model?: string | null;
+      input_tokens?: number | null;
+      output_tokens?: number | null;
+      user_local_date?: string;
+      created_at?: string;
+      deleted_at?: string | null;
+    }
+  >;
 };
 
 type PublicEnums = {
@@ -1741,3 +1932,14 @@ export type MonthlyReflectionInsert = InsertDto<"monthly_reflections">;
 export type MonthlyReflectionUpdate = UpdateDto<"monthly_reflections">;
 export type TranslationValueInsert = InsertDto<"translation_values">;
 export type TranslationValueUpdate = UpdateDto<"translation_values">;
+export type CoachActionNoteRow = Tables<"coach_action_notes">;
+export type CoachActionNoteInsert = InsertDto<"coach_action_notes">;
+export type CoachActionNoteUpdate = UpdateDto<"coach_action_notes">;
+export type SpiritualEntryRow = Tables<"spiritual_entries">;
+export type SpiritualEntryInsert = InsertDto<"spiritual_entries">;
+export type SpiritualEntryUpdate = UpdateDto<"spiritual_entries">;
+export type PrayerRequestRow = Tables<"prayer_requests">;
+export type PrayerRequestInsert = InsertDto<"prayer_requests">;
+export type PrayerRequestUpdate = UpdateDto<"prayer_requests">;
+export type AiCompanionMessageRow = Tables<"ai_companion_messages">;
+export type AiCompanionMessageInsert = InsertDto<"ai_companion_messages">;

@@ -1,12 +1,12 @@
 # i18n 잔여 한글 문구 점검 리포트
 
-실행일: 2026-05-11 22:24
+실행일: 2026-06-20 23:48
 
 자동 탐지 결과이며, 사용자 입력값/DB 값/주석은 수동 판단 필요합니다.
 
 ## 요약
-- 총 발견 라인: 3731
-- 대상 파일 수: 125
+- 총 발견 라인: 5767
+- 대상 파일 수: 176
 
 ## 발견 목록
 
@@ -26,64 +26,69 @@
 - L122: `${t("genealogy.filterRegion", "지역")}: ${region?.regionName ?? t("common.all", "전체")}`,
 - L123: `${t("genealogy.filterChurch", "교회")}: ${church?.churchName ?? t("common.all", "전체")}`,
 - L124: `${t("genealogy.filterGeneration", "세대")}: ${generation?.label ?? t("common.all", "전체")}`,
-- L170: <h2>선택 노드 정보</h2>
-- L174: <dt>이름</dt>
-- L178: <dt>세대</dt>
-- L182: <dt>국가</dt>
-- L186: <dt>교회</dt>
-- L190: <dt>역할</dt>
-- L194: <dt>코치이</dt>
-- L195: <dd>{selectedNode.activeCoacheeCount}명</dd>
-- L199: <p>선택된 노드 없음</p>
-- L204: <h2>전체 현황</h2>
-- L207: <dt>코치</dt>
-- L208: <dd>{data.summaryStats.totalCoaches}명</dd>
-- L211: <dt>코치이</dt>
-- L212: <dd>{data.summaryStats.totalCoachees}명</dd>
-- L215: <dt>관계</dt>
-- L216: <dd>{data.summaryStats.totalActiveRelationships}개</dd>
-- L219: <dt>최대 세대</dt>
-- L223: <dt>국가</dt>
-- L224: <dd>{data.summaryStats.totalCountries}개</dd>
-- L227: <dt>교회</dt>
-- L228: <dd>{data.summaryStats.totalChurches}개</dd>
-- L234: <h2>세대별 인원 분포</h2>
-- L239: <span>{stat.generationNumber ? `G${stat.generationNumber}` : "미지정"}</span>
-- L240: <strong>{stat.profileCount}명</strong>
-- L245: <p>세대 통계가 없습니다.</p>
-- L250: <h2>국가별 현황</h2>
-- L262: {country.profileCount}명 / 관계 {country.relationshipCount}
-- L268: <p className="print-more">외 {remainingCountryCount}개 국가</p>
-- L272: <p>국가 통계가 없습니다.</p>
-- L284: ? "지역 지도는 다음 단계에서 구현됩니다."
-- L286: ? "배정 관리는 다음 단계에서 구현됩니다."
-- L287: : "세대 변경 이력은 다음 단계에서 구현됩니다.";
-- L574: <nav className="flex flex-wrap gap-2" aria-label={t("genealogy.title", "계보도 보기 탭")}>
-- L601: ? t("genealogy.printTree", "계보 트리 인쇄")
-- L602: : t("genealogy.printMap", "지역 지도 인쇄")}
-- L614: {t("genealogy.country", "국가")}
-- L622: <option value="">{t("common.all", "전체")}</option>
-- L638: {t("genealogy.church", "교회")}
-- L646: <option value="">{t("common.all", "전체")}</option>
-- L660: {t("genealogy.generation", "세대")}
-- L670: <option value="">{t("common.all", "전체")}</option>
-- L687: {t("genealogy.resetFilters", "필터 초기화")}
-- L695: "현재 활성 코칭 관계에 연결된 회원 중 국가/교회/세대 정보가 있는 회원이 없습니다. 배정 관리 탭에서 국가/세대가 입력된 회원을 코치 관계에 연결하면 필터 옵션이 표시됩니다.",
-- L702: {t("genealogy.goAssign", "배정 관리로 이동")}
-- L714: printedAtLabel={t("genealogy.printedAt", "출력일")}
-- L715: printedAtPlaceholder={t("genealogy.generatedOnPrint", "인쇄 시 생성")}
-- L716: title={t("genealogy.title", "세대별 코칭 계보도")}
-- L720: {t("genealogy.tree", "계보 트리")}
-- L723: {t("genealogy.noRelationships", "표시할 코칭 관계가 없습니다. 아직 활성 코칭 관계가 없습니다.")}
-- L732: printedAtLabel={t("genealogy.printedAt", "출력일")}
-- L733: printedAtPlaceholder={t("genealogy.generatedOnPrint", "인쇄 시 생성")}
-- L734: title={t("genealogy.title", "세대별 코칭 계보도")}
-- L740: {t("genealogy.tree", "계보 트리")}
-- L743: {t("genealogy.nodeClickHelp", "노드를 클릭하면 오른쪽 패널에서 상세 정보를 확인할 수 있습니다.")}
-- L745: {t("genealogy.currentSelection", "현재 선택")}: {getNodeLabel(selectedNode)}
-- L771: printedAtLabel={t("genealogy.printedAt", "출력일")}
-- L772: printedAtPlaceholder={t("genealogy.generatedOnPrint", "인쇄 시 생성")}
-- L773: title={t("genealogy.regionalMap", "지역별 코칭 분포 지도")}
+- L176: <h2>선택 노드 정보</h2>
+- L180: <dt>이름</dt>
+- L184: <dt>세대</dt>
+- L188: <dt>국가</dt>
+- L192: <dt>교회</dt>
+- L196: <dt>역할</dt>
+- L200: <dt>코치이</dt>
+- L201: <dd>{selectedNode.activeCoacheeCount}명</dd>
+- L205: <p>선택된 노드 없음</p>
+- L210: <h2>전체 현황</h2>
+- L213: <dt>코치</dt>
+- L214: <dd>{data.summaryStats.totalCoaches}명</dd>
+- L217: <dt>코치이</dt>
+- L218: <dd>{data.summaryStats.totalCoachees}명</dd>
+- L221: <dt>관계</dt>
+- L222: <dd>{data.summaryStats.totalActiveRelationships}개</dd>
+- L225: <dt>최대 세대</dt>
+- L229: <dt>국가</dt>
+- L230: <dd>{data.summaryStats.totalCountries}개</dd>
+- L233: <dt>교회</dt>
+- L234: <dd>{data.summaryStats.totalChurches}개</dd>
+- L240: <h2>세대별 인원 분포</h2>
+- L247: {stat.generationNumber ? `G${stat.generationNumber}` : "미지정"}
+- L249: <strong>{stat.profileCount}명</strong>
+- L254: <p className="print-more">외 {remainingGenerationCount}개 세대</p>
+- L258: <p>세대 통계가 없습니다.</p>
+- L263: <h2>국가별 현황</h2>
+- L275: {country.profileCount}명 / 관계 {country.relationshipCount}
+- L281: <p className="print-more">외 {remainingCountryCount}개 국가</p>
+- L285: <p>국가 통계가 없습니다.</p>
+- L290: <h2>교회별 현황</h2>
+- L298: {church.profileCount}명 / 관계 {church.relationshipCount}
+- L304: <p className="print-more">외 {remainingChurchCount}개 교회</p>
+- L308: <p>교회 통계가 없습니다.</p>
+- L320: ? "지역 지도는 다음 단계에서 구현됩니다."
+- L322: ? "배정 관리는 다음 단계에서 구현됩니다."
+- L323: : "세대 변경 이력은 다음 단계에서 구현됩니다.";
+- L985: <nav className="flex flex-wrap gap-2" aria-label={t("genealogy.title", "계보도 보기 탭")}>
+- L1012: ? t("genealogy.printTree", "계보 트리 인쇄")
+- L1013: : t("genealogy.printMap", "지역 지도 인쇄")}
+- L1025: {t("genealogy.country", "국가")}
+- L1033: <option value="">{t("common.all", "전체")}</option>
+- L1049: {t("genealogy.church", "교회")}
+- L1057: <option value="">{t("common.all", "전체")}</option>
+- L1071: {t("genealogy.generation", "세대")}
+- L1081: <option value="">{t("common.all", "전체")}</option>
+- L1098: {t("genealogy.resetFilters", "필터 초기화")}
+- L1106: "현재 활성 코칭 관계에 연결된 회원 중 국가/교회/세대 정보가 있는 회원이 없습니다. 배정 관리 탭에서 국가/세대가 입력된 회원을 코치 관계에 연결하면 필터 옵션이 표시됩니다.",
+- L1113: {t("genealogy.goAssign", "배정 관리로 이동")}
+- L1125: printedAtLabel={t("genealogy.printedAt", "출력일")}
+- L1126: printedAtPlaceholder={t("genealogy.generatedOnPrint", "인쇄 시 생성")}
+- L1127: title={t("genealogy.title", "세대별 코칭 계보도")}
+- L1131: {t("genealogy.tree", "계보 트리")}
+- L1134: {t("genealogy.noRelationships", "표시할 코칭 관계가 없습니다. 아직 활성 코칭 관계가 없습니다.")}
+- L1143: printedAtLabel={t("genealogy.printedAt", "출력일")}
+- L1144: printedAtPlaceholder={t("genealogy.generatedOnPrint", "인쇄 시 생성")}
+- L1145: title={t("genealogy.title", "세대별 코칭 계보도")}
+- L1151: {t("genealogy.tree", "계보 트리")}
+- L1154: {t("genealogy.nodeClickHelp", "노드를 클릭하면 오른쪽 패널에서 상세 정보를 확인할 수 있습니다.")}
+- L1156: {t("genealogy.currentSelection", "현재 선택")}: {getNodeLabel(selectedNode)}
+- L1183: printedAtLabel={t("genealogy.printedAt", "출력일")}
+- L1184: printedAtPlaceholder={t("genealogy.generatedOnPrint", "인쇄 시 생성")}
+- L1185: title={t("genealogy.regionalMap", "지역별 코칭 분포 지도")}
 
 ### src/app/admin/coaching-genealogy/GenealogyAssignPanel.tsx
 
@@ -106,14 +111,14 @@
 - L253: ? "배정 처리 중 오류가 발생했습니다."
 - L262: `배정 처리 완료: 생성 ${created.length}건, 세대 변경 ${updatedGenerations.length}건, 건너뜀 ${skipped.length}건`,
 - L268: setErrorMessage("배정 처리 중 오류가 발생했습니다.");
-- L276: <h2 className="text-xl font-semibold text-slate-950">배정 관리</h2>
+- L276: <h2 className="text-xl font-semibold text-ink-strong">배정 관리</h2>
 - L278: 코치와 코치이를 배정하고, 세대를 지정할 수 있습니다. 세대 변경은
 - L279: 자동으로 이력에 기록됩니다.
 - L284: <p className="font-semibold">세대 정의 안내</p>
 - L286: 세대는 재귀 계보 방식으로 이해합니다. 코치이가 성장하여 다른 사람의
 - L287: 코치가 되면 다음 세대로 이어집니다. 다만 실제 세대 값은 관리자가
 - L288: 수동으로 지정하며, 변경 이력은 자동으로 기록됩니다.
-- L295: <h3 className="text-lg font-semibold text-slate-950">필터</h3>
+- L295: <h3 className="text-lg font-semibold text-ink-strong">필터</h3>
 - L297: 코치와 코치이 후보, 현재 배정 관계 목록에 함께 적용됩니다.
 - L305: 배정 필터 초기화
 - L311: 국가
@@ -126,7 +131,7 @@
 - L393: 검색어
 - L398: placeholder="이름, 이메일"
 - L405: 적용
-- L415: <h3 className="text-lg font-semibold text-slate-950">코치 선택</h3>
+- L415: <h3 className="text-lg font-semibold text-ink-strong">코치 선택</h3>
 - L417: 배정할 코치
 - L423: <option value="">코치를 선택해 주세요</option>
 - L427: 담당 {coach.activeCoacheeCount}명
@@ -134,7 +139,7 @@
 - L446: 추천 세대:{" "}
 - L448: ? `${recommendedGeneration}세대`
 - L449: : "코치 세대가 없어 추천할 수 없습니다."}
-- L456: <h3 className="text-lg font-semibold text-slate-950">세대 지정</h3>
+- L456: <h3 className="text-lg font-semibold text-ink-strong">세대 지정</h3>
 - L458: 선택한 코치이에게만 적용됩니다. 비워두면 세대는 변경하지 않습니다.
 - L468: 세대 변경 안 함
 - L476: 세대 옵션에서 선택
@@ -177,34 +182,56 @@
 - L175: <h2 className="text-lg font-semibold">선택 지역</h2>
 - L177: 지도 마커를 선택하면 지역별 상세 통계가 표시됩니다.
 - L193: {marker.code ?? "코드 없음"}
-- L199: <dt className="text-slate-500">전체 프로필 수</dt>
+- L199: <dt className="text-ink-faint">전체 프로필 수</dt>
 - L200: <dd className="font-medium">{marker.profileCount}명</dd>
-- L203: <dt className="text-slate-500">코치 수</dt>
+- L203: <dt className="text-ink-faint">코치 수</dt>
 - L204: <dd className="font-medium">{marker.coachCount}명</dd>
-- L207: <dt className="text-slate-500">코치이 수</dt>
+- L207: <dt className="text-ink-faint">코치이 수</dt>
 - L208: <dd className="font-medium">{marker.coacheeCount}명</dd>
-- L211: <dt className="text-slate-500">활성 관계 수</dt>
+- L211: <dt className="text-ink-faint">활성 관계 수</dt>
 - L212: <dd className="font-medium">{marker.relationshipCount}개</dd>
 - L224: 트리로 보기
-- L292: 표시 구분
-- L302: <option value="all">전체</option>
-- L303: <option value="country">국가</option>
-- L304: <option value="region">지역</option>
-- L305: <option value="church">교회</option>
-- L314: 국가
-- L322: <option value="">전체</option>
-- L340: 세대
-- L350: <option value="">전체</option>
-- L367: 지도에 표시할 코칭 지역 데이터가 없습니다.
-- L383: 좌표 미등록 {coordinateMissingCount}개 항목은 지도에 표시되지 않습니다.
-- L394: <h2 className="text-lg font-semibold">지도 전체 현황</h2>
-- L397: <p className="text-slate-500">전체 코치</p>
-- L403: <p className="text-slate-500">전체 코치이</p>
-- L409: <p className="text-slate-500">활성 관계</p>
-- L415: <p className="text-slate-500">활동 국가</p>
-- L424: <h2 className="text-lg font-semibold">세대별 분포</h2>
-- L433: <span className="font-medium">{generation.profileCount}명</span>
-- L437: <p className="text-slate-600">세대 통계가 없습니다.</p>
+- L257: markerType === "all" ? "전체" : getMarkerTypeLabel(markerType);
+- L294: 마커 표시 기준
+- L304: <option value="all">전체</option>
+- L305: <option value="country">국가</option>
+- L306: <option value="region">지역</option>
+- L307: <option value="church">교회</option>
+- L314: 지도에 표시할 코칭 지역 데이터가 없습니다.
+- L330: 좌표 미등록 {coordinateMissingCount}개 항목은 지도에 표시되지 않습니다.
+- L341: <h2 className="text-lg font-semibold">지도 전체 현황</h2>
+- L344: <p className="text-ink-faint">전체 코치</p>
+- L350: <p className="text-ink-faint">전체 코치이</p>
+- L356: <p className="text-ink-faint">활성 관계</p>
+- L362: <p className="text-ink-faint">활동 국가</p>
+- L371: <h2 className="text-lg font-semibold">세대별 분포</h2>
+- L380: <span className="font-medium">{generation.profileCount}명</span>
+- L384: <p className="text-ink-muted">세대 통계가 없습니다.</p>
+- L392: <h2>지역 지도 요약</h2>
+- L395: <dt>마커 표시 기준</dt>
+- L399: <dt>표시 마커</dt>
+- L400: <dd>{visibleMarkers.length}개</dd>
+- L403: <dt>전체 노드</dt>
+- L404: <dd>{data.nodes.length}명</dd>
+- L407: <dt>국가</dt>
+- L408: <dd>{data.summaryStats.totalCountries}개</dd>
+- L411: <dt>교회</dt>
+- L412: <dd>{data.summaryStats.totalChurches}개</dd>
+- L415: <dt>세대</dt>
+- L422: 개
+- L429: <h2>선택 지역</h2>
+- L433: <dt>이름</dt>
+- L437: <dt>구분</dt>
+- L441: <dt>프로필</dt>
+- L442: <dd>{selectedMarker.profileCount}명</dd>
+- L445: <dt>코치/코치이</dt>
+- L447: {selectedMarker.coachCount}명 / {selectedMarker.coacheeCount}명
+- L451: <dt>관계</dt>
+- L452: <dd>{selectedMarker.relationshipCount}개</dd>
+- L456: <p>선택된 지역이 없습니다.</p>
+- L461: <h2>세대 분포</h2>
+- L467: <strong>{generation.profileCount}명</strong>
+- L472: <p>세대 통계가 없습니다.</p>
 
 ### src/app/admin/coaching-genealogy/GenealogyStatsPanel.tsx
 
@@ -212,7 +239,7 @@
 - L19: return value ? `${value}세대` : "미지정";
 - L24: return "미지정";
 - L69: {stat.generationNumber ? `G${stat.generationNumber}` : "미지정"}
-- L71: <span className="text-slate-500">{stat.profileCount}명</span>
+- L71: <span className="text-ink-faint">{stat.profileCount}명</span>
 - L93: {country.profileCount}명
 - L97: 관계 {country.relationshipCount}개 · 코치 {country.coachCount}명 ·
 - L98: 코치이 {country.coacheeCount}명
@@ -241,26 +268,38 @@
 - L194: label="활동 국가 수"
 - L198: label="활동 교회 수"
 - L205: <h2 className="text-lg font-semibold">세대별 인원 분포</h2>
-- L217: <p className="mt-3 text-sm text-slate-600">세대 통계가 없습니다.</p>
+- L217: <p className="mt-3 text-sm text-ink-muted">세대 통계가 없습니다.</p>
 - L222: <h2 className="text-lg font-semibold">국가별 현황</h2>
-- L233: <p className="mt-3 text-sm text-slate-600">국가 통계가 없습니다.</p>
+- L233: <p className="mt-3 text-sm text-ink-muted">국가 통계가 없습니다.</p>
 - L238: <h2 className="text-lg font-semibold">교회별 현황</h2>
-- L246: <p className="mt-3 text-sm text-slate-600">교회 통계가 없습니다.</p>
+- L246: <p className="mt-3 text-sm text-ink-muted">교회 통계가 없습니다.</p>
 
 ### src/app/admin/coaching-genealogy/GenealogyTreeView.tsx
 
-- L121: return generation === 1 ? "G1 루트코치" : `G${generation}`;
-- L125: return node.ministryPosition ?? node.primaryRole ?? "역할 미지정";
-- L133: return summary.length > 0 ? summary : "지역 미지정";
-- L324: {truncateText(`코치이 ${node.activeCoacheeCount}명`, width)}
-- L355: 세대별 인원 비율
-- L369: {generationName(generation)} {counts[generation]}명
-- L401: 순환 관계가 감지되었습니다. 배정 관계를 확인하세요.
-- L406: 일부 회원의 세대 값이 계보 흐름과 다릅니다. 세대 배정 관리에서
-- L407: 확인하세요.
-- L415: aria-label="피라미드형 세대별 코칭 계보도"
-- L476: {counts[generation]}명
-- L552: 노드를 선택하면 오른쪽 상세 패널에서 소속, 역할, 담당 관계를 확인할 수 있습니다.
+- L122: return generation === 1 ? "G1 루트코치" : `G${generation}`;
+- L127: return "일시중지";
+- L131: return "종료";
+- L135: return "보관";
+- L138: return "활성";
+- L142: return node.ministryPosition ?? node.primaryRole ?? "역할 미지정";
+- L150: return summary.length > 0 ? summary : "지역 미지정";
+- L341: {truncateText(`코치이 ${node.activeCoacheeCount}명`, width)}
+- L372: 세대별 인원 비율
+- L386: {generationName(generation)} {counts[generation]}명
+- L423: 순환 관계가 감지되었습니다. 배정 관계를 확인하세요.
+- L431: 세대 불일치 {mismatchWarnings.length}건이 있습니다.
+- L434: 코치 세대 + 1이 코치이 세대와 맞지 않는 관계입니다.
+- L436: ? ` 현재 선택한 관계 상태(${statusLabel(relationshipStatus)}) 기준으로 확인했습니다.`
+- L441: 세대 배정 관리에서 수동 확인
+- L451: {warning.coachLabel || "확인 필요"}
+- L455: {warning.coacheeLabel || "확인 필요"}
+- L459: 기대 세대: {generationLabel(warning.expectedCoacheeGenerationNumber)}
+- L466: 외 {hiddenMismatchCount}건은 세대 배정 관리에서 함께 확인하세요.
+- L470: 자동 수정하지 않고, 세대 배정 관리에서 관계와 세대 값을 확인한 뒤
+- L471: 필요한 경우 수동으로 조정하세요.
+- L480: aria-label="피라미드형 세대별 코칭 계보도"
+- L541: {counts[generation]}명
+- L617: 노드를 선택하면 오른쪽 상세 패널에서 소속, 역할, 담당 관계를 확인할 수 있습니다.
 
 ### src/app/admin/coaching-genealogy/GenerationHistoryPanel.tsx
 
@@ -272,7 +311,7 @@
 - L146: : "미지정",
 - L228: throw new Error("세대 변경 이력을 조회하는 중 오류가 발생했습니다.");
 - L251: : "세대 변경 이력을 조회하는 중 오류가 발생했습니다.",
-- L291: <h2 className="text-xl font-semibold text-slate-950">변경 이력</h2>
+- L291: <h2 className="text-xl font-semibold text-ink-strong">변경 이력</h2>
 - L293: 회원의 세대 변경 이력을 확인합니다. 세대 변경은 배정 관리 또는
 - L294: 관리자 수정 시 자동으로 기록됩니다.
 - L300: label="전체 변경 건수"
@@ -281,7 +320,7 @@
 - L312: label="가장 많이 변경된 세대"
 - L313: value={historyData?.summary.mostChangedGeneration ?? "미지정"}
 - L316: label="변경 대상 회원 수"
-- L324: <h3 className="text-lg font-semibold text-slate-950">필터</h3>
+- L324: <h3 className="text-lg font-semibold text-ink-strong">필터</h3>
 - L326: 필터 변경은 URL에 반영되어 브라우저 뒤로가기로 이전 상태를
 - L327: 복구할 수 있습니다.
 - L335: 필터 초기화
@@ -312,7 +351,7 @@
 - L594: 페이지
 - L603: 이전
 - L614: 다음
-- L622: <h3 className="text-lg font-semibold text-slate-950">이력 상세</h3>
+- L622: <h3 className="text-lg font-semibold text-ink-strong">이력 상세</h3>
 - L625: <DetailRow label="이력 ID" value={selectedHistory.id} />
 - L627: label="대상 회원"
 - L633: label="변경 전 세대"
@@ -334,15 +373,15 @@
 - L294: <p>코치: {marker.coachCount}명</p>
 - L295: <p>코치이: {marker.coacheeCount}명</p>
 - L296: <p>관계: {marker.relationshipCount}개</p>
-- L304: <p className="mb-1 font-semibold text-slate-900">파이 = 세대 비율</p>
+- L304: <p className="mb-1 font-semibold text-ink-strong">파이 = 세대 비율</p>
 
 ### src/app/admin/coaching-genealogy/page.tsx
 
-- L77: 관리자
-- L80: 세대별 코칭 계보도
-- L83: 활성 코치-코치이 관계를 기준으로 세대 흐름과 지역별 현황을
-- L84: 확인합니다. 개인 일지 본문은 이 화면에서 조회하지 않습니다.
-- L94: 관리자 대시보드
+- L80: 관리자
+- L83: 세대별 코칭 계보도
+- L86: 활성 코치-코치이 관계를 기준으로 세대 흐름과 지역별 현황을
+- L87: 확인합니다. 개인 일지 본문은 이 화면에서 조회하지 않습니다.
+- L97: 관리자 대시보드
 
 ### src/app/admin/coaching-relationships/new/page.tsx
 
@@ -406,7 +445,7 @@
 - L605: placeholder="이메일 검색"
 - L614: 검색
 - L625: 검색 초기화
-- L633: <p className="mt-4 text-slate-600">표시할 초대가 없습니다.</p>
+- L633: <p className="mt-4 text-ink-muted">표시할 초대가 없습니다.</p>
 - L648: <th className="py-3 pr-4 font-medium">관리</th>
 - L686: 재초대 준비
 - L697: ? "취소 중..."
@@ -419,92 +458,308 @@
 - L181: <h1 className="mt-3 text-3xl font-semibold">초대 상세</h1>
 - L183: 하나의 초대를 읽기 전용으로 확인할 수 있습니다.
 - L188: <h2 className="text-lg font-semibold">초대 요약</h2>
-- L191: <dt className="text-sm font-medium text-slate-500">이메일</dt>
-- L195: <dt className="text-sm font-medium text-slate-500">역할</dt>
-- L203: <dt className="text-sm font-medium text-slate-500">범위</dt>
-- L207: <dt className="text-sm font-medium text-slate-500">상태</dt>
-- L219: <dt className="text-sm font-medium text-slate-500">생성일</dt>
-- L223: <dt className="text-sm font-medium text-slate-500">수정일</dt>
+- L191: <dt className="text-sm font-medium text-ink-faint">이메일</dt>
+- L195: <dt className="text-sm font-medium text-ink-faint">역할</dt>
+- L203: <dt className="text-sm font-medium text-ink-faint">범위</dt>
+- L207: <dt className="text-sm font-medium text-ink-faint">상태</dt>
+- L219: <dt className="text-sm font-medium text-ink-faint">생성일</dt>
+- L223: <dt className="text-sm font-medium text-ink-faint">수정일</dt>
 - L230: <h2 className="text-lg font-semibold">수락 상태</h2>
-- L233: <dt className="text-sm font-medium text-slate-500">만료일</dt>
-- L237: <dt className="text-sm font-medium text-slate-500">수락일</dt>
-- L241: <dt className="text-sm font-medium text-slate-500">만료 여부</dt>
+- L233: <dt className="text-sm font-medium text-ink-faint">만료일</dt>
+- L237: <dt className="text-sm font-medium text-ink-faint">수락일</dt>
+- L241: <dt className="text-sm font-medium text-ink-faint">만료 여부</dt>
 - L242: <dd className="mt-1">{isExpired(invitation) ? "예" : "아니오"}</dd>
-- L245: <dt className="text-sm font-medium text-slate-500">수락 여부</dt>
+- L245: <dt className="text-sm font-medium text-ink-faint">수락 여부</dt>
 - L246: <dd className="mt-1">{isAccepted(invitation) ? "예" : "아니오"}</dd>
-- L249: <dt className="text-sm font-medium text-slate-500">철회 여부</dt>
+- L249: <dt className="text-sm font-medium text-ink-faint">철회 여부</dt>
 - L250: <dd className="mt-1">{isRevoked(invitation) ? "예" : "아니오"}</dd>
 - L256: <h2 className="text-lg font-semibold">관리자 정보</h2>
-- L259: <dt className="text-sm font-medium text-slate-500">초대한 사람</dt>
-- L263: <dt className="text-sm font-medium text-slate-500">초대한 사람 ID</dt>
-- L268: <dt className="text-sm font-medium text-slate-500">초대한 사람 이메일</dt>
+- L259: <dt className="text-sm font-medium text-ink-faint">초대한 사람</dt>
+- L263: <dt className="text-sm font-medium text-ink-faint">초대한 사람 ID</dt>
+- L268: <dt className="text-sm font-medium text-ink-faint">초대한 사람 이메일</dt>
 - L276: <h2 className="text-lg font-semibold">안전한 작업</h2>
 - L282: 초대 목록으로 돌아가기
 
 ### src/app/admin/invitations/new/page.tsx
 
-- L11: 관리자
-- L13: <h1 className="mt-3 text-3xl font-semibold">초대 생성</h1>
-- L15: 특정 역할과 범위를 가진 사용자를 위한 대기 중 초대를 생성합니다.
-- L25: 초대 목록 보기
+- L27: <I18nText k="admin.invitations.new.badge" fallback="관리자" />
+- L30: <I18nText k="admin.invitations.new.title" fallback="초대 생성" />
+- L35: fallback="새 사용자를 초대하고 역할과 소속 범위를 지정합니다."
+- L47: fallback="초대 목록으로"
 
 ### src/app/admin/invitations/page.tsx
 
-- L169: 관리자
-- L171: <h1 className="mt-3 text-3xl font-semibold">초대</h1>
-- L173: 초대와 현재 상태를 읽기 전용으로 확인할 수 있습니다.
-- L181: 초대 생성
-- L191: <span className="text-sm font-medium text-slate-700">검색</span>
-- L196: placeholder="이메일"
-- L202: <span className="text-sm font-medium text-slate-700">역할</span>
-- L208: <option value="all">전체</option>
-- L218: <span className="text-sm font-medium text-slate-700">상태</span>
-- L224: <option value="all">전체</option>
-- L237: 필터
-- L244: 지금 초대를 불러올 수 없습니다.
-- L250: 초대가 없습니다.
-- L260: <th className="px-4 py-3 font-medium">이메일</th>
-- L261: <th className="px-4 py-3 font-medium">역할</th>
-- L262: <th className="px-4 py-3 font-medium">범위</th>
-- L263: <th className="px-4 py-3 font-medium">상태</th>
-- L264: <th className="px-4 py-3 font-medium">만료일</th>
-- L265: <th className="px-4 py-3 font-medium">수락일</th>
-- L266: <th className="px-4 py-3 font-medium">생성일</th>
-- L267: <th className="px-4 py-3 font-medium">초대한 사람</th>
-- L268: <th className="px-4 py-3 font-medium">작업</th>
-- L333: <p className="text-sm text-slate-600">{page}페이지</p>
-- L340: 이전
-- L344: 이전
-- L353: 다음
-- L357: 다음
+- L171: 관리자
+- L173: <h1 className="mt-3 text-3xl font-semibold">초대</h1>
+- L175: 초대와 현재 상태를 읽기 전용으로 확인할 수 있습니다.
+- L179: backLabel="관리자 센터로"
+- L189: 초대 생성
+- L199: <span className="text-sm font-medium text-ink-base">검색</span>
+- L204: placeholder="이메일"
+- L210: <span className="text-sm font-medium text-ink-base">역할</span>
+- L216: <option value="all">전체</option>
+- L226: <span className="text-sm font-medium text-ink-base">상태</span>
+- L232: <option value="all">전체</option>
+- L245: 필터
+- L252: 지금 초대를 불러올 수 없습니다.
+- L260: ? "검색 조건에 맞는 초대가 없습니다."
+- L261: : "아직 생성된 초대가 없습니다."}
+- L265: ? "필터를 초기화하거나 새 초대를 생성해 주세요."
+- L266: : "새 사용자를 초대하려면 초대 생성을 시작해 주세요."}
+- L274: 필터 초기화
+- L281: 초대 생성
+- L290: 표는 가로로 스크롤해 전체 내용을 확인하세요.
+- L296: <th className="px-4 py-3 font-medium">이메일</th>
+- L297: <th className="px-4 py-3 font-medium">역할</th>
+- L298: <th className="px-4 py-3 font-medium">범위</th>
+- L299: <th className="px-4 py-3 font-medium">상태</th>
+- L300: <th className="px-4 py-3 font-medium">만료일</th>
+- L301: <th className="px-4 py-3 font-medium">수락일</th>
+- L302: <th className="px-4 py-3 font-medium">생성일</th>
+- L303: <th className="px-4 py-3 font-medium">초대한 사람</th>
+- L304: <th className="px-4 py-3 font-medium">작업</th>
+- L369: <p className="text-sm text-ink-muted">{page}페이지</p>
+- L376: 이전
+- L380: 이전
+- L389: 다음
+- L393: 다음
 
 ### src/app/admin/page.tsx
 
-- L12: church_admin: "교회 관리자",
-- L13: coach: "코치",
-- L14: coach_maker: "코치메이커",
-- L15: coachee: "코칭 대상자",
-- L16: organization_admin: "기관 관리자",
-- L17: super_admin: "최고 관리자",
-- L23: return trimmedRole ? trimmedRole : "미지정";
-- L27: if (role === "미지정") {
-- L31: return ROLE_DISPLAY_LABELS[role] ?? `기타: ${role}`;
-- L39: roleCounts.set("미지정", (roleCounts.get("미지정") ?? 0) + 1);
-- L106: 관리자
-- L108: <h1 className="mt-3 text-3xl font-semibold">관리자 대시보드</h1>
-- L110: 회원관리 현황을 확인하고 사용자 관리 화면으로 이동합니다.
-- L120: 회원관리로 이동
-- L127: 지금 회원관리 현황을 불러올 수 없습니다.
-- L133: description="현재 관리자 회원목록에서 조회한 전체 회원 수입니다."
-- L134: title="전체 회원 수"
-- L138: description="프로필 상태가 active인 회원 수입니다."
-- L139: title="활성 회원 수"
-- L143: description="프로필 상태가 inactive인 회원 수입니다."
-- L144: title="비활성 회원 수"
-- L152: 역할별 회원 수
-- L155: 현재 회원 프로필의 role 값을 기준으로 자동 집계한 수입니다.
-- L161: 역할 정보가 있는 회원이 없습니다.
-- L174: {roleStat.count}명
+- L13: church_admin: "교회 관리자",
+- L14: coach: "코치",
+- L15: coach_maker: "코치메이커",
+- L16: coachee: "코칭 대상자",
+- L17: organization_admin: "기관 관리자",
+- L18: super_admin: "최고 관리자",
+- L24: return trimmedRole ? trimmedRole : "미지정";
+- L28: if (role === "미지정") {
+- L32: return ROLE_DISPLAY_LABELS[role] ?? `기타: ${role}`;
+- L40: roleCounts.set("미지정", (roleCounts.get("미지정") ?? 0) + 1);
+- L84: description: "회원 정보와 상태를 확인하고 수정합니다.",
+- L86: title: "회원 관리",
+- L89: description: "새 사용자를 초대하고 초대 상태를 확인합니다.",
+- L91: title: "초대 관리",
+- L94: description: "회원별 시스템 역할과 활성 상태를 관리합니다.",
+- L96: title: "역할 관리",
+- L99: description: "국가, 기관/교회, 세대, 소속 선택값을 관리합니다.",
+- L101: title: "국가/지역/기관/교회/그룹 관리",
+- L105: "기본 언어, 기본 국가, 이메일 발신, 초대 만료 기간, 시스템 공지, 인쇄 기본 옵션, 조직별 기본 권한을 관리합니다.",
+- L107: title: "시스템 설정",
+- L137: <Badge icon="settings" tone="info">관리자 전용</Badge>
+- L138: <h1 className="mt-3 text-3xl font-semibold">관리자 센터</h1>
+- L140: 회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간입니다.
+- L148: 관리자 설정
+- L152: 회원관리로 이동
+- L160: 관리자 전용 메뉴
+- L163: 운영 관리에 필요한 기능을 이곳에서 확인하고 이동합니다.
+- L184: 지금 회원관리 현황을 불러올 수 없습니다.
+- L190: description="현재 관리자 회원목록에서 조회한 전체 회원 수입니다."
+- L191: title="전체 회원 수"
+- L195: description="프로필 상태가 active인 회원 수입니다."
+- L196: title="활성 회원 수"
+- L200: description="프로필 상태가 inactive인 회원 수입니다."
+- L201: title="비활성 회원 수"
+- L209: 역할별 회원 수
+- L212: 현재 회원 프로필의 role 값을 기준으로 자동 집계한 수입니다.
+- L218: 역할 정보가 있는 회원이 없습니다.
+- L231: {roleStat.count}명
+
+### src/app/admin/settings/OrganizationDefaultRoleSettings.tsx
+
+- L74: setMessage("조직을 선택해 주세요.");
+- L104: : "조직별 기본 권한을 저장하지 못했습니다.",
+- L117: setMessage("조직별 기본 권한 설정을 저장했습니다.");
+- L123: : "조직별 기본 권한을 저장하지 못했습니다.",
+- L135: <CardTitle>조직별 기본 권한 설정</CardTitle>
+- L137: 조직별 신규 사용자 초대 폼에 제안할 기본 권한을 관리합니다.
+- L138: 초대 생성 화면에서 조직 선택 시 기본 권한 제안에 사용됩니다.
+- L141: <Badge tone="success">초대 생성에 적용</Badge>
+- L146: 이 설정은 초대 생성 화면의 기본값 제안에만 사용되며, 최종 초대
+- L147: 생성 시 서버에서 다시 검증됩니다.
+- L164: 활성 조직이 없습니다. 기관/교회 관리에서 활성 조직을 먼저
+- L165: 등록해 주세요.
+- L170: <FieldText>조직</FieldText>
+- L190: <FieldText>기본 초대 역할</FieldText>
+- L192: <option value="coachee">코치이</option>
+- L204: 초대 생성 기본값 제안 사용
+- L213: 적용 범위: {selectedOrganization.organization_name}
+- L216: 초대 화면에서 이 조직을 선택하면 역할은 코치이, 범위 유형은
+- L217: 기관, 범위 ID는 조직 ID로 제안됩니다.
+- L228: {isSaving ? "저장 중..." : "기본 권한 저장"}
+
+### src/app/admin/settings/SystemAnnouncementsClient.tsx
+
+- L55: admin: "관리자 전용",
+- L56: all: "전체 사용자",
+- L60: admin: "관리자 센터",
+- L61: dashboard: "대시보드",
+- L62: login_after: "로그인 후",
+- L120: return { label: "삭제됨", tone: "neutral" as const };
+- L124: return { label: "비활성", tone: "warning" as const };
+- L128: return { label: "예약", tone: "info" as const };
+- L132: return { label: "종료", tone: "neutral" as const };
+- L135: return { label: "활성", tone: "success" as const };
+- L170: !announcement.deleted_at && getAnnouncementStatus(announcement).label === "활성",
+- L236: throw new Error(result.error ?? "시스템 공지를 저장하지 못했습니다.");
+- L241: message: editingId ? "시스템 공지를 수정했습니다." : "시스템 공지를 추가했습니다.",
+- L250: : "시스템 공지를 저장하지 못했습니다.",
+- L273: throw new Error(result.error ?? "공지 상태를 변경하지 못했습니다.");
+- L277: setSaveState({ message: "공지 상태를 변경했습니다.", tone: "success" });
+- L283: : "공지 상태를 변경하지 못했습니다.",
+- L293: `"${announcement.title}" 공지를 삭제하시겠습니까?\n이 작업은 soft delete로 처리됩니다.`,
+- L310: throw new Error(result.error ?? "시스템 공지를 삭제하지 못했습니다.");
+- L314: setSaveState({ message: "시스템 공지를 삭제했습니다.", tone: "success" });
+- L323: : "시스템 공지를 삭제하지 못했습니다.",
+- L336: <Badge tone="info">운영 공지</Badge>
+- L337: <Badge tone="success">저장/수정 가능</Badge>
+- L338: <Badge tone="success">활성 {activeCount}개</Badge>
+- L340: <CardTitle className="mt-3 text-xl">시스템 공지 설정</CardTitle>
+- L342: 운영 공지 관리용 설정입니다. 공지 작성, 수정, 활성/비활성, 삭제와
+- L343: 노출 기간을 관리합니다.
+- L350: <Badge tone={saveState.tone}>{saveState.tone === "success" ? "완료" : "확인"}</Badge>
+- L360: <FieldText>공지 제목</FieldText>
+- L364: placeholder="예: 5월 시스템 점검 안내"
+- L370: <FieldText>우선순위</FieldText>
+- L382: <FieldText>공지 본문</FieldText>
+- L386: placeholder="사용자에게 안내할 내용을 입력하세요."
+- L394: <FieldText>대상</FieldText>
+- L402: <option value="all">전체 사용자</option>
+- L403: <option value="admin">관리자 전용</option>
+- L407: <FieldText>표시 위치</FieldText>
+- L415: <option value="dashboard">대시보드</option>
+- L416: <option value="login_after">로그인 후</option>
+- L417: <option value="admin">관리자 센터</option>
+- L421: <FieldText>시작일</FieldText>
+- L430: <FieldText>종료일</FieldText>
+- L448: 활성 상태로 게시
+- L453: 취소
+- L463: ? "저장 중..."
+- L465: ? "공지 수정"
+- L466: : "공지 추가"}
+- L474: <h3 className="text-lg font-semibold text-ink-strong">공지 목록</h3>
+- L476: 삭제된 공지는 관리 이력을 위해 목록에 흐리게 표시됩니다.
+- L482: 등록된 시스템 공지가 없습니다.
+- L503: <Badge tone="neutral">우선순위 {announcement.priority}</Badge>
+- L512: 기간: {formatDateTime(announcement.starts_at)} ~{" "}
+- L523: 수정
+- L532: {announcement.is_active ? "비활성" : "활성"}
+- L542: 삭제
+
+### src/app/admin/settings/SystemSettingsForm.tsx
+
+- L94: throw new Error(payload?.error ?? "설정을 저장하지 못했습니다.");
+- L106: setMessage("설정을 저장했습니다.");
+- L109: setMessage(error instanceof Error ? error.message : "설정을 저장하지 못했습니다.");
+- L121: <CardTitle>기본 운영 설정</CardTitle>
+- L123: 기본 언어, 기본 국가, 시스템 기본 시간대, 초대 만료 기간을
+- L124: 저장합니다.
+- L127: <Badge tone="info">저장 가능</Badge>
+- L145: <FieldLabel htmlFor="default_locale">기본 언어</FieldLabel>
+- L151: <option value="ko">한국어</option>
+- L155: 저장되며, 실제 적용 화면은 단계적으로 연결 예정입니다.
+- L160: <FieldLabel htmlFor="default_country_id">기본 국가</FieldLabel>
+- L166: <option value="">선택 안 함</option>
+- L174: 저장되며, 실제 적용 화면은 단계적으로 연결 예정입니다.
+- L179: <FieldLabel htmlFor="default_timezone">시스템 기본 시간대</FieldLabel>
+- L192: 사용자 또는 조직 시간대가 없을 때 적용되는 시스템 기본
+- L193: 시간대입니다.
+- L198: <FieldLabel htmlFor="invitation_expires_in_days">초대 만료 기간</FieldLabel>
+- L206: {days}일
+- L211: /admin/invitations/new 초대 생성 화면의 기본 만료일로
+- L212: 사용됩니다.
+- L223: <CardTitle>인쇄 기본 옵션</CardTitle>
+- L225: 목실기, 나의 기록, 보고서 출력에 사용할 기본 용지, 방향,
+- L226: 여백과 표시 항목을 저장합니다.
+- L229: <Badge tone="warning">저장만 됨</Badge>
+- L235: <FieldText>용지 크기</FieldText>
+- L245: <FieldText>방향</FieldText>
+- L255: <option value="portrait">세로</option>
+- L256: <option value="landscape">가로</option>
+- L261: <FieldText>여백</FieldText>
+- L268: <option value="compact">좁게</option>
+- L269: <option value="normal">보통</option>
+- L270: <option value="wide">넓게</option>
+- L277: ["show_title", "제목 표시"],
+- L278: ["show_people_info", "작성자/대상자 정보 표시"],
+- L279: ["show_date", "날짜 표시"],
+- L280: ["show_logo", "로고 표시"],
+- L281: ["show_signature", "서명란 표시"],
+- L282: ["show_page_numbers", "페이지 번호 표시"],
+- L305: 인쇄 옵션은 저장되지만 출력 화면 반영은 단계적으로 연결 예정입니다.
+- L306: 페이지 번호, 로고, 서명란은 문서별 레이아웃 차이가 있어 현재는
+- L307: 저장값 중심으로 관리합니다.
+- L314: 설정 변경은 전체 운영 기본값에 영향을 줄 수 있습니다.
+- L317: {isSaving ? "저장 중..." : "설정 저장"}
+
+### src/app/admin/settings/affiliations/AffiliationsClient.tsx
+
+- L23: { label: "사역팀", value: "ministry_team" },
+- L24: { label: "소그룹/목장", value: "small_group" },
+- L25: { label: "코호트 그룹", value: "cohort_group" },
+- L26: { label: "훈련반", value: "training_group" },
+- L27: { label: "지역 그룹", value: "regional_group" },
+- L28: { label: "기타", value: "other" },
+- L83: return "미지정";
+- L94: return "미지정";
+- L97: return items.find((item) => item.id === id)?.name ?? "미지정";
+- L166: : "소속 선택값을 처리하지 못했습니다.",
+- L177: setErrorMessage("이름을 입력해 주세요.");
+- L242: setMessage(data.message ?? "소속 선택값이 추가되었습니다.");
+- L248: : "소속 선택값 추가에 실패했습니다.",
+- L315: setMessage(data.message ?? "소속 선택값이 수정되었습니다.");
+- L321: : "소속 선택값 수정에 실패했습니다.",
+- L331: 이 화면은 회원정보수정 드롭다운의 선택값을 관리합니다. 기존 DB
+- L332: 구조를 사용하며 삭제 기능은 제공하지 않습니다.
+- L348: <SummaryCard label="지역/도시" value={regions.length} />
+- L349: <SummaryCard label="세부 교회" value={churches.length} />
+- L350: <SummaryCard label="그룹/팀/목장" value={groups.length} />
+- L363: label="지역/도시명"
+- L370: label="소속 국가"
+- L375: <option value="">미지정</option>
+- L384: pendingLabel="추가 중..."
+- L386: 지역/도시 추가
+- L390: description="국가 하위의 지역 또는 도시 선택값입니다."
+- L391: emptyText="등록된 지역/도시가 없습니다."
+- L392: title="지역/도시 관리"
+- L412: <option value="">미지정</option>
+- L449: label="세부 교회명"
+- L456: label="소속 기관/교회"
+- L461: <option value="">미지정</option>
+- L470: pendingLabel="추가 중..."
+- L472: 세부 교회 추가
+- L476: description="기관 또는 교회 네트워크 아래의 세부 교회 선택값입니다."
+- L477: emptyText="등록된 세부 교회가 없습니다."
+- L478: title="세부 교회 관리"
+- L498: <option value="">미지정</option>
+- L537: label="그룹/팀/목장명"
+- L540: placeholder="청년팀"
+- L544: label="세부 교회"
+- L549: <option value="">미지정</option>
+- L557: label="유형"
+- L570: pendingLabel="추가 중..."
+- L572: 그룹/팀/목장 추가
+- L576: description="세부 교회 하위의 그룹, 팀, 목장 선택값입니다."
+- L577: emptyText="등록된 그룹/팀/목장이 없습니다."
+- L578: title="그룹/팀/목장 관리"
+- L598: <option value="">미지정</option>
+- L665: <th className="px-4 py-3 font-medium">이름</th>
+- L666: <th className="px-4 py-3 font-medium">상위 소속</th>
+- L667: <th className="px-4 py-3 font-medium">최근 수정일</th>
+- L668: <th className="px-4 py-3 font-medium">작업</th>
+- L828: {pending ? "저장 중..." : "저장"}
+- L836: 취소
+- L846: 수정
+
+### src/app/admin/settings/affiliations/page.tsx
+
+- L21: <h1 className="mt-3 text-3xl font-semibold">소속 선택값 관리</h1>
+- L23: 회원정보수정 화면에서 사용하는 지역/도시, 세부 교회,
+- L24: 그룹/팀/목장 선택값을 관리합니다. 등록한 값은 회원정보수정
+- L25: 드롭다운에 표시됩니다.
+- L28: 적용 위치: 회원 정보 입력/수정 화면의 국가·지역·기관·교회·그룹
+- L29: 선택값으로 사용됩니다.
+- L37: 관리자 대시보드로 돌아가기
 
 ### src/app/admin/settings/countries/CountriesClient.tsx
 
@@ -521,12 +776,12 @@
 - L276: : "국가 사용 여부 변경에 실패했습니다.",
 - L286: 국가는 회원의 소속 국가 선택에 사용됩니다. 이미 회원에게 연결된
 - L287: 국가는 삭제하지 않고 비활성화만 할 수 있습니다.
-- L292: <p className="text-sm font-medium text-slate-500">전체 국가 수</p>
-- L296: <p className="text-sm font-medium text-slate-500">사용 중</p>
-- L300: <p className="text-sm font-medium text-slate-500">비활성</p>
+- L292: <p className="text-sm font-medium text-ink-faint">전체 국가 수</p>
+- L296: <p className="text-sm font-medium text-ink-faint">사용 중</p>
+- L300: <p className="text-sm font-medium text-ink-faint">비활성</p>
 - L313: <h2 className="text-lg font-semibold">국가 추가</h2>
 - L315: 국가 코드는 ISO 2~3자리 대문자 코드를 사용합니다.
-- L322: <span className="text-sm font-medium text-slate-700">국가명</span>
+- L322: <span className="text-sm font-medium text-ink-base">국가명</span>
 - L332: 국가 코드
 - L347: {pendingAction === "create" ? "추가 중..." : "국가 추가"}
 - L366: 등록된 국가가 없습니다. 국가를 추가해 주세요.
@@ -566,9 +821,9 @@
 - L318: : "세대 옵션 사용 여부 변경에 실패했습니다.",
 - L328: 세대 옵션은 회원가입/초대 수락 시 표시되는 선택 항목입니다.
 - L329: 회원에게 저장되는 실제 값은 profiles.generation_number입니다.
-- L334: <p className="text-sm font-medium text-slate-500">전체 옵션 수</p>
-- L338: <p className="text-sm font-medium text-slate-500">사용 중</p>
-- L342: <p className="text-sm font-medium text-slate-500">비활성</p>
+- L334: <p className="text-sm font-medium text-ink-faint">전체 옵션 수</p>
+- L338: <p className="text-sm font-medium text-ink-faint">사용 중</p>
+- L342: <p className="text-sm font-medium text-ink-faint">비활성</p>
 - L353: <h2 className="text-lg font-semibold">세대 추가</h2>
 - L355: 세대 번호는 1 이상의 정수로 입력합니다. 정렬 순서를 비우면 세대 번호를 사용합니다.
 - L361: 세대 번호
@@ -603,405 +858,582 @@
 
 ### src/app/admin/settings/organizations/OrganizationsClient.tsx
 
-- L12: denomination: "교단/교파",
-- L13: mission_body: "선교단체",
-- L14: church_network: "교회 네트워크/노회",
-- L15: local_ministry: "지역 사역",
-- L16: nonprofit: "비영리단체",
-- L17: other: "기타",
-- L45: return "미지정";
-- L51: return "미지정";
-- L66: return isActive ? "사용 중" : "비활성";
-- L71: return "미지정";
-- L111: message: "기관 및 단체명을 입력해 주세요.",
-- L118: message: "소속 국가를 선택해 주세요.",
-- L125: message: "기관 유형을 선택해 주세요.",
-- L181: : "기관 및 단체 정보를 처리하지 못했습니다.",
-- L229: setMessage(data.message ?? "기관 및 단체가 추가되었습니다.");
-- L235: : "기관 및 단체 추가에 실패했습니다.",
-- L303: setMessage(data.message ?? "기관 및 단체 정보가 수정되었습니다.");
-- L309: : "기관 및 단체 수정에 실패했습니다.",
-- L348: ? "기관 및 단체가 다시 활성화되었습니다."
-- L349: : "기관 및 단체가 비활성화되었습니다. 기존 회원의 소속 정보는 유지됩니다.",
-- L356: : "기관 및 단체 사용 여부 변경에 실패했습니다.",
-- L366: 기관 및 단체는 회원의 소속 기관 선택에 사용됩니다. 이미 회원에게
-- L367: 연결된 기관은 삭제하지 않고 비활성화만 할 수 있습니다.
-- L373: 전체 기관 및 단체 수
-- L378: <p className="text-sm font-medium text-slate-500">사용 중</p>
-- L382: <p className="text-sm font-medium text-slate-500">비활성</p>
-- L395: <h2 className="text-lg font-semibold">기관 및 단체 추가</h2>
-- L397: 기관명, 기관 유형, 소속 국가를 선택해 등록합니다.
-- L405: 기관 및 단체명
-- L416: 기관 유형
-- L434: 소속 국가
-- L441: <option value="">국가 선택</option>
-- L454: {pendingAction === "create" ? "추가 중..." : "기관 및 단체 추가"}
-- L473: 등록된 기관 및 단체가 없습니다.
-- L480: <th className="px-4 py-3 font-medium">기관명</th>
-- L481: <th className="px-4 py-3 font-medium">기관 유형</th>
-- L482: <th className="px-4 py-3 font-medium">소속 국가</th>
-- L483: <th className="px-4 py-3 font-medium">사용 여부</th>
-- L484: <th className="px-4 py-3 font-medium">생성일</th>
-- L485: <th className="px-4 py-3 font-medium">최근 수정일</th>
-- L486: <th className="px-4 py-3 font-medium">작업</th>
-- L506: organization.name || "미지정"
-- L527: organization.organization_type_label || "미지정"
-- L539: <option value="">국가 선택</option>
-- L577: ? "저장 중..."
-- L578: : "저장"}
-- L586: 취소
-- L597: 수정
-- L610: ? "처리 중..."
-- L612: ? "비활성화"
-- L613: : "다시 활성화"}
+- L13: denomination: "교단/교파",
+- L14: mission_body: "선교단체",
+- L15: church_network: "교회 네트워크/노회",
+- L16: local_ministry: "지역 사역",
+- L17: nonprofit: "비영리단체",
+- L18: other: "기타",
+- L46: return "미지정";
+- L52: return "미지정";
+- L67: return isActive ? "사용 중" : "비활성";
+- L72: return "미지정";
+- L113: message: "기관 및 단체명을 입력해 주세요.",
+- L120: message: "소속 국가를 선택해 주세요.",
+- L127: message: "기관 유형을 선택해 주세요.",
+- L137: message: "기관/조직 기본 시간대를 확인해 주세요.",
+- L196: : "기관 및 단체 정보를 처리하지 못했습니다.",
+- L247: setMessage(data.message ?? "기관 및 단체가 추가되었습니다.");
+- L253: : "기관 및 단체 추가에 실패했습니다.",
+- L325: setMessage(data.message ?? "기관 및 단체 정보가 수정되었습니다.");
+- L331: : "기관 및 단체 수정에 실패했습니다.",
+- L370: ? "기관 및 단체가 다시 활성화되었습니다."
+- L371: : "기관 및 단체가 비활성화되었습니다. 기존 회원의 소속 정보는 유지됩니다.",
+- L378: : "기관 및 단체 사용 여부 변경에 실패했습니다.",
+- L388: 기관 및 단체는 회원의 소속 기관 선택에 사용됩니다. 이미 회원에게
+- L389: 연결된 기관은 삭제하지 않고 비활성화만 할 수 있습니다.
+- L395: 전체 기관 및 단체 수
+- L400: <p className="text-sm font-medium text-ink-faint">사용 중</p>
+- L404: <p className="text-sm font-medium text-ink-faint">비활성</p>
+- L417: <h2 className="text-lg font-semibold">기관 및 단체 추가</h2>
+- L419: 기관명, 기관 유형, 소속 국가를 선택해 등록합니다.
+- L427: 기관 및 단체명
+- L438: 기관 유형
+- L456: 소속 국가
+- L463: <option value="">국가 선택</option>
+- L473: 기관/조직 기본 시간대
+- L480: <option value="">선택 안 함</option>
+- L488: 개인 시간대가 없을 때 이 조직 기본값을 사용합니다.
+- L496: {pendingAction === "create" ? "추가 중..." : "기관 및 단체 추가"}
+- L515: 등록된 기관 및 단체가 없습니다.
+- L522: <th className="px-4 py-3 font-medium">기관명</th>
+- L523: <th className="px-4 py-3 font-medium">기관 유형</th>
+- L524: <th className="px-4 py-3 font-medium">소속 국가</th>
+- L525: <th className="px-4 py-3 font-medium">기본 시간대</th>
+- L526: <th className="px-4 py-3 font-medium">사용 여부</th>
+- L527: <th className="px-4 py-3 font-medium">생성일</th>
+- L528: <th className="px-4 py-3 font-medium">최근 수정일</th>
+- L529: <th className="px-4 py-3 font-medium">작업</th>
+- L549: organization.name || "미지정"
+- L570: organization.organization_type_label || "미지정"
+- L582: <option value="">국가 선택</option>
+- L602: <option value="">선택 안 함</option>
+- L610: organization.default_timezone ?? "시스템 기본값"
+- L640: ? "저장 중..."
+- L641: : "저장"}
+- L649: 취소
+- L660: 수정
+- L673: ? "처리 중..."
+- L675: ? "비활성화"
+- L676: : "다시 활성화"}
 
 ### src/app/admin/settings/organizations/page.tsx
 
-- L17: <p className="text-sm font-medium text-slate-500">관리자 설정</p>
+- L17: <p className="text-sm font-medium text-ink-faint">관리자 설정</p>
 - L19: 기관 및 단체 관리
 - L22: 회원의 소속 기관 및 단체 선택에 사용되는 기관 목록을
 - L23: 관리합니다. 이미 회원에게 연결된 기관은 삭제하지 않고
 - L24: 비활성화합니다.
 - L31: 관리자 홈으로
 
+### src/app/admin/settings/page.tsx
+
+- L21: applyInfo: "회원 정보 입력/수정과 초대 수락 화면의 국가 선택값으로 사용됩니다.",
+- L23: "초대 수락과 회원관리에서 사용하는 국가 목록을 확인하고 관리합니다.",
+- L25: status: "실제 적용 중",
+- L27: title: "국가 관리",
+- L30: applyInfo: "회원 소속과 조직별 기본 권한 설정에서 사용하는 기관/교회 선택값입니다.",
+- L32: "회원 소속 기관/교회 목록을 추가하고, 국가 연결과 사용 여부를 관리합니다.",
+- L34: status: "실제 적용 중",
+- L36: title: "기관/교회 관리",
+- L39: applyInfo: "초대 수락과 회원가입에서 표시할 세대 선택값으로 사용됩니다.",
+- L41: "초대 수락과 회원가입에서 표시할 세대 선택 항목을 관리합니다.",
+- L43: status: "실제 적용 중",
+- L45: title: "세대 관리",
+- L49: "회원 정보 입력/수정 화면의 국가·지역·기관·교회·그룹 선택값으로 사용됩니다.",
+- L51: "회원정보수정에서 사용하는 지역/도시, 세부 교회, 그룹/팀/목장 선택값을 등록하고 수정합니다.",
+- L53: status: "실제 적용 중",
+- L55: title: "소속 선택값 관리",
+- L62: "초대, 알림, 안내 메일 발신 기본값을 준비 중입니다. 현재 자동 메일 발송은 활성화되어 있지 않습니다.",
+- L63: title: "이메일 발신 설정",
+- L106: <Badge icon="settings" tone="info">관리자 전용</Badge>
+- L107: <CardTitle className="mt-3 text-3xl">시스템 설정</CardTitle>
+- L109: 프로그램 전체 운영에 필요한 기본 언어, 국가, 이메일, 초대, 공지,
+- L110: 인쇄, 권한 기본값을 관리합니다.
+- L120: 관리자 센터로 돌아가기
+- L145: 적용 위치: {card.applyInfo}
+- L154: 운영 기본값 설정
+- L157: 기본 언어, 기본 국가, 초대 만료 기간, 인쇄 옵션, 운영 공지,
+- L158: 조직별 기본 권한을 관리합니다. 저장만 되는 항목과 실제 적용 중인
+- L159: 항목을 구분해 확인해 주세요.
+- L187: 준비 중
+- L195: 다음 단계에서 저장 기능과 메일 서비스 연결 예정
+
+### src/app/admin/users/AdminUserAffiliationFields.tsx
+
+- L208: <I18nText k="members.country" fallback="소속 국가" />
+- L218: "선택 안 함"
+- L220: <I18nText k="members.notSpecified" fallback="미지정" />
+- L227: {country.is_active ? "" : " - 비활성"}
+- L239: <I18nText k="members.regionCity" fallback="지역/도시" />
+- L248: <I18nText k="members.notSpecified" fallback="미지정" />
+- L264: <I18nText k="members.regionCity" fallback="지역/도시" />
+- L267: 등록된 지역/도시 목록이 없습니다. 현재는 소속 기관/교회 기준으로
+- L268: 먼저 관리하세요.
+- L278: 소속 기관/교회
+- L287: <I18nText k="members.notSpecified" fallback="미지정" />
+- L292: {organization.is_active ? "" : " - 비활성"}
+- L304: 세부 교회
+- L314: "선택 안 함"
+- L316: <I18nText k="members.notSpecified" fallback="미지정" />
+- L333: 세부 교회
+- L336: 등록된 세부 교회 목록이 없습니다. 소속은 위의 소속 기관/교회에서
+- L337: 선택해 주세요.
+- L348: <I18nText k="members.groupTeam" fallback="그룹/팀/목장" />
+- L357: <I18nText k="members.notSpecified" fallback="미지정" />
+- L373: <I18nText k="members.groupTeam" fallback="그룹/팀/목장" />
+- L376: 등록된 그룹/팀/목장 목록이 없습니다. 먼저 소속 기관/교회를 선택해
+- L377: 관리하세요.
+
+### src/app/admin/users/AdminUserDetailDrawer.tsx
+
+- L45: "목사",
+- L46: "선교사",
+- L47: "전도사",
+- L48: "장로",
+- L49: "권사",
+- L50: "집사",
+- L51: "목자",
+- L52: "순장",
+- L53: "교사",
+- L54: "리더",
+- L55: "성도",
+- L56: "기타",
+- L60: label: `${index + 1}세대`,
+- L65: return "미지정";
+- L71: return "미지정";
+- L92: return value && value.trim().length > 0 ? value : "이메일 없음";
+- L96: return value && value.trim().length > 0 ? value : "미지정";
+- L112: return "미지정";
+- L127: ? `${value}세대`
+- L128: : "미지정";
+- L140: return isActiveRole(roleItem) ? "활성" : "비활성";
+- L145: return "미등록";
+- L185: label: `${currentValue}세대`,
+- L221: placeholder="권한 범위를 먼저 선택하세요."
+- L232: placeholder="권한 범위 목록을 불러오는 중..."
+- L262: <option value="">권한을 적용할 범위를 선택하세요</option>
+- L278: ? "목록을 불러오지 못했습니다. 범위 ID를 입력하세요."
+- L279: : "선택한 권한 범위의 ID를 입력하세요."
+- L308: super_admin 역할은 이 화면에서 변경할 수 없습니다.
+- L325: 역할만 변경되며 기존 권한 범위는 유지됩니다. 범위 변경이 필요하면
+- L326: 권한을 다시 추가하거나 수정하세요.
+- L347: 역할 변경
+- L387: setOptionsError("권한 범위 선택값을 불러오지 못했습니다.");
+- L406: return <p className="text-xs text-ink-faint">추가로 부여할 수 있는 역할이 없습니다.</p>;
+- L418: 권한 범위는 회원 소속 정보와 다를 수 있습니다. 관리자 권한은 해당
+- L419: 범위의 사용자와 기록에 접근할 수 있으므로 신중히 선택하세요.
+- L420: super_admin은 이 화면에서 새로 추가할 수 없습니다.
+- L424: 관리자 권한은 선택한 범위 안의 관리 기능에 접근할 수 있습니다.
+- L438: <option value="">역할 선택</option>
+- L454: {selectedRole ? "권한 범위 선택" : "역할을 먼저 선택하세요"}
+- L473: 역할 추가
+- L488: return <span className="text-xs text-ink-faint">super_admin 보호</span>;
+- L504: confirmDescription={`${formatEmail(user.email)} 회원의 ${getRoleLabel(
+- L506: )} 시스템 역할만 ${isActive ? "비활성화" : "활성화"}합니다.`}
+- L509: ? "시스템 역할을 비활성화하시겠습니까?"
+- L510: : "시스템 역할을 활성화하시겠습니까?"
+- L514: {isActive ? "비활성화" : "재활성화"}
+- L524: return <span className="text-xs text-ink-faint">super_admin 보호</span>;
+- L528: return <span className="text-xs text-ink-faint">확인 필요</span>;
+- L548: ? `${user.email} 계정을 비활성화합니다.`
+- L549: : `${user.email} 계정을 다시 활성화합니다.`
+- L553: ? "회원을 비활성화하시겠습니까?"
+- L554: : "회원을 재활성화하시겠습니까?"
+- L558: {user.status === "active" ? "비활성화" : "재활성화"}
+- L590: setOptionsError("소속 선택값을 불러오지 못했습니다.");
+- L620: throw new Error(payload.error ?? "회원 정보 수정에 실패했습니다.");
+- L628: throw new Error("수정된 회원 정보를 다시 불러오지 못했습니다.");
+- L633: setSaveMessage(payload.message ?? "회원 정보가 수정되었습니다.");
+- L638: : "회원 정보 수정 중 오류가 발생했습니다.",
+- L660: <h4 className="text-sm font-semibold text-ink-strong">회원 정보 수정</h4>
+- L662: 이메일과 시스템 역할은 별도 관리 기능에서 변경합니다.
+- L666: 수정 열기
+- L671: 소속 선택값을 불러오는 중...
+- L697: <legend className="px-1 text-sm font-semibold text-ink-base">기본 정보</legend>
+- L700: <span className="font-medium text-ink-base">이름</span>
+- L711: <span className="font-medium text-ink-base">표시 이름</span>
+- L721: <span className="font-medium text-ink-base">전화번호</span>
+- L731: <span className="font-medium text-ink-base">이메일</span>
+- L740: <legend className="px-1 text-sm font-semibold text-ink-base">소속 정보</legend>
+- L764: <span className="font-medium text-ink-base">소속 직분</span>
+- L770: <option value="">미지정</option>
+- L782: <legend className="px-1 text-sm font-semibold text-ink-base">역할 및 세대</legend>
+- L785: <span className="font-medium text-ink-base">세대</span>
+- L791: <option value="">미지정</option>
+- L803: <span className="font-medium text-ink-base">회원 상태</span>
+- L825: {isSaving ? "저장 중..." : "회원 정보 저장"}
+- L831: 수정 취소
+- L852: <h3 className="text-base font-semibold">회원가입 입력 정보</h3>
+- L854: 현재 선택한 회원의 기본 정보, 소속 정보, 세대와 시스템 자동 기록입니다.
+- L858: <h3 className="text-base font-semibold">기본 정보</h3>
+- L860: <DetailValue label="이름" value={displayProfileValue(user.full_name)} />
+- L861: <DetailValue label="표시 이름" value={displayProfileValue(user.display_name)} />
+- L862: <DetailValue label="이메일" value={formatEmail(user.email)} />
+- L863: <DetailValue label="전화번호" value={displayProfileValue(user.phone)} />
+- L867: <h3 className="text-base font-semibold">소속 정보</h3>
+- L869: <DetailValue label="소속 국가" value={formatCountryValue(user)} />
+- L870: <DetailValue label="지역/도시" value={formatLookupValue(user.region_name, user.region_id)} />
+- L872: label="소속 기관/교회"
+- L875: <DetailValue label="세부 교회" value={formatLookupValue(user.church_name, user.church_id)} />
+- L876: <DetailValue label="그룹/팀/목장" value={formatLookupValue(user.group_name, user.group_id)} />
+- L877: <DetailValue label="소속 직분" value={displayProfileValue(user.ministry_position)} />
+- L881: <h3 className="text-base font-semibold">세대</h3>
+- L883: <DetailValue label="세대" value={formatGeneration(user.generation_number)} />
+- L887: <h3 className="text-base font-semibold">시스템 자동 기록</h3>
+- L889: <DetailValue label="회원 상태" value={getStatusLabel(user.status)} />
+- L890: <DetailValue label="가입일" value={formatDateTime(user.created_at)} />
+- L891: <DetailValue label="최근 수정일" value={formatDateTime(user.updated_at)} />
+- L895: <h3 className="text-base font-semibold">회원 정보 관리</h3>
+- L903: <h3 className="text-base font-semibold">시스템 역할 관리</h3>
+- L905: 이 영역은 회원의 시스템 접근 권한을 관리하는 관리자 전용 기능입니다.
+- L910: label="대표 시스템 역할"
+- L911: value={user.primary_role ? getRoleLabel(user.primary_role) : "미지정"}
+- L914: <dt className="text-sm font-medium text-ink-faint">시스템 역할</dt>
+- L918: 미지정
+- L928: 역할 상태: {getRoleActiveLabel(roleItem)}
+- L935: <DetailValue label="역할 권한 범위" value={formatScopeSummary(user.roles)} />
+- L939: <p className="text-xs font-semibold text-ink-base">시스템 역할 활성/비활성</p>
+- L941: <p className="text-xs text-ink-faint">미지정</p>
+- L954: 역할 상태: {getRoleActiveLabel(roleItem)}
+- L997: setError("회원 정보를 불러오지 못했습니다.");
+- L1011: <I18nText k="common.view" fallback="상세보기" />
+- L1014: <I18nText k="common.close" fallback="닫기" />
+- L1021: 회원 상세정보
+- L1024: 상세 정보와 수정 폼은 열 때마다 별도로 불러옵니다.
+- L1031: 회원 정보를 불러오는 중...
+
+### src/app/admin/users/AdminUserDirectCreatePanel.tsx
+
+- L35: "목사",
+- L36: "선교사",
+- L37: "전도사",
+- L38: "장로",
+- L39: "권사",
+- L40: "집사",
+- L41: "목자",
+- L42: "순장",
+- L43: "교사",
+- L44: "리더",
+- L45: "성도",
+- L46: "기타",
+- L50: label: `${index + 1}세대`,
+- L79: <span className="text-sm font-medium text-ink-base">권한 범위</span>
+- L83: placeholder="권한 범위 유형을 먼저 선택하세요."
+- L114: <span className="text-sm font-medium text-ink-base">권한 범위</span>
+- L116: <option value="">권한을 적용할 범위를 선택하세요</option>
+- L124: 권한 범위는 회원 소속 정보와 다를 수 있습니다.
+- L132: <span className="text-sm font-medium text-ink-base">권한 범위 ID</span>
+- L136: placeholder="선택한 권한 범위의 ID를 입력하세요."
+- L141: 이 범위는 선택 목록이 준비되지 않아 ID 입력이 필요합니다. 값이 확실한
+- L142: 경우에만 등록하세요.
+- L169: setError("회원 등록 선택값을 불러오지 못했습니다.");
+- L184: <I18nText k="members.directCreate" fallback="직접 회원 등록" />
+- L189: fallback="기존 이메일 초대 방식은 유지하고, 필요한 경우에만 직접 등록합니다."
+- L195: <I18nText k="members.openCreate" fallback="회원 등록 열기" />
+- L198: <I18nText k="members.closeCreate" fallback="회원 등록 닫기" />
+- L206: 회원 등록 선택값을 불러오는 중...
+- L221: fallback="이메일 발송 없이 Supabase Auth 계정을 만들고 기존 프로필/역할 구조에 연결합니다."
+- L232: 기본 정보
+- L236: <span className="text-sm font-medium text-ink-base">이름</span>
+- L246: <span className="text-sm font-medium text-ink-base">이메일</span>
+- L256: 임시 비밀번호
+- L272: 소속 정보
+- L291: 소속 직분
+- L298: <option value="">미지정</option>
+- L311: 역할 및 세대
+- L315: 권한 범위는 회원 소속 정보와 다를 수 있습니다. 관리자 권한은
+- L316: 해당 범위의 사용자와 기록에 접근할 수 있으므로 신중히
+- L317: 선택하세요.
+- L320: 최고관리자 권한은 이 화면에서 새로 추가할 수 없습니다.
+- L326: 시스템 역할
+- L338: <option value="">역할 선택</option>
+- L347: 관리자 권한은 선택한 범위 안의 관리 기능에 접근할 수
+- L348: 있습니다.
+- L353: <span className="text-sm font-medium text-ink-base">세대</span>
+- L359: <option value="">미지정</option>
+- L374: 권한 범위 유형
+- L387: {selectedRole ? "권한 범위 선택" : "역할을 먼저 선택하세요"}
+- L408: 직접 회원 등록
+- L411: 생성 성공 후 임시 비밀번호를 사용자에게 직접 전달하세요.
+
+### src/app/admin/users/AdminUserRoleSummaryCards.tsx
+
+- L78: setError("요약 정보를 불러오지 못했습니다.");
+- L95: label: "전체 회원 수",
+- L97: description: "profiles 기준",
+- L100: label: "코치이 수",
+- L102: description: "활성 역할 기준",
+- L105: label: "코치 수",
+- L107: description: "활성 역할 기준",
+- L110: label: "코치메이커 수",
+- L112: description: "활성 역할 기준",
+- L115: label: "교회 관리자 수",
+- L117: description: "활성 역할 기준",
+- L120: label: "기관 관리자 수",
+- L122: description: "활성 역할 기준",
+- L125: label: "최고 관리자 수",
+- L127: description: "활성 역할 기준",
+- L149: <span className="sr-only">회원</span>
+- L160: {isLoading ? "요약 불러오는 중..." : card.description}
+
 ### src/app/admin/users/AdminUsersClientFilters.tsx
 
-- L85: return t("adminUsers.selectedRoleEmpty", "선택한 역할에 해당하는 회원이 없습니다.");
-- L89: return t("adminUsers.searchEmpty", "검색 조건에 맞는 회원이 없습니다.");
-- L92: return t("adminUsers.noUsers", "등록된 회원이 없습니다.");
-- L244: {t("common.search", "검색")}
-- L249: placeholder={t("adminUsers.searchPlaceholder", "이름, 이메일, 역할, 소속/조직")}
-- L257: {t("members.role", "역할")}
-- L264: <option value="all">{t("common.all", "전체")}</option>
-- L275: {t("members.status", "상태")}
-- L282: <option value="all">{t("common.all", "전체")}</option>
-- L293: {t("adminUsers.pageSize", "페이지 크기")}
-- L315: {t("adminUsers.resetFilters", "필터 초기화")}
-- L321: t("adminUsers.filterInfo", "필터 결과 {filtered}명 / 현재 페이지 데이터 {total}명"),
-- L338: t("adminUsers.pageInfo", "전체 결과 {total}명 · 현재 페이지 {page} / {pages}"),
-- L349: {t("adminUsers.previousPage", "이전")}
-- L357: {t("adminUsers.nextPage", "다음")}
+- L94: return t("adminUsers.selectedRoleEmpty", "선택한 역할에 해당하는 회원이 없습니다.");
+- L98: return t("adminUsers.searchEmpty", "검색 조건에 맞는 회원이 없습니다.");
+- L101: return t("adminUsers.noUsers", "등록된 회원이 없습니다.");
+- L254: {t("common.search", "검색")}
+- L258: placeholder={t("adminUsers.searchPlaceholder", "이름, 이메일, 역할, 소속/조직")}
+- L266: {t("members.role", "역할")}
+- L272: <option value="all">{t("common.all", "전체")}</option>
+- L283: {t("members.status", "상태")}
+- L289: <option value="all">{t("common.all", "전체")}</option>
+- L300: {t("adminUsers.pageSize", "페이지 크기")}
+- L322: {t("adminUsers.resetFilters", "필터 초기화")}
+- L328: t("adminUsers.filterInfo", "필터 결과 {filtered}명 / 현재 페이지 데이터 {total}명"),
+- L349: t("adminUsers.pageInfo", "전체 결과 {total}명 · 현재 페이지 {page} / {pages}"),
+- L362: {t("adminUsers.previousPage", "이전")}
+- L373: {t("adminUsers.nextPage", "다음")}
 
 ### src/app/admin/users/LoginGuideCopyButton.tsx
 
-- L13: return `GO Coaching 로그인 안내입니다.
-- L15: 로그인 주소: ${origin}/login
-- L16: 아이디: ${email}
-- L18: 비밀번호를 모르시는 경우 관리자에게 임시 비밀번호 재설정을 요청해 주세요.
-- L19: 처음 로그인하신 후에는 비밀번호를 변경해 주세요.`;
-- L45: return <span className="text-sm text-slate-400">이메일 없음</span>;
-- L55: 로그인 안내 복사
-- L58: <p className="text-xs text-emerald-700">로그인 안내문이 복사되었습니다.</p>
-- L62: <span>복사에 실패했습니다. 아래 안내문을 수동으로 복사해 주세요.</span>
+- L14: return `GO Coaching 로그인 안내입니다.
+- L16: 로그인 주소: ${origin}/login
+- L17: 아이디: ${email}
+- L19: 비밀번호를 모르시는 경우 관리자에게 임시 비밀번호 재설정을 요청해 주세요.
+- L20: 처음 로그인하신 후에는 비밀번호를 변경해 주세요.`;
+- L46: return <span className="text-sm text-ink-faint">이메일 없음</span>;
+- L52: 로그인 안내 복사
+- L55: <p className="text-xs text-emerald-700">로그인 안내문이 복사되었습니다.</p>
+- L59: <span>복사에 실패했습니다. 아래 안내문을 수동으로 복사해 주세요.</span>
 
 ### src/app/admin/users/page.tsx
 
-- L32: return "미지정";
-- L38: return "미지정";
-- L62: return formatted === "미지정" ? formatted : formatted.slice(0, 10);
-- L74: return "이름 없음";
-- L78: return value && value.trim().length > 0 ? value : "이메일 없음";
-- L82: return value && value.trim().length > 0 ? value : "미지정";
-- L102: return "미지정";
-- L117: ? `${value}세대`
-- L118: : "미지정";
-- L123: return "미등록";
-- L158: ? "역할 상태 활성 active"
-- L159: : "역할 상태 비활성 inactive",
-- L169: `국가 ${formatCountryValue(user)}`,
-- L170: `기관 및 단체 ${formatLookupValue(user.organization_name, user.organization_id)}`,
-- L171: `교회 ${formatLookupValue(user.church_name, user.church_id)}`,
-- L172: `직분 ${displayProfileValue(user.ministry_position)}`,
-- L173: `세대 ${formatGeneration(user.generation_number)}`,
-- L184: return roleItem.status === "active" && roleItem.is_active ? "활성" : "비활성";
-- L215: <I18nText k="members.notSpecified" fallback="미지정" />
-- L226: title={`역할 상태: ${getRoleActiveLabel(roleItem)}`}
-- L248: return "선택한 역할에 해당하는 회원이 없습니다.";
-- L252: return "검색 조건에 맞는 회원이 없습니다.";
-- L255: return "등록된 회원이 없습니다.";
-- L274: "관리자 설정": "adminUsers.badgeAdmin",
-- L275: "수정": "adminUsers.badgeEdit",
-- L276: "신규": "adminUsers.badgeNew",
-- L277: "자동": "adminUsers.badgeAuto",
-- L305: "가입일": "members.createdOn",
-- L306: "대표 시스템 역할": "members.primarySystemRole",
-- L307: "소속 교회": "members.church",
-- L308: "소속 국가": "members.country",
-- L309: "소속 기관 및 단체": "members.organizationName",
-- L310: "소속 직분": "members.ministryPosition",
-- L311: "세대": "members.generation",
-- L312: "역할 권한 범위": "members.roleScopePermission",
-- L313: "이름": "members.fullName",
-- L314: "이메일": "members.email",
-- L315: "전화번호": "members.phone",
-- L316: "최근 수정일": "members.updatedAt",
-- L317: "표시 이름": "members.displayName",
-- L318: "회원 상태": "members.memberStatus",
-- L344: fallback="super_admin 역할은 이 화면에서 변경할 수 없습니다."
-- L383: <I18nText k="adminUsers.roleChange" fallback="역할 변경" />
-- L407: fallback="추가로 부여할 수 있는 역할이 없습니다."
-- L447: placeholder="global이면 비움"
-- L454: <I18nText k="adminUsers.addRole" fallback="역할 추가" />
-- L460: fallback="한 회원에게 coach와 coach_maker 역할을 함께 부여할 수 있습니다."
-- L477: <I18nText k="members.protectedSuperAdmin" fallback="super_admin 보호" />
-- L485: <I18nText k="members.needsReview" fallback="확인 필요" />
-- L507: ? `${user.email} 계정을 비활성화합니다. 기존 로그인과 접근에 영향을 줄 수 있습니다.`
-- L508: : `${user.email} 계정을 다시 활성화합니다.`
-- L512: ? "회원을 비활성화하시겠습니까?"
-- L513: : "회원을 재활성화하시겠습니까?"
-- L518: <I18nText k="members.disable" fallback="비활성화" />
-- L520: <I18nText k="members.reactivate" fallback="재활성화" />
-- L543: <I18nText k="members.editProfile" fallback="회원 정보 수정" />
-- L548: fallback="이메일과 시스템 역할은 별도 관리 기능에서 변경합니다."
-- L554: <I18nText k="members.openEdit" fallback="수정 열기" />
-- L557: <I18nText k="members.closeEdit" fallback="수정 닫기" />
-- L571: <I18nText k="members.basicInfo" fallback="기본 정보" />
-- L576: <I18nText k="members.fullName" fallback="이름" />
-- L589: <I18nText k="members.displayName" fallback="표시 이름" />
-- L601: <I18nText k="members.phone" fallback="전화번호" />
-- L613: <I18nText k="members.email" fallback="이메일" />
-- L624: <I18nText k="members.affiliationInfo" fallback="소속 정보" />
-- L629: <I18nText k="members.country" fallback="소속 국가" />
-- L637: <I18nText k="members.notSpecified" fallback="미지정" />
-- L645: <I18nText k="members.inactiveSuffix" fallback="비활성" />
-- L653: <I18nText k="members.organization" fallback="소속 기관 및 단체" />
-- L661: <I18nText k="members.notSpecified" fallback="미지정" />
-- L672: <I18nText k="members.church" fallback="소속 교회" />
-- L684: <I18nText k="members.ministryPosition" fallback="소속 직분" />
-- L692: placeholder="목회자, 선교사, 전도사 등"
-- L696: {["목회자", "선교사", "전도사", "장로", "권사", "집사", "성도", "리더", "교사", "기타"].map(
-- L708: <I18nText k="members.roleGeneration" fallback="역할 및 세대" />
-- L713: <I18nText k="members.generation" fallback="세대" />
-- L721: placeholder="예: 1"
-- L727: <I18nText k="members.memberStatus" fallback="회원 상태" />
-- L743: <I18nText k="members.systemRole" fallback="시스템 역할" />
-- L752: <I18nText k="members.notSpecified" fallback="미지정" />
-- L761: <I18nText k="members.createdOn" fallback="가입일" />: {formatDateTime(user.created_at)}
-- L764: <I18nText k="members.updatedAt" fallback="최근 수정일" />: {formatDateTime(user.updated_at)}
-- L769: fallback="이메일, 시스템 역할, 비밀번호는 이 수정 폼에서 변경하지 않습니다."
-- L779: <I18nText k="members.saveProfile" fallback="회원 정보 저장" />
-- L785: <I18nText k="members.cancelEdit" fallback="수정 취소" />
-- L811: message: `${createdEmail || "사용자"} 계정이 생성되었습니다. 임시 비밀번호를 사용자에게 직접 전달하세요. 사용자에게 첫 로그인 후 비밀번호 변경을 안내하세요.`,
-- L820: auth: "인증 사용자 생성",
-- L821: validation: "입력값 확인",
-- L822: profile: "프로필 연결",
-- L823: role: "역할 부여",
-- L824: service: "관리자 서비스 준비",
-- L827: invalid_body: "요청 본문을 읽을 수 없습니다. 다시 시도해 주세요.",
-- L828: invalid_name: "이름을 입력해 주세요. 이름은 120자 이하로 입력해야 합니다.",
-- L829: invalid_email: "이메일 형식을 확인해 주세요.",
-- L830: invalid_role: "역할 값이 올바르지 않습니다.",
-- L831: invalid_scope: "권한 범위 유형이 올바르지 않습니다.",
-- L832: invalid_scope_id: "권한 범위 ID 형식이 올바르지 않습니다.",
-- L834: "범위 유형이 organization/church/group 등 global이 아닌 경우 범위 ID가 필요합니다.",
-- L835: invalid_password: "임시 비밀번호는 8자 이상 72자 이하로 입력해 주세요.",
-- L836: invalid_phone: "전화번호는 40자 이하로 입력해 주세요.",
-- L837: registered_profile: "이미 등록된 회원입니다. 로그인 또는 비밀번호 재설정을 진행하세요.",
-- L839: "해당 이메일은 Supabase Auth에는 이미 존재하지만, 앱 프로필 연결 상태를 확인해야 합니다. 테스트 계정이면 Supabase Authentication에서 삭제 후 다시 등록하세요.",
-- L841: "기존 Auth 사용자 여부를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.",
-- L842: auth_create_failed: "인증 사용자 생성에 실패했습니다.",
-- L843: profile_create_failed: "프로필 생성에 실패했습니다.",
-- L844: role_create_failed: "역할 부여에 실패했습니다.",
-- L845: super_admin_protected: "super_admin 역할은 이 화면에서 생성할 수 없습니다.",
-- L847: "소속 국가, 소속 기관 및 단체, 소속 교회, 소속 직분 값을 확인해 주세요.",
-- L848: invalid_country: "소속 국가 값이 올바르지 않습니다.",
-- L849: country_not_found: "선택한 국가가 존재하지 않습니다.",
-- L850: country_inactive: "선택한 국가는 현재 사용할 수 없습니다.",
-- L852: "선택한 국가를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.",
-- L853: invalid_organization: "소속 기관 및 단체 ID 형식이 올바르지 않습니다.",
-- L855: "선택한 소속 기관 및 단체를 확인하지 못했습니다.",
-- L856: organization_not_found: "선택한 소속 기관 및 단체를 찾을 수 없습니다.",
-- L857: invalid_church: "소속 교회 ID 형식이 올바르지 않습니다.",
-- L858: invalid_ministry_position: "소속 직분은 100자 이하로 입력해 주세요.",
-- L859: invalid_generation: "세대 값은 1 이상의 숫자여야 합니다.",
-- L864: message: `${stageLabel[errorStage] ?? "직접 회원 등록"} 단계에서 실패했습니다. ${errorLabel[error] ?? "입력값 또는 기존 계정 여부를 확인해 주세요."}`,
-- L880: message: "역할이 추가되었습니다.",
-- L887: message: "역할이 변경되었습니다.",
-- L896: duplicate_role: "이미 부여된 활성 역할입니다.",
-- L897: invalid_role: "허용되지 않은 역할입니다.",
-- L898: invalid_scope: "권한 범위 유형이 올바르지 않습니다.",
-- L899: invalid_scope_id: "권한 범위 ID 형식이 올바르지 않습니다.",
-- L900: member_not_found: "회원을 찾을 수 없습니다.",
-- L901: missing_scope_id: "global이 아닌 권한 범위에는 범위 ID가 필요합니다.",
-- L902: profile_lookup_failed: "프로필 테이블 조회에 실패했습니다.",
-- L903: role_add_failed: "역할 추가에 실패했습니다.",
-- L904: role_lookup_failed: "역할 정보를 조회할 수 없습니다.",
-- L905: role_not_found: "변경할 활성 역할을 찾을 수 없습니다.",
-- L906: role_update_failed: "역할 변경에 실패했습니다.",
-- L907: self_role_change: "자기 자신의 역할은 변경할 수 없습니다.",
-- L908: super_admin_protected: "super_admin 역할은 이 화면에서 변경할 수 없습니다.",
-- L913: message: errorLabel[error] ?? "역할 변경 중 오류가 발생했습니다.",
-- L927: message: "회원이 비활성화되었습니다.",
-- L934: message: "회원이 재활성화되었습니다.",
-- L943: disable_failed: "비활성화 처리에 실패했습니다.",
-- L944: invalid_status: "허용되지 않은 상태값입니다.",
-- L945: member_not_found: "회원을 찾을 수 없습니다.",
-- L946: profile_lookup_failed: "프로필 테이블 조회에 실패했습니다.",
-- L947: reactivate_failed: "재활성화 처리에 실패했습니다.",
-- L948: role_lookup_failed: "역할 정보를 조회할 수 없습니다.",
-- L949: self_disable: "현재 로그인한 본인 계정은 비활성화할 수 없습니다.",
-- L950: super_admin_protected: "super_admin 계정은 이 화면에서 비활성화할 수 없습니다.",
-- L955: message: errorLabel[error] ?? "회원 상태 변경 중 오류가 발생했습니다.",
-- L969: message: "회원 정보가 수정되었습니다.",
-- L978: country_inactive: "선택한 국가는 현재 사용할 수 없습니다.",
-- L979: country_lookup_failed: "선택한 국가를 확인하지 못했습니다.",
-- L980: country_not_found: "선택한 국가를 찾을 수 없습니다.",
-- L981: invalid_church: "소속 교회 ID 형식이 올바르지 않습니다.",
-- L982: invalid_country: "국가 값이 올바르지 않습니다.",
-- L983: invalid_display_name: "표시 이름은 120자 이하로 입력해 주세요.",
-- L984: invalid_generation: "세대 값은 1 이상의 숫자여야 합니다.",
-- L985: invalid_ministry_position: "소속 직분은 100자 이하로 입력해 주세요.",
-- L986: invalid_name: "이름을 입력해 주세요. 이름은 120자 이하로 입력해야 합니다.",
-- L987: invalid_organization: "소속 기관 및 단체 ID 형식이 올바르지 않습니다.",
-- L989: "선택한 소속 기관 및 단체를 확인하지 못했습니다.",
-- L990: organization_not_found: "선택한 소속 기관 및 단체를 찾을 수 없습니다.",
-- L991: invalid_phone: "전화번호는 40자 이하로 입력해 주세요.",
-- L992: invalid_status: "허용되지 않은 회원 상태입니다.",
-- L993: member_not_found: "회원을 찾을 수 없습니다.",
-- L994: permission_denied: "회원 정보 수정은 super_admin만 가능합니다.",
-- L995: profile_lookup_failed: "프로필 조회에 실패했습니다.",
-- L996: update_failed: "회원 정보 수정에 실패했습니다.",
-- L1001: message: errorLabel[error] ?? "회원 정보 수정 중 오류가 발생했습니다.",
-- L1053: label: "전체 회원 수",
-- L1055: description: "profiles 기준",
-- L1058: label: "코치이 수",
-- L1060: description: "활성 역할 기준",
-- L1063: label: "코치 수",
-- L1065: description: "활성 역할 기준",
-- L1068: label: "코치메이커 수",
-- L1070: description: "활성 역할 기준",
-- L1073: label: "교회 관리자 수",
-- L1075: description: "활성 역할 기준",
-- L1078: label: "기관 관리자 수",
-- L1080: description: "활성 역할 기준",
-- L1083: label: "최고 관리자 수",
-- L1085: description: "활성 역할 기준",
-- L1095: <I18nText k="members.admin" fallback="관리자" />
-- L1098: <I18nText k="members.usersAndRoles" fallback="사용자 및 역할" />
-- L1103: fallback="프로필과 활성 역할을 조회하고, 필요한 경우 관리자가 직접 회원을 등록할 수 있습니다."
-- L1109: fallback="기존 이메일 초대 방식은 그대로 유지됩니다. 직접 등록 시 임시 비밀번호는 별도로 전달해야 합니다."
-- L1120: <I18nText k="members.createRelationship" fallback="코칭 관계 생성" />
-- L1126: <I18nText k="members.addMember" fallback="회원 추가" />
-- L1183: <I18nText k="members.directCreate" fallback="직접 회원 등록" />
-- L1188: fallback="기존 이메일 초대 방식은 유지하고, 필요한 경우에만 직접 등록합니다."
-- L1194: <I18nText k="members.openCreate" fallback="회원 등록 열기" />
-- L1197: <I18nText k="members.closeCreate" fallback="회원 등록 닫기" />
-- L1206: fallback="이메일 발송 없이 Supabase Auth 계정을 만들고 기존 프로필/역할 구조에 연결합니다."
-- L1216: <I18nText k="members.basicInfo" fallback="기본 정보" />
-- L1221: <I18nText k="members.fullName" fallback="이름" />
-- L1222: <FieldBadge tone="edit">수정</FieldBadge>
-- L1235: <I18nText k="members.email" fallback="이메일" />
-- L1236: <FieldBadge tone="edit">수정</FieldBadge>
-- L1248: <I18nText k="members.temporaryPassword" fallback="임시 비밀번호" />
-- L1249: <FieldBadge tone="admin">관리자 설정</FieldBadge>
-- L1265: <I18nText k="members.affiliationInfo" fallback="소속 정보" />
-- L1270: <I18nText k="members.country" fallback="소속 국가" />
-- L1271: <FieldBadge tone="new">신규</FieldBadge>
-- L1278: <option value="">미지정</option>
-- L1290: fallback="국가 목록을 불러오지 못했습니다. 미지정으로 등록할 수 있습니다."
-- L1298: <I18nText k="members.organization" fallback="소속 기관 및 단체" />
-- L1299: <FieldBadge tone="edit">수정</FieldBadge>
-- L1306: <option value="">미지정</option>
-- L1317: fallback="소속 기관 및 단체 목록을 불러오지 못했습니다. 미지정으로 등록할 수 있습니다."
-- L1325: <I18nText k="members.church" fallback="소속 교회" />
-- L1326: <FieldBadge tone="edit">수정</FieldBadge>
-- L1338: <I18nText k="members.ministryPosition" fallback="소속 직분" />
-- L1339: <FieldBadge tone="new">신규</FieldBadge>
-- L1346: placeholder="목회자, 선교사, 전도사 등"
-- L1350: {["목회자", "선교사", "전도사", "장로", "권사", "집사", "성도", "리더", "교사", "기타"].map(
-- L1361: fallback="소속 직분은 목회자, 선교사, 전도사처럼 실제 소속 내 직분이며 시스템 권한이 아닙니다."
-- L1368: <I18nText k="members.roleGeneration" fallback="역할 및 세대" />
-- L1373: <I18nText k="members.systemRole" fallback="시스템 역할" />
-- L1374: <FieldBadge tone="admin">관리자 설정</FieldBadge>
-- L1392: <I18nText k="members.generation" fallback="세대" />
-- L1393: <FieldBadge tone="new">신규</FieldBadge>
-- L1400: placeholder="예: 1"
-- L1407: <I18nText k="members.scopeType" fallback="권한 범위 유형" />
-- L1408: <FieldBadge tone="admin">관리자 설정</FieldBadge>
-- L1426: <I18nText k="members.scopeId" fallback="권한 범위 ID" />
-- L1427: <FieldBadge tone="admin">관리자 설정</FieldBadge>
-- L1432: placeholder="global이면 비워 둡니다"
-- L1440: fallback="시스템 역할은 권한을 결정하고, 세대는 회원 프로필의 generation_number에 숫자로 저장됩니다."
-- L1447: <I18nText k="members.systemRecords" fallback="시스템 자동 기록" />
-- L1452: <I18nText k="members.memberStatus" fallback="회원 상태" />
-- L1453: <FieldBadge tone="auto">자동</FieldBadge>
-- L1456: <I18nText k="members.createdAsActive" fallback="활성으로 생성" />
-- L1461: <I18nText k="members.createdOn" fallback="가입일" />
-- L1462: <FieldBadge tone="auto">자동</FieldBadge>
-- L1465: <I18nText k="members.createdAutomatically" fallback="생성 시 기록" />
-- L1470: <I18nText k="members.updatedAt" fallback="최근 수정일" />
-- L1471: <FieldBadge tone="auto">자동</FieldBadge>
-- L1474: <I18nText k="members.updatedAutomatically" fallback="생성/수정 시 기록" />
-- L1485: <I18nText k="members.createDirect" fallback="직접 회원 등록" />
-- L1490: fallback="생성 성공 후 임시 비밀번호를 사용자에게 직접 전달하세요."
-- L1501: <h2 className="text-lg font-semibold">역할별 회원 요약</h2>
-- L1503: 현재 조회 조건에 해당하는 회원을 profiles 기준으로 집계하고, 역할 수는 활성 역할 기준으로 계산합니다.
-- L1525: 지금 사용자를 불러올 수 없습니다.
-- L1549: <I18nText k="members.title" fallback="회원목록" />
-- L1554: fallback="검색, 필터, 정렬, 페이지네이션을 사용해 현재 목록을 확인합니다."
-- L1566: data-sort-label="이름"
-- L1569: <I18nText k="members.memberInfo" fallback="회원 정보" />
-- L1576: data-sort-label="상태"
-- L1579: <I18nText k="members.status" fallback="상태" />
-- L1586: data-sort-label="역할"
-- L1589: <I18nText k="members.roleScope" fallback="역할/범위" />
-- L1593: <I18nText k="members.organization" fallback="소속 정보" />
-- L1599: data-sort-label="생성일"
-- L1602: <I18nText k="members.recordInfo" fallback="기록 정보" />
-- L1606: <I18nText k="members.loginGuide" fallback="로그인 안내" />
-- L1609: <I18nText k="members.actions" fallback="관리" />
-- L1663: <I18nText k="members.roleScope" fallback="역할/범위" />
-- L1672: <I18nText k="members.organization" fallback="소속 정보" />
-- L1680: <I18nText k="members.recordInfo" fallback="기록 정보" />
-- L1685: <I18nText k="members.createdShort" fallback="생성" />
-- L1693: <I18nText k="members.updatedShort" fallback="수정" />
-- L1703: <I18nText k="members.loginGuide" fallback="로그인 안내" />
-- L1711: <I18nText k="members.actions" fallback="관리" />
-- L1721: <I18nText k="common.view" fallback="상세보기" />
-- L1724: <I18nText k="common.close" fallback="닫기" />
-- L1731: <I18nText k="adminUsers.memberDetails" fallback="회원 상세정보" />
-- L1736: fallback="현재 목록에 표시된 회원 정보입니다."
-- L1744: <I18nText k="members.signupInputInfo" fallback="회원가입 입력 정보" />
-- L1749: fallback="회원가입 또는 초대 수락 시 profiles에 저장된 기본 정보, 소속 정보, 세대와 시스템 자동 기록을 함께 확인합니다."
-- L1756: <I18nText k="members.basicInfo" fallback="기본 정보" />
-- L1760: badge="수정"
-- L1761: label="이름"
-- L1765: badge="수정"
-- L1766: label="표시 이름"
-- L1770: badge="수정"
-- L1771: label="이메일"
-- L1775: badge="수정"
-- L1776: label="전화번호"
-- L1784: <I18nText k="members.affiliationInfo" fallback="소속 정보" />
-- L1788: badge="수정"
-- L1789: label="소속 기관 및 단체"
-- L1796: badge="신규"
-- L1797: label="소속 국가"
-- L1802: badge="수정"
-- L1803: label="소속 교회"
-- L1807: badge="신규"
-- L1808: label="소속 직분"
-- L1816: fallback="소속 직분은 실제 소속 내 직분이고, 시스템 역할은 권한을 결정하는 별도 값입니다."
-- L1823: <I18nText k="members.roleGeneration" fallback="역할 및 세대" />
-- L1827: badge="관리자 설정"
-- L1828: label="대표 시스템 역할"
-- L1833: : "미지정"
-- L1838: <I18nText k="members.activeSystemRoles" fallback="활성 시스템 역할" />
-- L1839: <FieldBadge tone="admin">관리자 설정</FieldBadge>
-- L1844: <I18nText k="members.notSpecified" fallback="미지정" />
-- L1859: <I18nText k="members.roleStatus" fallback="역할 상태" />:{" "}
-- L1875: badge="관리자 설정"
-- L1876: label="역할 권한 범위"
-- L1881: badge="신규"
-- L1882: label="세대"
-- L1891: <I18nText k="members.systemRecords" fallback="시스템 자동 기록" />
-- L1895: badge="자동"
-- L1896: label="회원 상태"
-- L1901: badge="자동"
-- L1902: label="가입일"
-- L1907: badge="자동"
-- L1908: label="최근 수정일"
-- L1917: <I18nText k="members.quickActions" fallback="빠른 작업" />
+- L36: return "미지정";
+- L42: return "미지정";
+- L66: return formatted === "미지정" ? formatted : formatted.slice(0, 10);
+- L78: return "이름 없음";
+- L82: return value && value.trim().length > 0 ? value : "이메일 없음";
+- L86: return value && value.trim().length > 0 ? value : "미지정";
+- L106: return "미지정";
+- L121: ? `${value}세대`
+- L122: : "미지정";
+- L127: return "미등록";
+- L166: ? "역할 상태 활성 active"
+- L167: : "역할 상태 비활성 inactive",
+- L177: `국가 ${formatCountryValue(user)}`,
+- L178: `지역/도시 ${formatLookupValue(user.region_name, user.region_id)}`,
+- L179: `기관 및 단체 ${formatLookupValue(user.organization_name, user.organization_id)}`,
+- L180: `교회 ${formatLookupValue(user.church_name, user.church_id)}`,
+- L181: `그룹/팀/목장 ${formatLookupValue(user.group_name, user.group_id)}`,
+- L182: `직분 ${displayProfileValue(user.ministry_position)}`,
+- L183: `세대 ${formatGeneration(user.generation_number)}`,
+- L194: return roleItem.status === "active" && roleItem.is_active ? "활성" : "비활성";
+- L221: <I18nText k="members.notSpecified" fallback="미지정" />
+- L232: title={`역할 상태: ${getRoleActiveLabel(roleItem)}`}
+- L254: ["국가", formatCountryValue(user)],
+- L255: ["지역", formatLookupValue(user.region_name, user.region_id)],
+- L256: ["기관", formatLookupValue(user.organization_name, user.organization_id)],
+- L257: ["교회", formatLookupValue(user.church_name, user.church_id)],
+- L258: ["그룹", formatLookupValue(user.group_name, user.group_id)],
+- L259: ["직분", displayProfileValue(user.ministry_position)],
+- L260: ["세대", formatGeneration(user.generation_number)],
+- L269: tone={value === "미지정" ? "neutral" : "info"}
+- L290: return "선택한 역할에 해당하는 회원이 없습니다.";
+- L294: return "검색 조건에 맞는 회원이 없습니다.";
+- L297: return "등록된 회원이 없습니다.";
+- L316: "관리자 설정": "adminUsers.badgeAdmin",
+- L317: "수정": "adminUsers.badgeEdit",
+- L318: "신규": "adminUsers.badgeNew",
+- L319: "자동": "adminUsers.badgeAuto",
+- L347: "가입일": "members.createdOn",
+- L348: "대표 시스템 역할": "members.primarySystemRole",
+- L349: "소속 교회": "members.church",
+- L350: "소속 국가": "members.country",
+- L351: "소속 기관 및 단체": "members.organizationName",
+- L352: "소속 직분": "members.ministryPosition",
+- L353: "세대": "members.generation",
+- L354: "역할 권한 범위": "members.roleScopePermission",
+- L355: "이름": "members.fullName",
+- L356: "이메일": "members.email",
+- L357: "전화번호": "members.phone",
+- L358: "최근 수정일": "members.updatedAt",
+- L359: "표시 이름": "members.displayName",
+- L360: "회원 상태": "members.memberStatus",
+- L384: <I18nText k="members.protectedSuperAdmin" fallback="super_admin 보호" />
+- L392: <I18nText k="members.needsReview" fallback="확인 필요" />
+- L414: ? `${user.email} 계정을 비활성화합니다. 기존 로그인과 접근에 영향을 줄 수 있습니다.`
+- L415: : `${user.email} 계정을 다시 활성화합니다.`
+- L419: ? "회원을 비활성화하시겠습니까?"
+- L420: : "회원을 재활성화하시겠습니까?"
+- L425: <I18nText k="members.disable" fallback="비활성화" />
+- L427: <I18nText k="members.reactivate" fallback="재활성화" />
+- L452: message: `${createdEmail || "사용자"} 계정이 생성되었습니다. 임시 비밀번호를 사용자에게 직접 전달하세요. 사용자에게 첫 로그인 후 비밀번호 변경을 안내하세요.`,
+- L461: auth: "인증 사용자 생성",
+- L462: validation: "입력값 확인",
+- L463: profile: "프로필 연결",
+- L464: role: "역할 부여",
+- L465: service: "관리자 서비스 준비",
+- L468: invalid_body: "요청 본문을 읽을 수 없습니다. 다시 시도해 주세요.",
+- L469: invalid_intent: "요청한 회원 관리 작업을 확인할 수 없습니다. 화면을 새로고침한 뒤 다시 시도해 주세요.",
+- L470: invalid_name: "이름을 입력해 주세요. 이름은 120자 이하로 입력해야 합니다.",
+- L471: invalid_email: "이메일 형식을 확인해 주세요.",
+- L472: invalid_role: "역할 값이 올바르지 않습니다.",
+- L473: invalid_scope: "권한 범위 유형이 올바르지 않습니다.",
+- L474: invalid_scope_id: "권한 범위 ID 형식이 올바르지 않습니다.",
+- L476: "범위 유형이 organization/church/group 등 global이 아닌 경우 범위 ID가 필요합니다.",
+- L477: invalid_password: "임시 비밀번호는 8자 이상 72자 이하로 입력해 주세요.",
+- L478: invalid_phone: "전화번호는 40자 이하로 입력해 주세요.",
+- L479: registered_profile: "이미 등록된 회원입니다. 로그인 또는 비밀번호 재설정을 진행하세요.",
+- L481: "해당 이메일은 Supabase Auth에는 이미 존재하지만, 앱 프로필 연결 상태를 확인해야 합니다. 테스트 계정이면 Supabase Authentication에서 삭제 후 다시 등록하세요.",
+- L483: "기존 Auth 사용자 여부를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+- L484: auth_create_failed: "인증 사용자 생성에 실패했습니다.",
+- L485: profile_create_failed: "프로필 생성에 실패했습니다.",
+- L486: role_create_failed: "역할 부여에 실패했습니다.",
+- L487: super_admin_protected: "super_admin 역할은 이 화면에서 생성할 수 없습니다.",
+- L489: "소속 국가, 소속 기관 및 단체, 소속 교회, 소속 직분 값을 확인해 주세요.",
+- L490: invalid_country: "소속 국가 값이 올바르지 않습니다.",
+- L491: country_not_found: "선택한 국가가 존재하지 않습니다.",
+- L492: country_inactive: "선택한 국가는 현재 사용할 수 없습니다.",
+- L494: "선택한 국가를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+- L495: invalid_organization: "소속 기관 및 단체 ID 형식이 올바르지 않습니다.",
+- L496: invalid_region: "지역/도시 값이 올바르지 않습니다.",
+- L497: region_lookup_failed: "선택한 지역/도시를 확인하지 못했습니다.",
+- L498: region_not_found: "선택한 지역/도시를 찾을 수 없습니다.",
+- L500: "선택한 소속 기관 및 단체를 확인하지 못했습니다.",
+- L501: organization_not_found: "선택한 소속 기관 및 단체를 찾을 수 없습니다.",
+- L502: invalid_church: "소속 교회 ID 형식이 올바르지 않습니다.",
+- L503: church_lookup_failed: "선택한 소속 교회를 확인하지 못했습니다.",
+- L504: church_not_found: "선택한 소속 교회를 찾을 수 없습니다.",
+- L505: invalid_group: "그룹/팀/목장 값이 올바르지 않습니다.",
+- L506: group_lookup_failed: "선택한 그룹/팀/목장을 확인하지 못했습니다.",
+- L507: group_not_found: "선택한 그룹/팀/목장을 찾을 수 없습니다.",
+- L508: invalid_ministry_position: "소속 직분은 100자 이하로 입력해 주세요.",
+- L509: invalid_generation: "세대 값은 1 이상의 숫자여야 합니다.",
+- L514: message: `${stageLabel[errorStage] ?? "직접 회원 등록"} 단계에서 실패했습니다. ${errorLabel[error] ?? "입력값 또는 기존 계정 여부를 확인해 주세요."}`,
+- L532: message: "역할이 추가되었습니다.",
+- L539: message: "역할이 변경되었습니다.",
+- L546: message: "시스템 역할이 활성화되었습니다.",
+- L553: message: "시스템 역할이 비활성화되었습니다.",
+- L563: "이미 부여된 역할입니다. 비활성 역할은 역할 상태에서 다시 활성화해 주세요.",
+- L564: invalid_role: "허용되지 않은 역할입니다.",
+- L565: invalid_scope: "권한 범위 유형이 올바르지 않습니다.",
+- L566: invalid_scope_id: "권한 범위 ID 형식이 올바르지 않습니다.",
+- L567: invalid_status: "허용되지 않은 역할 상태입니다.",
+- L568: member_not_found: "회원을 찾을 수 없습니다.",
+- L569: missing_scope_id: "global이 아닌 권한 범위에는 범위 ID가 필요합니다.",
+- L570: profile_lookup_failed: "프로필 테이블 조회에 실패했습니다.",
+- L571: role_add_failed: "역할 추가에 실패했습니다.",
+- L572: role_lookup_failed: "역할 정보를 조회할 수 없습니다.",
+- L573: role_not_found: "변경할 역할을 찾을 수 없습니다.",
+- L574: role_status_update_failed: "역할 상태 변경에 실패했습니다.",
+- L575: role_update_failed: "역할 변경에 실패했습니다.",
+- L576: self_role_change: "자기 자신의 역할은 변경할 수 없습니다.",
+- L577: super_admin_protected: "super_admin 역할은 이 화면에서 변경할 수 없습니다.",
+- L582: message: errorLabel[error] ?? "역할 변경 중 오류가 발생했습니다.",
+- L596: message: "회원이 비활성화되었습니다.",
+- L603: message: "회원이 재활성화되었습니다.",
+- L612: disable_failed: "비활성화 처리에 실패했습니다.",
+- L613: invalid_status: "허용되지 않은 상태값입니다.",
+- L614: member_not_found: "회원을 찾을 수 없습니다.",
+- L615: profile_lookup_failed: "프로필 테이블 조회에 실패했습니다.",
+- L616: reactivate_failed: "재활성화 처리에 실패했습니다.",
+- L617: role_lookup_failed: "역할 정보를 조회할 수 없습니다.",
+- L618: self_disable: "현재 로그인한 본인 계정은 비활성화할 수 없습니다.",
+- L619: super_admin_protected: "super_admin 계정은 이 화면에서 비활성화할 수 없습니다.",
+- L624: message: errorLabel[error] ?? "회원 상태 변경 중 오류가 발생했습니다.",
+- L638: message: "회원 정보가 수정되었습니다.",
+- L647: country_inactive: "선택한 국가는 현재 사용할 수 없습니다.",
+- L648: country_lookup_failed: "선택한 국가를 확인하지 못했습니다.",
+- L649: country_not_found: "선택한 국가를 찾을 수 없습니다.",
+- L650: invalid_church: "소속 교회 ID 형식이 올바르지 않습니다.",
+- L651: invalid_country: "국가 값이 올바르지 않습니다.",
+- L652: invalid_display_name: "표시 이름은 120자 이하로 입력해 주세요.",
+- L653: invalid_generation: "세대 값은 1 이상의 숫자여야 합니다.",
+- L654: invalid_ministry_position: "소속 직분은 100자 이하로 입력해 주세요.",
+- L655: invalid_name: "이름을 입력해 주세요. 이름은 120자 이하로 입력해야 합니다.",
+- L656: invalid_organization: "소속 기관 및 단체 ID 형식이 올바르지 않습니다.",
+- L657: invalid_region: "지역/도시 값이 올바르지 않습니다.",
+- L658: region_lookup_failed: "선택한 지역/도시를 확인하지 못했습니다.",
+- L659: region_not_found: "선택한 지역/도시를 찾을 수 없습니다.",
+- L660: church_lookup_failed: "선택한 소속 교회를 확인하지 못했습니다.",
+- L661: church_not_found: "선택한 소속 교회를 찾을 수 없습니다.",
+- L662: invalid_group: "그룹/팀/목장 값이 올바르지 않습니다.",
+- L663: group_lookup_failed: "선택한 그룹/팀/목장을 확인하지 못했습니다.",
+- L664: group_not_found: "선택한 그룹/팀/목장을 찾을 수 없습니다.",
+- L666: "선택한 소속 기관 및 단체를 확인하지 못했습니다.",
+- L667: organization_not_found: "선택한 소속 기관 및 단체를 찾을 수 없습니다.",
+- L668: invalid_phone: "전화번호는 40자 이하로 입력해 주세요.",
+- L669: invalid_status: "허용되지 않은 회원 상태입니다.",
+- L670: member_not_found: "회원을 찾을 수 없습니다.",
+- L671: permission_denied: "회원 정보 수정은 super_admin만 가능합니다.",
+- L672: profile_lookup_failed: "프로필 조회에 실패했습니다.",
+- L673: update_failed: "회원 정보 수정에 실패했습니다.",
+- L678: message: errorLabel[error] ?? "회원 정보 수정 중 오류가 발생했습니다.",
+- L742: <I18nText k="members.admin" fallback="관리자" />
+- L745: <I18nText k="members.usersAndRoles" fallback="사용자 및 역할" />
+- L750: fallback="프로필과 활성 역할을 조회하고, 필요한 경우 관리자가 직접 회원을 등록할 수 있습니다."
+- L756: fallback="기존 이메일 초대 방식은 그대로 유지됩니다. 직접 등록 시 임시 비밀번호는 별도로 전달해야 합니다."
+- L768: <I18nText k="members.createRelationship" fallback="코칭 관계 생성" />
+- L771: <I18nText k="members.addMember" fallback="회원 추가" />
+- L785: <CardTitle className="text-lg">역할별 회원 요약</CardTitle>
+- L787: 회원 목록은 먼저 표시하고, 역할별 요약은 별도로 불러옵니다.
+- L847: 지금 사용자를 불러올 수 없습니다.
+- L874: <I18nText k="members.title" fallback="회원목록" />
+- L879: fallback="검색, 필터, 정렬, 페이지네이션을 사용해 현재 목록을 확인합니다."
+- L883: 표는 가로로 스크롤해 전체 내용을 확인하세요.
+- L895: data-sort-label="이름"
+- L898: <I18nText k="members.memberInfo" fallback="회원 정보" />
+- L905: data-sort-label="상태"
+- L908: <I18nText k="members.status" fallback="상태" />
+- L915: data-sort-label="역할"
+- L918: <I18nText k="members.roleScope" fallback="역할/범위" />
+- L922: <I18nText k="members.organization" fallback="소속 정보" />
+- L928: data-sort-label="생성일"
+- L931: <I18nText k="members.recordInfo" fallback="기록 정보" />
+- L935: <I18nText k="members.loginGuide" fallback="로그인 안내" />
+- L938: <I18nText k="members.actions" fallback="관리" />
+- L982: <I18nText k="members.roleScope" fallback="역할/범위" />
+- L991: <I18nText k="members.organization" fallback="소속 정보" />
+- L997: <I18nText k="members.recordInfo" fallback="기록 정보" />
+- L1002: <I18nText k="members.createdShort" fallback="생성" />
+- L1010: <I18nText k="members.updatedShort" fallback="수정" />
+- L1020: <I18nText k="members.loginGuide" fallback="로그인 안내" />
+- L1028: <I18nText k="members.actions" fallback="관리" />
+
+### src/app/api/admin/affiliations/route.ts
+
+- L163: ? jsonError(401, admin.code, "로그인이 필요합니다.")
+- L164: : jsonError(403, admin.code, "최고관리자 권한이 필요합니다.");
+- L168: return jsonError(403, "SUPER_ADMIN_REQUIRED", "최고관리자 권한이 필요합니다.");
+- L272: return "소속 국가 값을 확인해 주세요.";
+- L276: return "소속 기관/교회 값을 확인해 주세요.";
+- L279: return "세부 교회 값을 확인해 주세요.";
+- L300: return "지역/도시 코드 중복 여부를 확인하지 못했습니다.";
+- L308: ? "같은 국가에 동일한 지역/도시 코드가 이미 있습니다. 이름을 조금 다르게 입력해 주세요."
+- L319: error: "소속 기관/교회를 선택해 주세요.",
+- L337: error: "소속 기관/교회 정보를 확인하지 못했습니다.",
+- L346: error: "선택한 소속 기관/교회의 국가 정보를 찾을 수 없습니다.",
+- L363: error: "세부 교회를 선택해 주세요.",
+- L383: error: "선택한 세부 교회를 찾을 수 없습니다.",
+- L410: error: "세부 교회 정보를 확인하지 못했습니다.",
+- L420: error: "선택한 세부 교회를 찾을 수 없습니다.",
+- L618: message: "groups.group_type 값을 확인할 수 없습니다.",
+- L674: "요청 본문을 확인해 주세요.",
+- L686: "소속 선택값 저장 동작을 확인해 주세요.",
+- L701: "이름을 입력해 주세요.",
+- L725: clientError ?? "소속 선택값 추가를 위한 서버 설정이 준비되지 않았습니다.",
+- L743: builtValues.error ?? "소속 선택값을 확인해 주세요.",
+- L773: "소속 선택값 추가에 실패했습니다.",
+- L796: message: "소속 선택값이 추가되었습니다.",
+- L826: "요청 본문을 확인해 주세요.",
+- L838: "소속 선택값 수정 동작을 확인해 주세요.",
+- L853: "소속 선택값 ID를 확인해 주세요.",
+- L865: "이름을 입력해 주세요.",
+- L889: clientError ?? "소속 선택값 수정을 위한 서버 설정이 준비되지 않았습니다.",
+- L907: builtValues.error ?? "소속 선택값을 확인해 주세요.",
+- L941: "소속 선택값 수정에 실패했습니다.",
+- L964: message: "소속 선택값이 수정되었습니다.",
 
 ### src/app/api/admin/coaching-genealogy/assign/route.ts
 
@@ -1063,45 +1495,104 @@
 
 ### src/app/api/admin/organizations/route.ts
 
-- L106: ? jsonError(401, admin.code, "로그인이 필요합니다.")
-- L107: : jsonError(403, admin.code, "최고관리자 권한이 필요합니다.");
-- L111: return jsonError(403, "SUPER_ADMIN_REQUIRED", "최고관리자 권한이 필요합니다.");
-- L145: clientError ?? "기관 및 단체 관리를 위한 서버 설정이 준비되지 않았습니다.",
-- L163: error: "기관 및 단체 정보를 확인하지 못했습니다.",
-- L200: clientError ?? "국가 확인을 위한 서버 설정이 준비되지 않았습니다.",
-- L219: error: "국가 정보를 확인하지 못했습니다.",
-- L228: error: "선택한 국가를 찾을 수 없습니다.",
-- L235: error: "선택한 국가는 현재 사용할 수 없습니다.",
-- L273: country_name: country?.country_name ?? "미지정",
-- L327: return jsonError(400, "INVALID_BODY", "요청 본문을 확인해 주세요.");
-- L335: return jsonError(400, "INVALID_NAME", "기관 및 단체명을 입력해 주세요.");
-- L339: return jsonError(400, "INVALID_COUNTRY", "소속 국가 값이 올바르지 않습니다.");
-- L343: return jsonError(400, "INVALID_ORGANIZATION_TYPE", "기관 유형을 확인해 주세요.");
-- L362: "이미 등록된 기관 및 단체입니다.",
-- L372: clientError ?? "기관 및 단체 추가를 위한 서버 설정이 준비되지 않았습니다.",
-- L401: "기관 및 단체 추가에 실패했습니다.",
-- L411: message: "기관 및 단체가 추가되었습니다.",
-- L434: return jsonError(400, "INVALID_BODY", "요청 본문을 확인해 주세요.");
-- L440: return jsonError(400, "INVALID_ID", "기관 및 단체 ID를 확인할 수 없습니다.");
-- L458: return jsonError(400, "INVALID_NAME", "기관 및 단체명을 입력해 주세요.");
-- L471: "소속 국가 값이 올바르지 않습니다.",
-- L495: "기관 유형을 확인해 주세요.",
-- L504: return jsonError(400, "INVALID_STATUS", "사용 여부 값을 확인해 주세요.");
-- L511: return jsonError(400, "EMPTY_UPDATE", "수정할 내용이 없습니다.");
-- L528: "기관 및 단체를 찾을 수 없습니다.",
-- L548: "이미 등록된 기관 및 단체입니다.",
-- L558: clientError ?? "기관 및 단체 수정을 위한 서버 설정이 준비되지 않았습니다.",
-- L583: "기관 및 단체 수정에 실패했습니다.",
-- L593: message: "기관 및 단체 정보가 수정되었습니다.",
+- L111: ? jsonError(401, admin.code, "로그인이 필요합니다.")
+- L112: : jsonError(403, admin.code, "최고관리자 권한이 필요합니다.");
+- L116: return jsonError(403, "SUPER_ADMIN_REQUIRED", "최고관리자 권한이 필요합니다.");
+- L152: message: "기관/조직 기본 시간대를 확인해 주세요.",
+- L160: message: "기관/조직 기본 시간대는 올바른 IANA timezone이어야 합니다.",
+- L173: clientError ?? "기관 및 단체 관리를 위한 서버 설정이 준비되지 않았습니다.",
+- L191: error: "기관 및 단체 정보를 확인하지 못했습니다.",
+- L228: clientError ?? "국가 확인을 위한 서버 설정이 준비되지 않았습니다.",
+- L247: error: "국가 정보를 확인하지 못했습니다.",
+- L256: error: "선택한 국가를 찾을 수 없습니다.",
+- L263: error: "선택한 국가는 현재 사용할 수 없습니다.",
+- L302: country_name: country?.country_name ?? "미지정",
+- L357: return jsonError(400, "INVALID_BODY", "요청 본문을 확인해 주세요.");
+- L366: return jsonError(400, "INVALID_NAME", "기관 및 단체명을 입력해 주세요.");
+- L370: return jsonError(400, "INVALID_COUNTRY", "소속 국가 값이 올바르지 않습니다.");
+- L374: return jsonError(400, "INVALID_ORGANIZATION_TYPE", "기관 유형을 확인해 주세요.");
+- L397: "이미 등록된 기관 및 단체입니다.",
+- L407: clientError ?? "기관 및 단체 추가를 위한 서버 설정이 준비되지 않았습니다.",
+- L437: "기관 및 단체 추가에 실패했습니다.",
+- L447: message: "기관 및 단체가 추가되었습니다.",
+- L470: return jsonError(400, "INVALID_BODY", "요청 본문을 확인해 주세요.");
+- L476: return jsonError(400, "INVALID_ID", "기관 및 단체 ID를 확인할 수 없습니다.");
+- L495: return jsonError(400, "INVALID_NAME", "기관 및 단체명을 입력해 주세요.");
+- L508: "소속 국가 값이 올바르지 않습니다.",
+- L532: "기관 유형을 확인해 주세요.",
+- L551: return jsonError(400, "INVALID_STATUS", "사용 여부 값을 확인해 주세요.");
+- L564: return jsonError(400, "EMPTY_UPDATE", "수정할 내용이 없습니다.");
+- L581: "기관 및 단체를 찾을 수 없습니다.",
+- L601: "이미 등록된 기관 및 단체입니다.",
+- L611: clientError ?? "기관 및 단체 수정을 위한 서버 설정이 준비되지 않았습니다.",
+- L636: "기관 및 단체 수정에 실패했습니다.",
+- L646: message: "기관 및 단체 정보가 수정되었습니다.",
+
+### src/app/api/admin/settings/organization-default-roles/route.ts
+
+- L73: return NextResponse.json({ error: "요청 본문을 읽을 수 없습니다." }, { status: 400 });
+- L77: return NextResponse.json({ error: "요청 형식이 올바르지 않습니다." }, { status: 400 });
+- L81: return NextResponse.json({ error: "조직을 선택해 주세요." }, { status: 400 });
+- L86: { error: "사용 여부는 true 또는 false여야 합니다." },
+
+### src/app/api/admin/settings/route.ts
+
+- L81: return { error: "기본 국가는 올바른 국가 ID여야 합니다." };
+- L87: error: clientError ?? "기본 국가를 확인하기 위한 서버 설정이 없습니다.",
+- L103: return { error: "기본 국가를 확인하지 못했습니다." };
+- L107: return { error: "존재하지 않는 국가입니다." };
+- L111: return { error: "비활성 국가는 기본 국가로 설정할 수 없습니다." };
+- L137: return NextResponse.json({ error: "요청 본문을 읽을 수 없습니다." }, { status: 400 });
+- L141: return NextResponse.json({ error: "요청 형식이 올바르지 않습니다." }, { status: 400 });
+- L147: { error: `허용되지 않은 설정 항목입니다: ${unknownKeys.join(", ")}` },
+- L157: { error: "기본 언어는 ko 또는 en만 허용됩니다." },
+- L177: { error: "시스템 기본 시간대를 확인해 주세요." },
+- L185: { error: "시스템 기본 시간대는 올바른 IANA timezone이어야 합니다." },
+- L202: { error: "초대 만료 기간은 1~30일 사이의 정수여야 합니다." },
+
+### src/app/api/admin/system-announcements/[id]/route.ts
+
+- L22: return message.includes("Supabase") || message.includes("못했습니다")
+- L46: { error: "공지 ID가 필요합니다." },
+- L56: { error: "요청 본문을 읽을 수 없습니다." },
+- L73: { error: result.error ?? "시스템 공지를 수정하지 못했습니다." },
+- L100: { error: "공지 ID가 필요합니다." },
+- L113: { error: result.error ?? "시스템 공지를 삭제하지 못했습니다." },
+
+### src/app/api/admin/system-announcements/route.ts
+
+- L16: return message.includes("Supabase") || message.includes("못했습니다")
+- L65: { error: "요청 본문을 읽을 수 없습니다." },
+- L81: { error: result.error ?? "시스템 공지를 저장하지 못했습니다." },
+
+### src/app/api/admin/users/[profileId]/route.ts
+
+- L100: { error: "관리자 권한이 필요합니다." },
+- L111: { error: "회원 정보를 불러오지 못했습니다." },
+- L121: { error: "회원 정보를 불러오지 못했습니다." },
+
+### src/app/api/admin/users/options/route.ts
+
+- L158: { error: "관리자 권한이 필요합니다." },
+- L215: label: generation.label || `${generation.generation_number}세대`,
+- L232: // 국가/지역/기관/교회/그룹/세대 변경 직후 최대 3분 반영 지연 가능.
 
 ### src/app/api/admin/users/route.ts
 
-- L158: const generationMatch = text.match(/^(\d+)(?:\s*세대)?$/);
-- L903: message: "회원 정보가 수정되었습니다.",
-- L917: { error: "관리자 권한이 필요합니다." },
-- L1213: { ok: false, error: "관리자 권한이 필요합니다." },
-- L1227: { ok: false, error: "관리자 서비스 준비에 실패했습니다." },
-- L1241: { ok: false, error: "요청 본문을 확인해 주세요." },
+- L199: const generationMatch = text.match(/^(\d+)(?:\s*세대)?$/);
+- L452: "super_admin이 아닌 역할에는 global 범위를 사용할 수 없습니다.",
+- L458: "선택한 역할에 허용되지 않은 권한 범위입니다.",
+- L474: "global이 아닌 권한 범위에는 범위 ID가 필요합니다.",
+- L1255: message: "회원 정보가 수정되었습니다.",
+- L1271: { error: "관리자 권한이 필요합니다." },
+- L1646: { ok: false, error: "관리자 권한이 필요합니다." },
+- L1662: { ok: false, error: "관리자 서비스 준비에 실패했습니다." },
+- L1678: { ok: false, error: "요청 본문을 확인해 주세요." },
+
+### src/app/api/admin/users/summary/route.ts
+
+- L95: { error: "관리자 권한이 필요합니다." },
+- L109: { error: "요약 정보를 불러오지 못했습니다." },
 
 ### src/app/api/coach-maker/action-notes/[id]/route.ts
 
@@ -1110,7 +1601,7 @@
 
 ### src/app/api/coach-maker/action-notes/route.ts
 
-- L71: message: "관리 액션 메모가 생성되었습니다.",
+- L72: message: "관리 액션 메모가 생성되었습니다.",
 
 ### src/app/api/i18n/[lang]/[namespace]/route.ts
 
@@ -1186,17 +1677,33 @@
 
 - L71: message: "월간 회고가 저장되었습니다.",
 
+### src/app/api/my-coaching/spiritual-companion/route.ts
+
+- L180: error: "현재 로그인 사용자의 DB 프로필을 확인할 수 없습니다.",
+- L197: error: "로그인이 필요합니다.",
+- L215: error: "프로필을 확인할 수 없습니다.",
+- L223: error: "현재 로그인 사용자의 프로필을 찾을 수 없습니다.",
+- L274: error: "현재 로그인 사용자의 프로필 권한을 확인할 수 없습니다.",
+- L323: message: "저장된 대화를 불러올 수 없습니다.",
+- L360: message: "메시지를 입력해 주세요.",
+- L370: message: `메시지는 ${maxInputChars}자 이하로 입력해 주세요.`,
+- L405: message: "오늘의 대화 가능 횟수를 확인할 수 없습니다.",
+- L417: message: "오늘의 AI 동반자 응답 횟수를 모두 사용했습니다.",
+- L447: message: "메시지를 저장할 수 없습니다.",
+- L486: message: "AI 응답을 저장할 수 없습니다.",
+
 ### src/app/api/profile/locale/route.ts
 
-- L61: { ok: false, error: "로그인이 필요합니다." },
-- L80: { ok: false, error: "언어 설정을 조회하지 못했습니다." },
-- L97: { ok: false, error: "언어 설정을 조회하지 못했습니다." },
-- L108: { ok: false, error: "로그인이 필요합니다." },
-- L119: { ok: false, error: "요청 body가 올바른 JSON 형식이 아닙니다." },
-- L128: { ok: false, error: "지원하지 않는 언어입니다." },
-- L151: { ok: false, error: "언어 설정을 저장하지 못했습니다." },
-- L158: { ok: false, error: "프로필을 찾을 수 없습니다." },
-- L170: { ok: false, error: "언어 설정을 저장하지 못했습니다." },
+- L72: { ok: false, error: "로그인이 필요합니다." },
+- L108: { ok: false, error: "언어 설정을 조회하지 못했습니다." },
+- L117: // locale 변경 직후 최대 3분 반영 지연 가능.
+- L135: { ok: false, error: "언어 설정을 조회하지 못했습니다." },
+- L146: { ok: false, error: "로그인이 필요합니다." },
+- L157: { ok: false, error: "요청 body가 올바른 JSON 형식이 아닙니다." },
+- L166: { ok: false, error: "지원하지 않는 언어입니다." },
+- L189: { ok: false, error: "언어 설정을 저장하지 못했습니다." },
+- L196: { ok: false, error: "프로필을 찾을 수 없습니다." },
+- L213: { ok: false, error: "언어 설정을 저장하지 못했습니다." },
 
 ### src/app/coach-maker/ActionMemoDrafts.tsx
 
@@ -1225,360 +1732,375 @@
 - L198: label: "마감일 없음",
 - L210: label: "기한 지남",
 - L218: label: "오늘 마감",
-- L262: if (drilldown.type === "team") return `팀 = ${drilldown.value}`;
-- L263: if (drilldown.type === "target") return `대상 = ${drilldown.value}`;
-- L265: return `대상 구분 = ${TARGET_TYPE_LABELS[drilldown.value]}`;
-- L268: return `상태 = ${STATUS_LABELS[drilldown.value]}`;
-- L271: return `우선순위 = ${PRIORITY_LABELS[drilldown.value]}`;
-- L274: return "기한 지난 메모";
-- L382: const teamKey = note.team_name?.trim() || "미지정 팀";
-- L398: const targetKey = note.target_name.trim() || "이름 없음";
-- L456: (note.team_name?.trim() || "미지정 팀") === drilldownFilter.value) ||
-- L458: (note.target_name.trim() || "이름 없음") === drilldownFilter.value) ||
-- L591: setError("내보낼 메모가 없습니다.");
-- L598: "대상 구분",
-- L599: "대상 이름",
-- L600: "팀명",
-- L601: "지역",
-- L602: "액션 유형",
-- L603: "우선순위",
-- L604: "상태",
-- L605: "마감일",
-- L606: "메모 내용",
-- L607: "작성일",
-- L608: "수정일",
-- L609: "완료일",
-- L631: setMessage(`${sortedNotes.length}개 메모를 CSV로 내보냈습니다.`);
-- L648: ? getApiErrorMessage(payload) ?? "관리 액션 메모를 불러오지 못했습니다."
-- L649: : "관리 액션 메모를 불러오지 못했습니다.",
-- L657: setError("관리 액션 메모를 불러오지 못했습니다.");
-- L674: setMessage("관심 필요 대상자 정보가 입력되었습니다.");
-- L720: setError("대상과 메모 내용을 입력해 주세요.");
-- L726: setError("마감일 형식이 올바르지 않습니다.");
-- L758: ? getApiErrorMessage(payload) ?? "관리 액션 메모 저장에 실패했습니다."
-- L759: : "관리 액션 메모 저장에 실패했습니다.",
-- L770: setMessage("관리 액션 메모가 저장되었습니다.");
-- L773: setError("관리 액션 메모 저장에 실패했습니다.");
-- L796: ? getApiErrorMessage(payload) ?? "관리 액션 메모 상태 변경에 실패했습니다."
-- L797: : "관리 액션 메모 상태 변경에 실패했습니다.",
-- L802: setMessage("관리 액션 메모가 완료 처리되었습니다.");
-- L810: setError("관리 액션 메모 상태 변경에 실패했습니다.");
-- L838: ? "상태 변경에 실패했습니다."
-- L839: : "우선순위 변경에 실패했습니다.")
-- L841: ? "상태 변경에 실패했습니다."
-- L842: : "우선순위 변경에 실패했습니다.",
-- L854: ? "상태가 변경되었습니다."
-- L855: : "우선순위가 변경되었습니다.",
-- L861: ? "상태 변경에 실패했습니다."
-- L862: : "우선순위 변경에 실패했습니다.",
-- L875: setError("메모 내용을 입력해 주세요.");
-- L881: setError("마감일 형식이 올바르지 않습니다.");
-- L914: ? getApiErrorMessage(payload) ?? "관리 액션 메모 수정에 실패했습니다."
-- L915: : "관리 액션 메모 수정에 실패했습니다.",
-- L924: setMessage("관리 액션 메모가 수정되었습니다.");
-- L927: setError("관리 액션 메모 수정에 실패했습니다.");
-- L936: `관리 액션 메모를 목록에서 제거하시겠습니까?\n\n대상: ${
-- L938: }\n이 작업은 보관 처리되며 목록에서 숨겨질 수 있습니다.`,
-- L958: ? getApiErrorMessage(payload) ?? "관리 액션 메모 처리에 실패했습니다."
-- L959: : "관리 액션 메모 처리에 실패했습니다.",
-- L964: setMessage("관리 액션 메모가 목록에서 제거되었습니다.");
-- L970: setError("관리 액션 메모 처리에 실패했습니다.");
-- L980: <p className="text-sm font-medium text-slate-500">저장된 기록</p>
-- L982: 관리 액션 메모
-- L985: 코치, 팀, 관심 필요 대상자에게 필요한 후속 액션을 기록하고 진행 상태를 확인합니다.
-- L990: <p>관리 액션 메모는 저장되며 권한 범위 안에서 조회됩니다.</p>
-- L991: <p className="mt-1">민감한 개인정보나 비밀번호는 메모에 기록하지 마세요.</p>
-- L998: CSV 내보내기
-- L1006: 관심 필요 대상자에서 메모 작성
-- L1016: {target.targetName} 메모 작성
-- L1027: 오늘/이번 주 처리 필요
-- L1030: 처리 필요 요약
-- L1033: 전체 메모 기준의 상태, 우선순위, 팀/대상별 현황을 먼저 확인합니다.
-- L1041: 새로고침
-- L1047: 코치/팀별 메모 요약
-- L1050: 현재 조회된 전체 메모 기준 요약입니다. 검색/필터와 독립적으로 계산됩니다.
-- L1057: label: "전체 메모 수",
-- L1062: label: "진행 전",
-- L1070: label: "진행 중",
-- L1078: label: "완료",
-- L1086: label: "보관됨",
-- L1094: label: "높은 우선순위",
-- L1099: label: "기한 지난 메모",
-- L1119: <h5 className="text-sm font-semibold text-slate-950">팀별 메모 요약</h5>
-- L1121: <p className="mt-3 text-sm text-slate-500">팀별 메모가 없습니다.</p>
-- L1135: 전체 {team.totalCount}개 · 미완료 {team.incompleteCount}개 · 높은 우선순위{" "}
-- L1136: {team.highPriorityCount}개
-- L1146: 대상별 메모 요약 상위 5개
-- L1149: <p className="mt-3 text-sm text-slate-500">대상별 메모가 없습니다.</p>
-- L1166: 메모 {target.totalCount}개
-- L1176: 대상 구분별 메모 요약
-- L1180: 대상 구분별 메모가 없습니다.
-- L1200: 메모 {targetTypeSummary.totalCount}개
-- L1213: 현재 보기: {activeDrilldownLabel}
-- L1216: 기존 검색어와 필터 조건이 함께 적용됩니다.
-- L1224: 드릴다운 해제
-- L1231: 검색/필터/정렬
-- L1234: 드릴다운 조건과 검색, 상태, 우선순위, 대상 구분 필터가 함께 적용됩니다.
-- L1239: <span className="text-sm font-medium text-slate-700">검색</span>
-- L1243: placeholder="대상 이름, 팀명, 지역, 메모 내용"
-- L1248: <span className="text-sm font-medium text-slate-700">상태</span>
-- L1254: <option value="all">전체</option>
-- L1255: <option value="open">진행 전</option>
-- L1256: <option value="in_progress">진행 중</option>
-- L1257: <option value="completed">완료</option>
-- L1258: <option value="archived">보관됨</option>
-- L1262: <span className="text-sm font-medium text-slate-700">우선순위</span>
-- L1270: <option value="all">전체</option>
-- L1271: <option value="low">낮음</option>
-- L1272: <option value="normal">보통</option>
-- L1273: <option value="high">높음</option>
-- L1277: <span className="text-sm font-medium text-slate-700">대상 구분</span>
-- L1285: <option value="all">전체</option>
-- L1286: <option value="coach">코치</option>
-- L1287: <option value="team">팀</option>
-- L1288: <option value="attention_target">관심 필요 대상자</option>
-- L1289: <option value="coachee">코칭 대상자</option>
-- L1290: <option value="church">교회</option>
-- L1291: <option value="organization">기관</option>
-- L1295: <span className="text-sm font-medium text-slate-700">정렬 기준</span>
-- L1304: <option value="created_at">작성일</option>
-- L1305: <option value="due_date">마감일</option>
-- L1306: <option value="priority">우선순위</option>
-- L1307: <option value="status">상태</option>
-- L1308: <option value="target_name">대상 이름</option>
-- L1309: <option value="target_type">대상 구분</option>
-- L1313: <span className="text-sm font-medium text-slate-700">보기 개수</span>
-- L1319: <option value={10}>10개</option>
-- L1320: <option value={20}>20개</option>
-- L1321: <option value={50}>50개</option>
-- L1327: 전체 {notes.length}개 중 {filteredNotes.length}개 표시
-- L1335: {sortDirection === "asc" ? "오름차순" : "내림차순"}
-- L1342: 필터 초기화
-- L1350: 관리 액션 메모 작성
-- L1353: 대상과 액션을 정리해 저장하면 권한 범위 안에서 계속 확인할 수 있습니다.
-- L1361: <span className="text-sm font-medium text-slate-700">대상 구분</span>
-- L1367: <option value="coach">코치</option>
-- L1368: <option value="team">팀</option>
-- L1369: <option value="attention_target">관심 필요 대상자</option>
-- L1370: <option value="coachee">코칭 대상자</option>
-- L1371: <option value="church">교회</option>
-- L1372: <option value="organization">기관</option>
-- L1377: 대상 이름 또는 팀명
-- L1382: placeholder="이름 또는 팀명"
-- L1387: <span className="text-sm font-medium text-slate-700">팀/목장</span>
-- L1391: placeholder="선택 입력"
-- L1396: <span className="text-sm font-medium text-slate-700">지역</span>
-- L1400: placeholder="선택 입력"
-- L1406: 관리 액션 유형
-- L1413: <option value="contact_line">LINE/전화 연락</option>
-- L1414: <option value="coaching_encouragement">코칭 권면</option>
-- L1415: <option value="team_leader_check">팀장 확인</option>
-- L1416: <option value="next_meeting_check">다음 모임 점검</option>
-- L1417: <option value="other">기타</option>
-- L1421: <span className="text-sm font-medium text-slate-700">우선순위</span>
-- L1427: <option value="low">낮음</option>
-- L1428: <option value="normal">보통</option>
-- L1429: <option value="high">높음</option>
-- L1433: <span className="text-sm font-medium text-slate-700">마감일</span>
-- L1442: <span className="text-sm font-medium text-slate-700">메모 내용</span>
-- L1446: placeholder="후속 관리 액션 메모를 입력하세요."
-- L1456: {isSaving ? "저장 중" : "메모 저장"}
-- L1467: 관리 액션 메모 목록
-- L1470: 검색/필터/정렬 결과를 기준으로 메모를 확인하고 빠르게 처리합니다.
-- L1478: CSV 내보내기
-- L1484: 관리 액션 메모를 불러오는 중입니다.
-- L1488: 아직 등록된 관리 액션 메모가 없습니다.
-- L1513: 우선순위 {PRIORITY_LABELS[note.priority]}
-- L1527: 팀 {displayValue(note.team_name)} · 지역 {displayValue(note.region)}
-- L1530: 작성일: {formatDateTime(note.created_at)}
-- L1531: {note.due_date ? ` · 마감일: ${note.due_date}` : ""}
-- L1536: 상태 빠른 변경
-- L1555: <option value="open">진행 전</option>
-- L1556: <option value="in_progress">진행 중</option>
-- L1557: <option value="completed">완료</option>
-- L1558: <option value="archived">보관됨</option>
-- L1563: 우선순위 빠른 변경
-- L1582: <option value="low">낮음</option>
-- L1583: <option value="normal">보통</option>
-- L1584: <option value="high">높음</option>
-- L1590: 변경 중...
-- L1600: 상세보기
-- L1608: 완료 처리
-- L1618: {archivingId === note.id ? "삭제 중..." : "목록에서 제거"}
-- L1632: {normalizedCurrentPage} / {totalPages} 페이지 · 총 {sortedNotes.length}개
-- L1643: 이전
-- L1653: 다음
-- L1666: 관리 액션 메모 상세
-- L1669: 상세 정보 확인과 제한된 필드 수정을 지원합니다.
-- L1677: 닫기
-- L1684: <h4 className="text-sm font-semibold text-slate-950">기본정보</h4>
-- L1687: <dt className="text-slate-500">대상 구분</dt>
-- L1693: <dt className="text-slate-500">대상 이름</dt>
-- L1699: <dt className="text-slate-500">팀명</dt>
-- L1705: <dt className="text-slate-500">지역</dt>
-- L1711: <dt className="text-slate-500">작성일</dt>
-- L1717: <dt className="text-slate-500">수정일</dt>
-- L1723: <dt className="text-slate-500">완료일</dt>
-- L1733: 상태/우선순위/마감일
-- L1739: 액션 유형
-- L1751: <option value="contact_line">LINE/전화 연락</option>
-- L1752: <option value="coaching_encouragement">코칭 권면</option>
-- L1753: <option value="team_leader_check">팀장 확인</option>
-- L1754: <option value="next_meeting_check">다음 모임 점검</option>
-- L1755: <option value="other">기타</option>
-- L1760: 우선순위
-- L1772: <option value="low">낮음</option>
-- L1773: <option value="normal">보통</option>
-- L1774: <option value="high">높음</option>
-- L1778: <span className="text-sm font-medium text-slate-700">상태</span>
-- L1789: <option value="open">진행 전</option>
-- L1790: <option value="in_progress">진행 중</option>
-- L1791: <option value="completed">완료</option>
-- L1792: <option value="archived">보관됨</option>
-- L1797: 마감일
-- L1809: <span className="text-sm font-medium text-slate-700">팀명</span>
-- L1819: <span className="text-sm font-medium text-slate-700">지역</span>
-- L1834: 우선순위 {PRIORITY_LABELS[selectedNote.priority]}
-- L1852: <h4 className="text-sm font-semibold text-slate-950">메모 내용</h4>
-- L1869: <h4 className="text-sm font-semibold text-slate-950">작업</h4>
-- L1879: {isUpdatingDetail ? "저장 중" : "수정 저장"}
-- L1886: 수정 취소
-- L1896: 수정
-- L1905: 완료 처리
-- L1916: ? "삭제 중..."
-- L1917: : "목록에서 제거"}
+- L264: ? getApiErrorMessage(payload) ?? "관리 액션 메모를 불러오지 못했습니다."
+- L265: : "관리 액션 메모를 불러오지 못했습니다.",
+- L308: : "관리 액션 메모를 불러오지 못했습니다.",
+- L337: 기한 지난 관리 메모
+- L340: {isLoading ? "..." : `${overdueCount}개`}
+- L343: {error ?? "오늘 먼저 처리할 메모입니다."}
+- L350: 메모 처리
+- L370: if (drilldown.type === "team") return `팀 = ${drilldown.value}`;
+- L371: if (drilldown.type === "target") return `대상 = ${drilldown.value}`;
+- L373: return `대상 구분 = ${TARGET_TYPE_LABELS[drilldown.value]}`;
+- L376: return `상태 = ${STATUS_LABELS[drilldown.value]}`;
+- L379: return `우선순위 = ${PRIORITY_LABELS[drilldown.value]}`;
+- L382: return "기한 지난 메모";
+- L517: const teamKey = note.team_name?.trim() || "미지정 팀";
+- L533: const targetKey = note.target_name.trim() || "이름 없음";
+- L591: (note.team_name?.trim() || "미지정 팀") === drilldownFilter.value) ||
+- L593: (note.target_name.trim() || "이름 없음") === drilldownFilter.value) ||
+- L726: setError("내보낼 메모가 없습니다.");
+- L733: "대상 구분",
+- L734: "대상 이름",
+- L735: "팀명",
+- L736: "지역",
+- L737: "액션 유형",
+- L738: "우선순위",
+- L739: "상태",
+- L740: "마감일",
+- L741: "메모 내용",
+- L742: "작성일",
+- L743: "수정일",
+- L744: "완료일",
+- L766: setMessage(`${sortedNotes.length}개 메모를 CSV로 내보냈습니다.`);
+- L781: : "관리 액션 메모를 불러오지 못했습니다.",
+- L830: setMessage("관심 필요 대상자 정보가 입력되었습니다.");
+- L876: setError("대상과 메모 내용을 입력해 주세요.");
+- L882: setError("마감일 형식이 올바르지 않습니다.");
+- L914: ? getApiErrorMessage(payload) ?? "관리 액션 메모 저장에 실패했습니다."
+- L915: : "관리 액션 메모 저장에 실패했습니다.",
+- L926: setMessage("관리 액션 메모가 저장되었습니다.");
+- L930: setError("관리 액션 메모 저장에 실패했습니다.");
+- L953: ? getApiErrorMessage(payload) ?? "관리 액션 메모 상태 변경에 실패했습니다."
+- L954: : "관리 액션 메모 상태 변경에 실패했습니다.",
+- L959: setMessage("관리 액션 메모가 완료 처리되었습니다.");
+- L968: setError("관리 액션 메모 상태 변경에 실패했습니다.");
+- L996: ? "상태 변경에 실패했습니다."
+- L997: : "우선순위 변경에 실패했습니다.")
+- L999: ? "상태 변경에 실패했습니다."
+- L1000: : "우선순위 변경에 실패했습니다.",
+- L1012: ? "상태가 변경되었습니다."
+- L1013: : "우선순위가 변경되었습니다.",
+- L1020: ? "상태 변경에 실패했습니다."
+- L1021: : "우선순위 변경에 실패했습니다.",
+- L1034: setError("메모 내용을 입력해 주세요.");
+- L1040: setError("마감일 형식이 올바르지 않습니다.");
+- L1073: ? getApiErrorMessage(payload) ?? "관리 액션 메모 수정에 실패했습니다."
+- L1074: : "관리 액션 메모 수정에 실패했습니다.",
+- L1083: setMessage("관리 액션 메모가 수정되었습니다.");
+- L1087: setError("관리 액션 메모 수정에 실패했습니다.");
+- L1096: `관리 액션 메모를 보관하시겠습니까?\n\n대상: ${
+- L1098: }\n보관된 메모는 기본 목록에서 숨겨질 수 있습니다.`,
+- L1118: ? getApiErrorMessage(payload) ?? "관리 액션 메모 처리에 실패했습니다."
+- L1119: : "관리 액션 메모 처리에 실패했습니다.",
+- L1124: setMessage("관리 액션 메모가 보관되었습니다.");
+- L1131: setError("관리 액션 메모 처리에 실패했습니다.");
+- L1144: <p className="text-sm font-medium text-ink-faint">저장된 기록</p>
+- L1146: 관리 액션 메모 요약
+- L1149: 후속 액션을 메모로 남기고 진행 상태를 처리합니다.
+- L1152: 완료: 처리한 메모로 남깁니다. 보관: 현재 목록에서 정리하지만
+- L1153: 기록은 보관합니다.
+- L1158: <p>내부 관리 메모입니다. 코치이에게 공개되지 않습니다.</p>
+- L1159: <p className="mt-1">필요하면 아래에서 전체 목록과 작성폼을 펼쳐 사용하세요.</p>
+- L1166: { label: "전체 메모 수", value: summary.totalCount },
+- L1167: { label: "진행 중", value: summary.inProgressCount },
+- L1168: { label: "완료", value: summary.completedCount },
+- L1169: { label: "높은 우선순위", value: summary.highPriorityCount },
+- L1170: { label: "기한 지난 메모", value: summary.overdueCount },
+- L1190: 메모 전체 보기
+- L1200: 새 메모 작성
+- L1208: 접기
+- L1220: 작성폼으로 이동
+- L1226: 목록으로 이동
+- L1232: 관심 필요 대상자 내부 메모 작성
+- L1242: {target.targetName} 내부 메모 작성
+- L1253: 오늘/이번 주 처리 필요
+- L1256: 처리 필요 요약
+- L1259: 전체 메모 기준의 상태, 우선순위, 팀/대상별 현황을 먼저 확인합니다.
+- L1267: 새로고침
+- L1273: 코치/팀별 메모 요약
+- L1276: 현재 조회된 전체 메모 기준 요약입니다. 검색/필터와 독립적으로 계산됩니다.
+- L1283: label: "전체 메모 수",
+- L1288: label: "진행 전",
+- L1296: label: "진행 중",
+- L1304: label: "완료",
+- L1312: label: "보관됨",
+- L1320: label: "높은 우선순위",
+- L1325: label: "기한 지난 메모",
+- L1345: <h5 className="text-sm font-semibold text-ink-strong">팀별 메모 요약</h5>
+- L1347: <p className="mt-3 text-sm text-ink-faint">팀별 메모가 없습니다.</p>
+- L1361: 전체 {team.totalCount}개 · 미완료 {team.incompleteCount}개 · 높은 우선순위{" "}
+- L1362: {team.highPriorityCount}개
+- L1372: 대상별 메모 요약 상위 5개
+- L1375: <p className="mt-3 text-sm text-ink-faint">대상별 메모가 없습니다.</p>
+- L1392: 메모 {target.totalCount}개
+- L1402: 대상 구분별 메모 요약
+- L1406: 대상 구분별 메모가 없습니다.
+- L1426: 메모 {targetTypeSummary.totalCount}개
+- L1439: 현재 보기: {activeDrilldownLabel}
+- L1442: 기존 검색어와 필터 조건이 함께 적용됩니다.
+- L1450: 드릴다운 해제
+- L1457: 검색/필터/정렬
+- L1460: 드릴다운 조건과 검색, 상태, 우선순위, 대상 구분 필터가 함께 적용됩니다.
+- L1465: <span className="text-sm font-medium text-ink-base">검색</span>
+- L1469: placeholder="대상 이름, 팀명, 지역, 메모 내용"
+- L1474: <span className="text-sm font-medium text-ink-base">상태</span>
+- L1480: <option value="all">전체</option>
+- L1481: <option value="open">진행 전</option>
+- L1482: <option value="in_progress">진행 중</option>
+- L1483: <option value="completed">완료</option>
+- L1484: <option value="archived">보관됨</option>
+- L1488: <span className="text-sm font-medium text-ink-base">우선순위</span>
+- L1496: <option value="all">전체</option>
+- L1497: <option value="low">낮음</option>
+- L1498: <option value="normal">보통</option>
+- L1499: <option value="high">높음</option>
+- L1503: <span className="text-sm font-medium text-ink-base">대상 구분</span>
+- L1511: <option value="all">전체</option>
+- L1512: <option value="coach">코치</option>
+- L1513: <option value="team">팀</option>
+- L1514: <option value="attention_target">관심 필요 대상자</option>
+- L1515: <option value="coachee">코칭 대상자</option>
+- L1516: <option value="church">교회</option>
+- L1517: <option value="organization">기관</option>
+- L1521: <span className="text-sm font-medium text-ink-base">정렬 기준</span>
+- L1530: <option value="created_at">작성일</option>
+- L1531: <option value="due_date">마감일</option>
+- L1532: <option value="priority">우선순위</option>
+- L1533: <option value="status">상태</option>
+- L1534: <option value="target_name">대상 이름</option>
+- L1535: <option value="target_type">대상 구분</option>
+- L1539: <span className="text-sm font-medium text-ink-base">보기 개수</span>
+- L1545: <option value={10}>10개</option>
+- L1546: <option value={20}>20개</option>
+- L1547: <option value={50}>50개</option>
+- L1553: 전체 {notes.length}개 중 {filteredNotes.length}개 표시
+- L1561: {sortDirection === "asc" ? "오름차순" : "내림차순"}
+- L1568: 필터 초기화
+- L1579: 관리 액션 메모 작성
+- L1582: 대상과 액션을 정리해 저장하면 권한 범위 안에서 계속 확인할 수 있습니다.
+- L1590: <span className="text-sm font-medium text-ink-base">대상 구분</span>
+- L1596: <option value="coach">코치</option>
+- L1597: <option value="team">팀</option>
+- L1598: <option value="attention_target">관심 필요 대상자</option>
+- L1599: <option value="coachee">코칭 대상자</option>
+- L1600: <option value="church">교회</option>
+- L1601: <option value="organization">기관</option>
+- L1606: 대상 이름 또는 팀명
+- L1611: placeholder="이름 또는 팀명"
+- L1616: <span className="text-sm font-medium text-ink-base">팀/목장</span>
+- L1620: placeholder="선택 입력"
+- L1625: <span className="text-sm font-medium text-ink-base">지역</span>
+- L1629: placeholder="선택 입력"
+- L1635: 관리 액션 유형
+- L1642: <option value="contact_line">LINE/전화 연락</option>
+- L1643: <option value="coaching_encouragement">코칭 권면</option>
+- L1644: <option value="team_leader_check">팀장 확인</option>
+- L1645: <option value="next_meeting_check">다음 모임 점검</option>
+- L1646: <option value="other">기타</option>
+- L1650: <span className="text-sm font-medium text-ink-base">우선순위</span>
+- L1656: <option value="low">낮음</option>
+- L1657: <option value="normal">보통</option>
+- L1658: <option value="high">높음</option>
+- L1662: <span className="text-sm font-medium text-ink-base">마감일</span>
+- L1671: <span className="text-sm font-medium text-ink-base">메모 내용</span>
+- L1675: placeholder="후속 관리 액션 메모를 입력하세요."
+- L1685: {isSaving ? "저장 중" : "메모 저장"}
+- L1696: 관리 액션 메모 목록
+- L1699: 검색/필터/정렬 결과를 기준으로 메모를 확인하고 빠르게 처리합니다.
+- L1707: CSV 내보내기
+- L1713: 관리 액션 메모를 불러오는 중입니다.
+- L1718: <p>아직 등록된 관리 메모가 없습니다.</p>
+- L1722: 선택한 필터에 해당하는 관리 메모가 없습니다.
+- L1725: 필터를 초기화하거나 다른 조건으로 다시 조회해 주세요.
+- L1732: 필터 초기화
+- L1760: 우선순위 {PRIORITY_LABELS[note.priority]}
+- L1774: 팀 {displayValue(note.team_name)} · 지역 {displayValue(note.region)}
+- L1777: 작성일: {formatDateTime(note.created_at)}
+- L1778: {note.due_date ? ` · 마감일: ${note.due_date}` : ""}
+- L1783: 상태 빠른 변경
+- L1802: <option value="open">진행 전</option>
+- L1803: <option value="in_progress">진행 중</option>
+- L1804: <option value="completed">완료</option>
+- L1805: <option value="archived">보관됨</option>
+- L1810: 우선순위 빠른 변경
+- L1829: <option value="low">낮음</option>
+- L1830: <option value="normal">보통</option>
+- L1831: <option value="high">높음</option>
+- L1837: 변경 중...
+- L1847: 상세보기
+- L1855: 완료 처리
+- L1865: {archivingId === note.id ? "보관 중..." : "보관"}
+- L1879: {normalizedCurrentPage} / {totalPages} 페이지 · 총 {sortedNotes.length}개
+- L1890: 이전
+- L1900: 다음
+- L1913: 관리 액션 메모 상세
+- L1916: 상세 정보 확인과 제한된 필드 수정을 지원합니다.
+- L1924: 닫기
+- L1931: <h4 className="text-sm font-semibold text-ink-strong">기본정보</h4>
+- L1934: <dt className="text-ink-faint">대상 구분</dt>
+- L1940: <dt className="text-ink-faint">대상 이름</dt>
+- L1946: <dt className="text-ink-faint">팀명</dt>
+- L1952: <dt className="text-ink-faint">지역</dt>
+- L1958: <dt className="text-ink-faint">작성일</dt>
+- L1964: <dt className="text-ink-faint">수정일</dt>
+- L1970: <dt className="text-ink-faint">완료일</dt>
+- L1980: 상태/우선순위/마감일
+- L1986: 액션 유형
+- L1998: <option value="contact_line">LINE/전화 연락</option>
+- L1999: <option value="coaching_encouragement">코칭 권면</option>
+- L2000: <option value="team_leader_check">팀장 확인</option>
+- L2001: <option value="next_meeting_check">다음 모임 점검</option>
+- L2002: <option value="other">기타</option>
+- L2007: 우선순위
+- L2019: <option value="low">낮음</option>
+- L2020: <option value="normal">보통</option>
+- L2021: <option value="high">높음</option>
+- L2025: <span className="text-sm font-medium text-ink-base">상태</span>
+- L2036: <option value="open">진행 전</option>
+- L2037: <option value="in_progress">진행 중</option>
+- L2038: <option value="completed">완료</option>
+- L2039: <option value="archived">보관됨</option>
+- L2044: 마감일
+- L2056: <span className="text-sm font-medium text-ink-base">팀명</span>
+- L2066: <span className="text-sm font-medium text-ink-base">지역</span>
+- L2081: 우선순위 {PRIORITY_LABELS[selectedNote.priority]}
+- L2099: <h4 className="text-sm font-semibold text-ink-strong">메모 내용</h4>
+- L2116: <h4 className="text-sm font-semibold text-ink-strong">작업</h4>
+- L2126: {isUpdatingDetail ? "저장 중" : "수정 저장"}
+- L2133: 수정 취소
+- L2143: 수정
+- L2152: 완료 처리
+- L2163: ? "보관 중..."
+- L2164: : "보관"}
 
 ### src/app/coach-maker/moksilgi-progress/MoksilgiProgressClientTable.tsx
 
-- L11: const MISSING_LABEL = "미지정";
-- L51: return row.display_name ?? row.full_name ?? row.email ?? row.author_name ?? "알 수 없음";
-- L63: return displayName ?? fullName ?? email ?? "알 수 없음";
-- L215: reasons.push("아직 목실기 기록이 없습니다.");
-- L216: actions.push("첫 기록 작성 안내 필요");
-- L220: reasons.push("평균 성취율이 50% 미만입니다.");
-- L221: actions.push("코치 상담 필요");
-- L225: reasons.push("최근 2개월 이상 기록이 없습니다.");
-- L226: actions.push("기록 독려 필요");
-- L243: label: "기록 없음",
-- L250: label: "양호",
-- L257: label: "관심",
-- L263: label: "돌봄 필요",
-- L276: label: "미입력",
-- L285: label: "우수",
-- L292: label: "진행 중",
-- L298: label: "관심 필요",
-- L310: if (status === "completed") return "완료";
-- L311: if (status === "inProgress") return "진행 중";
-- L312: if (status === "incomplete") return "미완료";
-- L313: return "미입력";
-- L449: "기록 없음": "moksilgi.noRecord",
-- L450: "관심": "moksilgi.attention",
-- L451: "관심 필요": "moksilgi.attention",
-- L452: "돌봄 필요": "moksilgi.careNeeded",
-- L453: "미완료": "moksilgi.notCompleted",
-- L454: "미입력": "moksilgi.notEntered",
-- L455: "양호": "moksilgi.good",
-- L456: "우수": "moksilgi.excellent",
-- L457: "진행 중": "moksilgi.inProgress",
-- L468: "기록 독려 필요": "moksilgi.recordEncourageAction",
-- L469: "아직 목실기 기록이 없습니다.": "moksilgi.noRecordReason",
-- L470: "첫 기록 작성 안내 필요": "moksilgi.firstRecordAction",
-- L471: "최근 2개월 이상 기록이 없습니다.": "moksilgi.missingRecentReason",
-- L472: "코치 상담 필요": "moksilgi.coachConsultAction",
-- L473: "평균 성취율이 50% 미만입니다.": "moksilgi.lowAverageReason",
-- L642: setExportMessage(t("moksilgi.noCsvData", "내보낼 목실기 현황 데이터가 없습니다."));
-- L648: t("members.name", "이름"),
-- L649: t("moksilgi.region", "지역"),
-- L650: t("moksilgi.team", "팀"),
-- L651: t("moksilgi.currentRate", "현재 월까지 성취율"),
-- L652: t("moksilgi.fullYearRate", "12개월 전체 성취율"),
-- L653: t("moksilgi.completedCount", "완료 수"),
-- L654: t("moksilgi.notCompletedCount", "미완료 수"),
-- L655: t("moksilgi.notEntered", "미입력 수"),
-- L656: t("moksilgi.progressRate", "진행 상태"),
-- L657: ...MONTHS.map((month) => `${month}${t("moksilgi.month", "월")} ${t("moksilgi.progressRate", "진행 상태")}`),
-- L686: `${visibleRows.length} ${t("moksilgi.csvExported", "목실기 현황을 CSV로 내보냈습니다.")}`,
-- L695: {t("moksilgi.title", "전체 목실기 성취 현황")}
-- L700: t("moksilgi.regionTeamVisible", "전체 {total}명 중 {visible}명 표시"),
-- L705: t("moksilgi.relationshipVisible", "active 코칭 관계 {count}건 표시"),
-- L709: t("moksilgi.careVisible", "돌봄 필요자 {count}명 표시"),
-- L724: {t("moksilgi.teamView", "지역/팀별 보기")}
-- L735: {t("moksilgi.relationshipView", "코치-코치이 관계별 보기")}
-- L746: {t("moksilgi.careNeededView", "돌봄 필요자 보기")}
-- L753: {t("moksilgi.csvExport", "CSV 내보내기")}
-- L760: {t("moksilgi.resetFilters", "필터 초기화")}
-- L775: {t("common.search", "검색")}
-- L780: placeholder="이름, 지역명, 팀명"
-- L787: {t("moksilgi.region", "지역")}
-- L794: <option value="all">{t("common.all", "전체")}</option>
-- L804: {t("moksilgi.team", "팀/목장")}
-- L811: <option value="all">{t("common.all", "전체")}</option>
-- L822: <span>{t("common.sort", "정렬")}: {sortDirection === "asc" ? t("moksilgi.asc", "오름차순") : t("moksilgi.desc", "내림차순")}</span>
-- L823: <span>{t("moksilgi.averageToCurrent", "현재 월까지 평균")}: {formatPercent(averageRow.upToCurrentRate)}</span>
-- L828: {t("moksilgi.noFilterResults", "현재 검색/필터 조건에 해당하는 목실기 성취 현황이 없습니다.")}
-- L835: <th className="px-3 py-2 font-semibold">{t("moksilgi.sequence", "순번")}</th>
-- L843: {t("members.name", "이름")}
-- L853: {t("moksilgi.region", "지역")}
-- L863: {t("moksilgi.team", "팀")}
-- L866: <th className="px-3 py-2 font-semibold">{t("moksilgi.role", "직책")}</th>
-- L867: <th className="px-3 py-2 font-semibold">{t("moksilgi.generation", "세대별")}</th>
-- L875: {t("moksilgi.upToCurrent", "현재 월까지")}
-- L878: <th className="px-3 py-2 font-semibold">{t("moksilgi.progressRate", "진행률")}</th>
-- L881: {month}{t("moksilgi.month", "월")}
-- L891: {t("moksilgi.cumulative", "누적")}
-- L894: <th className="px-3 py-2 font-semibold">{t("common.view", "상세")}</th>
-- L934: {t("moksilgi.details", "상세보기")}
-- L942: {t("moksilgi.averageAchievement", "평균 성취")}
-- L981: return month === null ? "없음" : `${month}월`;
-- L986: return "전체 미작성";
-- L989: return value === null ? "확인 필요" : `${value}개월`;
-- L998: {t("moksilgi.noCareNeeded", "현재 돌봄 필요자가 없습니다.")}
-- L1008: <th className="px-3 py-2 font-semibold">{t("moksilgi.coachName", "코치명")}</th>
-- L1009: <th className="px-3 py-2 font-semibold">{t("moksilgi.coacheeName", "코치이명")}</th>
-- L1010: <th className="px-3 py-2 font-semibold">{t("moksilgi.relationshipStatus", "관계상태")}</th>
-- L1011: <th className="px-3 py-2 font-semibold">{t("moksilgi.averageRate", "현재까지 평균 성취율")}</th>
-- L1012: <th className="px-3 py-2 font-semibold">{t("moksilgi.recentRecordMonth", "최근 기록 월")}</th>
-- L1013: <th className="px-3 py-2 font-semibold">{t("moksilgi.missingMonths", "미작성 개월 수")}</th>
-- L1014: <th className="px-3 py-2 font-semibold">{t("moksilgi.careReason", "돌봄 사유")}</th>
-- L1015: <th className="px-3 py-2 font-semibold">{t("moksilgi.recommendedAction", "권장 조치")}</th>
-- L1054: ? t("moksilgi.noRecord", "기록 없음")
-- L1103: {t("moksilgi.noRelationshipRows", "표시할 코치-코치이 관계별 목실기 성취 현황이 없습니다.")}
-- L1113: <th className="px-3 py-2 font-semibold">{t("moksilgi.coachName", "코치명")}</th>
-- L1114: <th className="px-3 py-2 font-semibold">{t("moksilgi.coacheeName", "코치이명")}</th>
-- L1115: <th className="px-3 py-2 font-semibold">{t("moksilgi.relationshipStatus", "관계상태")}</th>
-- L1118: {month}{t("moksilgi.month", "월")}
-- L1121: <th className="px-3 py-2 font-semibold">{t("moksilgi.averageRate", "현재까지 평균")}</th>
-- L1122: <th className="px-3 py-2 font-semibold">{t("moksilgi.relationshipStatus", "진행 상태")}</th>
-- L1198: : t("moksilgi.notCalculable", "계산 불가");
-- L1201: : t("moksilgi.notCalculable", "계산 불가");
-- L1209: {t("moksilgi.progressDetail", "목실기 진행 상세")}
-- L1220: {t("common.close", "닫기")}
-- L1228: {t("moksilgi.basicInfo", "기본 정보")}
-- L1232: <dt className="text-slate-500">{t("members.name", "이름")}</dt>
-- L1236: <dt className="text-slate-500">{t("moksilgi.region", "지역")}</dt>
-- L1242: <dt className="text-slate-500">{t("moksilgi.team", "팀")}</dt>
-- L1248: <dt className="text-slate-500">{t("members.email", "이메일")}</dt>
-- L1258: {t("moksilgi.achievementSummary", "성취 요약")}
-- L1262: <dt className="text-slate-500">{t("moksilgi.currentRate", "현재 월까지 성취율")}</dt>
-- L1266: <dt className="text-slate-500">{t("moksilgi.fullYearRate", "12개월 전체 성취율")}</dt>
-- L1270: <dt className="text-slate-500">{t("moksilgi.progressRate", "진행률")}</dt>
-- L1283: <p className="text-sm text-emerald-700">{t("status.completed", "완료")}</p>
-- L1285: {statusCounts.completed}{t("moksilgi.months", "개월")}
-- L1289: <p className="text-sm text-sky-700">{t("moksilgi.inProgress", "진행 중")}</p>
-- L1291: {statusCounts.inProgress}{t("moksilgi.months", "개월")}
-- L1295: <p className="text-sm text-amber-700">{t("moksilgi.notCompleted", "미완료")}</p>
-- L1297: {statusCounts.incomplete}{t("moksilgi.months", "개월")}
-- L1301: <p className="text-sm text-slate-600">{t("moksilgi.notEntered", "미입력")}</p>
-- L1303: {statusCounts.missing}{t("moksilgi.months", "개월")}
-- L1312: {t("moksilgi.progressRate", "월별 진행 상태")}
-- L1317: "현재 월까지의 항목과 이후 예정 항목을 구분해 표시합니다.",
-- L1323: {t("moksilgi.currentMonth", "현재 월까지")}
-- L1326: {t("moksilgi.pending", "이후 예정")}
-- L1348: {month}{t("moksilgi.month", "월")}
-- L1352: ? t("moksilgi.pending", "이후 예정")
-- L1353: : t("moksilgi.currentMonth", "현재 월까지")}
-- L1361: {t("moksilgi.progressRate", "성취율")}:{" "}
-- L1363: ? t("moksilgi.notEntered", "미입력")
+- L76: return `${month}월`;
+- L131: reasons.push("아직 목실기 기록이 없습니다.");
+- L132: actions.push("첫 기록 작성 안내 필요");
+- L136: reasons.push("평균 성취율이 50% 미만입니다.");
+- L137: actions.push("코치 상담 필요");
+- L141: reasons.push("최근 2개월 이상 기록이 없습니다.");
+- L142: actions.push("기록 독려 필요");
+- L172: reasons: ["성취율을 지속적으로 확인해 주세요."],
+- L173: actions: ["정기 점검 권장"],
+- L182: reasons: ["현재 흐름이 안정적입니다."],
+- L183: actions: ["현재 코칭 흐름 유지"],
+- L254: return `${row.generation_number}세대`;
+- L265: return `${row.coachee_generation_number}세대`;
+- L368: return { label: "완료", tone: "success" as const };
+- L372: return { label: "미입력", tone: "neutral" as const };
+- L376: return { label: "관심 필요", tone: "warning" as const };
+- L379: return { label: "정상", tone: "success" as const };
+- L416: <option value="">전체</option>
+- L457: <p className="text-sm font-medium text-ink-faint">목실기 상세</p>
+- L462: 닫기
+- L467: <DetailItem label="국가" value={displayText(countryLabel(row))} />
+- L468: <DetailItem label="지역/도시" value={displayText(rowRegion(row))} />
+- L469: <DetailItem label="소속 기관/교회" value={displayText(rowOrganizationChurch(row))} />
+- L470: <DetailItem label="그룹/팀/목장" value={displayText(rowGroup(row))} />
+- L471: <DetailItem label="직책/직분" value={displayText(rowMinistryPosition(row))} />
+- L472: <DetailItem label="세대" value={displayText(rowGeneration(row))} />
+- L473: <DetailItem label="코칭 역할" value={displayText(rowCoachingRole(row))} />
+- L474: <DetailItem label="담당 코치" value={displayText(coachName)} />
+- L481: <th className="px-3 py-2">월</th>
+- L484: {month}월
+- L487: <th className="px-3 py-2 text-right">현재 평균</th>
+- L492: <th className="px-3 py-2 text-left font-medium">성취율</th>
+- L535: setMessage("메모 내용을 입력해 주세요.");
+- L562: setMessage(payload?.message ?? "관리 메모를 저장하지 못했습니다.");
+- L566: setMessage(payload?.message ?? "관리 메모가 저장되었습니다.");
+- L569: setMessage("관리 메모를 저장하는 중 오류가 발생했습니다.");
+- L580: <p className="text-sm font-medium text-ink-faint">내부 관리 메모</p>
+- L583: 코치이 본인에게 공개되는 피드백이 아니라 관리자/코치 내부 관리 메모입니다.
+- L587: 닫기
+- L594: placeholder="필요한 돌봄 내용이나 다음 조치를 기록해 주세요."
+- L605: 취소
+- L612: {submitting ? "저장 중..." : "메모 저장"}
+- L631: 코치-코치이 관계별 목실기 데이터가 없습니다.
+- L644: <th className="px-3 py-3">코치명</th>
+- L645: <th className="px-3 py-3">코치이명</th>
+- L646: <th className="px-3 py-3">관계상태</th>
+- L647: <th className="px-3 py-3">국가</th>
+- L648: <th className="px-3 py-3">지역/도시</th>
+- L649: <th className="px-3 py-3">소속 기관/교회</th>
+- L650: <th className="px-3 py-3">그룹/팀/목장</th>
+- L651: <th className="px-3 py-3">직책/직분</th>
+- L652: <th className="px-3 py-3">세대</th>
+- L653: <th className="px-3 py-3">코칭 역할</th>
+- L656: {month}월
+- L659: <th className="px-3 py-3 text-right">현재까지 평균</th>
+- L752: <CardTitle className="text-lg">관심 필요 대상자</CardTitle>
+- L754: 현재 월까지 성취율 50% 미만, 미입력 또는 기록 부족 대상을 우선 확인합니다.
+- L758: 관심 필요 대상자가 없습니다.
+- L767: <CardTitle className="text-lg">관심 필요 대상자</CardTitle>
+- L769: 낮은 성취율과 기록 부족 대상을 먼저 확인합니다.
+- L777: <th className="px-3 py-3">이름</th>
+- L778: <th className="px-3 py-3">소속/팀</th>
+- L779: <th className="px-3 py-3 text-right">현재 월까지 성취율</th>
+- L780: <th className="px-3 py-3">상태</th>
+- L781: <th className="px-3 py-3">상세보기</th>
+- L799: {assessment.averageRate === null ? "기록 없음" : formatPercent(assessment.averageRate)}
+- L804: 최근 기록: {formatMonthLabel(assessment.recentRecordMonth)}
+- L816: 상세보기
+- L826: 관리 메모 작성
+- L870: {renderHeader("이름", "name")}
+- L872: <th className="px-3 py-3">소속</th>
+- L873: <th className="px-3 py-3">{renderHeader("지역", "region")}</th>
+- L876: {month}월
+- L880: {renderHeader("현재 월까지 평균", "achievement")}
+- L882: <th className="px-3 py-3 text-right">12개월 평균</th>
+- L883: <th className="px-3 py-3">{renderHeader("상태", "care")}</th>
+- L884: {onViewDetail || detailHrefBuilder ? <th className="px-3 py-3">상세보기</th> : null}
+- L903: 담당 코치: {displayText(coachNameByCoacheeId.get(row.profile_id))}
+- L937: 상세보기
+- L947: 기록 보기
+- L990: 현재 {pagination.page}페이지 / 전체 {pagination.totalPages}페이지 · 전체{" "}
+- L991: {pagination.totalRows}명
+- L995: <FieldText className="text-xs">페이지 크기</FieldText>
+- L999: {size}개
+- L1011: 이전 페이지
+- L1015: 이전 페이지
+- L1024: 다음 페이지
+- L1028: 다음 페이지
+- L1227: "이름",
+- L1228: "국가",
+- L1229: "지역/도시",
+- L1230: "소속 기관/교회",
+- L1231: "그룹/팀/목장",
+- L1232: "직책/직분",
+- L1233: "세대",
+- L1234: "코칭 역할",
+- L1235: "담당 코치",
+- L1236: "목실기 성취율",
+- L1237: "관심 상태",
+- L1238: ...MONTHS.map((month) => `${month}월`),
+- L1239: "12개월 누적",
+- L1259: ? "관심 필요"
+- L1261: ? "관심 필요"
+- L1263: ? "정상"
+- L1264: : "미입력",
+- L1294: { label: "전체 목실기 표", mode: "team" as const },
+- L1295: { label: "코치-코치이 관계별", mode: "relationship" as const },
+- L1296: { label: "관심 필요자 전체", mode: "care" as const },
+- L1317: CSV 내보내기
+- L1324: <CardTitle className="text-lg">화면 내 상세 필터</CardTitle>
+- L1326: 조회된 결과 안에서 국가, 소속 기관/교회, 그룹/팀/목장, 담당 코치 기준으로 다시 좁힙니다.
+- L1327: 모바일에서는 필요한 조건만 선택한 뒤 표로 이동해 확인하세요.
+- L1333: <FieldText className="text-xs">{t("common.search", "검색")}</FieldText>
+- L1336: placeholder="이름, 국가, 소속, 직분, 코치 검색"
+- L1341: <FilterSelect label="국가" onChange={setCountryFilter} options={countryOptions} value={countryFilter} />
+- L1342: <FilterSelect label="지역/도시" onChange={setRegionFilter} options={regionOptions} value={regionFilter} />
+- L1343: <FilterSelect label="소속 기관/교회" onChange={setOrganizationFilter} options={organizationOptions} value={organizationFilter} />
+- L1344: <FilterSelect label="그룹/팀/목장" onChange={setGroupFilter} options={groupOptions} value={groupFilter} />
+- L1345: <FilterSelect label="직책/직분" onChange={setMinistryFilter} options={ministryOptions} value={ministryFilter} />
+- L1346: <FilterSelect label="세대" onChange={setGenerationFilter} options={generationOptions} value={generationFilter} />
+- L1347: <FilterSelect label="담당 코치" onChange={setCoachFilter} options={coachOptions} value={coachFilter} />
+- L1351: {filteredRows.length}명 표시 / 현재 페이지 {rows.length}명 · 전체 필터 결과 {pagination.totalRows}명
+- L1361: 보기 필터 초기화
+- L1379: <p>선택한 조건에 해당하는 목실기 기록이 없습니다.</p>
+- L1380: <p className="mt-1">필터를 초기화하거나 다른 조건으로 다시 조회해 주세요.</p>
 
 ### src/app/coach-maker/moksilgi-progress/[planId]/page.tsx
 
@@ -1591,20 +2113,20 @@
 - L68: "알 수 없음"
 - L133: 전체 목실기 성취 현황으로 돌아가기
 - L137: 대시보드
-- L148: <span className="text-sm font-medium text-slate-700">연도</span>
+- L148: <span className="text-sm font-medium text-ink-base">연도</span>
 - L162: 조회
 - L168: 올해로 보기
-- L210: return <p className="text-slate-500">등록된 핵심가치가 없습니다.</p>;
-- L226: <p className="mt-3 text-sm font-medium text-slate-500">실천 모습</p>
-- L247: <dt className="text-xs font-medium text-slate-500">연간 목표량</dt>
-- L253: <dt className="text-xs font-medium text-slate-500">월 목표량</dt>
-- L259: <dt className="text-xs font-medium text-slate-500">단위</dt>
-- L263: <dt className="text-xs font-medium text-slate-500">측정 방식</dt>
-- L270: <p className="text-sm font-medium text-slate-500">실행전략</p>
-- L272: <p className="mt-1 text-sm text-slate-500">등록된 실행전략이 없습니다.</p>
-- L293: return <p className="text-slate-500">등록된 목표 영역이 없습니다.</p>;
+- L210: return <p className="text-ink-faint">등록된 핵심가치가 없습니다.</p>;
+- L226: <p className="mt-3 text-sm font-medium text-ink-faint">실천 모습</p>
+- L247: <dt className="text-xs font-medium text-ink-faint">연간 목표량</dt>
+- L253: <dt className="text-xs font-medium text-ink-faint">월 목표량</dt>
+- L259: <dt className="text-xs font-medium text-ink-faint">단위</dt>
+- L263: <dt className="text-xs font-medium text-ink-faint">측정 방식</dt>
+- L270: <p className="text-sm font-medium text-ink-faint">실행전략</p>
+- L272: <p className="mt-1 text-sm text-ink-faint">등록된 실행전략이 없습니다.</p>
+- L293: return <p className="text-ink-faint">등록된 목표 영역이 없습니다.</p>;
 - L305: 목표 {index + 1}: {area.area_title}
-- L312: <p className="mt-4 text-sm text-slate-500">등록된 세부 목표가 없습니다.</p>
+- L312: <p className="mt-4 text-sm text-ink-faint">등록된 세부 목표가 없습니다.</p>
 - L346: <th className="px-3 py-2 font-semibold">목표 / 성취</th>
 - L347: <th className="px-3 py-2 font-semibold">목표1: 영적 성장</th>
 - L348: <th className="px-3 py-2 font-semibold">목표2: 지적 성장</th>
@@ -1625,10 +2147,10 @@
 - L467: <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
 - L471: 코치메이커 목실기 상세 보기
 - L473: <h1 className="mt-3 text-3xl font-semibold">목실기 상세 현황</h1>
-- L474: <p className="mt-2 text-lg text-slate-700">전체 목실기 성취 현황 상세</p>
+- L474: <p className="mt-2 text-lg text-ink-base">전체 목실기 성취 현황 상세</p>
 - L476: 선택한 사람의 목실기와 연간 성취 요약을 확인합니다.
 - L482: label="목실기 상세 현황 출력"
-- L488: <p className="text-sm font-medium text-slate-500">{year}년 총 달성률</p>
+- L488: <p className="text-sm font-medium text-ink-faint">{year}년 총 달성률</p>
 - L493: 조회 범위:{" "}
 - L494: {data.scopeMode === "all" ? "전체 비삭제 목실기" : "직접 코칭 관계 기준"}
 - L498: 아직 선택한 연도의 월별 체크리스트 기록이 없습니다.
@@ -1669,252 +2191,319 @@
 
 ### src/app/coach-maker/moksilgi-progress/page.tsx
 
-- L96: <I18nText k="moksilgi.year" fallback="연도" />
-- L109: <I18nText k="moksilgi.region" fallback="지역" />
-- L120: <I18nText k="moksilgi.team" fallback="팀/목장" />
-- L131: <I18nText k="moksilgi.role" fallback="직책" />
-- L142: <I18nText k="moksilgi.generation" fallback="세대" />
-- L153: <I18nText k="moksilgi.keyword" fallback="검색어" />
-- L167: <I18nText k="moksilgi.query" fallback="조회" />
-- L173: <I18nText k="moksilgi.resetFilters" fallback="필터 초기화" />
-- L183: <p className="text-slate-700">아직 프로필이 생성되지 않았습니다.</p>
-- L185: 프로필 보기
-- L213: <I18nText k="moksilgi.reportTitle" fallback="목실기 전체 진행 현황 보고서" />
-- L216: <I18nText k="moksilgi.reportYear" fallback="출력 연도" />: {filters.year}
-- L219: <I18nText k="moksilgi.generatedAt" fallback="생성일" />: {new Date().toLocaleDateString("ko-KR")}
-- L225: <I18nText k="moksilgi.title" fallback="코치메이커 전체 목실기 성취 현황" />
-- L228: <I18nText k="moksilgi.title" fallback="전체 목실기 성취 현황" />
-- L231: <I18nText k="nav.moksilgiProgress" fallback="코치메이커용 목실기 진행 현황" />
-- L236: fallback="지역/팀의 코치와 코치이 목실기 월별 성취율을 한눈에 확인합니다."
-- L243: label="목실기 전체 현황 출력"
-- L255: <I18nText k="moksilgi.accessDenied" fallback="코치메이커 권한이 없습니다." />
-- L259: <I18nText k="moksilgi.loadFailed" fallback="지금 전체 목실기 성취 현황을 불러올 수 없습니다." />
-- L265: description="현재 필터 조건으로 조회된 목실기 대상자 수입니다."
-- L266: title={<I18nText k="moksilgi.totalTargets" fallback="전체 대상자 수" />}
-- L270: description="12개월 누적 성취율이 100% 이상인 대상자 수입니다."
-- L271: title={<I18nText k="moksilgi.completedCount" fallback="완료 수" />}
-- L275: description="누적 성취율이 0% 초과 100% 미만인 대상자 수입니다."
-- L276: title={<I18nText k="moksilgi.inProgressCount" fallback="진행 수" />}
-- L280: description="아직 누적 성취 기록이 없는 대상자 수입니다."
-- L281: title={<I18nText k="moksilgi.notCompletedCount" fallback="미완료 수" />}
-- L285: description="선택 연도 기준 현재 월까지의 평균 성취율입니다."
-- L286: title={<I18nText k="moksilgi.upToCurrent" fallback="전체 성취(UP TO CURRENT)" />}
-- L290: description="1월부터 12월까지 전체 평균 누적 성취율입니다."
-- L291: title={<I18nText k="moksilgi.fullYearAverage" fallback="12개월 전체 성취 현황" />}
-- L295: description="현재 조회 중인 목실기 성취 현황 연도입니다."
-- L296: title={<I18nText k="moksilgi.queryYear" fallback="조회 연도" />}
-- L302: ? "전체 비삭제 목실기를 조회합니다."
-- L303: : "직접 코칭 관계 기준으로 조회합니다."
-- L305: title={<I18nText k="moksilgi.queryScope" fallback="조회 범위" />}
-- L308: ? <I18nText k="moksilgi.allScope" fallback="전체" />
-- L309: : <I18nText k="moksilgi.directCoachingScope" fallback="직접 코칭" />
-- L316: <I18nText k="moksilgi.noProgressData" fallback="아직 확인할 목실기 성취 현황이 없습니다." />
+- L129: <CardTitle className="text-lg">데이터 조회 조건</CardTitle>
+- L131: 상단 조회 조건은 서버에서 새 데이터를 불러오는 기준입니다.
+- L132: 연도, 지역, 팀, 직책, 세대, 검색어 조건이 전체 조회 범위를
+- L133: 바꿉니다.
+- L142: <I18nText k="moksilgi.year" fallback="연도" />
+- L154: <I18nText k="moksilgi.region" fallback="지역/도시" />
+- L159: placeholder="예: 치앙라이"
+- L165: <I18nText k="moksilgi.team" fallback="그룹/팀/목장" />
+- L170: placeholder="예: 코칭그룹"
+- L176: <I18nText k="moksilgi.role" fallback="역할/직책" />
+- L186: <I18nText k="moksilgi.generation" fallback="세대" />
+- L196: <I18nText k="moksilgi.keyword" fallback="검색어" />
+- L201: placeholder="이름, 이메일, 소속 검색"
+- L207: <I18nText k="moksilgi.query" fallback="조회" />
+- L215: <I18nText k="moksilgi.resetFilters" fallback="필터 초기화" />
+- L228: <p className="text-ink-base">아직 프로필이 생성되지 않았습니다.</p>
+- L230: 프로필 보기
+- L260: <I18nText k="moksilgi.reportTitle" fallback="목실기 전체 진행 현황 보고서" />
+- L263: <I18nText k="moksilgi.reportYear" fallback="출력 연도" />: {filters.year}
+- L266: <I18nText k="moksilgi.generatedAt" fallback="생성일" />: {formatDateInTimezone(new Date(), timezone)}
+- L269: 기준 시간대: {timezone}
+- L276: 전체 목실기 성취 현황
+- L281: fallback="담당 범위의 코치이 목실기 월별 성취율과 관심 필요 대상을 확인합니다."
+- L288: backLabel="코치메이커로"
+- L293: label="출력"
+- L305: <I18nText k="moksilgi.accessDenied" fallback="코치메이커 권한이 없습니다." />
+- L309: <I18nText k="moksilgi.loadFailed" fallback="지금 전체 목실기 성취 현황을 불러올 수 없습니다." />
+- L315: description="현재 필터 조건으로 조회된 목실기 대상자 수입니다."
+- L316: title={<I18nText k="moksilgi.totalTargets" fallback="전체 대상자 수" />}
+- L320: description="누적 성취율이 0% 초과 100% 미만인 대상자 수입니다."
+- L321: title={<I18nText k="moksilgi.inProgressCount" fallback="진행 중 인원" />}
+- L325: description="12개월 누적 성취율이 100% 이상인 대상자 수입니다."
+- L326: title={<I18nText k="moksilgi.completedCount" fallback="완료 인원" />}
+- L330: description="현재 월까지 평균 성취율이 50% 미만인 대상자 수입니다."
+- L331: title="관심 필요 대상자"
+- L335: description="아직 목실기 성취 기록이 없는 대상자 수입니다."
+- L336: title="미입력 대상자"
+- L340: description="선택 연도 기준 현재 월까지의 평균 성취율입니다."
+- L342: title={<I18nText k="moksilgi.upToCurrent" fallback="현재 월까지 평균 성취율" />}
+- L350: <p>선택한 조건에 해당하는 목실기 기록이 없습니다.</p>
+- L351: <p className="mt-1">필터를 초기화하거나 다른 조건으로 다시 조회해 주세요.</p>
+- L357: 화면 내 보기 필터는 이미 조회된 결과 안에서만 표시를
+- L358: 좁힙니다. 관심 필요 대상자 표와 월별 표는 가로로 스크롤해
+- L359: 전체 내용을 확인하세요.
 
 ### src/app/coach-maker/page.tsx
 
-- L34: return trimmed && trimmed.length > 0 ? trimmed : "미입력";
-- L37: function displayOptional(value: string | null | undefined, fallback = "미등록") {
-- L43: return row.display_name ?? row.full_name ?? row.email ?? row.author_name ?? "알 수 없음";
-- L193: <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
-- L199: <I18nText k="dashboard.viewProfile" fallback="프로필 보기" />
-- L215: <I18nText k="coachMaker.coachStatusHeading" fallback="코치별 현황" /> ·{" "}
-- L221: fallback="관리 범위 내 코치별 담당 코치이 통계"
-- L228: fallback="기준으로 active 코칭 관계와 제출/공유 현황을 집계합니다. 개인 기록 본문은 표시하지 않습니다."
-- L236: <I18nText k="coachMaker.viewRelationships" fallback="코칭 관계 보기" />
-- L242: description={<I18nText k="coachMaker.totalCoachesDescription" fallback="관리 범위 안에서 active 관계가 있는 코치 수입니다." />}
-- L243: title={<I18nText k="coachMaker.totalCoaches" fallback="전체 코치 수" />}
-- L244: value={`${data.summary.coachCount}명`}
-- L247: description={<I18nText k="coachMaker.totalCoacheesDescription" fallback="active 코칭 관계의 코치이 수입니다." />}
-- L248: title={<I18nText k="coachMaker.totalCoachees" fallback="전체 담당 코치이 수" />}
-- L249: value={`${data.summary.assignedCoacheeCount}명`}
-- L252: description={<I18nText k="coachMaker.weeklySubmittedDescription" fallback="이번 주 제출된 주간 기록 기준 코치이 수입니다." />}
-- L253: title={<I18nText k="coachMaker.weeklySubmitted" fallback="이번 주 제출" />}
-- L254: value={`${data.summary.weeklySubmittedThisWeekCount}명`}
-- L257: description={<I18nText k="coachMaker.weeklyMissingDescription" fallback="담당 코치이 중 이번 주 제출이 확인되지 않은 인원입니다." />}
-- L258: title={<I18nText k="coachMaker.weeklyMissing" fallback="이번 주 미제출" />}
-- L259: value={`${data.summary.weeklyMissingThisWeekCount}명`}
-- L262: description={<I18nText k="coachMaker.sharedDailyRecordsDescription" fallback="코치에게 공유된 하루 기록 수입니다." />}
-- L263: title={<I18nText k="coachMaker.sharedDailyRecords" fallback="공유된 하루 기록" />}
-- L264: value={`${data.summary.sharedDailyRecordCount}개`}
-- L267: description={<I18nText k="coachMaker.sharedMonthlyReflectionsDescription" fallback="코치에게 공유된 월간 회고 수입니다." />}
-- L268: title={<I18nText k="coachMaker.sharedMonthlyReflections" fallback="공유된 월간 회고" />}
-- L269: value={`${data.summary.sharedMonthlyReflectionCount}개`}
-- L272: description={<I18nText k="coachMaker.totalFeedbackDescription" fallback="작성된 코치 피드백 수입니다." />}
-- L273: title={<I18nText k="coachMaker.totalFeedback" fallback="전체 피드백 수" />}
-- L274: value={`${data.summary.feedbackCount}개`}
-- L277: description={<I18nText k="coachMaker.feedbackPendingDescription" fallback="제출된 주간 기록 중 피드백이 없는 항목입니다." />}
-- L278: title={<I18nText k="coachMaker.feedbackPending" fallback="피드백 대기" />}
-- L279: value={`${data.summary.feedbackPendingCount}개`}
-- L287: fallback="관리 범위 안에 등록된 코치가 없거나 아직 배정된 코치-코치이 관계가 없습니다."
-- L295: <th className="px-3 py-2 font-semibold"><I18nText k="roles.coach" fallback="코치" /></th>
-- L296: <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.assignedCoachees" fallback="담당 코치이" /></th>
-- L297: <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.weeklySubmitted" fallback="이번 주 제출" /></th>
-- L298: <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.weeklyMissing" fallback="이번 주 미제출" /></th>
-- L299: <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.sharedDailyRecords" fallback="공유 하루 기록" /></th>
-- L300: <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.sharedMonthlyReflections" fallback="공유 월간 회고" /></th>
-- L301: <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.totalFeedback" fallback="피드백 작성" /></th>
-- L302: <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.feedbackPending" fallback="피드백 대기" /></th>
-- L311: {displayOptional(coach.coachEmail, "이메일 미등록")}
-- L315: {coach.assignedCoacheeCount}명
-- L318: {coach.weeklySubmittedThisWeekCount}명
-- L321: {coach.weeklyMissingThisWeekCount}명
-- L324: {coach.sharedDailyRecordCount}개
-- L327: {coach.sharedMonthlyReflectionCount}개
-- L330: {coach.feedbackCount}개
-- L341: ? `${coach.feedbackPendingCount}개 확인 필요`
-- L342: : "대기 없음"}
-- L388: <I18nText k="nav.coachMaker" fallback="코치메이커" />
-- L391: <I18nText k="coachMaker.title" fallback="코치메이커 대시보드" />
-- L396: fallback="담당 범위의 목실기 성취 현황과 코칭 진행 상태를 확인합니다."
-- L406: <I18nText k="common.print" fallback="인쇄용 보고서 보기" />
-- L415: <I18nText k="moksilgi.accessDenied" fallback="코치메이커 권한이 없습니다." />
-- L421: fallback="목실기 요약 정보를 불러오지 못했습니다. 잠시 후 다시 확인해 주세요."
-- L438: {result.data.year} <I18nText k="moksilgi.yearSummary" fallback="년 목실기 요약" />
-- L441: <I18nText k="moksilgi.achievementStatus" fallback="목실기 성취 현황" />
-- L446: fallback="접근 가능한 대상자의 목실기 진행 상태와 평균 성취율을 요약합니다."
-- L454: <I18nText k="moksilgi.viewOverallProgress" fallback="전체 목실기 현황 보기" />
-- L462: fallback="아직 목실기 현황 데이터가 없습니다. 코치이가 목실기와 월별 기록을 저장하면 이곳에 요약이 표시됩니다."
-- L468: description={<I18nText k="moksilgi.totalTargetsDescription" fallback="현재 접근 가능한 목실기 대상자 수입니다." />}
-- L469: title={<I18nText k="moksilgi.totalTargets" fallback="전체 대상자 수" />}
-- L473: description={<I18nText k="moksilgi.inProgressTargetsDescription" fallback="누적 성취율이 0% 초과 100% 미만인 인원입니다." />}
-- L474: title={<I18nText k="moksilgi.inProgressTargets" fallback="진행 중 인원" />}
-- L478: description={<I18nText k="moksilgi.completedTargetsDescription" fallback="12개월 누적 성취율이 100% 이상인 인원입니다." />}
-- L479: title={<I18nText k="moksilgi.completedTargets" fallback="완료 인원" />}
-- L483: description={<I18nText k="moksilgi.notStartedTargetsDescription" fallback="아직 누적 성취 기록이 없는 인원입니다." />}
-- L484: title={<I18nText k="moksilgi.notStartedTargets" fallback="미완료 인원" />}
-- L488: description={<I18nText k="moksilgi.currentAverageDescription" fallback="선택 연도 기준 현재 월까지의 평균 성취율입니다." />}
-- L489: title={<I18nText k="moksilgi.currentAverage" fallback="현재 월까지 평균 성취율" />}
-- L494: description={<I18nText k="moksilgi.fullYearAverageDescription" fallback="1월부터 12월까지 전체 평균 누적 성취율입니다." />}
-- L495: title={<I18nText k="moksilgi.fullYearAverage" fallback="12개월 전체 평균 성취율" />}
-- L500: description={<I18nText k="moksilgi.attentionTargetsDescription" fallback="현재 월까지 성취율이 50% 미만인 대상자 수입니다." />}
-- L501: title={<I18nText k="moksilgi.attentionTargets" fallback="관심 필요 대상자 수" />}
-- L505: description={<I18nText k="moksilgi.missingTargetsDescription" fallback="성취율 계산이 어렵거나 기록이 없는 대상자 수입니다." />}
-- L506: title={<I18nText k="moksilgi.missingTargets" fallback="미입력 대상자 수" />}
-- L517: <I18nText k="moksilgi.quickCheck" fallback="빠른 점검" />
-- L520: <I18nText k="moksilgi.attentionUsers" fallback="관심 필요 대상자" />
-- L525: fallback="현재 월까지 성취율이 50% 미만인 대상자 중 낮은 성취율 순으로 최대 5명을 표시합니다."
-- L533: <I18nText k="moksilgi.viewOverallProgress" fallback="전체 목실기 현황 보기" />
-- L540: <I18nText k="moksilgi.attentionTargets" fallback="관심 필요 대상자 수" />
-- L546: <I18nText k="moksilgi.lowAverageReason" fallback="현재 월까지 성취율이 50% 미만입니다." />
-- L551: <I18nText k="moksilgi.missingTargets" fallback="미입력 대상자 수" />
-- L559: fallback="기록이 없거나 성취율 계산이 어려운 대상자입니다."
-- L567: <I18nText k="moksilgi.noAttentionUsers" fallback="관심 필요 대상자가 없습니다." />
-- L574: <th className="px-3 py-2 font-semibold"><I18nText k="members.name" fallback="이름" /></th>
-- L575: <th className="px-3 py-2 font-semibold"><I18nText k="moksilgi.team" fallback="팀" /></th>
-- L576: <th className="px-3 py-2 font-semibold"><I18nText k="moksilgi.region" fallback="지역" /></th>
-- L577: <th className="px-3 py-2 font-semibold"><I18nText k="moksilgi.currentAverage" fallback="현재 월까지 성취율" /></th>
-- L578: <th className="px-3 py-2 font-semibold"><I18nText k="moksilgi.details" fallback="상세" /></th>
-- L601: <I18nText k="moksilgi.viewProgress" fallback="현황 보기" />
-- L618: <I18nText k="coachMaker.myCoachingManagement" fallback="나의 코칭 관리" />
-- L621: <I18nText k="coachMaker.personalCoachRole" fallback="개인 코치 역할 기능" />
-- L626: fallback="코치메이커가 동시에 코치 역할을 수행할 때 사용하는 개인 코칭 관리 기능입니다."
-- L638: <I18nText k="coachMaker.myCoachingManagement" fallback="나의 코칭 관리" />
-- L643: fallback="내가 코치로 담당하는 코치이와 코칭 기록을 확인합니다."
-- L654: <I18nText k="coachMaker.moksilgiProgress" fallback="전체 목실기 성취 현황" />
-- L657: <I18nText k="coachMaker.teamMoksilgiManagement" fallback="지역/팀 목실기 관리 기능" />
-- L662: fallback="코치메이커가 담당 지역/팀의 목실기 진행 흐름을 확인하는 관리 기능입니다."
-- L674: <I18nText k="coachMaker.moksilgiProgress" fallback="전체 목실기 성취 현황" />
-- L679: fallback="담당 지역/팀의 코치와 코치이 목실기 월별 성취율을 한눈에 확인합니다."
-- L690: <I18nText k="coachMaker.coachingStructureManagement" fallback="코칭 구조 관리" />
-- L693: <I18nText k="coachMaker.coachingRelationshipFlow" fallback="코칭 관계와 세대 흐름" />
-- L698: fallback="코칭 관계와 세대별 계층 구조를 시각적으로 확인하는 기능입니다."
-- L710: <I18nText k="coachMaker.coachingGenealogy" fallback="세대별 계층 계보도" />
-- L715: fallback="내가 담당하거나 접근 가능한 코칭 관계의 세대별 흐름과 계층 구조를 확인합니다."
+- L28: return trimmed && trimmed.length > 0 ? trimmed : "미입력";
+- L31: function displayOptional(value: string | null | undefined, fallback = "미등록") {
+- L37: return row.display_name ?? row.full_name ?? row.email ?? row.author_name ?? "알 수 없음";
+- L88: <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
+- L94: <I18nText k="dashboard.viewProfile" fallback="프로필 보기" />
+- L119: description={<I18nText k="coachMaker.totalCoachesDescription" fallback="현재 관리 중인 코치입니다." />}
+- L120: title={<I18nText k="coachMaker.totalCoaches" fallback="전체 코치 수" />}
+- L121: value={`${coachStats.summary.coachCount}명`}
+- L124: description={<I18nText k="coachMaker.totalCoacheesDescription" fallback="배정된 코치이입니다." />}
+- L125: title={<I18nText k="coachMaker.totalCoachees" fallback="전체 담당 코치이 수" />}
+- L126: value={`${coachStats.summary.assignedCoacheeCount}명`}
+- L129: description={<I18nText k="coachMaker.weeklySubmittedDescription" fallback="이번 주 기록 제출 인원입니다." />}
+- L130: title={<I18nText k="coachMaker.weeklySubmitted" fallback="이번 주 제출" />}
+- L131: value={`${coachStats.summary.weeklySubmittedThisWeekCount}명`}
+- L134: description={<I18nText k="coachMaker.weeklyMissingDescription" fallback="이번 주 확인이 필요합니다." />}
+- L135: title={<I18nText k="coachMaker.weeklyMissing" fallback="이번 주 미제출" />}
+- L136: value={`${coachStats.summary.weeklyMissingThisWeekCount}명`}
+- L139: description={<I18nText k="coachMaker.feedbackPendingDescription" fallback="아직 피드백이 필요합니다." />}
+- L140: title={<I18nText k="coachMaker.feedbackPending" fallback="피드백 대기" />}
+- L141: value={`${coachStats.summary.feedbackPendingCount}개`}
+- L144: description={<I18nText k="moksilgi.attentionTargetsDescription" fallback="목실기 점검이 필요합니다." />}
+- L145: title={<I18nText k="moksilgi.attentionTargets" fallback="관심 필요 대상자" />}
+- L146: value={`${attention.attentionCount}명`}
+- L164: action: "미제출 확인",
+- L165: description: "주간 기록 목록에서 미제출 상태를 확인합니다.",
+- L167: title: "미제출 인원",
+- L168: value: `${coachStats.summary.weeklyMissingThisWeekCount}명`,
+- L171: action: "피드백 확인",
+- L172: description: "주간 기록 목록에서 피드백이 필요한 기록을 확인합니다.",
+- L174: title: "피드백 대기",
+- L175: value: `${coachStats.summary.feedbackPendingCount}개`,
+- L178: action: "목실기 현황 보기",
+- L179: description: "성취율이 낮은 대상자를 먼저 봅니다.",
+- L181: title: "관심 필요 대상자",
+- L182: value: `${attention.attentionCount}명`,
+- L190: 오늘/이번 주 처리 필요
+- L193: 우선 확인할 작업
+- L220: 목실기 기준 연도: {year}
+- L241: <I18nText k="moksilgi.quickCheck" fallback="빠른 점검" />
+- L244: <I18nText k="moksilgi.attentionUsers" fallback="관심 필요 대상자" />
+- L247: 성취율이 낮은 대상자 중 낮은 순서로 최대 5명만 표시합니다.
+- L254: <I18nText k="moksilgi.viewOverallProgress" fallback="전체 목실기 현황 보기" />
+- L260: <I18nText k="moksilgi.noAttentionUsers" fallback="관심 필요 대상자가 없습니다." />
+- L265: 표는 가로로 스크롤해 전체 내용을 확인하세요.
+- L272: <I18nText k="members.name" fallback="이름" />
+- L274: <th className="px-3 py-2 font-semibold">소속</th>
+- L276: <I18nText k="moksilgi.currentAverage" fallback="현재 월까지 성취율" />
+- L278: <th className="px-3 py-2 font-semibold">조치</th>
+- L288: <p>국가/소속: {displayValue(item.row.region_name)}</p>
+- L290: 공동체/팀: {displayValue(item.row.team_name)}
+- L301: <I18nText k="moksilgi.viewProgress" fallback="현황 보기" />
+- L325: <I18nText k="coachMaker.coachStatusHeading" fallback="코치별 현황" /> ·{" "}
+- L329: 코칭 진행 요약
+- L335: fallback="기준으로 active 코칭 관계와 제출/공유 현황을 집계합니다. 개인 기록 본문은 표시하지 않습니다."
+- L343: <I18nText k="coachMaker.viewRelationships" fallback="코칭 관계 보기" />
+- L351: fallback="관리 범위 안에 등록된 코치가 없거나 아직 배정된 코치-코치이 관계가 없습니다."
+- L357: 표는 가로로 스크롤해 전체 내용을 확인하세요.
+- L363: <th className="px-3 py-2 font-semibold"><I18nText k="roles.coach" fallback="코치" /></th>
+- L364: <th className="px-3 py-2 font-semibold"><I18nText k="coachMaker.assignedCoachees" fallback="담당 코치이" /></th>
+- L365: <th className="px-3 py-2 font-semibold">이번 주 진행</th>
+- L366: <th className="px-3 py-2 font-semibold">확인 필요</th>
+- L367: <th className="px-3 py-2 font-semibold">조치</th>
+- L376: {displayOptional(coach.coachEmail, "이메일 미등록")}
+- L380: {coach.assignedCoacheeCount}명
+- L383: 제출 {coach.weeklySubmittedThisWeekCount}명 / 담당{" "}
+- L384: {coach.assignedCoacheeCount}명
+- L395: 미제출 {coach.weeklyMissingThisWeekCount}명
+- L404: 피드백 대기 {coach.feedbackPendingCount}개
+- L411: 상세 통계
+- L414: <div>공유 하루 기록 {coach.sharedDailyRecordCount}개</div>
+- L415: <div>공유 월간 회고 {coach.sharedMonthlyReflectionCount}개</div>
+- L416: <div>피드백 작성 {coach.feedbackCount}개</div>
+- L443: {data.year} <I18nText k="moksilgi.yearSummary" fallback="년 목실기 요약" />
+- L446: 목실기 성취 요약
+- L449: 전체 {data.totalCount}명 중 현재 월까지 평균 성취율은{" "}
+- L453: 입니다.
+- L460: <I18nText k="moksilgi.viewOverallProgress" fallback="전체 목실기 현황 보기" />
+- L468: fallback="아직 목실기 현황 데이터가 없습니다. 코치이가 목실기와 월별 기록을 저장하면 이곳에 요약이 표시됩니다."
+- L474: description={<I18nText k="moksilgi.totalTargetsDescription" fallback="현재 확인 가능한 대상자입니다." />}
+- L475: title={<I18nText k="moksilgi.totalTargets" fallback="전체 대상자 수" />}
+- L479: description={<I18nText k="moksilgi.currentAverageDescription" fallback="현재 월까지 평균입니다." />}
+- L480: title={<I18nText k="moksilgi.currentAverage" fallback="현재 월까지 평균 성취율" />}
+- L485: description={<I18nText k="moksilgi.attentionTargetsDescription" fallback="먼저 살펴볼 대상자입니다." />}
+- L486: title={<I18nText k="moksilgi.attentionTargets" fallback="관심 필요 대상자 수" />}
+- L490: description={<I18nText k="moksilgi.missingTargetsDescription" fallback="기록 확인이 필요합니다." />}
+- L491: title={<I18nText k="moksilgi.missingTargets" fallback="미입력 대상자 수" />}
+- L511: description: "담당 코치이와 코칭 기록을 확인합니다.",
+- L513: title: "나의 코칭 관리",
+- L516: description: "전체 목실기 월별 성취율을 확인합니다.",
+- L518: title: "전체 목실기 성취 현황",
+- L522: ? "코칭 관계와 세대별 계층 구조를 관리자 권한으로 확인합니다."
+- L523: : "관리자 권한에서 제공됩니다.",
+- L525: title: "세대별 계층 계보도",
+- L528: description: "후속 관리 메모를 확인하고 작성합니다.",
+- L530: title: "관리 액션 메모",
+- L537: <p className="text-sm font-medium text-ink-faint">주요 기능</p>
+- L539: 바로가기
+- L564: 준비 중
+- L569: 현재 권한에서는 사용할 수 없습니다.
+- L608: <I18nText k="nav.coachMaker" fallback="코치메이커" />
+- L611: <I18nText k="coachMaker.title" fallback="코치메이커 대시보드" />
+- L616: fallback="담당 범위의 목실기 성취 현황과 코칭 진행 상태를 확인합니다."
+- L627: <I18nText k="common.print" fallback="인쇄용 보고서 보기" />
+- L630: 현재 연도 기준 인쇄용 보고서로 이동합니다.
+- L640: <I18nText k="moksilgi.accessDenied" fallback="코치메이커 권한이 없습니다." />
+- L646: fallback="목실기 요약 정보를 불러오지 못했습니다. 잠시 후 다시 확인해 주세요."
 
 ### src/app/coach-maker/report/PrintReportButton.tsx
 
-- L10: 인쇄하기
+- L14: {t("coachMaker.report.printOrPdf", "보고서 인쇄/PDF 저장")}
 
 ### src/app/coach-maker/report/ReportFilters.tsx
 
-- L73: 연도
-- L81: {optionYear}년
-- L88: 팀
-- L93: placeholder="전체 또는 팀명 입력"
-- L104: 시작일
-- L114: 종료일
-- L130: 필터 적용
-- L137: 필터 초기화
+- L75: {t("coachMaker.report.filters.title", "보고서 기준")}
+- L80: "목실기 성취 현황은 선택 연도 기준, 관리 액션 메모는 작성일 기간 기준으로 표시합니다. 팀 필터는 목실기 대상자와 관리 메모 모두에 공통 적용됩니다.",
+- L86: {t("coachMaker.report.filters.year", "연도")}
+- L95: {t("coachMaker.report.filters.yearSuffix", "년")}
+- L102: {t("coachMaker.report.filters.team", "팀")}
+- L109: "전체 또는 팀명 입력",
+- L121: {t("coachMaker.report.filters.from", "시작일")}
+- L131: {t("coachMaker.report.filters.to", "종료일")}
+- L147: {t("coachMaker.report.filters.apply", "필터 적용")}
+- L154: {t("coachMaker.report.filters.reset", "필터 초기화")}
 
 ### src/app/coach-maker/report/page.tsx
 
-- L21: const UNASSIGNED_LABEL = "미지정";
-- L24: coaching_encouragement: "코칭 권면",
-- L25: contact_line: "LINE/전화 연락",
-- L26: next_meeting_check: "다음 모임 점검",
-- L27: other: "기타",
-- L28: team_leader_check: "팀장 확인",
-- L32: high: "높음",
-- L33: low: "낮음",
-- L34: normal: "보통",
-- L38: archived: "보관됨",
-- L39: completed: "완료",
-- L40: in_progress: "진행 중",
-- L41: open: "진행 전",
-- L45: attention_target: "관심 필요 대상자",
-- L46: church: "교회",
-- L47: coach: "코치",
-- L48: coachee: "코칭 대상자",
-- L49: organization: "기관",
-- L50: team: "팀",
-- L101: return trimmed && trimmed.length > 0 ? trimmed : "미입력";
-- L127: return row.display_name ?? row.full_name ?? row.email ?? row.author_name ?? "알 수 없음";
-- L320: `기준 연도: ${year}년`,
-- L321: `팀: ${team ?? "전체"}`,
-- L322: `기간: ${from ?? "전체"} ~ ${to ?? "전체"}`,
-- L323: "기간 기준: 관리 액션 메모 작성일",
-- L330: return `${date.getMonth() + 1}월`;
-- L346: return `${year}년 ${fromMonth}~${toMonth} 기준`;
-- L350: return `${year}년 ${fromMonth} 이후 기준`;
-- L354: return `${year}년 ${toMonth}까지 기준`;
-- L357: return `${year}년 전체 기간 기준`;
-- L382: return "선택한 조건에 해당하는 보고서 데이터가 없습니다.";
-- L388: const teamLabel = team ? `${team} 기준` : "전체 팀 기준";
-- L391: return `${periodLabel}, ${teamLabel}으로 전체 ${totalCount}명 중 ${participantCount}명이 목실기 기록에 참여했으며, 평균 성취율은 ${formatPercent(safeAverage)}입니다. 현재 관심이 필요한 대상자는 ${attentionCount}명이며, 코치의 후속 관리가 필요합니다.`;
-- L420: if (!value) return "미입력";
-- L423: if (Number.isNaN(date.getTime())) return "미입력";
-- L463: 선택한 조건에 해당하는 데이터가 없습니다.
-- L639: 대시보드로 돌아가기
-- L646: 코치메이커 보고서
-- L649: 코치메이커 운영 보고서
-- L652: <p>생성일: {formatGeneratedAt(generatedAt)}</p>
-- L653: <p>기준 연도: {selectedYear}년</p>
-- L656: 목실기 성취 현황, 관심 필요 대상자, 관리 액션 메모의 핵심 운영 지표를 인쇄용으로 정리합니다.
-- L681: ? "아직 프로필이 생성되지 않았습니다."
-- L683: ? "코치메이커 권한이 없습니다."
-- L684: : "보고서 데이터를 불러오지 못했습니다."}
-- L690: 목실기 성취 현황
-- L698: <SummaryBox label="전체 대상자 수" value={rows.length} />
-- L699: <SummaryBox label="진행 중 인원" value={statusCounts.inProgress} />
-- L700: <SummaryBox label="완료 인원" value={statusCounts.completed} />
-- L701: <SummaryBox label="미완료 인원" value={statusCounts.notStarted} />
-- L703: label="현재 월까지 평균 성취율"
-- L707: label="12개월 전체 평균 성취율"
-- L716: 관심 필요 대상자
-- L719: <SummaryBox label="관심 필요 대상자 수" value={attention.attentionCount} />
-- L720: <SummaryBox label="미입력 대상자 수" value={attention.missingCount} />
-- L731: <th className="py-2 pr-3">이름</th>
-- L732: <th className="py-2 pr-3">지역</th>
-- L733: <th className="py-2 pr-3">팀</th>
-- L734: <th className="py-2 pr-3">현재 월까지 성취율</th>
-- L756: 관리 액션 메모 요약
-- L760: 보고서 데이터를 불러오지 못했습니다.
-- L764: <SummaryBox label="전체 메모 수" value={notes.length} />
-- L765: <SummaryBox label="진행 전" value={notes.filter((note) => note.status === "open").length} />
-- L766: <SummaryBox label="진행 중" value={notes.filter((note) => note.status === "in_progress").length} />
-- L767: <SummaryBox label="완료" value={notes.filter((note) => note.status === "completed").length} />
-- L768: <SummaryBox label="높은 우선순위" value={notes.filter((note) => note.priority === "high").length} />
-- L769: <SummaryBox label="기한 지난 메모" value={notes.filter(isOverdue).length} />
-- L770: <SummaryBox label="오늘 마감" value={notes.filter(isDueToday).length} />
-- L771: <SummaryBox label="이번 주 마감" value={notes.filter(isDueThisWeek).length} />
-- L778: 우선 조치 목록
-- L781: 높은 우선순위 미완료 메모와 기한 지난 미완료 메모를 최대 10개까지 표시합니다.
-- L792: <th className="py-2 pr-3">대상</th>
-- L793: <th className="py-2 pr-3">액션 유형</th>
-- L794: <th className="py-2 pr-3">우선순위</th>
-- L795: <th className="py-2 pr-3">상태</th>
-- L796: <th className="py-2 pr-3">마감일</th>
-- L797: <th className="py-2 pr-3">메모 요약</th>
+- L37: const UNASSIGNED_LABEL = "미지정";
+- L46: fallback: "코칭 권면",
+- L50: fallback: "LINE/전화 연락",
+- L54: fallback: "다음 모임 점검",
+- L58: fallback: "기타",
+- L62: fallback: "팀장 확인",
+- L69: fallback: "높음",
+- L73: fallback: "낮음",
+- L77: fallback: "보통",
+- L84: fallback: "보관됨",
+- L88: fallback: "완료",
+- L92: fallback: "진행 중",
+- L96: fallback: "진행 전",
+- L103: fallback: "관심 필요 대상자",
+- L107: fallback: "교회",
+- L111: fallback: "코치",
+- L115: fallback: "코칭 대상자",
+- L119: fallback: "기관",
+- L123: fallback: "팀",
+- L176: return trimmed && trimmed.length > 0 ? trimmed : "미입력";
+- L202: return row.display_name ?? row.full_name ?? row.email ?? row.author_name ?? "알 수 없음";
+- L409: fallback: "기준 연도",
+- L414: <I18nText k="coachMaker.report.filters.yearSuffix" fallback="년" />
+- L419: fallback: "팀",
+- L422: <I18nText k="coachMaker.report.filterSummary.all" fallback="전체" />
+- L426: fallback: "기간",
+- L431: <I18nText k="coachMaker.report.filterSummary.all" fallback="전체" />
+- L435: <I18nText k="coachMaker.report.filterSummary.all" fallback="전체" />
+- L441: fallback="전체 기간"
+- L446: fallback: "목실기 기준",
+- L451: <I18nText k="coachMaker.report.filters.yearSuffix" fallback="년" />{" "}
+- L454: fallback="선택 연도"
+- L460: fallback: "관리 메모 기준",
+- L466: fallback="작성일"
+- L469: <I18nText k="coachMaker.report.filterSummary.all" fallback="전체" />
+- L473: <I18nText k="coachMaker.report.filterSummary.all" fallback="전체" />
+- L479: fallback: "팀 기준",
+- L484: fallback="전체 팀"
+- L489: fallback: "기준 시간대",
+- L499: return `${date.getMonth() + 1}월`;
+- L518: <I18nText k="coachMaker.report.filters.yearSuffix" fallback="년" />{" "}
+- L520: <I18nText k="coachMaker.report.autoSummary.period.range" fallback="기준" />
+- L529: <I18nText k="coachMaker.report.filters.yearSuffix" fallback="년" />{" "}
+- L531: <I18nText k="coachMaker.report.autoSummary.period.from" fallback="이후 기준" />
+- L540: <I18nText k="coachMaker.report.filters.yearSuffix" fallback="년" />{" "}
+- L542: <I18nText k="coachMaker.report.autoSummary.period.to" fallback="까지 기준" />
+- L550: <I18nText k="coachMaker.report.filters.yearSuffix" fallback="년" />{" "}
+- L553: fallback="전체 기간 기준"
+- L584: fallback="선택한 조건에 해당하는 보고서 데이터가 없습니다."
+- L595: <I18nText k="coachMaker.report.autoSummary.team.selected" fallback="기준" />
+- L598: <I18nText k="coachMaker.report.autoSummary.team.all" fallback="전체 팀 기준" />
+- L604: <I18nText k="coachMaker.report.autoSummary.body" fallback="보고서 요약" />:{" "}
+- L606: <I18nText k="coachMaker.report.autoSummary.totalTargets" fallback="전체 대상자" />{" "}
+- L608: <I18nText k="coachMaker.report.checkNeeded.peopleSuffix" fallback="명" />
+- L612: fallback="목실기 기록 참여"
+- L615: <I18nText k="coachMaker.report.checkNeeded.peopleSuffix" fallback="명" />
+- L619: fallback="평균 성취율"
+- L624: fallback="관심 필요 대상자"
+- L627: <I18nText k="coachMaker.report.checkNeeded.peopleSuffix" fallback="명" />
+- L631: fallback="코치의 후속 관리가 필요합니다."
+- L726: return value ? formatDateInTimezone(value, timezone) : "미입력";
+- L789: if (code === "PROFILE_NOT_FOUND") return "아직 프로필이 생성되지 않았습니다.";
+- L790: if (code === "ACCESS_DENIED") return "코치메이커 권한이 없습니다.";
+- L791: return "코치별 현황 데이터를 불러오지 못했습니다.";
+- L798: return <I18nText k="coachMaker.report.checkNeeded.none" fallback="없음" />;
+- L803: <I18nText k="coachMaker.report.checkNeeded.missing" fallback="미제출" />{" "}
+- L805: <I18nText k="coachMaker.report.checkNeeded.peopleSuffix" fallback="명" />{" / "}
+- L806: <I18nText k="coachMaker.report.checkNeeded.feedback" fallback="피드백" />{" "}
+- L808: <I18nText k="coachMaker.report.checkNeeded.itemsSuffix" fallback="건" />
+- L1007: fallback="대시보드로 돌아가기"
+- L1016: 인쇄 전 연도, 팀, 기간 기준을 확인해 주세요. 브라우저 인쇄창에서
+- L1017: PDF 저장을 선택할 수 있습니다. 모바일 브라우저에서는 PDF 저장
+- L1018: 옵션이 기기와 브라우저에 따라 다르게 표시될 수 있습니다. 인쇄창이
+- L1019: 열리지 않으면 Safari 또는 Chrome에서 다시 열어 주세요.
+- L1026: fallback="코치메이커 보고서"
+- L1032: fallback="코치메이커 운영 보고서"
+- L1037: <I18nText k="coachMaker.report.generatedAt" fallback="생성일" />:{" "}
+- L1041: <I18nText k="coachMaker.report.year" fallback="기준 연도" />:{" "}
+- L1042: {selectedYear}년
+- L1045: <I18nText k="coachMaker.report.timezone" fallback="기준 시간대" />:{" "}
+- L1052: fallback="목실기 성취 현황, 관심 필요 대상자, 관리 액션 메모의 핵심 운영 지표를 인쇄용으로 정리합니다."
+- L1077: 목실기 성취 현황은 선택한 연도 기준으로 표시하고, 관리 액션
+- L1078: 메모는 작성일 기간 기준으로 필터링합니다. 현황 분석은 전체 목실기
+- L1079: 성취 현황에서 확인하고, 제출·공유용 출력은 이 보고서 화면에서
+- L1080: 준비합니다.
+- L1086: ? "아직 프로필이 생성되지 않았습니다."
+- L1088: ? "코치메이커 권한이 없습니다."
+- L1089: : "보고서 데이터를 불러오지 못했습니다."}
+- L1097: fallback="코치메이커 담당 범위 요약"
+- L1109: fallback="선택한 조건에 해당하는 코치메이커 담당 범위 데이터가 없습니다."
+- L1116: <p>담당 범위: {coachStats.scopeLabel}</p>
+- L1117: <p className="mt-1">이번 주 기준: {formatWeekRange(coachStats.weekRange)}</p>
+- L1120: <SummaryBox label="전체 코치 수" value={coachStats.summary.coachCount} />
+- L1121: <SummaryBox label="전체 담당 코치이 수" value={coachStats.summary.assignedCoacheeCount} />
+- L1122: <SummaryBox label="이번 주 제출" value={coachStats.summary.weeklySubmittedThisWeekCount} />
+- L1123: <SummaryBox label="이번 주 미제출" value={coachStats.summary.weeklyMissingThisWeekCount} />
+- L1124: <SummaryBox label="피드백 대기" value={coachStats.summary.feedbackPendingCount} />
+- L1125: <SummaryBox label="공유 기록" value={coachStats.summary.sharedDailyRecordCount + coachStats.summary.sharedMonthlyReflectionCount} />
+- L1135: fallback="코치별 담당 코치이 현황"
+- L1139: 이번 주 제출, 미제출, 피드백 대기 현황을 코치별로 요약합니다.
+- L1150: fallback="선택한 조건에 해당하는 코치별 담당 현황 데이터가 없습니다."
+- L1159: <th className="py-2 pr-3">코치</th>
+- L1160: <th className="py-2 pr-3">담당 코치이</th>
+- L1161: <th className="py-2 pr-3">이번 주 제출</th>
+- L1162: <th className="py-2 pr-3">이번 주 미제출</th>
+- L1163: <th className="py-2 pr-3">피드백 대기</th>
+- L1164: <th className="py-2 pr-3">확인 필요</th>
+- L1195: fallback="목실기 성취 요약"
+- L1203: fallback="선택한 조건에 해당하는 목실기 성취 데이터가 없습니다."
+- L1209: <SummaryBox label="전체 대상자 수" value={rows.length} />
+- L1210: <SummaryBox label="진행 중 인원" value={statusCounts.inProgress} />
+- L1211: <SummaryBox label="완료 인원" value={statusCounts.completed} />
+- L1212: <SummaryBox label="미완료 인원" value={statusCounts.notStarted} />
+- L1214: label="현재 월까지 평균 성취율"
+- L1218: label="12개월 전체 평균 성취율"
+- L1229: fallback="관심 필요 대상자"
+- L1233: <SummaryBox label="관심 필요 대상자 수" value={attention.attentionCount} />
+- L1234: <SummaryBox label="미입력 대상자 수" value={attention.missingCount} />
+- L1241: fallback="선택한 조건에 해당하는 관심 필요 대상자가 없습니다."
+- L1250: <th className="py-2 pr-3">이름</th>
+- L1251: <th className="py-2 pr-3">국가/소속</th>
+- L1252: <th className="py-2 pr-3">공동체/팀</th>
+- L1253: <th className="py-2 pr-3">현재 월까지 성취율</th>
+- L1277: fallback="관리 액션 메모 요약"
+- L1282: 보고서 데이터를 불러오지 못했습니다.
+- L1287: 진행 전/진행 중/완료/보관됨 상태를 기준으로 집계합니다.
+- L1290: <SummaryBox label="전체 메모 수" value={notes.length} />
+- L1291: <SummaryBox label="진행 중" value={noteCounts.inProgress} />
+- L1292: <SummaryBox label="완료" value={noteCounts.completed} />
+- L1293: <SummaryBox label="높은 우선순위" value={noteCounts.highPriority} />
+- L1294: <SummaryBox label="기한 지난 메모" value={noteCounts.overdue} />
+- L1304: fallback="우선 조치 목록"
+- L1308: 높은 우선순위 미완료 메모와 기한 지난 미완료 메모를 최대 10개까지 표시합니다.
+- L1315: fallback="선택한 팀/기간에 해당하는 관리 액션 메모가 없습니다."
+- L1324: <th className="py-2 pr-3">대상</th>
+- L1325: <th className="py-2 pr-3">액션 유형</th>
+- L1326: <th className="py-2 pr-3">우선순위</th>
+- L1327: <th className="py-2 pr-3">상태</th>
+- L1328: <th className="py-2 pr-3">마감일</th>
+- L1329: <th className="py-2 pr-3">메모 요약</th>
 
 ### src/app/coach/goals/page.tsx
 
@@ -1935,194 +2524,208 @@
 - L150: <h1 className="mt-6 text-2xl font-semibold">코치이 목표</h1>
 - L152: 담당 코치이들이 작성한 목표를 확인합니다.
 - L157: 아직 확인할 코치이 목표가 없습니다.
-- L168: <p className="text-sm font-medium text-slate-500">코치이</p>
-- L205: <dt className="text-sm font-medium text-slate-500">분류</dt>
+- L168: <p className="text-sm font-medium text-ink-faint">코치이</p>
+- L205: <dt className="text-sm font-medium text-ink-faint">분류</dt>
 - L212: 현재값 / 목표값 / 단위
-- L220: <dt className="text-sm font-medium text-slate-500">시작일</dt>
-- L226: <dt className="text-sm font-medium text-slate-500">마감일</dt>
-- L232: <dt className="text-sm font-medium text-slate-500">완료일</dt>
-- L238: <dt className="text-sm font-medium text-slate-500">작성일</dt>
-- L244: <dt className="text-sm font-medium text-slate-500">수정일</dt>
+- L220: <dt className="text-sm font-medium text-ink-faint">시작일</dt>
+- L226: <dt className="text-sm font-medium text-ink-faint">마감일</dt>
+- L232: <dt className="text-sm font-medium text-ink-faint">완료일</dt>
+- L238: <dt className="text-sm font-medium text-ink-faint">작성일</dt>
+- L244: <dt className="text-sm font-medium text-ink-faint">수정일</dt>
 
 ### src/app/coach/moksilgi/[planId]/page.tsx
 
-- L16: draft: "임시 저장",
-- L17: active: "활성",
-- L18: archived: "보관",
-- L22: daily_check: "매일 실행 확인",
-- L23: weekly_count: "매주 실행 확인",
-- L24: monthly_number: "월간 수치 입력",
-- L67: "알 수 없음"
-- L132: 코치이 목실기 목록으로 돌아가기
-- L136: 코치 홈으로 돌아가기
-- L140: 대시보드
-- L151: <span className="text-sm font-medium text-slate-700">연도</span>
-- L165: 조회
-- L171: 올해로 보기
-- L213: return <p className="text-slate-500">등록된 핵심가치가 없습니다.</p>;
-- L229: <p className="mt-3 text-sm font-medium text-slate-500">실천 모습</p>
-- L250: <dt className="text-xs font-medium text-slate-500">연간 목표량</dt>
-- L256: <dt className="text-xs font-medium text-slate-500">월 목표량</dt>
-- L262: <dt className="text-xs font-medium text-slate-500">단위</dt>
-- L266: <dt className="text-xs font-medium text-slate-500">측정 방식</dt>
-- L273: <p className="text-sm font-medium text-slate-500">실행전략</p>
-- L275: <p className="mt-1 text-sm text-slate-500">등록된 실행전략이 없습니다.</p>
-- L296: return <p className="text-slate-500">등록된 목표 영역이 없습니다.</p>;
-- L308: 목표 {index + 1}: {area.area_title}
-- L315: <p className="mt-4 text-sm text-slate-500">등록된 세부 목표가 없습니다.</p>
-- L349: <th className="px-3 py-2 font-semibold">목표 / 성취</th>
-- L350: <th className="px-3 py-2 font-semibold">목표1: 영적 성장</th>
-- L351: <th className="px-3 py-2 font-semibold">목표2: 지적 성장</th>
-- L352: <th className="px-3 py-2 font-semibold">목표3: 육체적 성장</th>
-- L353: <th className="px-3 py-2 font-semibold">목표4: 사회적 성장</th>
-- L354: <th className="px-3 py-2 font-semibold">목표5: 기타</th>
-- L355: <th className="px-3 py-2 font-semibold">종합</th>
-- L356: <th className="px-3 py-2 font-semibold">평균</th>
-- L375: 현재 월
-- L415: 아직 프로필이 생성되지 않았습니다.
-- L421: 프로필 보기
-- L431: 코치 권한이 없습니다.
-- L441: 해당 목실기를 찾을 수 없습니다.
-- L451: 지금 목실기 상세 정보를 불러올 수 없습니다.
-- L467: <h1>코치이 목실기 상세 보고서</h1>
-- L468: <p>코치이: {coacheeName(data)}</p>
-- L469: <p>출력 연도: {year}년</p>
-- L470: <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
-- L474: 코치용 목실기 상세 보기
-- L476: <h1 className="mt-3 text-3xl font-semibold">코치이 목실기 상세</h1>
-- L477: <p className="mt-2 text-lg text-slate-700">목표와 실행전략 기획안</p>
-- L479: 담당 코치이가 작성한 목실기와 연간 성취 요약을 확인합니다.
-- L485: label="코치이 목실기 상세 출력"
-- L491: <p className="text-sm font-medium text-slate-500">{year}년 총 달성률</p>
-- L497: 아직 선택한 연도의 월별 체크리스트 기록이 없습니다.
-- L503: <Section title="코치이 정보">
-- L506: { label: "이름", value: coacheeName(data) },
-- L507: { label: "이메일", value: data.coachee?.email ?? null },
-- L508: { label: "직책", value: plan.role_label },
-- L509: { label: "세대", value: plan.generation_label },
-- L510: { label: "지역/목장", value: plan.region_name },
-- L511: { label: "코치", value: plan.coach_name },
-- L512: { label: "지역팀장", value: plan.regional_leader_name },
-- L517: <Section title="기본 정보">
-- L520: { label: "제목", value: plan.title },
-- L521: { label: "부제", value: plan.subtitle },
-- L523: label: "기간",
-- L526: { label: "작성일", value: formatDate(plan.written_at) },
-- L527: { label: "상태", value: STATUS_LABEL[plan.status] ?? plan.status },
-- L528: { label: "최근 수정일", value: formatDate(plan.updated_at) },
-- L529: { label: "작성자", value: plan.author_name },
-- L530: { label: "지역/목장", value: plan.region_name },
-- L531: { label: "팀", value: plan.team_name },
-- L536: <Section title="Ⅰ. 사명선언서">
-- L539: { label: "사명선언 문장", value: plan.mission_statement },
-- L540: { label: "관련 성경구절", value: plan.mission_bible_verse },
-- L541: { label: "사명 설명", value: plan.mission_description },
-- L546: <Section title="Ⅱ. 비전">
-- L549: { label: "비전 목표 연도", value: plan.vision_year },
-- L550: { label: "비전 문장", value: plan.vision_statement },
-- L551: { label: "핵심 수치", value: plan.vision_metrics },
-- L552: { label: "대상", value: plan.vision_target },
-- L553: { label: "비전 설명", value: plan.vision_description },
-- L558: <Section title="Ⅲ. 핵심가치">
-- L562: <Section title="Ⅳ. 목표">
-- L565: { label: "전체 목표 문장", value: plan.main_goal },
-- L566: { label: "목표 설명", value: plan.main_goal_description },
-- L571: <Section title="Ⅴ. 목표에 따른 실행전략 기획안">
-- L575: <Section title="개인 목표와 실행전략 성취표">
-- L577: {year}년 연간 대비, 월별누적 성취율입니다. (단위%)
+- L37: draft: "임시 저장",
+- L38: active: "활성",
+- L39: archived: "보관",
+- L50: daily_check: "매일 실행 확인",
+- L51: weekly_count: "매주 실행 확인",
+- L52: monthly_number: "월간 수치 입력",
+- L95: "알 수 없음"
+- L162: <I18nText k="coach.moksilgi.detail.backToList" fallback="코치이 목실기 목록으로 돌아가기" />
+- L165: <I18nText k="coach.moksilgi.backToCoachHome" fallback="코치 홈으로 돌아가기" />
+- L168: <I18nText k="coach.moksilgi.dashboard" fallback="대시보드" />
+- L181: <I18nText k="coach.moksilgi.year" fallback="연도" />
+- L193: <I18nText k="coach.moksilgi.search" fallback="조회" />
+- L200: <I18nText k="coach.moksilgi.detail.viewCurrentYear" fallback="올해로 보기" />
+- L246: <I18nText k="coach.moksilgi.detail.noCoreValues" fallback="등록된 핵심가치가 없습니다." />
+- L266: <I18nText k="coach.moksilgi.detail.practiceExample" fallback="실천 모습" />
+- L291: <I18nText k="coach.moksilgi.detail.annualTarget" fallback="연간 목표량" />
+- L299: <I18nText k="coach.moksilgi.detail.monthlyTarget" fallback="월 목표량" />
+- L307: <I18nText k="coach.moksilgi.detail.unit" fallback="단위" />
+- L313: <I18nText k="coach.moksilgi.detail.measurementType" fallback="측정 방식" />
+- L322: <I18nText k="coach.moksilgi.detail.actionStrategies" fallback="실행전략" />
+- L326: <I18nText k="coach.moksilgi.detail.noActionStrategies" fallback="등록된 실행전략이 없습니다." />
+- L351: <I18nText k="coach.moksilgi.detail.noGoalAreas" fallback="등록된 목표 영역이 없습니다." />
+- L366: <I18nText k="coach.moksilgi.detail.goalPrefix" fallback="목표" /> {index + 1}: {area.area_title}
+- L374: <I18nText k="coach.moksilgi.detail.noDetailGoals" fallback="등록된 세부 목표가 없습니다." />
+- L412: <I18nText k="coach.moksilgi.detail.goalAchievement" fallback="목표 / 성취" />
+- L415: <I18nText k="coach.moksilgi.detail.goal1Spiritual" fallback="목표1: 영적 성장" />
+- L418: <I18nText k="coach.moksilgi.detail.goal2Intellectual" fallback="목표2: 지적 성장" />
+- L421: <I18nText k="coach.moksilgi.detail.goal3Physical" fallback="목표3: 육체적 성장" />
+- L424: <I18nText k="coach.moksilgi.detail.goal4Social" fallback="목표4: 사회적 성장" />
+- L427: <I18nText k="coach.moksilgi.detail.goal5Other" fallback="목표5: 기타" />
+- L430: <I18nText k="coach.moksilgi.total" fallback="종합" />
+- L433: <I18nText k="coach.moksilgi.average" fallback="평균" />
+- L453: <I18nText k="moksilgi.currentMonth" fallback="현재 월" />
+- L493: <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
+- L499: <I18nText k="myCoaching.viewProfile" fallback="프로필 보기" />
+- L509: <I18nText k="coach.moksilgi.accessDenied" fallback="코치 권한이 없습니다." />
+- L519: <I18nText k="coach.moksilgi.detail.notFound" fallback="해당 목실기를 찾을 수 없습니다." />
+- L529: <I18nText k="coach.moksilgi.detail.loadFailed" fallback="지금 목실기 상세 정보를 불러올 수 없습니다." />
+- L546: <I18nText k="coach.moksilgi.detail.reportTitle" fallback="코치이 목실기 상세 보고서" />
+- L549: <I18nText k="coach.moksilgi.coachee" fallback="코치이" />: {coacheeName(data)}
+- L552: <I18nText k="coach.moksilgi.printYear" fallback="출력 연도" />: {year}년
+- L555: <I18nText k="coach.moksilgi.generatedAt" fallback="생성일" />: {formatDateInTimezone(new Date(), DEFAULT_TIMEZONE)}
+- L558: <I18nText k="coach.moksilgi.timezone" fallback="기준 시간대" />: {DEFAULT_TIMEZONE}
+- L565: <I18nText k="coach.moksilgi.detail.badge" fallback="코치용 목실기 상세 보기" />
+- L568: <I18nText k="coach.moksilgi.detail.title" fallback="코치이 목실기 상세" />
+- L571: <I18nText k="coach.moksilgi.detail.subtitle" fallback="목표와 실행전략 기획안" />
+- L576: fallback="담당 코치이가 작성한 목실기와 연간 성취 요약을 확인합니다."
+- L583: label="코치이 목실기 상세 인쇄/PDF 저장"
+- L588: fallback="모바일 브라우저에서는 PDF 저장 옵션이 기기와 브라우저에 따라 다르게 표시될 수 있습니다. 인쇄창이 열리지 않으면 Safari 또는 Chrome에서 다시 열어 주세요."
+- L600: <I18nText k="coach.moksilgi.totalAchievementSuffix" fallback="년 총 달성률" />
+- L608: label="연간 성취율"
+- L616: fallback="아직 선택한 연도의 월별 체크리스트 기록이 없습니다."
+- L624: <Section title={<I18nText k="coach.moksilgi.detail.coacheeInfo" fallback="코치이 정보" />}>
+- L627: { label: <I18nText k="coach.moksilgi.detail.name" fallback="이름" />, value: coacheeName(data) },
+- L628: { label: <I18nText k="coach.moksilgi.detail.email" fallback="이메일" />, value: data.coachee?.email ?? null },
+- L629: { label: <I18nText k="moksilgi.role" fallback="직책" />, value: plan.role_label },
+- L630: { label: <I18nText k="moksilgi.generation" fallback="세대" />, value: plan.generation_label },
+- L631: { label: <I18nText k="coach.moksilgi.community" fallback="소속/공동체" />, value: plan.region_name },
+- L632: { label: <I18nText k="coach.moksilgi.coach" fallback="코치" />, value: plan.coach_name },
+- L633: { label: <I18nText k="coach.moksilgi.detail.regionalLeader" fallback="지역팀장" />, value: plan.regional_leader_name },
+- L638: <Section title={<I18nText k="moksilgi.basicInfo" fallback="기본 정보" />}>
+- L641: { label: <I18nText k="coach.moksilgi.detail.planTitle" fallback="제목" />, value: plan.title },
+- L642: { label: <I18nText k="coach.moksilgi.detail.planSubtitle" fallback="부제" />, value: plan.subtitle },
+- L644: label: <I18nText k="coach.moksilgi.detail.period" fallback="기간" />,
+- L647: { label: <I18nText k="coach.moksilgi.detail.writtenAt" fallback="작성일" />, value: formatDate(plan.written_at) },
+- L648: { label: <I18nText k="coach.moksilgi.detail.status" fallback="상태" />, value: STATUS_LABEL[plan.status] ?? plan.status },
+- L649: { label: <I18nText k="coach.moksilgi.updatedAt" fallback="최근 수정일" />, value: formatDate(plan.updated_at) },
+- L650: { label: <I18nText k="coach.moksilgi.author" fallback="작성자" />, value: plan.author_name },
+- L651: { label: <I18nText k="coach.moksilgi.community" fallback="소속/공동체" />, value: plan.region_name },
+- L652: { label: <I18nText k="moksilgi.team" fallback="팀/목장" />, value: plan.team_name },
+- L657: <Section title={<I18nText k="coach.moksilgi.detail.missionSection" fallback="Ⅰ. 사명선언서" />}>
+- L660: { label: <I18nText k="coach.moksilgi.detail.missionStatement" fallback="사명선언 문장" />, value: plan.mission_statement },
+- L661: { label: <I18nText k="coach.moksilgi.detail.bibleVerse" fallback="관련 성경구절" />, value: plan.mission_bible_verse },
+- L662: { label: <I18nText k="coach.moksilgi.detail.missionDescription" fallback="사명 설명" />, value: plan.mission_description },
+- L667: <Section title={<I18nText k="coach.moksilgi.detail.visionSection" fallback="Ⅱ. 비전" />}>
+- L670: { label: <I18nText k="coach.moksilgi.detail.visionYear" fallback="비전 목표 연도" />, value: plan.vision_year },
+- L671: { label: <I18nText k="coach.moksilgi.detail.visionStatement" fallback="비전 문장" />, value: plan.vision_statement },
+- L672: { label: <I18nText k="coach.moksilgi.detail.visionMetrics" fallback="핵심 수치" />, value: plan.vision_metrics },
+- L673: { label: <I18nText k="coach.moksilgi.detail.visionTarget" fallback="대상" />, value: plan.vision_target },
+- L674: { label: <I18nText k="coach.moksilgi.detail.visionDescription" fallback="비전 설명" />, value: plan.vision_description },
+- L679: <Section title={<I18nText k="coach.moksilgi.detail.coreValuesSection" fallback="Ⅲ. 핵심가치" />}>
+- L683: <Section title={<I18nText k="coach.moksilgi.detail.goalsSection" fallback="Ⅳ. 목표" />}>
+- L686: { label: <I18nText k="coach.moksilgi.detail.mainGoalStatement" fallback="전체 목표 문장" />, value: plan.main_goal },
+- L687: { label: <I18nText k="coach.moksilgi.detail.goalDescription" fallback="목표 설명" />, value: plan.main_goal_description },
+- L692: <Section title={<I18nText k="coach.moksilgi.detail.actionPlanSection" fallback="Ⅴ. 목표에 따른 실행전략 기획안" />}>
+- L696: <Section title={<I18nText k="coach.moksilgi.detail.achievementTableSection" fallback="개인 목표와 실행전략 성취표" />}>
+- L701: fallback="년 연간 대비, 월별누적 성취율입니다. (단위%)"
 
 ### src/app/coach/moksilgi/page.tsx
 
-- L12: draft: "임시 저장",
-- L13: active: "활성",
-- L14: archived: "보관",
-- L57: "알 수 없음"
-- L65: <span className="text-sm font-medium text-slate-700">연도</span>
-- L79: 조회
-- L89: 코치 홈으로 돌아가기
-- L93: 대시보드
-- L104: 아직 프로필이 생성되지 않았습니다.
-- L110: 프로필 보기
-- L122: <p className="text-sm font-medium text-slate-500">코치이</p>
-- L130: {item.summary_year}년 총 달성률
-- L154: <dt className="text-sm font-medium text-slate-500">사명선언서 요약</dt>
-- L160: <dt className="text-sm font-medium text-slate-500">비전 요약</dt>
-- L166: <dt className="text-sm font-medium text-slate-500">전체 목표</dt>
-- L175: <dt className="text-sm font-medium text-slate-500">영적 성장</dt>
-- L179: <dt className="text-sm font-medium text-slate-500">지적 성장</dt>
-- L183: <dt className="text-sm font-medium text-slate-500">육체적 성장</dt>
-- L187: <dt className="text-sm font-medium text-slate-500">사회적 성장</dt>
-- L191: <dt className="text-sm font-medium text-slate-500">기타</dt>
-- L195: <dt className="text-sm font-medium text-slate-500">종합</dt>
-- L199: <dt className="text-sm font-medium text-slate-500">평균</dt>
-- L203: <dt className="text-sm font-medium text-slate-500">최근 수정일</dt>
-- L210: <p className="text-sm font-medium text-slate-500">작성자</p>
-- L214: <p className="text-sm font-medium text-slate-500">지역/목장</p>
-- L218: <p className="text-sm font-medium text-slate-500">코치</p>
-- L222: <p className="text-sm font-medium text-slate-500">요약 월 수</p>
-- L223: <p className="mt-1 text-slate-950">{item.summary_count}개월</p>
-- L232: 상세 보기
-- L262: 코치 권한이 없습니다.
-- L275: 지금 코치이 목실기를 불러올 수 없습니다.
-- L288: <h1>코치이 목실기 목록 보고서</h1>
-- L289: <p>출력 연도: {year}년</p>
-- L290: <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
-- L294: <h1 className="text-2xl font-semibold">담당 코치이 목실기</h1>
-- L295: <p className="mt-2 text-lg text-slate-700">코치용 목실기 읽기 화면</p>
-- L297: 담당 코치이들이 작성한 목표와 실행전략 기획안과 성취 요약을 확인합니다.
-- L303: label="코치이 목실기 목록 출력"
-- L309: 아직 확인할 코치이 목실기가 없습니다.
+- L32: draft: "임시 저장",
+- L33: active: "활성",
+- L34: archived: "보관",
+- L84: "알 수 없음"
+- L93: <I18nText k="coach.moksilgi.year" fallback="연도" />
+- L105: <I18nText k="coach.moksilgi.search" fallback="조회" />
+- L115: <I18nText k="coach.moksilgi.backToCoachHome" fallback="코치 홈으로 돌아가기" />
+- L118: <I18nText k="coach.moksilgi.dashboard" fallback="대시보드" />
+- L130: <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
+- L136: <I18nText k="myCoaching.viewProfile" fallback="프로필 보기" />
+- L150: <I18nText k="coach.moksilgi.coachee" fallback="코치이" />
+- L162: <I18nText k="coach.moksilgi.totalAchievementSuffix" fallback="년 총 달성률" />
+- L194: <I18nText k="coach.moksilgi.missionSummary" fallback="사명선언서 요약" />
+- L202: <I18nText k="coach.moksilgi.visionSummary" fallback="비전 요약" />
+- L210: <I18nText k="coach.moksilgi.mainGoal" fallback="전체 목표" />
+- L221: <I18nText k="coach.moksilgi.spiritualGrowth" fallback="영적 성장" />
+- L227: <I18nText k="coach.moksilgi.intellectualGrowth" fallback="지적 성장" />
+- L233: <I18nText k="coach.moksilgi.physicalGrowth" fallback="육체적 성장" />
+- L239: <I18nText k="coach.moksilgi.socialGrowth" fallback="사회적 성장" />
+- L245: <I18nText k="coach.moksilgi.otherGrowth" fallback="기타" />
+- L251: <I18nText k="coach.moksilgi.total" fallback="종합" />
+- L257: <I18nText k="coach.moksilgi.average" fallback="평균" />
+- L263: <I18nText k="coach.moksilgi.updatedAt" fallback="최근 수정일" />
+- L272: <I18nText k="coach.moksilgi.author" fallback="작성자" />
+- L278: <I18nText k="coach.moksilgi.community" fallback="소속/공동체" />
+- L284: <I18nText k="coach.moksilgi.coach" fallback="코치" />
+- L290: <I18nText k="coach.moksilgi.summaryMonths" fallback="요약 월 수" />
+- L294: <I18nText k="coach.moksilgi.monthsSuffix" fallback="개월" />
+- L305: <I18nText k="coach.moksilgi.details" fallback="상세 보기" />
+- L336: <I18nText k="coach.moksilgi.accessDenied" fallback="코치 권한이 없습니다." />
+- L349: <I18nText k="coach.moksilgi.loadFailed" fallback="지금 코치이 목실기를 불러올 수 없습니다." />
+- L363: <I18nText k="coach.moksilgi.reportTitle" fallback="코치이 목실기 목록 보고서" />
+- L366: <I18nText k="coach.moksilgi.printYear" fallback="출력 연도" />: {year}
+- L369: <I18nText k="coach.moksilgi.generatedAt" fallback="생성일" />: {formatDateInTimezone(new Date(), DEFAULT_TIMEZONE)}
+- L372: <I18nText k="coach.moksilgi.timezone" fallback="기준 시간대" />: {DEFAULT_TIMEZONE}
+- L379: <I18nText k="coach.moksilgi.badge" fallback="코치용 목실기" />
+- L382: <I18nText k="coach.moksilgi.title" fallback="담당 코치이 목실기" />
+- L385: <I18nText k="coach.moksilgi.subtitle" fallback="코치용 목실기 읽기 화면" />
+- L390: fallback="담당 코치이들이 작성한 목표와 실행전략 기획안과 성취 요약을 확인합니다."
+- L397: label="코치이 목실기 목록 인쇄/PDF 저장"
+- L402: fallback="모바일 브라우저에서는 PDF 저장 옵션이 기기와 브라우저에 따라 다르게 표시될 수 있습니다. 인쇄창이 열리지 않으면 Safari 또는 Chrome에서 다시 열어 주세요."
+- L412: <I18nText k="coach.moksilgi.empty" fallback="아직 확인할 코치이 목실기가 없습니다." />
+- L416: <I18nText k="coach.moksilgi.backToCoachHome" fallback="코치 홈으로 돌아가기" />
 
 ### src/app/coach/page.tsx
 
-- L13: draft: "임시저장",
-- L14: submitted: "제출완료",
-- L15: reviewed: "검토완료",
-- L16: none: "기록 없음",
-- L21: return "미등록";
-- L27: return "미등록";
-- L38: return WEEKLY_STATUS_LABELS[status] ?? "확인 필요";
-- L44: return labels.length > 0 ? labels.join(" / ") : "소속 미등록";
-- L61: <h1 className="text-2xl font-semibold">코치 홈</h1>
-- L63: 코치 기능을 선택해 주세요.
-- L74: <h2 className="text-lg font-semibold">담당 코치이 현황</h2>
-- L76: {dashboard.data.weekRange.start} ~ {dashboard.data.weekRange.end} 기준
-- L77: 주간 제출과 공유 기록 현황입니다.
-- L84: 주간 기록 보기
-- L90: <p className="text-sm text-slate-500">담당 코치이</p>
-- L92: {dashboard.data.summary.assignedCoacheeCount}명
-- L96: <p className="text-sm text-slate-500">이번 주 제출</p>
-- L98: {dashboard.data.summary.weeklySubmittedThisWeekCount}명
-- L102: <p className="text-sm text-slate-500">이번 주 미제출</p>
-- L104: {dashboard.data.summary.weeklyMissingThisWeekCount}명
-- L108: <p className="text-sm text-slate-500">공유된 하루 기록</p>
-- L110: {dashboard.data.summary.sharedDailyRecordCount}개
-- L114: <p className="text-sm text-slate-500">공유된 월간 회고</p>
-- L116: {dashboard.data.summary.sharedMonthlyReflectionCount}개
-- L120: <p className="text-sm text-slate-500">피드백 대기</p>
-- L122: {dashboard.data.summary.feedbackPendingCount}개
-- L129: <h2 className="text-lg font-semibold">담당 코치이 목록</h2>
-- L131: active 코칭 관계 기준으로 최근 제출/공유 상태만 표시합니다.
-- L136: 현재 배정된 코치이가 없습니다.
-- L143: <th className="whitespace-nowrap px-3 py-2 font-medium">코치이</th>
-- L144: <th className="whitespace-nowrap px-3 py-2 font-medium">소속</th>
-- L146: 관계 시작일
-- L149: 최근 주간 기록
-- L152: 공유 기록
-- L155: 피드백
-- L167: {coachee.coacheeEmail ?? "이메일 미등록"}
-- L181: 제출일: {formatDate(coachee.latestWeeklySubmittedAt)}
-- L185: <div>하루 {coachee.sharedDailyCount}개</div>
-- L187: 최근: {formatDate(coachee.latestSharedDailyDate)}
-- L189: <div className="mt-2">월간 {coachee.sharedMonthlyCount}개</div>
-- L191: 최근: {coachee.latestSharedMonthlyLabel ?? "미등록"}
-- L202: {coachee.feedbackPending ? "대기 있음" : "대기 없음"}
-- L224: <h2 className="text-lg font-semibold">코칭 관계 보기</h2>
-- L226: 현재 담당 중인 코칭 관계를 확인합니다.
-- L234: <h2 className="text-lg font-semibold">주간 기록 보기</h2>
-- L236: 담당 코치이들의 주간 기록을 확인합니다.
-- L244: <h2 className="text-lg font-semibold">코치이 목실기 보기</h2>
-- L246: 담당 코치이들의 목실기와 성취 요약을 확인합니다.
+- L22: draft: "임시저장",
+- L23: submitted: "제출완료",
+- L24: reviewed: "검토완료",
+- L25: none: "기록 없음",
+- L30: return "미등록";
+- L36: return "미등록";
+- L47: return WEEKLY_STATUS_LABELS[status] ?? "확인 필요";
+- L53: return labels.length > 0 ? labels.join(" / ") : "소속 미등록";
+- L87: {pending ? "대기 있음" : "대기 없음"}
+- L134: <Badge icon="users" tone="info">코치 대시보드</Badge>
+- L135: <CardTitle className="mt-3 text-2xl">코치 홈</CardTitle>
+- L137: 코치 기능을 선택하고 담당 코치이의 최근 기록 상태를 확인해 주세요.
+- L149: <CardTitle>담당 코치이 현황</CardTitle>
+- L151: {dashboard.data.weekRange.start} ~ {dashboard.data.weekRange.end} 기준
+- L152: 주간 제출과 공유 기록 현황입니다.
+- L160: 주간 기록 보기
+- L167: description="현재 active 코칭 관계 기준입니다."
+- L168: title="담당 코치이"
+- L169: value={`${dashboard.data.summary.assignedCoacheeCount}명`}
+- L172: description="담당 코치이 대비 이번 주 제출 비율입니다."
+- L177: title="이번 주 제출"
+- L178: value={`${dashboard.data.summary.weeklySubmittedThisWeekCount}명`}
+- L181: description="확인이 필요한 이번 주 미제출 인원입니다."
+- L186: title="이번 주 미제출"
+- L187: value={`${dashboard.data.summary.weeklyMissingThisWeekCount}명`}
+- L190: description="코치에게 공유된 하루 기록 수입니다."
+- L191: title="공유된 하루 기록"
+- L192: value={`${dashboard.data.summary.sharedDailyRecordCount}개`}
+- L195: description="코치에게 공유된 월간 회고 수입니다."
+- L196: title="공유된 월간 회고"
+- L197: value={`${dashboard.data.summary.sharedMonthlyReflectionCount}개`}
+- L200: description="피드백 작성이 필요한 기록 수입니다."
+- L201: title="피드백 대기"
+- L202: value={`${dashboard.data.summary.feedbackPendingCount}개`}
+- L210: <CardTitle>담당 코치이 목록</CardTitle>
+- L212: active 코칭 관계 기준으로 최근 제출/공유 상태만 표시합니다.
+- L219: 현재 배정된 코치이가 없습니다.
+- L228: <th className="whitespace-nowrap px-3 py-2 font-medium">코치이</th>
+- L229: <th className="whitespace-nowrap px-3 py-2 font-medium">소속</th>
+- L231: 관계 시작일
+- L234: 최근 주간 기록
+- L237: 공유 기록
+- L240: 피드백
+- L255: {coachee.coacheeEmail ?? "이메일 미등록"}
+- L267: 제출일: {formatDate(coachee.latestWeeklySubmittedAt)}
+- L271: <div>하루 {coachee.sharedDailyCount}개</div>
+- L273: 최근: {formatDate(coachee.latestSharedDailyDate)}
+- L275: <div className="mt-2">월간 {coachee.sharedMonthlyCount}개</div>
+- L277: 최근: {coachee.latestSharedMonthlyLabel ?? "미등록"}
+- L305: <h2 className="text-lg font-semibold">코칭 관계 보기</h2>
+- L307: 현재 담당 중인 코칭 관계를 확인합니다.
+- L317: <h2 className="text-lg font-semibold">주간 기록 보기</h2>
+- L319: 담당 코치이들의 주간 기록을 확인합니다.
+- L329: <h2 className="text-lg font-semibold">코치이 목실기 보기</h2>
+- L331: 담당 코치이들의 목실기와 성취 요약을 확인합니다.
 
 ### src/app/coach/relationships/[id]/page.tsx
 
@@ -2143,19 +2746,19 @@
 - L211: 코치 대시보드로 돌아가기
 - L217: <h2 className="text-lg font-semibold">관계 요약</h2>
 - L221: 관계 유형
-- L234: <dt className="text-sm font-medium text-slate-500">상태</dt>
+- L234: <dt className="text-sm font-medium text-ink-faint">상태</dt>
 - L249: <h2 className="text-lg font-semibold">코치</h2>
-- L252: <dt className="text-sm font-medium text-slate-500">이름</dt>
-- L258: <dt className="text-sm font-medium text-slate-500">이메일</dt>
+- L252: <dt className="text-sm font-medium text-ink-faint">이름</dt>
+- L258: <dt className="text-sm font-medium text-ink-faint">이메일</dt>
 - L267: <h2 className="text-lg font-semibold">코치이</h2>
-- L270: <dt className="text-sm font-medium text-slate-500">이름</dt>
-- L276: <dt className="text-sm font-medium text-slate-500">이메일</dt>
+- L270: <dt className="text-sm font-medium text-ink-faint">이름</dt>
+- L276: <dt className="text-sm font-medium text-ink-faint">이메일</dt>
 - L285: <h2 className="text-lg font-semibold">범위</h2>
 - L292: <h2 className="text-lg font-semibold">일정</h2>
-- L295: <dt className="text-sm font-medium text-slate-500">시작일</dt>
-- L301: <dt className="text-sm font-medium text-slate-500">종료일</dt>
-- L307: <dt className="text-sm font-medium text-slate-500">생성일</dt>
-- L313: <dt className="text-sm font-medium text-slate-500">수정일</dt>
+- L295: <dt className="text-sm font-medium text-ink-faint">시작일</dt>
+- L301: <dt className="text-sm font-medium text-ink-faint">종료일</dt>
+- L307: <dt className="text-sm font-medium text-ink-faint">생성일</dt>
+- L313: <dt className="text-sm font-medium text-ink-faint">수정일</dt>
 - L322: <h2 className="text-lg font-semibold">다음 단계</h2>
 - L328: 코칭 관계 목록으로 돌아가기
 - L334: 코치 대시보드로 돌아가기
@@ -2183,7 +2786,7 @@
 - L205: 있습니다.
 - L210: 코치 홈으로 돌아가기
 - L216: 대시보드로 돌아가기
-- L223: <p className="text-slate-700">아직 프로필이 생성되지 않았습니다.</p>
+- L223: <p className="text-ink-base">아직 프로필이 생성되지 않았습니다.</p>
 - L225: 초대를 받으셨다면 먼저 초대를 수락해 주세요.
 - L232: 프로필 보기
 - L245: 코치이 검색
@@ -2191,7 +2794,7 @@
 - L261: 상태
 - L281: 관계 유형
 - L301: 필터 적용
-- L309: <p className="text-slate-700">코칭 관계가 없습니다.</p>
+- L309: <p className="text-ink-base">코칭 관계가 없습니다.</p>
 - L315: <th className="px-3 py-2 font-medium">코치이</th>
 - L316: <th className="px-3 py-2 font-medium">관계 유형</th>
 - L317: <th className="px-3 py-2 font-medium">상태</th>
@@ -2203,9 +2806,9 @@
 - L386: 보기
 - L397: <p>{pagination.page}페이지</p>
 - L404: 이전
-- L407: <span className="text-slate-400">이전</span>
+- L407: <span className="text-ink-faint">이전</span>
 - L414: 다음
-- L417: <span className="text-slate-400">다음</span>
+- L417: <span className="text-ink-faint">다음</span>
 
 ### src/app/coach/weekly-logs/[id]/feedback/page.tsx
 
@@ -2233,20 +2836,20 @@
 - L156: 해당 주간 기록을 찾을 수 없습니다.
 - L167: 지금 피드백 화면을 불러올 수 없습니다.
 - L179: <h2 className="text-lg font-semibold">주간 기록 요약</h2>
-- L182: <dt className="text-sm font-medium text-slate-500">코치이</dt>
-- L187: <dt className="text-sm font-medium text-slate-500">주간 기간</dt>
-- L194: <dt className="text-sm font-medium text-slate-500">상태</dt>
-- L200: <dt className="text-sm font-medium text-slate-500">제출일</dt>
-- L209: <dt className="text-sm font-medium text-slate-500">감사 제목</dt>
-- L215: <dt className="text-sm font-medium text-slate-500">기도 제목</dt>
-- L221: <dt className="text-sm font-medium text-slate-500">진행 상황</dt>
-- L227: <dt className="text-sm font-medium text-slate-500">어려웠던 점</dt>
-- L233: <dt className="text-sm font-medium text-slate-500">코치에게 남긴 말</dt>
+- L182: <dt className="text-sm font-medium text-ink-faint">코치이</dt>
+- L187: <dt className="text-sm font-medium text-ink-faint">주간 기간</dt>
+- L194: <dt className="text-sm font-medium text-ink-faint">상태</dt>
+- L200: <dt className="text-sm font-medium text-ink-faint">제출일</dt>
+- L209: <dt className="text-sm font-medium text-ink-faint">감사 제목</dt>
+- L215: <dt className="text-sm font-medium text-ink-faint">기도 제목</dt>
+- L221: <dt className="text-sm font-medium text-ink-faint">진행 상황</dt>
+- L227: <dt className="text-sm font-medium text-ink-faint">어려웠던 점</dt>
+- L233: <dt className="text-sm font-medium text-ink-faint">코치에게 남긴 말</dt>
 - L256: <h1 className="mt-6 text-2xl font-semibold">코치 피드백 작성</h1>
 - L261: <h2 className="text-lg font-semibold">피드백</h2>
-- L273: <span className="text-sm font-medium text-slate-700">피드백</span>
-- L284: <span className="text-sm font-medium text-slate-700">격려</span>
-- L295: <span className="text-sm font-medium text-slate-700">다음 단계</span>
+- L273: <span className="text-sm font-medium text-ink-base">피드백</span>
+- L284: <span className="text-sm font-medium text-ink-base">격려</span>
+- L295: <span className="text-sm font-medium text-ink-base">다음 단계</span>
 - L312: 임시 저장
 - L320: 피드백 게시
 
@@ -2275,19 +2878,19 @@
 - L114: 대시보드
 - L130: <h1 className="mt-6 text-2xl font-semibold">주간 기록 상세</h1>
 - L133: <h2 className="text-lg font-semibold">기본 정보</h2>
-- L136: <dt className="text-sm font-medium text-slate-500">코치이</dt>
-- L140: <dt className="text-sm font-medium text-slate-500">주간 기간</dt>
-- L146: <dt className="text-sm font-medium text-slate-500">상태</dt>
-- L150: <dt className="text-sm font-medium text-slate-500">관계 유형</dt>
-- L156: <dt className="text-sm font-medium text-slate-500">제출일</dt>
-- L160: <dt className="text-sm font-medium text-slate-500">수정일</dt>
-- L164: <dt className="text-sm font-medium text-slate-500">범위</dt>
-- L170: <dt className="text-sm font-medium text-slate-500">버전</dt>
+- L136: <dt className="text-sm font-medium text-ink-faint">코치이</dt>
+- L140: <dt className="text-sm font-medium text-ink-faint">주간 기간</dt>
+- L146: <dt className="text-sm font-medium text-ink-faint">상태</dt>
+- L150: <dt className="text-sm font-medium text-ink-faint">관계 유형</dt>
+- L156: <dt className="text-sm font-medium text-ink-faint">제출일</dt>
+- L160: <dt className="text-sm font-medium text-ink-faint">수정일</dt>
+- L164: <dt className="text-sm font-medium text-ink-faint">범위</dt>
+- L170: <dt className="text-sm font-medium text-ink-faint">버전</dt>
 - L177: <h2 className="text-lg font-semibold">주간 기록 내용</h2>
-- L180: <dt className="text-sm font-medium text-slate-500">감사 제목</dt>
-- L186: <dt className="text-sm font-medium text-slate-500">기도 제목</dt>
-- L192: <dt className="text-sm font-medium text-slate-500">진행 상황</dt>
-- L198: <dt className="text-sm font-medium text-slate-500">어려웠던 점</dt>
+- L180: <dt className="text-sm font-medium text-ink-faint">감사 제목</dt>
+- L186: <dt className="text-sm font-medium text-ink-faint">기도 제목</dt>
+- L192: <dt className="text-sm font-medium text-ink-faint">진행 상황</dt>
+- L198: <dt className="text-sm font-medium text-ink-faint">어려웠던 점</dt>
 - L205: 코치에게 남긴 말
 - L223: 아직 프로필이 생성되지 않았습니다.
 - L229: 프로필 보기
@@ -2341,9 +2944,9 @@
 - L65: 내 코칭 공간
 - L68: 대시보드
 - L74: <h2 className="text-lg font-semibold">환영합니다</h2>
-- L76: 안녕하세요, <span className="font-medium text-slate-950">{displayName}</span>님.
-- L80: <dt className="text-sm font-medium text-slate-500">이름</dt>
-- L86: <dt className="text-sm font-medium text-slate-500">이메일</dt>
+- L76: 안녕하세요, <span className="font-medium text-ink-strong">{displayName}</span>님.
+- L80: <dt className="text-sm font-medium text-ink-faint">이름</dt>
+- L86: <dt className="text-sm font-medium text-ink-faint">이메일</dt>
 - L95: <h2 className="text-lg font-semibold">바로가기</h2>
 - L101: 목표 확인
 - L107: 목실기 작성
@@ -2365,25 +2968,25 @@
 - L166: return displayName ?? fullName ?? email ?? authEmail ?? "코치이";
 - L172: {children ?? "표시할 목표/목실기 데이터가 없습니다."}
 - L181: 목표
-- L212: <dt className="font-medium text-slate-500">분류</dt>
-- L216: <dt className="font-medium text-slate-500">목표값</dt>
-- L222: <dt className="font-medium text-slate-500">현재값</dt>
-- L228: <dt className="font-medium text-slate-500">마감일</dt>
+- L212: <dt className="font-medium text-ink-faint">분류</dt>
+- L216: <dt className="font-medium text-ink-faint">목표값</dt>
+- L222: <dt className="font-medium text-ink-faint">현재값</dt>
+- L228: <dt className="font-medium text-ink-faint">마감일</dt>
 - L255: 목실기
-- L268: <dt className="font-medium text-slate-500">기간</dt>
-- L274: <dt className="font-medium text-slate-500">작성일</dt>
-- L278: <dt className="font-medium text-slate-500">코치</dt>
-- L282: <dt className="font-medium text-slate-500">상태</dt>
+- L268: <dt className="font-medium text-ink-faint">기간</dt>
+- L274: <dt className="font-medium text-ink-faint">작성일</dt>
+- L278: <dt className="font-medium text-ink-faint">코치</dt>
+- L282: <dt className="font-medium text-ink-faint">상태</dt>
 - L289: <h3 className="font-semibold">사명과 비전</h3>
-- L292: <p className="font-medium text-slate-500">사명선언서</p>
-- L298: <p className="font-medium text-slate-500">비전</p>
-- L305: <p className="font-medium text-slate-500">전체 목표</p>
+- L292: <p className="font-medium text-ink-faint">사명선언서</p>
+- L298: <p className="font-medium text-ink-faint">비전</p>
+- L305: <p className="font-medium text-ink-faint">전체 목표</p>
 - L314: <h3 className="font-semibold">핵심가치</h3>
 - L332: <h3 className="font-semibold">목표에 따른 실행전략 기획안</h3>
-- L334: <p className="mt-3 text-sm text-slate-600">표시할 세부 목표가 없습니다.</p>
-- L360: <dt className="font-medium text-slate-500">연간 목표</dt>
-- L364: <dt className="font-medium text-slate-500">월 목표</dt>
-- L368: <dt className="font-medium text-slate-500">측정 방식</dt>
+- L334: <p className="mt-3 text-sm text-ink-muted">표시할 세부 목표가 없습니다.</p>
+- L360: <dt className="font-medium text-ink-faint">연간 목표</dt>
+- L364: <dt className="font-medium text-ink-faint">월 목표</dt>
+- L368: <dt className="font-medium text-ink-faint">측정 방식</dt>
 - L411: 월간 진행 내용
 - L415: <EmptyState>아직 월별 체크리스트 기록이 없습니다.</EmptyState>
 - L422: <th className="px-3 py-2">월</th>
@@ -2396,10 +2999,10 @@
 - L455: {year}년 총 달성률: {formatPercent(cumulativeRow.average_rate)}
 - L467: 코치 피드백
 - L471: <EmptyState>표시할 코치 피드백이 없습니다.</EmptyState>
-- L482: <p className="text-sm font-medium text-slate-500">주간 기간</p>
+- L482: <p className="text-sm font-medium text-ink-faint">주간 기간</p>
 - L488: 코치: {displayValue(item.coach_display_name ?? item.coach_full_name ?? item.coach_email)}
-- L493: <p className="font-medium text-slate-500">피드백</p>
-- L499: <p className="font-medium text-slate-500">다음 단계</p>
+- L493: <p className="font-medium text-ink-faint">피드백</p>
+- L499: <p className="font-medium text-ink-faint">다음 단계</p>
 - L649: 코치이 공간으로 돌아가기
 - L656: 코치이 보고서
 - L659: 목표와 목실기 인쇄용 보고서
@@ -2412,54 +3015,49 @@
 
 ### src/app/dashboard/page.tsx
 
-- L37: title: "기관 및 단체 관리",
-- L40: "회원 소속 기관 및 단체를 추가하고, 국가 연결과 사용 여부를 관리합니다.",
-- L45: title: "세대별 계층 계보도",
-- L48: "코칭 관계가 세대별, 조직별, 코치-코치이 흐름으로 어떻게 이어지는지 시각적으로 확인합니다.",
-- L56: title: "코치메이커 대시보드",
-- L59: "코치메이커가 담당하는 팀, 목실기 진행 현황, 코칭 구조를 확인합니다.",
-- L64: title: "전체 목실기 성취 현황",
-- L67: "코치메이커가 담당하는 지역/팀과 코치-코치이 관계의 목실기 월별 성취율을 확인합니다.",
-- L91: <I18nText k="dashboard.title" fallback="대시보드" />
-- L94: <I18nText k="dashboard.title" fallback="대시보드" />
-- L97: <I18nText k="dashboard.loadFailed" fallback="지금 대시보드를 불러올 수 없습니다." />
-- L110: <I18nText k="dashboard.title" fallback="대시보드" />
-- L113: <I18nText k="dashboard.accountStatus" fallback="계정 상태 확인" />
-- L116: <I18nText k="dashboard.inactiveAccount" fallback="비활성화된 계정입니다. 관리자에게 문의하세요." />
-- L133: "사용자";
-- L141: <I18nText k="dashboard.title" fallback="대시보드" />
-- L144: <I18nText k="dashboard.title" fallback="대시보드" />
-- L152: <I18nText k="dashboard.welcome" fallback="환영합니다" />
-- L155: <I18nText k="dashboard.hello" fallback="안녕하세요" />,{" "}
-- L161: fallback="프로필과 역할별 작업 공간으로 이동할 수 있는 기본 화면입니다."
-- L169: <I18nText k="dashboard.profile" fallback="프로필" />
-- L175: <I18nText k="dashboard.viewProfile" fallback="프로필 보기" />
-- L182: <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
-- L185: <I18nText k="dashboard.acceptInvitationFirst" fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요." />
-- L192: <I18nText k="dashboard.displayName" fallback="표시 이름" />
-- L200: <I18nText k="members.email" fallback="이메일" />
-- L206: <I18nText k="dashboard.fullName" fallback="전체 이름" />
-- L214: <I18nText k="members.status" fallback="상태" />
-- L232: <I18nText k="dashboard.myRoles" fallback="내 역할" />
-- L240: <I18nText k="members.role" fallback="역할" />
-- L243: <I18nText k="members.scope" fallback="범위" />
-- L246: <I18nText k="members.status" fallback="상태" />
-- L276: <I18nText k="dashboard.noActiveRole" fallback="아직 활성 역할이 배정되지 않았습니다." />
-- L279: <I18nText k="dashboard.acceptInvitationFirst" fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요." />
-- L287: <I18nText k="dashboard.quickLinks" fallback="바로가기" />
-- L294: <I18nText k="dashboard.myProfile" fallback="내 프로필" />
-- L303: <I18nText k="dashboard.adminUsers" fallback="관리자: 사용자" />
-- L309: <I18nText k="dashboard.adminInvitations" fallback="관리자: 초대" />
-- L319: <I18nText k="dashboard.coachWorkspace" fallback="코치 작업 공간" />
-- L328: <I18nText k="dashboard.myCoachingSpace" fallback="내 코칭 공간" />
-- L335: <I18nText k="dashboard.coachingSpacePreparing" fallback="코칭 공간이 준비 중입니다." />
-- L341: <I18nText k="dashboard.checkProfile" fallback="프로필 확인하기" />
-- L349: <I18nText k="dashboard.noActiveRole" fallback="아직 활성 역할이 배정되지 않았습니다." />
-- L352: <I18nText k="dashboard.acceptInvitationFirst" fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요." />
-- L365: fallback="코치메이커 기능"
-- L371: fallback="코치메이커 대시보드와 전체 목실기 성취 현황으로 바로 이동합니다."
-- L398: <I18nText k="dashboard.adminFeatures" fallback="관리자 기능" />
-- L403: fallback="최고관리자가 자주 확인하는 관리 화면으로 바로 이동합니다."
+- L44: title: "코치메이커 센터",
+- L47: "담당 코치와 코치이의 성장 현황과 목실기 진행 상황을 관리합니다.",
+- L53: title: "전체 목실기 성취 현황",
+- L56: "코치메이커가 담당하는 지역/팀과 코치-코치이 관계의 목실기 월별 성취율을 확인합니다.",
+- L62: title: "나의 목실기",
+- L64: description: "내 목실기 목표와 실행전략을 작성하고 점검합니다.",
+- L70: title: "나의 기록",
+- L72: description: "하루기록, 주간기록, 월간기록을 확인하고 작성합니다.",
+- L159: <I18nText k="dashboard.title" fallback="대시보드" />
+- L162: <I18nText k="dashboard.title" fallback="대시보드" />
+- L166: <I18nText k="dashboard.loadFailed" fallback="지금 대시보드를 불러올 수 없습니다." />
+- L180: <I18nText k="dashboard.title" fallback="대시보드" />
+- L183: <I18nText k="dashboard.accountStatus" fallback="계정 상태 확인" />
+- L189: fallback="비활성화된 계정입니다. 관리자에게 문의하세요."
+- L210: "사용자";
+- L240: <Badge tone="info">시스템 공지</Badge>
+- L242: <Badge tone="warning">관리자 전용</Badge>
+- L268: <I18nText k="dashboard.myMoksilgi" fallback="나의 목실기" />
+- L273: fallback="내 목실기 목표와 실행전략을 작성하고 점검합니다."
+- L288: <I18nText k="dashboard.viewProfile" fallback="프로필 보기" />
+- L291: title={<I18nText k="dashboard.profile" fallback="프로필" />}
+- L298: fallback="아직 프로필이 생성되지 않았습니다."
+- L304: fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요."
+- L312: <I18nText k="dashboard.displayName" fallback="표시 이름" />
+- L320: <I18nText k="members.email" fallback="이메일" />
+- L326: <I18nText k="members.status" fallback="상태" />
+- L339: title={<I18nText k="dashboard.myRoles" fallback="내 역할" />}
+- L368: fallback="아직 활성 역할이 배정되지 않았습니다."
+- L374: fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요."
+- L382: title={<I18nText k="dashboard.quickLinks" fallback="바로가기" />}
+- L386: fallback="내 프로필"
+- L394: fallback="관리자 센터"
+- L403: fallback="코치 작업 공간"
+- L416: fallback="코칭 공간이 준비 중입니다."
+- L423: <I18nText k="dashboard.checkProfile" fallback="프로필 확인하기" />
+- L433: fallback="아직 활성 역할이 배정되지 않았습니다."
+- L439: fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요."
+- L449: <I18nText k="dashboard.coachMakerFeatures" fallback="코치메이커 기능" />
+- L455: fallback="코치메이커 센터, 전체 목실기 성취 현황, 나의 목실기와 나의 기록으로 바로 이동합니다."
+- L468: title={<I18nText k="dashboard.adminCenter" fallback="관리자 센터" />}
+- L473: fallback="회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간으로 이동합니다."
+- L477: description="회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간으로 이동합니다."
+- L481: title="관리자 센터"
 
 ### src/app/debug/invitations/InvitationDebugForm.tsx
 
@@ -2513,11 +3111,11 @@
 - L158: : "초대 수락 중 오류가 발생했습니다.",
 - L163: setSuccessMessage("초대를 수락했습니다.");
 - L165: setErrorMessage("초대 수락 중 오류가 발생했습니다.");
-- L174: <h2 className="text-base font-semibold text-slate-950">기본 정보</h2>
+- L174: <h2 className="text-base font-semibold text-ink-strong">기본 정보</h2>
 - L176: 초대 이메일은 자동으로 확인됩니다. 이름과 표시 이름은 현재 로그인 계정의 프로필 흐름을 따릅니다.
 - L179: <ReadOnlyField label="이메일" value={invitedEmail} />
 - L180: <ReadOnlyField label="초대 만료일" value={expiresAtLabel} />
-- L185: <h2 className="text-base font-semibold text-slate-950">소속 정보</h2>
+- L185: <h2 className="text-base font-semibold text-ink-strong">소속 정보</h2>
 - L187: 소속 직분은 시스템 권한이 아니라 실제 소속 내 직분입니다.
 - L190: <ReadOnlyField label="소속 기관 및 단체" value={organizationLabel} />
 - L191: <ReadOnlyField label="소속 교회" value={churchLabel} />
@@ -2528,7 +3126,7 @@
 - L220: 소속 직분
 - L221: <FieldBadge tone="new">신규</FieldBadge>
 - L228: <option value="">미지정</option>
-- L240: <h2 className="text-base font-semibold text-slate-950">역할 및 세대</h2>
+- L240: <h2 className="text-base font-semibold text-ink-strong">역할 및 세대</h2>
 - L242: 시스템 역할은 초대에 지정된 권한이고, 세대는 회원 프로필에 숫자로 저장됩니다.
 - L245: <ReadOnlyField label="시스템 역할" value={invitedRoleLabel} />
 - L249: 세대
@@ -2539,7 +3137,7 @@
 - L279: <FieldBadge tone="new">신규</FieldBadge>
 - L287: placeholder="세대 숫자를 입력하세요"
 - L295: 직접 입력은 1 이상의 숫자만 저장되며, NaN 값은 저장하지 않습니다.
-- L300: <h2 className="text-base font-semibold text-slate-950">계정 설정</h2>
+- L300: <h2 className="text-base font-semibold text-ink-strong">계정 설정</h2>
 - L302: 이 초대는 현재 로그인한 계정에 연결됩니다. 아직 로그인하지 않았다면
 - L303: 먼저 로그인한 뒤 다시 초대 링크를 열어 주세요. 비밀번호 설정은 이
 - L304: 화면에서 진행하지 않습니다. 관리자로부터 받은 임시 비밀번호로 먼저
@@ -2569,240 +3167,274 @@
 
 ### src/app/login/LoginForm.tsx
 
-- L133: const loginText = clientTranslations.login ?? "로그인";
-- L134: const emailText = clientTranslations.email ?? "이메일";
-- L135: const passwordText = clientTranslations.password ?? "비밀번호";
-- L138: "Supabase Auth에 등록된 이메일과 비밀번호로 로그인합니다.";
-- L139: const loadingText = clientTranslations.loading ?? "불러오는 중";
-- L140: const errorText = clientTranslations.error ?? "오류";
+- L65: const loginText = t("auth.login", translations.login ?? "로그인");
+- L66: const emailText = t("auth.email", translations.email ?? "이메일");
+- L67: const passwordText = t("auth.password", translations.password ?? "비밀번호");
+- L71: "Supabase Auth에 등록된 이메일과 비밀번호로 로그인합니다.",
+- L73: const loadingText = t("common.loading", translations.loading ?? "불러오는 중");
+- L74: const errorText = t("common.error", translations.error ?? "오류");
+- L141: 비밀번호 재설정
 
 ### src/app/login/page.tsx
 
-- L65: error: "origin을 확인하지 못해서 i18n API를 호출하지 못했습니다.",
-- L85: : `${namespace} 번역 API 호출에 실패했습니다.`,
-- L101: : `${namespace} 번역 API 호출 중 오류가 발생했습니다.`,
+- L31: login: t("auth.login", "로그인"),
+- L32: email: t("auth.email", "이메일"),
+- L33: password: t("auth.password", "비밀번호"),
+- L36: "Supabase Auth에 등록된 이메일과 비밀번호로 로그인합니다.",
+- L38: login_success: t("auth.loginSuccess", "로그인되었습니다."),
+- L39: login_required: t("auth.loginRequired", "로그인이 필요합니다."),
+- L40: loading: t("common.loading", "불러오는 중"),
+- L41: error: t("common.error", "오류"),
+
+### src/app/my-coaching/check/TodayCheckClient.tsx
+
+- L36: spiritual: { icon: "🙏", label: "영적", tone: "success" },
+- L37: intellectual: { icon: "📘", label: "지적", tone: "info" },
+- L38: physical: { icon: "💪", label: "신체적", tone: "warning" },
+- L39: social: { icon: "🤝", label: "사회적", tone: "danger" },
+- L100: setStatusMessage("저장 중...");
+- L107: setStatusMessage("저장 대상 목표를 찾을 수 없습니다.");
+- L139: setStatusMessage("저장 실패. 다시 시도해 주세요.");
+- L150: setStatusMessage("저장 대기 중...");
+- L192: setStatusMessage("저장됨");
+- L216: <Badge tone="info">오늘 실행 체크</Badge>
+- L219: 오늘 {totalCount}개 중 {completedCount}개 완료
+- L240: 재시도
+- L249: {isManualSaving ? "저장 중..." : "저장"}
+- L259: <p className="text-sm font-semibold">아직 목표가 없어요</p>
+- L261: 먼저 목실기에서 4영역 목표를 작성해 주세요.
+- L286: aria-label={`${item.goalTitle} ${item.isChecked ? "완료" : "미완료"}`}
+- L310: {item.isChecked ? "완료" : "미완료"}
+
+### src/app/my-coaching/check/page.tsx
+
+- L89: 지금 오늘 실행 체크를 불러올 수 없습니다.
+- L105: 오늘 실행 체크를 준비할 수 없습니다.
+- L162: <p className="text-sm font-semibold">아직 목표가 없어요</p>
+- L164: 먼저 목실기에서 세부 목표를 작성해 주세요.
+- L238: return { ok: false, message: "저장할 수 없습니다. 잠시 후 다시 시도해 주세요." };
+- L251: return { ok: false, message: "저장 대상 목표를 찾을 수 없습니다." };
+- L266: return { ok: false, message: "기존 체크 정보를 불러오지 못했습니다." };
+- L295: return { ok: false, message: "저장에 실패했습니다. 다시 시도해 주세요." };
+- L300: message: "저장됨",
+- L328: return { ok: false, message: "저장에 실패했습니다. 다시 시도해 주세요." };
+- L332: return { ok: true, message: "저장됨", monthlyRecordId: existing.id };
+- L344: return { ok: false, message: "저장 충돌이 발생했습니다. 다시 시도해 주세요." };
+- L361: return { ok: false, message: "저장 충돌이 발생했습니다. 다시 시도해 주세요." };
+- L364: return { ok: true, message: "저장됨", monthlyRecordId: latest.id };
 
 ### src/app/my-coaching/feedback/page.tsx
 
-- L41: return "게시됨";
-- L43: return "임시 저장";
-- L45: return "보관됨";
-- L52: return value && value.trim().length > 0 ? value : "없음";
-- L61: "알 수 없음"}
-- L81: 내 코칭
-- L87: 내 코칭 공간으로 돌아가기
-- L90: 대시보드
-- L100: 프로필 보기
-- L120: message="아직 프로필이 생성되지 않았습니다."
-- L122: title="받은 피드백"
-- L130: message="지금 피드백을 불러올 수 없습니다."
-- L131: title="받은 피드백"
-- L144: 내 코칭
-- L146: <h1 className="mt-3 text-3xl font-semibold">받은 피드백</h1>
-- L148: 코치가 남긴 주간 기록 피드백을 확인합니다.
-- L153: 내 코칭 공간으로 돌아가기
-- L156: 대시보드
-- L163: <p className="text-slate-700">아직 받은 피드백이 없습니다.</p>
-- L174: <p className="text-sm font-medium text-slate-500">코치</p>
-- L190: 주간 기간
-- L198: 제출일
-- L206: 작성일
-- L214: 수정일
-- L224: <h2 className="font-semibold text-slate-950">피드백</h2>
-- L230: <h2 className="font-semibold text-slate-950">격려</h2>
-- L236: <h2 className="font-semibold text-slate-950">다음 단계</h2>
+- L46: fallback="게시됨"
+- L51: <I18nText k="myCoaching.feedback.status.draft" fallback="임시 저장" />
+- L57: fallback="보관됨"
+- L69: <I18nText k="myCoaching.feedback.none" fallback="없음" />
+- L79: <I18nText k="myCoaching.feedback.unknown" fallback="알 수 없음" />
+- L98: <I18nText k="myCoaching.feedback.badge" fallback="내 코칭" />
+- L101: <I18nText k="myCoaching.feedback.title" fallback="받은 피드백" />
+- L118: fallback="프로필 보기"
+- L139: messageFallback="아직 프로필이 생성되지 않았습니다."
+- L149: messageFallback="지금 피드백을 불러올 수 없습니다."
+- L163: <I18nText k="myCoaching.feedback.badge" fallback="내 코칭" />
+- L166: <I18nText k="myCoaching.feedback.title" fallback="받은 피드백" />
+- L171: fallback="코치가 남긴 주간 기록 피드백을 확인합니다."
+- L185: fallback="아직 받은 피드백이 없습니다."
+- L199: <I18nText k="myCoaching.feedback.coach" fallback="코치" />
+- L218: fallback="주간 기간"
+- L229: fallback="제출일"
+- L240: fallback="작성일"
+- L251: fallback="수정일"
+- L265: fallback="피드백"
+- L276: fallback="격려"
+- L287: fallback="다음 단계"
 
 ### src/app/my-coaching/goals/page.tsx
 
-- L14: { value: "active", label: "진행 중" },
-- L15: { value: "paused", label: "일시 중지" },
-- L16: { value: "completed", label: "완료" },
-- L17: { value: "archived", label: "보관" },
-- L21: { value: "low", label: "낮음" },
-- L22: { value: "normal", label: "보통" },
-- L23: { value: "high", label: "높음" },
-- L123: const title = goal ? "목표 수정" : "새 목표 만들기";
-- L124: const buttonLabel = goal ? "목표 저장" : "목표 저장";
-- L131: 목표 제목
-- L145: 설명
-- L159: 분류
-- L171: 목표값
-- L184: 현재값
-- L197: 단위
-- L212: 우선순위
-- L229: 시작일
-- L241: 마감일
-- L321: ? "목표 상태를 변경할 수 없습니다."
-- L323: ? "목표를 저장할 수 없습니다."
-- L326: ? "목표를 저장했습니다."
-- L328: ? "목표 상태를 변경했습니다."
-- L337: 내 코칭
-- L339: <h1 className="mt-3 text-3xl font-semibold">나의 목표</h1>
-- L341: 코칭 과정에서 실천할 목표를 기록하고 관리합니다.
-- L346: 내 코칭 공간으로 돌아가기
-- L349: 대시보드
-- L356: <p className="text-slate-700">아직 프로필이 생성되지 않았습니다.</p>
-- L359: 프로필 보기
-- L365: 지금 목표를 불러올 수 없습니다.
-- L381: <h2 className="text-lg font-semibold">새 목표 만들기</h2>
-- L388: <h2 className="text-lg font-semibold">목표 목록</h2>
-- L391: 아직 등록된 목표가 없습니다.
-- L422: 분류
-- L430: 목표값
-- L438: 현재값
-- L446: 완료일
-- L454: 시작일
-- L462: 마감일
-- L470: 수정일
-- L480: 목표 내용 수정
+- L66: return trimmed && trimmed.length > 0 ? trimmed : "아직 작성되지 않았습니다.";
+- L120: 나의 성장 화면을 불러올 수 없습니다.
+- L138: 목실기 정보를 불러올 수 없습니다.
+- L154: 나의 성장 화면을 준비할 수 없습니다.
+- L228: {/* 헤더 */}
+- L231: <Badge tone="info">나의 성장</Badge>
+- L232: <CardTitle className="mt-2 text-xl text-ink-strong">삶의 방향과 실천</CardTitle>
+- L234: {monthLabel(year, month)} 실행률 기준 · {timezone}
+- L240: /* 계획 없음 */
+- L244: 아직 목실기 계획이 없습니다. 먼저 삶의 방향과 목표를 작성해 주세요.
+- L247: 목표 설계 시작하기
+- L253: {/* 안내 + 수정 CTA (단일 진입점) */}
+- L257: 미션·비전·핵심가치·목표를 <span className="font-medium text-ink-base">기억하고 확인하는 곳</span>이에요.{" "}
+- L258: 내용을 고칠 때는 목표 설계 화면에서 수정해 주세요.
+- L265: 코치도 이 내용을 확인할 수 있어요
+- L268: 목표 설계 화면 열기
+- L273: <GrowthSection title="미션">
+- L282: <GrowthSection title="비전">
+- L291: <GrowthSection title="핵심가치">
+- L293: <p className="text-ink-muted">등록된 핵심가치가 없습니다.</p>
+- L301: valueName={value.value_name || `핵심가치 ${index + 1}`}
+- L308: <GrowthSection title="장기 목표">
+- L317: <GrowthSection title="4영역 목표와 실행률">
+- L319: 방향(목표)과 이번 달 실천(실행률)을 함께 확인합니다.
+- L321: ? ` 집계 최신: ${new Date(summary.updated_at).toLocaleString("ko-KR")}`
+
+### src/app/my-coaching/layout.tsx
+
+- L6: * 피코치 모바일 셸 레이아웃.
+- L7: * 기존 my-coaching 하위 페이지를 그대로 감싸고, 하단에 5탭 내비게이션을 고정한다.
+- L8: * 콘텐츠와 인증/데이터 로직은 변경하지 않으며, 하단 탭이 콘텐츠를 가리지 않도록 여백만 추가한다.
 
 ### src/app/my-coaching/moksilgi/monthly/page.tsx
 
-- L16: spiritual: "영적 성장",
-- L17: intellectual: "지적 성장",
-- L18: physical: "육체적 성장",
-- L19: social: "사회적 성장",
-- L20: other: "기타",
-- L24: daily_check: "매일 실행 확인",
-- L25: weekly_count: "매주 실행 확인",
-- L26: monthly_number: "월간 수치 입력",
-- L100: if (!normalized) return "실행량";
-- L101: if (normalized === "일") return "일 수";
-- L102: if (normalized === "권") return "권 수";
-- L103: if (normalized === "회" || normalized === "번") return "횟 수";
-- L104: if (normalized === "시간") return "시간";
-- L105: if (normalized === "명") return "명 수";
-- L112: return "매일 실행 확인 V";
-- L114: return "매주 실행 확인 V";
-- L138: return `${checkedCount}${unit || "일"}`;
-- L143: return `${total}${unit || "회"}`;
-- L172: <span className="text-sm font-medium text-slate-700">연도</span>
-- L183: <span className="text-sm font-medium text-slate-700">월</span>
-- L191: {value}월
-- L200: 조회
-- L220: const selectedMonthLabel = `${month}월`;
-- L240: 월 목표량: {displayValue(detailGoal.monthly_target)} / 연간 목표량:{" "}
-- L241: {displayValue(detailGoal.annual_target)} / 단위:{" "}
-- L245: 측정 방식: {MEASUREMENT_LABELS[detailGoal.measurement_type]}
-- L249: 실행전략: {strategies.join(", ")}
-- L254: 현재 달성률 {formatPercent(record?.achievement_rate)}
-- L260: <div className="border-r border-slate-200 px-3 py-2">월 별</div>
-- L262: <div className="border-r border-slate-200 px-3 py-2">달성률</div>
-- L263: <div className="border-r border-slate-200 px-3 py-2">월 별</div>
-- L298: aria-label={`${day}일`}
-- L312: "첫주",
-- L313: "둘째주",
-- L314: "셋째주",
-- L315: "넷째주",
-- L316: "다섯째주",
-- L350: 월 목표량 / 현재 목표량 수정
-- L363: <span className="text-sm font-medium text-slate-700">코멘트</span>
-- L379: 저장
-- L426: <h2 className="text-lg font-semibold">월별 요약</h2>
-- L431: <th className="px-3 py-2 font-semibold">월</th>
-- L432: <th className="px-3 py-2 font-semibold">영적 성장</th>
-- L433: <th className="px-3 py-2 font-semibold">지적 성장</th>
-- L434: <th className="px-3 py-2 font-semibold">육체적 성장</th>
-- L435: <th className="px-3 py-2 font-semibold">사회적 성장</th>
-- L436: <th className="px-3 py-2 font-semibold">기타</th>
-- L437: <th className="px-3 py-2 font-semibold">종합</th>
-- L438: <th className="px-3 py-2 font-semibold">평균</th>
-- L456: {month}월
-- L459: 현재 선택
-- L474: <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">누적</th>
-- L509: <h1>월별 목실기 기록 보고서</h1>
-- L511: 출력 기간: {year}년 {month}월
-- L513: <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
-- L518: 목실기 월별 체크리스트
-- L521: 월별 실행 기록과 달성률 자동 계산
-- L524: 세부 목표별 실행 상황을 기록하면 달성률이 자동 계산됩니다.
-- L531: label="월별 목실기 출력"
-- L534: 목실기 작성으로 돌아가기
-- L537: 내 코칭 공간으로 돌아가기
-- L540: 대시보드
-- L547: <p className="text-slate-700">아직 프로필이 생성되지 않았습니다.</p>
-- L549: 프로필 보기
-- L554: 지금 월별 체크리스트를 불러올 수 없습니다.
-- L558: <p className="text-slate-700">먼저 목실기 기본 작성 폼을 저장해 주세요.</p>
-- L560: 목실기 작성
-- L565: <p className="text-slate-700">먼저 세부 목표와 실행전략을 등록해 주세요.</p>
-- L567: 목실기 작성
-- L574: 저장되었습니다.
-- L579: 저장할 수 없습니다. 입력값을 확인해 주세요.
-- L606: 목표 {area.sort_order}: {area.area_title}
-- L613: 영역 평균 {formatPercent(areaAverage)}
-- L619: 이 영역에는 세부 목표가 없습니다.
+- L141: <I18nText k="myCoaching.moksilgi.monthly.monthOptionSuffix" fallback="월" />
+- L149: return <I18nText k="myCoaching.moksilgi.measurement.dailyCheck" fallback="매일 실행 확인" />;
+- L151: return <I18nText k="myCoaching.moksilgi.measurement.weeklyCount" fallback="매주 실행 확인" />;
+- L153: return <I18nText k="myCoaching.moksilgi.measurement.monthlyNumber" fallback="월간 수치 입력" />;
+- L164: if (!normalized) return "실행량";
+- L165: if (normalized === "일") return "일 수";
+- L166: if (normalized === "권") return "권 수";
+- L167: if (normalized === "회" || normalized === "번") return "횟 수";
+- L168: if (normalized === "시간") return "시간";
+- L169: if (normalized === "명") return "명 수";
+- L176: return <I18nText k="myCoaching.moksilgi.monthly.dailyCheckHeader" fallback="매일 실행 확인 V" />;
+- L178: return <I18nText k="myCoaching.moksilgi.monthly.weeklyCheckHeader" fallback="매주 실행 확인 V" />;
+- L202: return `${checkedCount}${unit || "일"}`;
+- L207: return `${total}${unit || "회"}`;
+- L245: <I18nText k="myCoaching.moksilgi.monthly.year" fallback="연도" />
+- L258: <I18nText k="myCoaching.moksilgi.monthly.month" fallback="월" />
+- L269: <I18nText k="myCoaching.moksilgi.monthly.search" fallback="조회" />
+- L316: <I18nText k="myCoaching.moksilgi.detailGoal.monthlyTarget" fallback="월 목표량" />:{" "}
+- L318: <I18nText k="myCoaching.moksilgi.detailGoal.yearlyTarget" fallback="연간 목표량" />:{" "}
+- L320: <I18nText k="myCoaching.moksilgi.detailGoal.unit" fallback="단위" />:{" "}
+- L324: <I18nText k="myCoaching.moksilgi.detailGoal.measurementMethod" fallback="측정 방식" />:{" "}
+- L329: <I18nText k="myCoaching.moksilgi.monthly.actionStrategies" fallback="실행전략" />:{" "}
+- L335: <I18nText k="myCoaching.moksilgi.monthly.currentAchievement" fallback="현재 달성률" />{" "}
+- L352: aria-label={`${day}일`}
+- L372: { fallback: "첫주", key: "myCoaching.moksilgi.monthly.week1" },
+- L373: { fallback: "둘째주", key: "myCoaching.moksilgi.monthly.week2" },
+- L374: { fallback: "셋째주", key: "myCoaching.moksilgi.monthly.week3" },
+- L375: { fallback: "넷째주", key: "myCoaching.moksilgi.monthly.week4" },
+- L376: { fallback: "다섯째주", key: "myCoaching.moksilgi.monthly.week5" },
+- L410: <I18nText k="myCoaching.moksilgi.monthly.comment" fallback="코멘트" />
+- L429: <I18nText k="myCoaching.moksilgi.monthly.achievementRate" fallback="달성률" />{" "}
+- L440: fallback="월 목표량 / 현재 목표량 수정"
+- L454: <I18nText k="myCoaching.moksilgi.monthly.comment" fallback="코멘트" />
+- L468: <I18nText k="myCoaching.moksilgi.monthly.save" fallback="저장" />
+- L514: { key: "spiritual", labelKey: "myCoaching.moksilgi.goal.spiritual.title", fallback: "목표 1: 영적 성장" },
+- L515: { key: "intellectual", labelKey: "myCoaching.moksilgi.goal.intellectual.title", fallback: "목표 2: 지적 성장" },
+- L516: { key: "physical", labelKey: "myCoaching.moksilgi.goal.physical.title", fallback: "목표 3: 육체적 성장" },
+- L517: { key: "social", labelKey: "myCoaching.moksilgi.goal.social.title", fallback: "목표 4: 사회적 성장" },
+- L518: { key: "other", labelKey: "myCoaching.moksilgi.goal.other.title", fallback: "목표 5: 기타" },
+- L525: <I18nText k="myCoaching.moksilgi.monthly.summaryTitle" fallback="월별 요약" />
+- L532: <I18nText k="myCoaching.moksilgi.monthly.month" fallback="월" />
+- L546: <I18nText k="myCoaching.moksilgi.monthly.total" fallback="종합" />
+- L549: <I18nText k="myCoaching.moksilgi.monthly.average" fallback="평균" />
+- L571: <I18nText k="myCoaching.moksilgi.monthly.currentSelection" fallback="현재 선택" />
+- L587: <I18nText k="myCoaching.moksilgi.monthly.cumulative" fallback="누적" />
+- L646: <I18nText k="myCoaching.moksilgi.monthly.reportTitle" fallback="월별 목실기 기록 보고서" />
+- L649: <I18nText k="myCoaching.moksilgi.monthly.printPeriod" fallback="출력 기간" />: {year}
+- L650: <I18nText k="myCoaching.moksilgi.monthly.yearSuffix" fallback="년" />{" "}
+- L654: <I18nText k="myCoaching.moksilgi.generatedAt" fallback="생성일" />:{" "}
+- L669: <I18nText k="myCoaching.moksilgi.monthly.print" fallback="월별 목실기 출력" />
+- L680: <I18nText k="myCoaching.moksilgi.monthly.title" fallback="목실기 월별 체크리스트" />
+- L685: fallback="월별 실행 기록과 달성률 자동 계산"
+- L691: fallback="세부 목표별 실행 상황을 기록하면 달성률이 자동 계산됩니다."
+- L695: 여기는 <span className="font-semibold text-ink-base">매일·매주 실행을 체크하는 곳</span>이에요. 한 달 전체 결과와 성취표는 <span className="font-semibold text-ink-base">리포트</span>에서 볼 수 있어요.
+- L700: <I18nText k="myCoaching.moksilgi.monthly.backToMoksilgi" fallback="목실기 작성으로 돌아가기" />
+- L707: <I18nText k="myCoaching.moksilgi.saved" fallback="저장되었습니다." />
+- L714: fallback="저장할 수 없습니다. 입력값을 확인해 주세요."
+- L723: <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
+- L726: <I18nText k="myCoaching.viewProfile" fallback="프로필 보기" />
+- L734: fallback="지금 월별 체크리스트를 불러올 수 없습니다."
+- L743: fallback="먼저 목실기 기본 작성 폼을 저장해 주세요."
+- L747: <I18nText k="myCoaching.moksilgi.monthly.writeMoksilgi" fallback="목실기 작성" />
+- L757: fallback="먼저 세부 목표와 실행전략을 등록해 주세요."
+- L761: <I18nText k="myCoaching.moksilgi.monthly.writeMoksilgi" fallback="목실기 작성" />
+- L795: <I18nText k="myCoaching.moksilgi.monthly.average" fallback="평균" />
+- L802: <I18nText k="myCoaching.moksilgi.monthly.yearSuffix" fallback="년" />{" "}
+- L807: <I18nText k="myCoaching.moksilgi.monthly.areaAverage" fallback="영역 평균" />
+- L829: fallback={`목표 ${area.sort_order}: ${area.area_title}`}
+- L836: <I18nText k="myCoaching.moksilgi.monthly.areaAverage" fallback="영역 평균" />{" "}
+- L845: fallback="이 영역에는 세부 목표가 없습니다."
 
 ### src/app/my-coaching/moksilgi/page.tsx
 
-- L21: { value: "daily_check", label: "매일 실행 확인" },
-- L22: { value: "weekly_count", label: "매주 실행 확인" },
-- L23: { value: "monthly_number", label: "월간 수치 입력" },
-- L196: <h2 className="text-lg font-semibold">기본 정보</h2>
-- L198: <TextInput label="제목" maxLength={160} name="title" value={plan?.title ?? "목표와 실행전략 기획안"} />
-- L199: <TextInput label="부제" maxLength={160} name="subtitle" value={plan?.subtitle ?? "목실기와 체크리스트"} />
-- L200: <TextInput label="기간 시작일" name="period_start" type="date" value={plan?.period_start} />
-- L201: <TextInput label="기간 종료일" name="period_end" type="date" value={plan?.period_end} />
-- L202: <TextInput label="작성일" name="written_at" type="date" value={plan?.written_at} />
-- L203: <TextInput label="작성자" maxLength={120} name="author_name" value={plan?.author_name} />
-- L204: <TextInput label="지역/목장" maxLength={120} name="region_name" value={plan?.region_name} />
-- L205: <TextInput label="지역팀장" maxLength={120} name="regional_leader_name" value={plan?.regional_leader_name} />
-- L206: <TextInput label="코치" maxLength={120} name="coach_name" value={plan?.coach_name} />
-- L207: <TextInput label="직책" maxLength={80} name="role_label" value={plan?.role_label} />
-- L208: <TextInput label="세대" maxLength={80} name="generation_label" value={plan?.generation_label} />
-- L214: <h2 className="text-lg font-semibold">Ⅰ. 사명선언서 (Mission)</h2>
-- L216: <TextArea label="사명선언 문장" maxLength={3000} name="mission_statement" value={plan?.mission_statement} />
-- L217: <TextInput label="관련 성경구절" maxLength={120} name="mission_bible_verse" value={plan?.mission_bible_verse} />
-- L218: <TextArea label="사명 설명" maxLength={4000} name="mission_description" value={plan?.mission_description} />
-- L223: <h2 className="text-lg font-semibold">Ⅱ. 비전 (Vision)</h2>
-- L225: <TextInput label="비전 목표 연도" name="vision_year" type="number" value={plan?.vision_year} />
-- L226: <TextInput label="핵심 수치" maxLength={1000} name="vision_metrics" value={plan?.vision_metrics} />
-- L227: <TextInput label="대상" maxLength={1000} name="vision_target" value={plan?.vision_target} />
-- L230: <TextArea label="비전 문장" maxLength={3000} name="vision_statement" value={plan?.vision_statement} />
-- L231: <TextArea label="비전 설명" maxLength={4000} name="vision_description" value={plan?.vision_description} />
-- L236: <h2 className="text-lg font-semibold">Ⅲ. 핵심가치 (Core Value)</h2>
-- L240: <TextInput label="가치명" maxLength={120} name={`core_value_name_${index}`} value={value.value_name} />
-- L241: <TextInput label="의미" maxLength={1000} name={`core_value_meaning_${index}`} value={value.meaning} />
-- L242: <TextInput label="실천 모습" maxLength={1000} name={`core_value_practice_${index}`} value={value.practice_example} />
-- L249: <h2 className="text-lg font-semibold">Ⅳ. 목표</h2>
-- L251: <TextArea label="전체 목표 문장" maxLength={1000} name="main_goal" value={plan?.main_goal} />
-- L252: <TextArea label="목표 설명" maxLength={3000} name="main_goal_description" value={plan?.main_goal_description} />
-- L258: 기본 정보 저장
-- L280: <TextInput label="세부 목표 제목" maxLength={300} name="detail_title" value={detailGoal?.title} />
-- L281: <TextArea label="세부 목표 설명" maxLength={3000} name="detail_description" rows={3} value={detailGoal?.description} />
-- L283: <TextInput label="연간 목표량" name="annual_target" type="number" value={detailGoal?.annual_target} />
-- L284: <TextInput label="월 목표량" name="monthly_target" type="number" value={detailGoal?.monthly_target} />
-- L285: <TextInput label="단위" maxLength={40} name="unit" value={detailGoal?.unit} />
-- L288: <span className="text-sm font-medium text-slate-700">측정 방식</span>
-- L305: label={`실행전략 ${index}`}
-- L313: 세부 목표 저장
-- L339: <h1>내 목실기 보고서</h1>
-- L340: <p>출력 연도: {printYear}년</p>
-- L341: <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
-- L346: 목실기 작성
-- L349: 목표와 실행전략 기획안
-- L351: <p className="mt-2 text-xl text-slate-700">목실기와 체크리스트</p>
-- L353: 사명선언서, 비전, 핵심가치, 목표와 실행전략을 작성합니다.
-- L359: label="내 목실기 출력"
-- L362: 내 코칭 공간으로 돌아가기
-- L365: 대시보드
-- L372: <p className="text-slate-700">아직 프로필이 생성되지 않았습니다.</p>
-- L374: 프로필 보기
-- L379: 지금 목실기를 불러올 수 없습니다.
-- L385: 저장되었습니다.
-- L390: 저장할 수 없습니다. 입력값을 확인해 주세요.
-- L404: Ⅴ. 목표에 따른 실행전략 기획안
-- L407: 월별 체크리스트와 달성률 계산은 다음 단계에서 추가됩니다.
-- L412: 기본 정보를 먼저 저장하면 목표 영역과 세부 목표를 작성할 수 있습니다.
-- L427: 목표 {area.sort_order}: {area.area_title}
-- L452: <dt className="font-medium text-slate-500">연간 목표량</dt>
-- L456: <dt className="font-medium text-slate-500">월 목표량</dt>
-- L460: <dt className="font-medium text-slate-500">단위</dt>
-- L470: 아직 세부 목표가 없습니다.
+- L43: fallback: "매일 실행 확인",
+- L48: fallback: "매주 실행 확인",
+- L53: fallback: "월간 수치 입력",
+- L63: { anchorId: "section-basic", label: "기본정보" },
+- L64: { anchorId: "section-mission", label: "사명" },
+- L65: { anchorId: "section-vision", label: "비전" },
+- L66: { anchorId: "section-core", label: "핵심가치" },
+- L67: { anchorId: "section-goal", label: "목표" },
+- L68: { anchorId: "section-strategy", label: "실행전략" },
+- L206: plan.vision_year ? `${plan.vision_year}년` : null,
+- L377: title={<I18nText k="myCoaching.moksilgi.basicInfo" fallback="기본 정보" />}
+- L380: <TextInput label={<I18nText k="myCoaching.moksilgi.form.title" fallback="제목" />} maxLength={160} name="title" value={plan?.title ?? "목표와 실행전략 기획안"} />
+- L381: <TextInput label={<I18nText k="myCoaching.moksilgi.form.subtitle" fallback="부제" />} maxLength={160} name="subtitle" value={plan?.subtitle ?? "목실기와 체크리스트"} />
+- L382: <TextInput label={<I18nText k="myCoaching.moksilgi.form.periodStartDate" fallback="기간 시작일" />} name="period_start" type="date" value={plan?.period_start} />
+- L383: <TextInput label={<I18nText k="myCoaching.moksilgi.form.periodEndDate" fallback="기간 종료일" />} name="period_end" type="date" value={plan?.period_end} />
+- L384: <TextInput label={<I18nText k="myCoaching.moksilgi.form.writtenDate" fallback="작성일" />} name="written_at" type="date" value={plan?.written_at} />
+- L385: <TextInput label={<I18nText k="myCoaching.moksilgi.form.author" fallback="작성자" />} maxLength={120} name="author_name" value={plan?.author_name} />
+- L391: fallback="예: 태국 / CCT 22노회 / 치앙라이 교회 / 코칭그룹"
+- L396: fallback="내가 속한 국가와 함께 신앙과 사역을 나누는 공동체를 기록합니다."
+- L400: label={<I18nText k="myCoaching.moksilgi.form.community" fallback="국가/소속/공동체" />}
+- L405: <TextInput label={<I18nText k="myCoaching.moksilgi.form.regionalLeader" fallback="지역팀장" />} maxLength={120} name="regional_leader_name" value={plan?.regional_leader_name} />
+- L406: <TextInput label={<I18nText k="myCoaching.moksilgi.form.coach" fallback="코치" />} maxLength={120} name="coach_name" value={plan?.coach_name} />
+- L407: <TextInput label={<I18nText k="myCoaching.moksilgi.form.role" fallback="직책" />} maxLength={80} name="role_label" value={plan?.role_label} />
+- L408: <TextInput label={<I18nText k="myCoaching.moksilgi.form.generation" fallback="세대" />} maxLength={80} name="generation_label" value={plan?.generation_label} />
+- L419: title={<I18nText k="myCoaching.moksilgi.missionTitle" fallback="Ⅰ. 사명선언서 (Mission)" />}
+- L422: <TextArea label={<I18nText k="myCoaching.moksilgi.form.missionStatement" fallback="사명선언 문장" />} maxLength={3000} name="mission_statement" value={plan?.mission_statement} />
+- L423: <TextInput label={<I18nText k="myCoaching.moksilgi.form.relatedBibleVerse" fallback="관련 성경구절" />} maxLength={120} name="mission_bible_verse" value={plan?.mission_bible_verse} />
+- L424: <TextArea label={<I18nText k="myCoaching.moksilgi.form.missionDescription" fallback="사명 설명" />} maxLength={4000} name="mission_description" value={plan?.mission_description} />
+- L434: title={<I18nText k="myCoaching.moksilgi.visionTitle" fallback="Ⅱ. 비전 (Vision)" />}
+- L437: <TextInput label={<I18nText k="myCoaching.moksilgi.form.visionTargetYear" fallback="비전 목표 연도" />} name="vision_year" type="number" value={plan?.vision_year} />
+- L438: <TextInput label={<I18nText k="myCoaching.moksilgi.form.keyMetric" fallback="핵심 수치" />} maxLength={1000} name="vision_metrics" value={plan?.vision_metrics} />
+- L439: <TextInput label={<I18nText k="myCoaching.moksilgi.form.target" fallback="대상" />} maxLength={1000} name="vision_target" value={plan?.vision_target} />
+- L442: <TextArea label={<I18nText k="myCoaching.moksilgi.form.visionStatement" fallback="비전 문장" />} maxLength={3000} name="vision_statement" value={plan?.vision_statement} />
+- L443: <TextArea label={<I18nText k="myCoaching.moksilgi.form.visionDescription" fallback="비전 설명" />} maxLength={4000} name="vision_description" value={plan?.vision_description} />
+- L453: title={<I18nText k="myCoaching.moksilgi.coreValueTitle" fallback="Ⅲ. 핵심가치 (Core Value)" />}
+- L458: <TextInput label={<I18nText k="myCoaching.moksilgi.form.valueName" fallback="가치명" />} maxLength={120} name={`core_value_name_${index}`} value={value.value_name} />
+- L459: <TextInput label={<I18nText k="myCoaching.moksilgi.form.meaning" fallback="의미" />} maxLength={1000} name={`core_value_meaning_${index}`} value={value.meaning} />
+- L460: <TextInput label={<I18nText k="myCoaching.moksilgi.form.practice" fallback="실천 모습" />} maxLength={1000} name={`core_value_practice_${index}`} value={value.practice_example} />
+- L472: title={<I18nText k="myCoaching.moksilgi.goalTitle" fallback="Ⅳ. 목표" />}
+- L475: <TextArea label={<I18nText k="myCoaching.moksilgi.form.overallGoalStatement" fallback="전체 목표 문장" />} maxLength={1000} name="main_goal" value={plan?.main_goal} />
+- L476: <TextArea label={<I18nText k="myCoaching.moksilgi.form.goalDescription" fallback="목표 설명" />} maxLength={3000} name="main_goal_description" value={plan?.main_goal_description} />
+- L501: <TextInput label={<I18nText k="myCoaching.moksilgi.detailGoal.title" fallback="세부 목표 제목" />} maxLength={300} name="detail_title" value={detailGoal?.title} />
+- L502: <TextArea label={<I18nText k="myCoaching.moksilgi.detailGoal.description" fallback="세부 목표 설명" />} maxLength={3000} name="detail_description" rows={3} value={detailGoal?.description} />
+- L504: <TextInput label={<I18nText k="myCoaching.moksilgi.detailGoal.yearlyTarget" fallback="연간 목표량" />} name="annual_target" type="number" value={detailGoal?.annual_target} />
+- L505: <TextInput label={<I18nText k="myCoaching.moksilgi.detailGoal.monthlyTarget" fallback="월 목표량" />} name="monthly_target" type="number" value={detailGoal?.monthly_target} />
+- L506: <TextInput label={<I18nText k="myCoaching.moksilgi.detailGoal.unit" fallback="단위" />} maxLength={40} name="unit" value={detailGoal?.unit} />
+- L510: <I18nText k="myCoaching.moksilgi.detailGoal.measurementMethod" fallback="측정 방식" />
+- L528: label={<I18nText k={`myCoaching.moksilgi.detailGoal.actionStrategy${index}`} fallback={`실행전략 ${index}`} />}
+- L536: <I18nText k="myCoaching.moksilgi.saveDetailGoal" fallback="세부 목표 저장" />
+- L587: fallback="내 목실기 출력"
+- L600: <I18nText k="myCoaching.moksilgi.badge" fallback="목실기 작성" />
+- L603: <I18nText k="myCoaching.moksilgi.title" fallback="목표와 실행전략 기획안" />
+- L606: <I18nText k="myCoaching.moksilgi.subtitle" fallback="목실기와 체크리스트" />
+- L611: fallback="사명선언서, 비전, 핵심가치, 목표와 실행전략을 작성합니다."
+- L621: <I18nText k="dashboard.noProfile" fallback="아직 프로필이 생성되지 않았습니다." />
+- L627: <I18nText k="myCoaching.viewProfile" fallback="프로필 보기" />
+- L634: <I18nText k="myCoaching.moksilgi.loadFailed" fallback="지금 목실기를 불러올 수 없습니다." />
+- L643: fallback="내 목실기 보고서"
+- L650: fallback="작성자"
+- L661: fallback="기간"
+- L668: <I18nText k="myCoaching.moksilgi.printYear" fallback="출력 연도" />
+- L672: <I18nText k="myCoaching.moksilgi.generatedAt" fallback="생성일" />
+- L687: <I18nText k="myCoaching.moksilgi.saved" fallback="저장되었습니다." />
+- L696: fallback="저장할 수 없습니다. 입력값을 확인해 주세요."
+- L718: fallback="Ⅴ. 목표에 따른 실행전략 기획안"
+- L724: fallback="월별 체크리스트와 달성률 계산은 다음 단계에서 추가됩니다."
+- L731: fallback="기본 정보를 먼저 저장하면 목표 영역과 세부 목표를 작성할 수 있습니다."
+- L762: fallback={`목표 ${area.sort_order}: ${area.area_title}`}
+- L791: <I18nText k="myCoaching.moksilgi.detailGoal.yearlyTarget" fallback="연간 목표량" />
+- L797: <I18nText k="myCoaching.moksilgi.detailGoal.monthlyTarget" fallback="월 목표량" />
+- L803: <I18nText k="myCoaching.moksilgi.detailGoal.unit" fallback="단위" />
+- L814: <I18nText k="myCoaching.moksilgi.noDetailGoals" fallback="아직 세부 목표가 없습니다." />
+- L830: <I18nText k="myCoaching.moksilgi.saveBasicInfo" fallback="기본 정보 저장" />
+- L838: fallback="내 목실기 출력"
 
 ### src/app/my-coaching/moksilgi/summary/page.tsx
 
-- L33: <span className="text-sm font-medium text-slate-700">연도</span>
+- L33: <span className="text-sm font-medium text-ink-base">연도</span>
 - L47: 조회
 - L73: 현재 월
 - L104: 개인 목표와 실행전략 성취표(연간 대비, 월별누적) (단위%)
@@ -2814,574 +3446,731 @@
 - L115: <th className="px-3 py-2 font-semibold">목표5: 기타</th>
 - L116: <th className="px-3 py-2 font-semibold">종합</th>
 - L117: <th className="px-3 py-2 font-semibold">평균</th>
-- L142: <p className="text-slate-700">아직 프로필이 생성되지 않았습니다.</p>
+- L142: <p className="text-ink-base">아직 프로필이 생성되지 않았습니다.</p>
 - L144: 프로필 보기
-- L167: <h1>내 목실기 연간 성취 보고서</h1>
-- L168: <p>출력 연도: {year}년</p>
-- L169: <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
-- L174: 목실기 개인 성취표
-- L177: 개인 목표와 실행전략 성취표
-- L179: <p className="mt-2 text-lg text-slate-700">목실기 연간 성취 요약</p>
-- L181: 월별 체크리스트에 기록한 내용을 바탕으로 1월부터 12월까지의 성취율을 확인합니다.
-- L188: label="목실기 성취표 출력"
-- L191: 목실기 작성으로 돌아가기
-- L194: 월별 체크리스트로 이동
-- L197: 내 코칭 공간으로 돌아가기
-- L200: 대시보드
-- L209: 지금 개인 성취표를 불러올 수 없습니다.
-- L213: <p className="text-slate-700">먼저 목실기 기본 작성 폼을 저장해 주세요.</p>
-- L215: 목실기 작성
-- L222: 아직 월별 체크리스트 기록이 없습니다.
-- L227: <p className="text-sm font-medium text-slate-500">{year}년 총 달성률</p>
-- L241: {year}년 총 달성률 {formatPercent(result.data.totalAchievementRate)}
+- L176: 이번 달 종합 실행률 (전월 대비)
+- L188: 지난달 {formatPercent(previous.total_rate)} → 이번 달{" "}
+- L212: <h1>내 목실기 연간 성취 보고서</h1>
+- L213: <p>출력 연도: {year}년</p>
+- L214: <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
+- L219: 목실기 개인 성취표
+- L222: 개인 목표와 실행전략 성취표
+- L224: <p className="mt-2 text-lg text-ink-base">목실기 연간 성취 요약</p>
+- L226: 월별 체크리스트에 기록한 내용을 바탕으로 1월부터 12월까지의 성취율을 확인합니다.
+- L229: 이 화면은 결과를 보는 <span className="font-semibold text-ink-base">리포트</span>예요. 매일 실행 체크는 <span className="font-semibold text-ink-base">체크(월별 체크리스트)</span>에서 하세요.
+- L236: label="목실기 성취표 출력"
+- L239: 목실기 작성으로 돌아가기
+- L248: 지금 개인 성취표를 불러올 수 없습니다.
+- L252: <p className="text-ink-base">먼저 목실기 기본 작성 폼을 저장해 주세요.</p>
+- L254: 목실기 작성
+- L261: 아직 월별 체크리스트 기록이 없습니다.
+- L266: <p className="text-sm font-medium text-ink-faint">{year}년 총 달성률</p>
+- L282: {year}년 총 달성률 {formatPercent(result.data.totalAchievementRate)}
 
 ### src/app/my-coaching/page.tsx
 
-- L89: 코칭
-- L91: <h1 className="mt-3 text-3xl font-semibold">내 코칭 공간</h1>
-- L93: 지금 코칭 공간을 불러올 수 없습니다.
-- L106: "사용자";
-- L114: 코칭
-- L116: <h1 className="mt-3 text-3xl font-semibold">내 코칭 공간</h1>
-- L118: 내 계정에 연결된 코칭 관계를 읽기 전용으로 확인할 수 있습니다.
-- L126: 대시보드로 돌아가기
-- L132: 나의 기록
-- L138: 프로필 보기
-- L144: <h2 className="text-lg font-semibold">환영합니다</h2>
-- L146: 안녕하세요,{" "}
-- L147: <span className="font-medium text-slate-950">{welcomeName}</span>님.
-- L149: <p className="mt-2 text-slate-600">여기는 내 코칭 공간입니다.</p>
-- L155: 아직 프로필이 생성되지 않았습니다.
-- L158: 초대를 받으셨다면 먼저 초대를 수락해 주세요.
-- L165: 프로필 보기
-- L172: <h2 className="text-lg font-semibold">내 코치</h2>
-- L175: 아직 배정된 코치가 없습니다.
-- L184: <p className="text-sm font-medium text-slate-500">코치</p>
-- L189: "알 수 없음"}
-- L201: <h2 className="text-lg font-semibold">내 코칭 관계</h2>
-- L204: 아직 배정된 코치가 없습니다.
-- L235: 범위
-- L246: 시작일
-- L254: 생성일
-- L262: 종료일
-- L276: <h2 className="text-lg font-semibold">나의 목실기</h2>
-- L278: 목실기 목표 작성, 월별 점검, 연간 성취표를 한곳에서
-- L279: 확인합니다.
-- L286: <p className="font-medium text-slate-950">목실기 작성하기</p>
-- L288: 나의 목실기 목표와 세부 내용을 작성합니다.
-- L295: <p className="font-medium text-slate-950">월별 목실기 점검</p>
-- L297: 월별 실행 기록과 달성률을 점검합니다.
-- L304: <p className="font-medium text-slate-950">나의 성취표 보기</p>
-- L306: 연간 목실기 성취 현황을 확인합니다.
-- L313: <h2 className="text-lg font-semibold">나의 기록</h2>
-- L315: 하루, 주간, 월간 단위로 나의 코칭 여정과 실천 내용을
-- L316: 기록합니다.
-- L323: <p className="font-medium text-slate-950">기록 선택하기</p>
-- L325: 하루 기록, 주간 기록, 월간 기록 중 필요한 기록 방식을
-- L326: 선택합니다.
-- L333: <h2 className="text-lg font-semibold">코치 피드백</h2>
-- L335: 코치가 남긴 피드백을 확인하고 다음 실행을 준비합니다.
-- L342: <p className="font-medium text-slate-950">피드백 보기</p>
-- L344: 공개된 코치 피드백을 확인합니다.
-- L352: <h2 className="text-lg font-semibold">프로필</h2>
-- L357: 프로필 보기
-- L363: 표시 이름
-- L371: 이메일
+- L50: spiritual: "영적 목표",
+- L51: intellectual: "지적 목표",
+- L52: physical: "신체적 목표",
+- L53: social: "사회적 목표",
+- L214: 지금 오늘의 목표를 불러올 수 없습니다.
+- L226: <p className="text-sm text-ink-base">아직 프로필이 없어요.</p>
+- L228: 프로필 확인하기
+- L245: 지금 오늘의 목표를 준비할 수 없습니다.
+- L356: "피코치";
+- L367: <Badge tone="info">오늘의 목표</Badge>
+- L368: <CardTitle className="text-xl">{userName}님의 오늘</CardTitle>
+- L378: <p className="text-sm font-semibold text-ink-base">오늘 전체 실행률</p>
+- L380: 완료 {totalCompletedGoals} / 대상 {totalGoals}
+- L388: 오늘 미완료 {totalGoals - totalCompletedGoals}개가 남아 있어요
+- L391: 남은 목표를 마무리하고 오늘 기록을 완성해 보세요.
+- L399: 오늘 목표를 모두 완료했어요
+- L408: 아직 목표가 없어요
+- L411: 목실기에서 4영역 목표를 먼저 작성해 주세요.
+- L423: 오늘 기억할 핵심가치
+- L460: 오늘 기록하기
+- L470: 이번 달 체크
+- L478: 월별 요약
+- L488: 나의 성장 보기
 
 ### src/app/my-coaching/records/PrintRecordsButton.tsx
 
-- L16: label: "전체 기록 인쇄",
-- L20: label: "하루 기록 인쇄",
-- L24: label: "주간 기록 인쇄",
-- L28: label: "월간 회고 인쇄",
+- L19: fallback: "현재 결과 전체 인쇄/PDF 저장",
+- L24: fallback: "하루 기록 인쇄/PDF 저장",
+- L29: fallback: "주간 기록 인쇄/PDF 저장",
+- L34: fallback: "월간 회고 인쇄/PDF 저장",
 
 ### src/app/my-coaching/records/daily/DailyRecordsClient.tsx
 
-- L51: draft: "임시저장",
-- L52: submitted: "제출",
-- L53: reviewed: "검토완료",
-- L57: private: "나만 보기",
-- L58: coach: "코치에게 공유",
-- L119: : "확인 필요";
-- L125: : "미지정";
-- L148: return "하루 기록 ID를 확인할 수 없습니다.";
-- L152: return "로그인이 필요합니다.";
-- L156: return "이 하루 기록에 접근할 권한이 없습니다.";
-- L160: return "하루 기록을 찾을 수 없습니다.";
-- L164: return "하루 기록 처리에 실패했습니다.";
-- L167: return getErrorMessage(payload, "하루 기록 처리에 실패했습니다.");
-- L253: getErrorMessage(payload, "하루 기록 목록을 불러오지 못했습니다."),
-- L269: : "하루 기록 목록을 불러오지 못했습니다.",
-- L299: setErrorMessage("올바른 기록 날짜를 선택해 주세요.");
-- L334: ? "하루 기록 수정에 실패했습니다."
-- L335: : "하루 기록 저장에 실패했습니다.",
-- L342: ? "하루 기록이 수정되었습니다."
-- L343: : "하루 기록이 저장되었습니다.",
-- L352: ? "하루 기록 수정에 실패했습니다."
-- L353: : "하루 기록 저장에 실패했습니다.",
-- L372: setErrorMessage("하루 기록을 찾을 수 없습니다.");
-- L377: `하루 기록을 삭제하시겠습니까?\n\n기록 날짜: ${formatDate(
-- L379: )}\n이 작업은 되돌릴 수 없습니다.`,
-- L409: setMessage("하루 기록이 목록에서 제거되었습니다.");
-- L416: : "하루 기록 처리에 실패했습니다.",
-- L429: {editingRecord ? "하루 기록 수정" : "하루 기록 작성"}
-- L432: 기록 날짜와 오늘의 돌아봄을 남겨 주세요.
-- L441: 수정 취소
-- L463: 기록 날짜
-- L484: 제목
-- L495: placeholder="오늘 기록의 제목"
-- L506: 오늘의 돌아봄
-- L526: 실천/적용
-- L546: 기도제목
-- L567: 공유 옵션
-- L581: <option value="private">나만 보기</option>
-- L582: <option value="coach">코치에게 공유</option>
-- L591: 상태
-- L604: <option value="draft">임시저장</option>
-- L605: <option value="submitted">제출</option>
-- L607: 검토완료
-- L626: 코치에게 공유
-- L635: ? "저장 중..."
-- L637: ? "하루 기록 수정"
-- L638: : "하루 기록 저장"}
-- L645: <h2 className="text-lg font-semibold">나의 하루 기록 목록</h2>
-- L647: 최신 기록 날짜순으로 표시됩니다.
-- L657: 검색
-- L663: placeholder="제목, 돌아봄, 실천/적용, 기도제목 검색"
-- L675: 상태
-- L685: <option value="all">전체</option>
-- L686: <option value="draft">임시저장</option>
-- L687: <option value="submitted">제출</option>
-- L688: <option value="reviewed">검토완료</option>
-- L697: 공유
-- L707: <option value="all">전체</option>
-- L708: <option value="private">나만 보기</option>
-- L709: <option value="coach">코치에게 공유</option>
-- L718: 정렬 기준
-- L728: <option value="record_date">기록 날짜</option>
-- L729: <option value="created_at">작성일</option>
-- L730: <option value="updated_at">수정일</option>
-- L731: <option value="status">상태</option>
-- L740: 정렬 방향
-- L750: <option value="desc">내림차순</option>
-- L751: <option value="asc">오름차순</option>
-- L758: 하루 기록: 전체 {records.length}개 중 {visibleRecords.length}개
-- L759: 표시
-- L766: 필터 초기화
-- L773: 하루 기록을 불러오는 중입니다.
-- L777: 아직 작성한 하루 기록이 없습니다.
-- L781: 선택한 조건에 해당하는 하루 기록이 없습니다.
-- L812: 오늘의 돌아봄
-- L819: <dt className="font-medium text-slate-500">실천/적용</dt>
-- L825: <dt className="font-medium text-slate-500">기도제목</dt>
-- L834: <dt className="font-medium">작성일</dt>
-- L838: <dt className="font-medium">수정일</dt>
-- L849: 수정
-- L857: {deletingId === record.id ? "삭제 중..." : "목록에서 제거"}
+- L62: fallback: "임시저장",
+- L66: fallback: "검토완료",
+- L70: fallback: "제출",
+- L77: fallback: "코치에게 공유",
+- L81: fallback: "나만 보기",
+- L147: return t("myCoaching.records.dailyPage.form.status.unknown", "확인 필요");
+- L159: return t("myCoaching.records.dailyPage.form.visibility.unknown", "미지정");
+- L167: return "확인 필요";
+- L188: return `감사한 일: ${gratitudeText}`;
+- L191: return `감사한 일: ${gratitudeText}\n\n오늘 배운 점: ${reflectionText}`;
+- L213: return t("myCoaching.records.dailyPage.form.errors.invalidId", "하루 기록 ID를 확인할 수 없습니다.");
+- L217: return t("myCoaching.records.dailyPage.form.errors.loginRequired", "로그인이 필요합니다.");
+- L221: return t("myCoaching.records.dailyPage.form.errors.forbidden", "이 하루 기록에 접근할 권한이 없습니다.");
+- L225: return t("myCoaching.records.dailyPage.form.errors.notFound", "하루 기록을 찾을 수 없습니다.");
+- L229: return t("myCoaching.records.dailyPage.form.errors.processFailed", "하루 기록 처리에 실패했습니다.");
+- L232: return getErrorMessage(payload, t("myCoaching.records.dailyPage.form.errors.processFailed", "하루 기록 처리에 실패했습니다."));
+- L327: getErrorMessage(payload, t("myCoaching.records.dailyPage.form.errors.loadFailed", "하루 기록 목록을 불러오지 못했습니다.")),
+- L343: : t("myCoaching.records.dailyPage.form.errors.loadFailed", "하루 기록 목록을 불러오지 못했습니다."),
+- L373: setErrorMessage(t("myCoaching.records.dailyPage.form.errors.invalidDate", "올바른 기록 날짜를 선택해 주세요."));
+- L408: ? t("myCoaching.records.dailyPage.form.errors.updateFailed", "하루 기록 수정에 실패했습니다.")
+- L409: : t("myCoaching.records.dailyPage.form.errors.saveFailed", "하루 기록 저장에 실패했습니다."),
+- L416: ? t("myCoaching.records.dailyPage.form.updated", "하루 기록이 수정되었습니다.")
+- L417: : t("myCoaching.records.dailyPage.form.saved", "하루 기록이 저장되었습니다."),
+- L430: ? t("myCoaching.records.dailyPage.form.errors.updateFailed", "하루 기록 수정에 실패했습니다.")
+- L431: : t("myCoaching.records.dailyPage.form.errors.saveFailed", "하루 기록 저장에 실패했습니다."),
+- L450: setErrorMessage(t("myCoaching.records.dailyPage.form.errors.notFound", "하루 기록을 찾을 수 없습니다."));
+- L455: `${t("myCoaching.records.dailyPage.form.deleteConfirm", "하루 기록을 삭제하시겠습니까?")}\n\n${t("myCoaching.records.dailyPage.form.recordDate", "기록 날짜")}: ${formatDate(
+- L457: )}\n${t("myCoaching.records.dailyPage.form.deleteIrreversible", "이 작업은 되돌릴 수 없습니다.")}`,
+- L487: setMessage(t("myCoaching.records.dailyPage.form.removed", "하루 기록이 목록에서 제거되었습니다."));
+- L494: : t("myCoaching.records.dailyPage.form.errors.processFailed", "하루 기록 처리에 실패했습니다."),
+- L518: 오늘 하루를 짧게 돌아보며 남겨보세요. 한두 줄이면 충분해요. 남긴 내용은 코치와의 다음 코칭 준비에 쓰여요.
+- L522: 감사한 일
+- L533: placeholder="오늘 감사했던 일을 한두 줄로 적어보세요. 예) 말씀 묵상 시간을 지킬 수 있어 감사했어요."
+- L540: 오늘 배운 점
+- L551: placeholder="오늘 새롭게 배운 점을 짧게 남겨보세요."
+- L558: 기도 제목 · 실행 메모 더 남기기 (선택)
+- L563: 기도 제목
+- L574: placeholder="기도가 필요한 내용을 적어보세요."
+- L581: 실행 메모
+- L592: placeholder="오늘 바로 실천할 한 가지를 적어보세요."
+- L603: <p className="text-sm font-medium text-ink-base">코치에게 공유</p>
+- L604: <p className="text-xs text-ink-muted">코치가 이 기록을 볼 수 있어요.</p>
+- L607: aria-label={form.shared_with_coach ? "공유 켬" : "공유 끔"}
+- L634: {isSaving ? "저장 중..." : "오늘 기록 저장"}
+- L649: ? t("myCoaching.records.dailyPage.form.editTitle", "하루 기록 수정")
+- L650: : t("myCoaching.records.dailyPage.form.createTitle", "하루 기록 작성")}
+- L655: "기록 날짜와 오늘의 돌아봄을 남겨 주세요.",
+- L665: {t("myCoaching.records.dailyPage.form.cancelEdit", "수정 취소")}
+- L687: {t("myCoaching.records.dailyPage.form.recordDate", "기록 날짜")}
+- L708: {t("myCoaching.records.dailyPage.form.title", "제목")}
+- L721: "오늘 기록의 제목",
+- L733: 감사한 일
+- L744: placeholder="오늘 감사했던 일을 짧게 적어보세요."
+- L754: 오늘 배운 점
+- L774: 실행 메모
+- L794: 기도 제목
+- L815: {t("myCoaching.records.dailyPage.form.visibility.label", "공유 옵션")}
+- L830: {t("myCoaching.records.dailyPage.form.visibility.private", "나만 보기")}
+- L833: {t("myCoaching.records.dailyPage.form.visibility.coach", "코치에게 공유")}
+- L843: {t("myCoaching.records.dailyPage.form.status.label", "상태")}
+- L857: {t("myCoaching.records.dailyPage.form.status.draft", "임시저장")}
+- L860: {t("myCoaching.records.dailyPage.form.status.submitted", "제출")}
+- L863: {t("myCoaching.records.dailyPage.form.status.reviewed", "검토완료")}
+- L882: 코치에게 공유 (코치가 이 기록을 볼 수 있어요)
+- L891: ? t("myCoaching.records.dailyPage.form.saving", "저장 중...")
+- L893: ? t("myCoaching.records.dailyPage.form.update", "하루 기록 수정")
+- L894: : t("myCoaching.records.dailyPage.form.save", "하루 기록 저장")}
+- L902: {t("myCoaching.records.dailyPage.form.listTitle", "나의 하루 기록 목록")}
+- L907: "최신 기록 날짜순으로 표시됩니다.",
+- L918: {t("myCoaching.records.dailyPage.form.search", "검색")}
+- L926: "제목, 돌아봄, 실천/적용, 기도제목 검색",
+- L939: {t("myCoaching.records.dailyPage.form.status.label", "상태")}
+- L950: {t("myCoaching.records.dailyPage.form.all", "전체")}
+- L953: {t("myCoaching.records.dailyPage.form.status.draft", "임시저장")}
+- L956: {t("myCoaching.records.dailyPage.form.status.submitted", "제출")}
+- L959: {t("myCoaching.records.dailyPage.form.status.reviewed", "검토완료")}
+- L969: {t("myCoaching.records.dailyPage.form.visibility.filterLabel", "공유")}
+- L980: {t("myCoaching.records.dailyPage.form.all", "전체")}
+- L983: {t("myCoaching.records.dailyPage.form.visibility.private", "나만 보기")}
+- L986: {t("myCoaching.records.dailyPage.form.visibility.coach", "코치에게 공유")}
+- L996: {t("myCoaching.records.dailyPage.form.sortBy", "정렬 기준")}
+- L1007: {t("myCoaching.records.dailyPage.form.recordDate", "기록 날짜")}
+- L1010: {t("myCoaching.records.dailyPage.form.createdAt", "작성일")}
+- L1013: {t("myCoaching.records.dailyPage.form.updatedAt", "수정일")}
+- L1016: {t("myCoaching.records.dailyPage.form.status.label", "상태")}
+- L1026: {t("myCoaching.records.dailyPage.form.sortDirection", "정렬 방향")}
+- L1037: {t("myCoaching.records.dailyPage.form.desc", "내림차순")}
+- L1040: {t("myCoaching.records.dailyPage.form.asc", "오름차순")}
+- L1048: {t("myCoaching.records.dailyPage.form.resultLabel", "하루 기록")}:{" "}
+- L1049: {t("myCoaching.records.dailyPage.form.resultCountPrefix", "전체")}{" "}
+- L1051: {t("myCoaching.records.dailyPage.form.resultCountMiddle", "개 중")}{" "}
+- L1053: {t("myCoaching.records.dailyPage.form.resultCountSuffix", "개 표시")}
+- L1060: {t("myCoaching.records.dailyPage.form.resetFilters", "필터 초기화")}
+- L1067: {t("myCoaching.records.dailyPage.form.loading", "하루 기록을 불러오는 중입니다.")}
+- L1071: {t("myCoaching.records.dailyPage.form.empty", "아직 작성한 하루 기록이 없습니다.")}
+- L1077: "선택한 조건에 해당하는 하루 기록이 없습니다.",
+- L1105: {t("myCoaching.records.dailyPage.form.reflection", "오늘의 돌아봄")}
+- L1113: {t("myCoaching.records.dailyPage.form.practice", "실천/적용")}
+- L1121: {t("myCoaching.records.dailyPage.form.prayerRequest", "기도제목")}
+- L1132: {t("myCoaching.records.dailyPage.form.createdAt", "작성일")}
+- L1138: {t("myCoaching.records.dailyPage.form.updatedAt", "수정일")}
+- L1150: {t("myCoaching.records.dailyPage.form.edit", "수정")}
+- L1159: ? t("myCoaching.records.dailyPage.form.deleting", "삭제 중...")
+- L1160: : t("myCoaching.records.dailyPage.form.removeFromList", "목록에서 제거")}
 
 ### src/app/my-coaching/records/daily/page.tsx
 
-- L21: 나의 기록
-- L23: <h1 className="mt-3 text-3xl font-semibold">하루 기록</h1>
-- L25: 오늘의 묵상, 실천, 적용, 기도제목을 기록합니다.
-- L33: 기록 선택으로 돌아가기
-- L39: 마이코칭으로 돌아가기
-- L45: 대시보드로 돌아가기
+- L76: <I18nText k="myCoaching.records.dailyPage.badge" fallback="오늘 기록" />
+- L79: <I18nText k="myCoaching.records.dailyPage.title" fallback="오늘 기록하기" />
+- L84: fallback="짧게 기록하고 코치 공유 여부를 선택할 수 있어요."
+- L96: 이번 달 누적 실행률 {monthlyContext.totalRate.toFixed(1)}%
+- L99: {monthlyContext.year}년 {monthlyContext.month}월 기준 · 오늘 기록이 이
+- L100: 수치에 반영됩니다.
 
 ### src/app/my-coaching/records/monthly/MonthlyReflectionsClient.tsx
 
-- L62: draft: "임시저장",
-- L63: submitted: "제출",
-- L64: reviewed: "검토완료",
-- L68: private: "나만 보기",
-- L69: coach: "코치에게 공유",
-- L114: : "확인 필요";
-- L120: : "미지정";
-- L143: return "로그인이 필요합니다.";
-- L147: return "이 월간 회고에 접근할 권한이 없습니다.";
-- L151: return "월간 회고를 찾을 수 없습니다.";
-- L155: return "월간 회고 처리에 실패했습니다.";
-- L158: return getErrorMessage(payload, "월간 회고 처리에 실패했습니다.");
-- L288: getErrorMessage(payload, "월간 회고 목록을 불러오지 못했습니다."),
-- L306: : "월간 회고 목록을 불러오지 못했습니다.",
-- L355: setErrorMessage("연도를 선택해 주세요.");
-- L365: setErrorMessage("월을 선택해 주세요.");
-- L378: "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
-- L414: ? "월간 회고 수정에 실패했습니다."
-- L415: : "월간 회고 저장에 실패했습니다.",
-- L420: ? "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요."
-- L426: ? "월간 회고가 수정되었습니다."
-- L427: : "월간 회고가 저장되었습니다.";
-- L441: ? "월간 회고 수정에 실패했습니다."
-- L442: : "월간 회고 저장에 실패했습니다.",
-- L461: setErrorMessage("월간 회고를 찾을 수 없습니다.");
-- L466: `월간 회고를 삭제하시겠습니까?\n\n대상: ${record.year}년 ${record.month}월\n이 작업은 되돌릴 수 없습니다.`,
-- L496: setMessage("월간 회고가 목록에서 제거되었습니다.");
-- L503: : "월간 회고 처리에 실패했습니다.",
-- L516: {editingRecord ? "월간 회고 수정" : "월간 회고 작성"}
-- L519: 한 달의 성장과 다음 달 계획을 정리해 주세요.
-- L528: 수정 취소
-- L551: 연도
-- L573: 월
-- L586: <option value="">월 선택</option>
-- L589: {month}월
-- L601: 한 달 요약
-- L621: 성장한 점
-- L641: 어려웠던 점
-- L661: 다음 달 계획
-- L682: 공유 옵션
-- L697: <option value="private">나만 보기</option>
-- L698: <option value="coach">코치에게 공유</option>
-- L707: 상태
-- L720: <option value="draft">임시저장</option>
-- L721: <option value="submitted">제출</option>
-- L723: 검토완료
-- L742: 코치에게 공유
-- L751: ? "저장 중..."
-- L753: ? "월간 회고 수정"
-- L754: : "월간 회고 저장"}
-- L761: <h2 className="text-lg font-semibold">나의 월간 회고 목록</h2>
-- L763: 최신 연도와 월 순서로 표시됩니다.
-- L774: 검색
-- L780: placeholder="한 달 요약, 성장한 점, 어려웠던 점, 다음 달 계획 검색"
-- L787: 월간 회고: 전체 {records.length}개 중 {visibleRecords.length}개
-- L788: 표시
-- L799: 연도 필터
-- L807: placeholder="예: 2026"
-- L817: 월 필터
-- L825: <option value="">전체</option>
-- L828: {month}월
-- L838: 상태
-- L848: <option value="all">전체</option>
-- L849: <option value="draft">임시저장</option>
-- L850: <option value="submitted">제출</option>
-- L851: <option value="reviewed">검토완료</option>
-- L859: 공유
-- L869: <option value="all">전체</option>
-- L870: <option value="private">나만 보기</option>
-- L871: <option value="coach">코치에게 공유</option>
-- L882: 정렬 기준
-- L892: <option value="year_month">연도/월</option>
-- L893: <option value="created_at">작성일</option>
-- L894: <option value="updated_at">수정일</option>
-- L895: <option value="status">상태</option>
-- L903: 정렬 방향
-- L913: <option value="desc">내림차순</option>
-- L914: <option value="asc">오름차순</option>
-- L923: 필터 적용
-- L930: 초기화
-- L938: 월간 회고를 불러오는 중입니다.
-- L942: 아직 작성한 월간 회고가 없습니다.
-- L946: 선택한 조건에 해당하는 월간 회고가 없습니다.
-- L958: {record.year}년 {record.month}월
-- L961: 월간 회고
-- L976: <dt className="font-medium text-slate-500">한 달 요약</dt>
-- L982: <dt className="font-medium text-slate-500">성장한 점</dt>
-- L988: <dt className="font-medium text-slate-500">어려웠던 점</dt>
-- L994: <dt className="font-medium text-slate-500">다음 달 계획</dt>
-- L1003: <dt className="font-medium">작성일</dt>
-- L1007: <dt className="font-medium">수정일</dt>
-- L1011: <dt className="font-medium">제출일</dt>
-- L1017: <dt className="font-medium">검토일</dt>
-- L1028: 수정
-- L1036: {deletingId === record.id ? "삭제 중..." : "목록에서 제거"}
+- L75: fallback: "임시저장",
+- L79: fallback: "제출",
+- L83: fallback: "검토완료",
+- L93: fallback: "나만 보기",
+- L97: fallback: "코치에게 공유",
+- L147: return t("myCoaching.records.monthlyPage.form.status.unknown", "확인 필요");
+- L155: return "확인 필요";
+- L167: return t("myCoaching.records.monthlyPage.form.visibility.unknown", "미지정");
+- L194: return t("myCoaching.records.monthlyPage.form.errors.loginRequired", "로그인이 필요합니다.");
+- L198: return t("myCoaching.records.monthlyPage.form.errors.forbidden", "이 월간 회고에 접근할 권한이 없습니다.");
+- L202: return t("myCoaching.records.monthlyPage.form.errors.notFound", "월간 회고를 찾을 수 없습니다.");
+- L206: return t("myCoaching.records.monthlyPage.form.errors.processFailed", "월간 회고 처리에 실패했습니다.");
+- L209: return getErrorMessage(payload, t("myCoaching.records.monthlyPage.form.errors.processFailed", "월간 회고 처리에 실패했습니다."));
+- L342: t("myCoaching.records.monthlyPage.form.errors.loadFailed", "월간 회고 목록을 불러오지 못했습니다."),
+- L361: : t("myCoaching.records.monthlyPage.form.errors.loadFailed", "월간 회고 목록을 불러오지 못했습니다."),
+- L410: setErrorMessage(t("myCoaching.records.monthlyPage.form.errors.yearRequired", "연도를 선택해 주세요."));
+- L420: setErrorMessage(t("myCoaching.records.monthlyPage.form.errors.monthRequired", "월을 선택해 주세요."));
+- L435: "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
+- L472: ? t("myCoaching.records.monthlyPage.form.errors.updateFailed", "월간 회고 수정에 실패했습니다.")
+- L473: : t("myCoaching.records.monthlyPage.form.errors.saveFailed", "월간 회고 저장에 실패했습니다."),
+- L480: "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
+- L487: ? t("myCoaching.records.monthlyPage.form.updated", "월간 회고가 수정되었습니다.")
+- L488: : t("myCoaching.records.monthlyPage.form.saved", "월간 회고가 저장되었습니다.");
+- L502: ? t("myCoaching.records.monthlyPage.form.errors.updateFailed", "월간 회고 수정에 실패했습니다.")
+- L503: : t("myCoaching.records.monthlyPage.form.errors.saveFailed", "월간 회고 저장에 실패했습니다."),
+- L522: setErrorMessage(t("myCoaching.records.monthlyPage.form.errors.notFound", "월간 회고를 찾을 수 없습니다."));
+- L527: `${t("myCoaching.records.monthlyPage.form.deleteConfirm", "월간 회고를 삭제하시겠습니까?")}\n\n${t("myCoaching.records.monthlyPage.form.targetMonth", "대상")}: ${record.year}${t("myCoaching.records.monthlyPage.form.yearSuffix", "년")} ${record.month}${t("myCoaching.records.monthlyPage.form.monthSuffix", "월")}\n${t("myCoaching.records.monthlyPage.form.deleteIrreversible", "이 작업은 되돌릴 수 없습니다.")}`,
+- L557: setMessage(t("myCoaching.records.monthlyPage.form.removed", "월간 회고가 목록에서 제거되었습니다."));
+- L564: : t("myCoaching.records.monthlyPage.form.errors.processFailed", "월간 회고 처리에 실패했습니다."),
+- L578: ? t("myCoaching.records.monthlyPage.form.editTitle", "월간 회고 수정")
+- L579: : t("myCoaching.records.monthlyPage.form.createTitle", "월간 회고 작성")}
+- L584: "한 달의 성장과 다음 달 계획을 정리해 주세요.",
+- L594: {t("myCoaching.records.monthlyPage.form.cancelEdit", "수정 취소")}
+- L617: {t("myCoaching.records.monthlyPage.form.year", "연도")}
+- L639: {t("myCoaching.records.monthlyPage.form.month", "월")}
+- L653: {t("myCoaching.records.monthlyPage.form.selectMonth", "월 선택")}
+- L658: {t("myCoaching.records.monthlyPage.form.monthSuffix", "월")}
+- L670: {t("myCoaching.records.monthlyPage.form.summary", "한 달 요약")}
+- L690: {t("myCoaching.records.monthlyPage.form.growthPoints", "성장한 점")}
+- L710: {t("myCoaching.records.monthlyPage.form.difficulty", "어려웠던 점")}
+- L730: {t("myCoaching.records.monthlyPage.form.nextMonthPlan", "다음 달 계획")}
+- L751: {t("myCoaching.records.monthlyPage.form.visibility.label", "공유 옵션")}
+- L767: {t("myCoaching.records.monthlyPage.form.visibility.private", "나만 보기")}
+- L770: {t("myCoaching.records.monthlyPage.form.visibility.coach", "코치에게 공유")}
+- L780: {t("myCoaching.records.monthlyPage.form.status.label", "상태")}
+- L794: {t("myCoaching.records.monthlyPage.form.status.draft", "임시저장")}
+- L797: {t("myCoaching.records.monthlyPage.form.status.submitted", "제출")}
+- L800: {t("myCoaching.records.monthlyPage.form.status.reviewed", "검토완료")}
+- L819: {t("myCoaching.records.monthlyPage.form.shareWithCoach", "코치에게 공유")}
+- L828: ? t("myCoaching.records.monthlyPage.form.saving", "저장 중...")
+- L830: ? t("myCoaching.records.monthlyPage.form.update", "월간 회고 수정")
+- L831: : t("myCoaching.records.monthlyPage.form.save", "월간 회고 저장")}
+- L839: {t("myCoaching.records.monthlyPage.form.listTitle", "나의 월간 회고 목록")}
+- L844: "최신 연도와 월 순서로 표시됩니다.",
+- L856: {t("myCoaching.records.monthlyPage.form.search", "검색")}
+- L864: "한 달 요약, 성장한 점, 어려웠던 점, 다음 달 계획 검색",
+- L872: {t("myCoaching.records.monthlyPage.form.resultLabel", "월간 회고")}:{" "}
+- L873: {t("myCoaching.records.monthlyPage.form.resultCountPrefix", "전체")}{" "}
+- L875: {t("myCoaching.records.monthlyPage.form.resultCountMiddle", "개 중")}{" "}
+- L877: {t("myCoaching.records.monthlyPage.form.resultCountSuffix", "개 표시")}
+- L888: {t("myCoaching.records.monthlyPage.form.yearFilter", "연도 필터")}
+- L896: placeholder={t("myCoaching.records.monthlyPage.form.yearPlaceholder", "예: 2026")}
+- L906: {t("myCoaching.records.monthlyPage.form.monthFilter", "월 필터")}
+- L915: {t("myCoaching.records.monthlyPage.form.all", "전체")}
+- L920: {t("myCoaching.records.monthlyPage.form.monthSuffix", "월")}
+- L930: {t("myCoaching.records.monthlyPage.form.status.label", "상태")}
+- L941: {t("myCoaching.records.monthlyPage.form.all", "전체")}
+- L944: {t("myCoaching.records.monthlyPage.form.status.draft", "임시저장")}
+- L947: {t("myCoaching.records.monthlyPage.form.status.submitted", "제출")}
+- L950: {t("myCoaching.records.monthlyPage.form.status.reviewed", "검토완료")}
+- L959: {t("myCoaching.records.monthlyPage.form.visibility.filterLabel", "공유")}
+- L970: {t("myCoaching.records.monthlyPage.form.all", "전체")}
+- L973: {t("myCoaching.records.monthlyPage.form.visibility.private", "나만 보기")}
+- L976: {t("myCoaching.records.monthlyPage.form.visibility.coach", "코치에게 공유")}
+- L988: {t("myCoaching.records.monthlyPage.form.sortBy", "정렬 기준")}
+- L999: {t("myCoaching.records.monthlyPage.form.yearMonth", "연도/월")}
+- L1002: {t("myCoaching.records.monthlyPage.form.createdAt", "작성일")}
+- L1005: {t("myCoaching.records.monthlyPage.form.updatedAt", "수정일")}
+- L1008: {t("myCoaching.records.monthlyPage.form.status.label", "상태")}
+- L1017: {t("myCoaching.records.monthlyPage.form.sortDirection", "정렬 방향")}
+- L1028: {t("myCoaching.records.monthlyPage.form.desc", "내림차순")}
+- L1031: {t("myCoaching.records.monthlyPage.form.asc", "오름차순")}
+- L1041: {t("myCoaching.records.monthlyPage.form.applyFilters", "필터 적용")}
+- L1048: {t("myCoaching.records.monthlyPage.form.resetFilters", "초기화")}
+- L1056: {t("myCoaching.records.monthlyPage.form.loading", "월간 회고를 불러오는 중입니다.")}
+- L1060: {t("myCoaching.records.monthlyPage.form.empty", "아직 작성한 월간 회고가 없습니다.")}
+- L1066: "선택한 조건에 해당하는 월간 회고가 없습니다.",
+- L1080: {t("myCoaching.records.monthlyPage.form.yearSuffix", "년")}{" "}
+- L1082: {t("myCoaching.records.monthlyPage.form.monthSuffix", "월")}
+- L1085: {t("myCoaching.records.monthlyPage.form.cardTitle", "월간 회고")}
+- L1097: {t("myCoaching.records.monthlyPage.form.summary", "한 달 요약")}
+- L1105: {t("myCoaching.records.monthlyPage.form.growthPoints", "성장한 점")}
+- L1113: {t("myCoaching.records.monthlyPage.form.difficulty", "어려웠던 점")}
+- L1121: {t("myCoaching.records.monthlyPage.form.nextMonthPlan", "다음 달 계획")}
+- L1132: {t("myCoaching.records.monthlyPage.form.createdAt", "작성일")}
+- L1138: {t("myCoaching.records.monthlyPage.form.updatedAt", "수정일")}
+- L1144: {t("myCoaching.records.monthlyPage.form.submittedAt", "제출일")}
+- L1152: {t("myCoaching.records.monthlyPage.form.reviewedAt", "검토일")}
+- L1164: {t("myCoaching.records.monthlyPage.form.edit", "수정")}
+- L1173: ? t("myCoaching.records.monthlyPage.form.deleting", "삭제 중...")
+- L1174: : t("myCoaching.records.monthlyPage.form.removeFromList", "목록에서 제거")}
 
 ### src/app/my-coaching/records/monthly/page.tsx
 
-- L21: 나의 기록
-- L23: <h1 className="mt-3 text-3xl font-semibold">월간 회고</h1>
-- L25: 한 달 동안의 성장, 어려움, 감사, 다음 달 계획을 정리합니다.
-- L29: 목실기 월별 점검은 실행 체크와 달성률을 기록하는
-- L30: 공간입니다.
-- L33: 월간 회고는 한 달의 성장과 다음 달 계획을 정리하는
-- L34: 기록입니다.
-- L43: 기록 선택으로 돌아가기
-- L49: 마이코칭으로 돌아가기
-- L55: 목실기 월별 점검으로 이동
+- L23: <I18nText k="myCoaching.records.monthlyPage.badge" fallback="나의 기록" />
+- L26: <I18nText k="myCoaching.records.monthlyPage.title" fallback="월간 회고" />
+- L31: fallback="한 달 동안의 성장, 어려움, 감사, 다음 달 계획을 정리합니다."
+- L38: fallback="목실기 월별 점검은 실행 체크와 달성률을 기록하는 공간입니다."
+- L44: fallback="월간 회고는 한 달의 성장과 다음 달 계획을 정리하는 기록입니다."
+- L57: fallback="나의 기록으로 돌아가기"
 
 ### src/app/my-coaching/records/page.tsx
 
-- L162: return "하루 기록";
-- L166: return "주간 기록";
-- L169: return "월간 회고";
-- L186: return "임시저장";
-- L190: return "제출완료";
-- L194: return "검토완료";
-- L197: return "확인 필요";
-- L221: return "코치에게 공유";
-- L225: return "나만 보기";
-- L228: return "미지정";
-- L324: `검색어: ${query || "전체"}`,
-- L325: `기록 유형: ${
-- L326: type === "all" ? "전체" : getRecordTypeLabel(type)
-- L328: `상태: ${status === "all" ? "전체" : getStatusLabel(status)}`,
-- L329: `공유: ${
-- L331: ? "전체"
-- L333: ? "코치에게 공유"
-- L334: : "나만 보기"
-- L336: `정렬: ${
-- L338: ? "최신순"
-- L340: ? "오래된순"
-- L342: ? "기록 유형순"
-- L343: : "상태순"
-- L395: 자세히 보기
-- L473: title: displayText(record.title, "제목 없음"),
-- L474: dateLabel: `기록 날짜: ${formatDate(record.record_date)}`,
-- L491: primaryLabel: "오늘의 돌아봄",
-- L493: secondaryLabel: "실천/적용",
-- L495: metaLabel: "기도제목",
-- L502: dateLabel: `주간 기간: ${formatWeekRange(
-- L523: primaryLabel: "진행 요약",
-- L525: secondaryLabel: "감사 내용",
-- L527: metaLabel: "제출일",
-- L533: title: `${reflection.year}년 ${reflection.month}월`,
-- L534: dateLabel: `연도/월: ${reflection.year}년 ${reflection.month}월`,
-- L560: primaryLabel: "한 달 요약",
-- L562: secondaryLabel: "성장한 점",
-- L564: metaLabel: "다음 달 계획",
-- L755: 코칭 기록
-- L758: 나의 기록
-- L761: 나의 기록 보고서
-- L764: 하루, 주간, 월간 단위로 나의 코칭 여정과 실천 내용을
-- L765: 기록합니다.
-- L768: 생성일: {generatedAt}
-- L771: 인쇄 범위:{" "}
-- L772: <span data-print-range-label="all">전체 기록</span>
-- L773: <span data-print-range-label="daily">하루 기록</span>
-- L774: <span data-print-range-label="weekly">주간 기록</span>
-- L775: <span data-print-range-label="monthly">월간 회고</span>
-- L778: 적용된 필터: {filterSummary}
-- L787: 내 코칭 공간으로 돌아가기
-- L793: 대시보드로 돌아가기
-- L799: <h2 className="text-lg font-semibold">기록 방식 선택</h2>
-- L801: 하루, 주간, 월간 기록 중 필요한 기록 방식을 선택해 주세요.
-- L808: <p className="font-medium text-slate-950">하루 기록</p>
-- L810: 오늘의 묵상, 실천, 적용, 기도제목을 간단히 기록합니다.
-- L813: 하루 기록 작성
-- L821: <p className="font-medium text-slate-950">주간 기록</p>
-- L823: 한 주간의 목표 실행과 목실기 실천을 정리합니다.
-- L826: 주간 기록 작성
-- L834: <p className="font-medium text-slate-950">월간 기록</p>
-- L836: 한 달 동안의 성장과 다음 달 계획을 정리합니다.
-- L839: 월간 회고 작성
-- L846: <h2 className="text-lg font-semibold">나의 기록 검색/필터</h2>
-- L848: 하루, 주간, 월간 기록을 함께 검색하고 필요한 조건으로
-- L849: 정리합니다.
-- L857: 검색어
-- L864: placeholder="제목, 돌아봄, 기도제목, 진행요약, 회고 내용 검색"
-- L875: 기록 유형
-- L883: <option value="all">전체</option>
-- L884: <option value="daily">하루 기록</option>
-- L885: <option value="weekly">주간 기록</option>
-- L886: <option value="monthly">월간 회고</option>
-- L895: 상태
-- L903: <option value="all">전체</option>
-- L904: <option value="draft">임시저장</option>
-- L905: <option value="submitted">제출완료</option>
-- L906: <option value="reviewed">검토완료</option>
-- L907: <option value="unknown">확인 필요</option>
-- L916: 공유
-- L924: <option value="all">전체</option>
-- L925: <option value="private">나만 보기</option>
-- L926: <option value="coach">코치에게 공유</option>
-- L935: 정렬
-- L943: <option value="newest">최신순</option>
-- L944: <option value="oldest">오래된순</option>
-- L945: <option value="type">기록 유형순</option>
-- L946: <option value="status">상태순</option>
-- L953: 전체 {combinedRecords.length}개 중 {filteredRecords.length}개 표시
-- L960: 필터 초기화
-- L966: 필터 적용
-- L976: <h2 className="text-lg font-semibold">최근 나의 기록</h2>
-- L978: 하루, 주간, 월간 기록의 최근 내용을 한눈에 확인합니다.
-- L987: <h3 className="font-semibold text-slate-950">최근 하루 기록</h3>
-- L989: 최신 기록 날짜순 3개
-- L996: 하루 기록으로 이동
-- L1002: 하루 기록을 불러오지 못했습니다.
-- L1006: 아직 작성한 하루 기록이 없습니다.
-- L1014: dateLabel: `기록 날짜: ${formatDate(record.record_date)}`,
-- L1017: metaLabel: "기도제목",
-- L1019: primaryLabel: "오늘의 돌아봄",
-- L1025: secondaryLabel: "실천/적용",
-- L1030: title: displayText(record.title, "제목 없음"),
-- L1043: <h3 className="font-semibold text-slate-950">최근 주간 기록</h3>
-- L1045: 최신 주간 기간순 3개
-- L1052: 주간 기록으로 이동
-- L1058: 주간 기록을 불러오지 못했습니다.
-- L1062: 아직 작성한 주간 기록이 없습니다.
-- L1070: dateLabel: `주간 기간: ${formatWeekRange(
-- L1076: metaLabel: "제출일",
-- L1078: primaryLabel: "진행 요약",
-- L1084: secondaryLabel: "감사 내용",
-- L1105: <h3 className="font-semibold text-slate-950">최근 월간 회고</h3>
-- L1107: 최신 연도/월순 3개
-- L1114: 월간 회고로 이동
-- L1120: 월간 회고를 불러오지 못했습니다.
-- L1124: 아직 작성한 월간 회고가 없습니다.
-- L1132: dateLabel: `연도/월: ${reflection.year}년 ${reflection.month}월`,
-- L1135: metaLabel: "다음 달 계획",
-- L1137: primaryLabel: "한 달 요약",
-- L1147: secondaryLabel: "성장한 점",
-- L1154: title: `${reflection.year}년 ${reflection.month}월`,
-- L1169: <h2 className="text-lg font-semibold">검색 결과</h2>
-- L1171: 전체 {combinedRecords.length}개 중 {printRecords.length}개 표시
-- L1174: 적용된 필터: {filterSummary}
-- L1181: 선택한 조건 또는 인쇄 범위에 해당하는 기록이 없습니다.
-- L1187: 하루 기록 결과
-- L1191: 선택한 범위에 인쇄할 기록이 없습니다.
-- L1204: 주간 기록 결과
-- L1208: 선택한 범위에 인쇄할 기록이 없습니다.
-- L1221: 월간 회고 결과
-- L1225: 선택한 범위에 인쇄할 기록이 없습니다.
+- L174: return "하루 기록";
+- L178: return "주간 기록";
+- L181: return "월간 회고";
+- L210: return "임시저장";
+- L214: return "제출완료";
+- L218: return "검토완료";
+- L221: return "확인 필요";
+- L257: return "코치에게 공유";
+- L261: return "나만 보기";
+- L264: return "미지정";
+- L372: <I18nText k="myCoaching.records.filters.searchLabel" fallback="검색어" />:{" "}
+- L373: {query || <I18nText k="myCoaching.records.filters.all" fallback="전체" />}
+- L375: <I18nText k="myCoaching.records.filters.recordType" fallback="기록 유형" />:{" "}
+- L378: <I18nText k="myCoaching.records.filters.status" fallback="상태" />:{" "}
+- L381: <I18nText k="myCoaching.records.filters.visibility" fallback="공유" />:{" "}
+- L384: <I18nText k="myCoaching.records.filters.sort" fallback="정렬" />:{" "}
+- L392: return <I18nText k="myCoaching.records.daily" fallback="하루 기록" />;
+- L395: return <I18nText k="myCoaching.records.weekly" fallback="주간 기록" />;
+- L398: return <I18nText k="myCoaching.records.monthlyReflection" fallback="월간 회고" />;
+- L400: return <I18nText k="myCoaching.records.filters.all" fallback="전체" />;
+- L405: return <I18nText k="myCoaching.records.filters.draft" fallback="임시저장" />;
+- L408: return <I18nText k="myCoaching.records.filters.submitted" fallback="제출완료" />;
+- L411: return <I18nText k="myCoaching.records.filters.reviewed" fallback="검토완료" />;
+- L414: return <I18nText k="myCoaching.records.filters.unknown" fallback="확인 필요" />;
+- L416: return <I18nText k="myCoaching.records.filters.all" fallback="전체" />;
+- L421: return <I18nText k="myCoaching.records.filters.coachShared" fallback="코치에게 공유" />;
+- L424: return <I18nText k="myCoaching.records.filters.private" fallback="나만 보기" />;
+- L426: return <I18nText k="myCoaching.records.filters.all" fallback="전체" />;
+- L431: return <I18nText k="myCoaching.records.filters.oldest" fallback="오래된순" />;
+- L434: return <I18nText k="myCoaching.records.filters.typeSort" fallback="기록 유형순" />;
+- L437: return <I18nText k="myCoaching.records.filters.statusSort" fallback="상태순" />;
+- L439: return <I18nText k="myCoaching.records.filters.newest" fallback="최신순" />;
+- L460: <I18nText k="myCoaching.records.filters.resultCountPrefix" fallback="전체" />{" "}
+- L462: <I18nText k="myCoaching.records.filters.totalSuffix" fallback="개 중" />{" "}
+- L464: <I18nText k="myCoaching.records.filters.shownSuffix" fallback="개 표시" />
+- L551: 자세히 보기
+- L672: title: displayText(record.title, "제목 없음"),
+- L673: dateLabel: `기록 날짜: ${formatDate(record.record_date, effectiveTimezone)}`,
+- L690: primaryLabel: "오늘의 돌아봄",
+- L692: secondaryLabel: "실천/적용",
+- L694: metaLabel: "기도제목",
+- L701: dateLabel: `주간 기간: ${formatWeekRange(
+- L723: primaryLabel: "진행 요약",
+- L725: secondaryLabel: "감사 내용",
+- L727: metaLabel: "제출일",
+- L733: title: `${reflection.year}년 ${reflection.month}월`,
+- L734: dateLabel: `연도/월: ${reflection.year}년 ${reflection.month}월`,
+- L760: primaryLabel: "한 달 요약",
+- L762: secondaryLabel: "성장한 점",
+- L764: metaLabel: "다음 달 계획",
+- L820: const printRecordCountSummary = `전체 ${printRecords.length}개 / 하루 ${dailyPrintRecords.length}개 / 주간 ${weeklyPrintRecords.length}개 / 월간 ${monthlyPrintRecords.length}개`;
+- L932: <I18nText k="myCoaching.records.badge" fallback="코칭 기록" />
+- L935: <I18nText k="myCoaching.records.title" fallback="나의 기록" />
+- L938: <I18nText k="myCoaching.records.reportTitle" fallback="나의 기록 보고서" />
+- L943: fallback="하루, 주간, 월간 단위로 나의 코칭 여정과 실천 내용을 기록합니다."
+- L947: <I18nText k="myCoaching.records.generatedAt" fallback="생성일" />: {generatedAt}
+- L950: <I18nText k="myCoaching.records.timezone" fallback="기준 시간대" />: {effectiveTimezone}
+- L953: <I18nText k="myCoaching.records.printRange" fallback="인쇄 범위" />:{" "}
+- L955: <I18nText k="myCoaching.records.currentResults" fallback="현재 결과 전체" />
+- L958: <I18nText k="myCoaching.records.daily" fallback="하루 기록" />
+- L961: <I18nText k="myCoaching.records.weekly" fallback="주간 기록" />
+- L964: <I18nText k="myCoaching.records.monthlyReflection" fallback="월간 회고" />
+- L970: fallback="출력 기준: 현재 검색/필터/정렬 결과"
+- L977: fallback="필터 없음: 최근 기록 기준 출력"
+- L983: <I18nText k="myCoaching.records.appliedFilters" fallback="적용된 필터" />: {filterSummary}
+- L986: <I18nText k="myCoaching.records.recordCount" fallback="기록 수" />: {printRecordCountSummary}
+- L1005: fallback="현재 검색어, 기록 유형, 상태, 공유, 정렬 기준이 인쇄물에 반영됩니다."
+- L1011: fallback="필터가 없으면 최근 하루/주간/월간 기록 중심으로 출력됩니다. 브라우저 인쇄창에서 PDF 저장을 선택할 수 있습니다. 모바일 브라우저에서는 PDF 저장 옵션이 기기와 브라우저에 따라 다르게 표시될 수 있습니다. 인쇄창이 열리지 않으면 Safari 또는 Chrome에서 다시 열어 주세요."
+- L1018: <I18nText k="myCoaching.myMoksilgi" fallback="나의 목실기" />
+- L1028: <I18nText k="myCoaching.records.chooseType" fallback="기록 방식 선택" />
+- L1033: fallback="하루, 주간, 월간 기록 중 필요한 기록 방식을 선택해 주세요."
+- L1046: <I18nText k="myCoaching.records.daily" fallback="하루 기록" />
+- L1051: fallback="오늘의 묵상, 실천, 적용, 기도제목을 간단히 기록합니다."
+- L1055: <I18nText k="myCoaching.records.writeDaily" fallback="하루 기록 작성" />
+- L1066: <I18nText k="myCoaching.records.weekly" fallback="주간 기록" />
+- L1071: fallback="한 주간의 목표 실행과 목실기 실천을 정리합니다."
+- L1075: <I18nText k="myCoaching.records.writeWeekly" fallback="주간 기록 작성" />
+- L1086: <I18nText k="myCoaching.records.monthly" fallback="월간 기록" />
+- L1091: fallback="한 달 동안의 성장과 다음 달 계획을 정리합니다."
+- L1095: <I18nText k="myCoaching.records.writeMonthly" fallback="월간 회고 작성" />
+- L1105: <I18nText k="myCoaching.records.searchFilterTitle" fallback="나의 기록 검색/필터" />
+- L1110: fallback="하루, 주간, 월간 기록을 함께 검색하고 필요한 조건으로 정리합니다."
+- L1118: <I18nText k="myCoaching.records.filters.searchLabel" fallback="검색어" />
+- L1129: fallback="제목, 돌아봄, 기도제목, 진행요약, 회고 내용 검색"
+- L1137: <I18nText k="myCoaching.records.filters.recordType" fallback="기록 유형" />
+- L1145: <I18nText k="myCoaching.records.filters.all" fallback="전체" />
+- L1148: <I18nText k="myCoaching.records.daily" fallback="하루 기록" />
+- L1151: <I18nText k="myCoaching.records.weekly" fallback="주간 기록" />
+- L1154: <I18nText k="myCoaching.records.monthlyReflection" fallback="월간 회고" />
+- L1161: <I18nText k="myCoaching.records.filters.status" fallback="상태" />
+- L1169: <I18nText k="myCoaching.records.filters.all" fallback="전체" />
+- L1172: <I18nText k="myCoaching.records.filters.draft" fallback="임시저장" />
+- L1175: <I18nText k="myCoaching.records.filters.submitted" fallback="제출완료" />
+- L1178: <I18nText k="myCoaching.records.filters.reviewed" fallback="검토완료" />
+- L1181: <I18nText k="myCoaching.records.filters.unknown" fallback="확인 필요" />
+- L1188: <I18nText k="myCoaching.records.filters.visibility" fallback="공유" />
+- L1196: <I18nText k="myCoaching.records.filters.all" fallback="전체" />
+- L1199: <I18nText k="myCoaching.records.filters.private" fallback="나만 보기" />
+- L1202: <I18nText k="myCoaching.records.filters.coachShared" fallback="코치에게 공유" />
+- L1209: <I18nText k="myCoaching.records.filters.sort" fallback="정렬" />
+- L1217: <I18nText k="myCoaching.records.filters.newest" fallback="최신순" />
+- L1220: <I18nText k="myCoaching.records.filters.oldest" fallback="오래된순" />
+- L1223: <I18nText k="myCoaching.records.filters.typeSort" fallback="기록 유형순" />
+- L1226: <I18nText k="myCoaching.records.filters.statusSort" fallback="상태순" />
+- L1245: <I18nText k="myCoaching.records.resetFilters" fallback="필터 초기화" />
+- L1248: <I18nText k="myCoaching.records.applyFilters" fallback="필터 적용" />
+- L1259: <I18nText k="myCoaching.records.recentTitle" fallback="최근 나의 기록" />
+- L1264: fallback="하루, 주간, 월간 기록의 최근 내용을 한눈에 확인합니다."
+- L1276: <I18nText k="myCoaching.records.recentDaily" fallback="최근 하루 기록" />
+- L1279: <I18nText k="myCoaching.records.latestDailyThree" fallback="최신 기록 날짜순 3개" />
+- L1288: <I18nText k="myCoaching.records.goDaily" fallback="하루 기록으로 이동" />
+- L1294: <I18nText k="myCoaching.records.dailyLoadFailed" fallback="하루 기록을 불러오지 못했습니다." />
+- L1298: <I18nText k="myCoaching.records.noDaily" fallback="아직 작성한 하루 기록이 없습니다." />
+- L1306: dateLabel: `기록 날짜: ${formatDate(record.record_date, effectiveTimezone)}`,
+- L1309: metaLabel: "기도제목",
+- L1311: primaryLabel: "오늘의 돌아봄",
+- L1317: secondaryLabel: "실천/적용",
+- L1322: title: displayText(record.title, "제목 없음"),
+- L1338: <I18nText k="myCoaching.records.recentWeekly" fallback="최근 주간 기록" />
+- L1341: <I18nText k="myCoaching.records.latestWeeklyThree" fallback="최신 주간 기간순 3개" />
+- L1350: <I18nText k="myCoaching.records.goWeekly" fallback="주간 기록으로 이동" />
+- L1356: <I18nText k="myCoaching.records.weeklyLoadFailed" fallback="주간 기록을 불러오지 못했습니다." />
+- L1360: <I18nText k="myCoaching.records.noWeekly" fallback="아직 작성한 주간 기록이 없습니다." />
+- L1368: dateLabel: `주간 기간: ${formatWeekRange(
+- L1375: metaLabel: "제출일",
+- L1377: primaryLabel: "진행 요약",
+- L1383: secondaryLabel: "감사 내용",
+- L1408: <I18nText k="myCoaching.records.recentMonthly" fallback="최근 월간 회고" />
+- L1411: <I18nText k="myCoaching.records.latestMonthlyThree" fallback="최신 연도/월순 3개" />
+- L1420: <I18nText k="myCoaching.records.goMonthly" fallback="월간 회고로 이동" />
+- L1426: <I18nText k="myCoaching.records.monthlyLoadFailed" fallback="월간 회고를 불러오지 못했습니다." />
+- L1430: <I18nText k="myCoaching.records.noMonthly" fallback="아직 작성한 월간 회고가 없습니다." />
+- L1438: dateLabel: `연도/월: ${reflection.year}년 ${reflection.month}월`,
+- L1441: metaLabel: "다음 달 계획",
+- L1443: primaryLabel: "한 달 요약",
+- L1453: secondaryLabel: "성장한 점",
+- L1460: title: `${reflection.year}년 ${reflection.month}월`,
+- L1478: <I18nText k="myCoaching.records.searchResults" fallback="검색 결과" />
+- L1487: <I18nText k="myCoaching.records.appliedFilters" fallback="적용된 필터" />: {filterSummary}
+- L1497: fallback="선택한 조건 또는 인쇄 범위에 해당하는 기록이 없습니다."
+- L1503: fallback="필터를 초기화하거나 새 기록을 작성해 주세요."
+- L1513: <I18nText k="myCoaching.records.resetFilters" fallback="필터 초기화" />
+- L1520: <I18nText k="myCoaching.records.writeDaily" fallback="하루 기록 작성" />
+- L1528: <I18nText k="myCoaching.records.writeWeekly" fallback="주간 기록 작성" />
+- L1536: <I18nText k="myCoaching.records.dailyResults" fallback="하루 기록 결과" />
+- L1542: fallback="선택한 조건에 해당하는 하루 기록이 없습니다."
+- L1556: <I18nText k="myCoaching.records.weeklyResults" fallback="주간 기록 결과" />
+- L1562: fallback="선택한 조건에 해당하는 주간 기록이 없습니다."
+- L1576: <I18nText k="myCoaching.records.monthlyResults" fallback="월간 회고 결과" />
+- L1582: fallback="선택한 조건에 해당하는 월간 회고가 없습니다."
+
+### src/app/my-coaching/report/monthly/page.tsx
+
+- L32: spiritual: "영적",
+- L33: intellectual: "지적",
+- L34: physical: "육체적",
+- L35: social: "사회적",
+- L129: 월간 리포트를 불러올 수 없습니다.
+- L144: 월간 리포트를 준비할 수 없습니다.
+- L244: <Badge tone="info">월간 리포트</Badge>
+- L246: <p className="text-xs text-ink-muted">기준 시간대: {timezone}</p>
+- L252: 이전 달
+- L258: 다음 달
+- L267: 월간 전체 실행률:{" "}
+- L271: 집계 최신 시각: {summary?.updated_at ? new Date(summary.updated_at).toLocaleString("ko-KR") : "-"}
+- L278: <CardTitle className="text-base">4영역별 실행률</CardTitle>
+- L294: <CardTitle className="text-base">일자별 실행률</CardTitle>
+- L302: title={`${point.day}일 ${point.completionRate}%`}
+- L306: <p className="mt-2 text-xs text-ink-muted">짙을수록 실행률이 높습니다.</p>
+- L313: 연속 실행일(현재):{" "}
+- L314: <span className="font-semibold">{monthlyView.currentStreak}일</span>
+- L317: 연속 실행일(최장):{" "}
+- L318: <span className="font-semibold">{monthlyView.longestStreak}일</span>
+- L321: 가장 꾸준한 영역:{" "}
+- L325: 보완 필요 영역:{" "}
+- L333: <CardTitle className="text-base">코치 피드백</CardTitle>
+- L337: <p className="text-sm text-ink-muted">아직 코치 피드백이 없습니다.</p>
+- L343: 다음 단계: {feedback.next_step ?? "-"}
+- L357: 월간 회고 작성
+
+### src/app/my-coaching/report/weekly/page.tsx
+
+- L51: 주간 리포트를 불러올 수 없습니다.
+- L67: 주간 리포트를 준비할 수 없습니다.
+- L188: <Badge tone="info">주간 리포트</Badge>
+- L189: <CardTitle className="mt-2 text-xl">이번 주 실행 리포트</CardTitle>
+- L199: <CardTitle className="text-base">요일별 실행률</CardTitle>
+- L215: <CardTitle className="text-base">4영역 주간 실행률</CardTitle>
+- L232: 가장 잘한 영역:{" "}
+- L234: {aggregate.bestArea?.areaTitle ?? "데이터 없음"}
+- L238: 가장 부족한 영역:{" "}
+- L240: {aggregate.weakestArea?.areaTitle ?? "데이터 없음"}
+- L244: 다음 주 제안: {aggregate.nextWeekSuggestion}
+- L251: <CardTitle className="text-base">코치 피드백 요약</CardTitle>
+- L258: 격려: {latestFeedback.encouragement ?? "-"}
+- L261: 다음 단계: {latestFeedback.next_step ?? "-"}
+- L266: 아직 받은 코치 피드백이 없습니다.
+
+### src/app/my-coaching/spiritual-companion/SpiritualCompanionClient.tsx
+
+- L17: fallback: "오늘 감사한 일과 기도 제목을 정리하고 싶습니다.",
+- L21: fallback: "마음이 지쳐 있는데 짧은 묵상 질문을 받고 싶습니다.",
+- L25: fallback: "이번 주 사역을 돌아보며 기도하고 싶습니다.",
+- L55: "저장된 대화를 불러올 수 없습니다.",
+- L93: "오늘의 생성 가능 횟수를 모두 사용했습니다.",
+- L103: "지금 AI 응답을 생성할 수 없습니다.",
+- L120: {t("myCoaching.spiritualCompanion.inputTitle", "오늘의 마음 나누기")}
+- L125: "감사한 일, 기도 제목, 묵상 주제 중 하나를 짧게 적어 주세요.",
+- L134: {t("myCoaching.spiritualCompanion.messageLabel", "나눌 내용")}
+- L156: "오늘 감사한 일과 기도 제목을 적어 보세요.",
+- L164: "기본 공개 범위는 나만 보기입니다.",
+- L178: ? t("myCoaching.spiritualCompanion.generating", "생성 중...")
+- L179: : t("myCoaching.spiritualCompanion.generate", "묵상 질문 받기")}
+- L184: {t("myCoaching.spiritualCompanion.remainingPrefix", "오늘 남은 생성 횟수")}:{" "}
+- L186: {t("myCoaching.spiritualCompanion.remainingSuffix", "회")}
+- L194: {t("myCoaching.spiritualCompanion.answerTitle", "AI 영적 형성 응답")}
+- L199: "응답은 목회적 조언이 아닌 개인 묵상을 돕는 짧은 질문과 실천 제안입니다.",
+- L225: "묵상 가이드를 생성하면 이곳에 응답이 표시됩니다.",
+- L232: {t("myCoaching.spiritualCompanion.savedMessagesTitle", "최근 저장된 대화")}
+- L237: "최근 20개 메시지를 시간순으로 표시합니다.",
+- L243: {t("myCoaching.spiritualCompanion.messagesLoading", "저장된 대화를 불러오는 중입니다.")}
+- L251: {t("myCoaching.spiritualCompanion.noSavedMessages", "아직 저장된 대화가 없습니다.")}
+- L274: ? t("myCoaching.spiritualCompanion.messageRole.user", "나")
+- L277: "AI 도우미",
+
+### src/app/my-coaching/spiritual-companion/page.tsx
+
+- L24: fallback="내 코칭"
+- L30: fallback="AI 영적 형성 도우미"
+- L36: fallback="기도 제목, 감사 제목, 묵상 주제를 바탕으로 짧은 묵상 질문을 제공합니다."
+- L49: fallback="MVP 안내"
+- L55: fallback="현재는 외부 AI API를 호출하지 않는 mock 응답으로 동작합니다. 개인 묵상 보조 용도로만 사용해 주세요."
 
 ### src/app/my-coaching/weekly-log/page.tsx
 
-- L40: return "알 수 없음";
-- L43: return person.displayName || person.fullName || person.email || "알 수 없음";
-- L81: return "임시저장";
-- L85: return "제출완료";
-- L88: return "확인 필요";
-- L157: ? "주간 기록을 제출했습니다."
-- L158: : "주간 기록을 임시 저장했습니다.";
-- L190: "주간 기록이 목록에서 제거되었습니다.",
-- L203: 코칭
-- L205: <h1 className="mt-3 text-3xl font-semibold">주간 기록</h1>
-- L207: 이번 주 코칭 관계에 대한 기록을 작성합니다. 현재는 주간 기록을
-- L208: 작성하는 공간이며, 하루 기록과 월간 기록은 단계적으로
-- L209: 확장됩니다.
-- L217: 기록 선택으로 돌아가기
-- L223: 내 코칭 공간으로 돌아가기
-- L229: 대시보드로 돌아가기
-- L236: 지금 주간 기록을 불러올 수 없습니다.
-- L240: <p className="text-slate-700">아직 프로필이 생성되지 않았습니다.</p>
-- L242: 초대를 받으셨다면 먼저 초대를 수락해 주세요.
-- L249: 프로필 보기
-- L256: <h2 className="text-lg font-semibold">이번 주</h2>
-- L258: 기간: {formatDateRange(currentWeek)}
-- L261: 작성자{" "}
-- L267: "사용자"}
-- L274: <p className="text-slate-700">아직 배정된 코치가 없습니다.</p>
-- L279: <h2 className="text-lg font-semibold">내 코칭 관계</h2>
-- L320: <h2 className="text-lg font-semibold">주간 돌아보기</h2>
-- L323: 이번 주 기록이 있습니다. 아래 입력란에는 저장된 이번
-- L324: 주 기록 내용이 채워져 있습니다.
-- L334: 코칭 관계
-- L367: 감사 제목
-- L383: 기도 제목
-- L399: 진행 상황
-- L417: 어려웠던 점
-- L433: 코치에게 남길 말
-- L453: 임시 저장
-- L461: 주간 기록 제출
-- L482: 목록에서 제거
-- L491: <h2 className="text-lg font-semibold">나의 주간 기록</h2>
-- L493: 현재 선택한 코칭 관계의 주간 기록을 최신순으로
-- L494: 확인합니다.
-- L498: 전체 {result.data.weeklyLogs.length}개
-- L504: 아직 작성한 주간 기록이 없습니다.
-- L516: 주간 기간
-- L537: 감사 내용
-- L545: 기도 제목
-- L553: 진행 요약
-- L561: 어려웠던 점
-- L569: 코치에게 남긴 메시지
-- L579: <dt className="font-medium">제출일</dt>
-- L585: <dt className="font-medium">작성일</dt>
-- L591: <dt className="font-medium">수정일</dt>
+- L37: if (message === "주간 기록을 제출했습니다.") {
+- L41: fallback="주간 기록을 제출했습니다."
+- L46: if (message === "주간 기록을 임시 저장했습니다.") {
+- L50: fallback="주간 기록을 임시 저장했습니다."
+- L55: if (message === "주간 기록이 목록에서 제거되었습니다.") {
+- L59: fallback="주간 기록이 목록에서 제거되었습니다."
+- L64: if (message === "지금 주간 기록을 저장할 수 없습니다.") {
+- L68: fallback="지금 주간 기록을 저장할 수 없습니다."
+- L73: if (message === "주간 기록 서비스를 지금 사용할 수 없습니다.") {
+- L77: fallback="주간 기록 서비스를 지금 사용할 수 없습니다."
+- L82: if (message === "주간 기록 ID를 확인할 수 없습니다.") {
+- L86: fallback="주간 기록 ID를 확인할 수 없습니다."
+- L91: if (message === "주간 기록 처리에 실패했습니다.") {
+- L95: fallback="주간 기록 처리에 실패했습니다."
+- L100: if (message === "주간 기록을 찾을 수 없습니다.") {
+- L104: fallback="주간 기록을 찾을 수 없습니다."
+- L109: if (message === "이 주간 기록에 접근할 권한이 없습니다.") {
+- L113: fallback="이 주간 기록에 접근할 권한이 없습니다."
+- L118: if (message === "지금 주간 기록을 불러올 수 없습니다.") {
+- L122: fallback="지금 주간 기록을 불러올 수 없습니다."
+- L136: return "알 수 없음";
+- L139: return person.displayName || person.fullName || person.email || "알 수 없음";
+- L180: fallback="임시저장"
+- L189: fallback="제출완료"
+- L197: fallback="확인 필요"
+- L268: ? "주간 기록을 제출했습니다."
+- L269: : "주간 기록을 임시 저장했습니다.";
+- L301: "주간 기록이 목록에서 제거되었습니다.",
+- L314: <I18nText k="myCoaching.weeklyLog.badge" fallback="코칭" />
+- L317: <I18nText k="myCoaching.weeklyLog.title" fallback="주간 기록" />
+- L322: fallback="이번 주 코칭 관계에 대한 기록을 작성합니다. 현재는 주간 기록을 작성하는 공간이며, 하루 기록과 월간 기록은 단계적으로 확장됩니다."
+- L334: fallback="나의 기록으로 돌아가기"
+- L344: fallback="지금 주간 기록을 불러올 수 없습니다."
+- L352: fallback="아직 프로필이 생성되지 않았습니다."
+- L358: fallback="초대를 받으셨다면 먼저 초대를 수락해 주세요."
+- L368: fallback="프로필 보기"
+- L377: <I18nText k="myCoaching.weeklyLog.form.thisWeek" fallback="이번 주" />
+- L380: <I18nText k="myCoaching.weeklyLog.form.period" fallback="기간" />:{" "}
+- L384: <I18nText k="myCoaching.weeklyLog.form.author" fallback="작성자" />{" "}
+- L390: "사용자"}
+- L400: fallback="아직 배정된 코치가 없습니다."
+- L410: fallback="내 코칭 관계"
+- L456: fallback="주간 돌아보기"
+- L463: fallback="이번 주 기록이 있습니다. 아래 입력란에는 저장된 이번 주 기록 내용이 채워져 있습니다."
+- L476: fallback="코칭 관계"
+- L512: fallback="감사 제목"
+- L531: fallback="기도 제목"
+- L550: fallback="진행 상황"
+- L571: fallback="어려웠던 점"
+- L590: fallback="코치에게 남길 말"
+- L613: fallback="임시 저장"
+- L624: fallback="주간 기록 제출"
+- L648: fallback="목록에서 제거"
+- L661: fallback="나의 주간 기록"
+- L667: fallback="현재 선택한 코칭 관계의 주간 기록을 최신순으로 확인합니다."
+- L672: <I18nText k="myCoaching.weeklyLog.form.total" fallback="전체" />{" "}
+- L674: <I18nText k="myCoaching.weeklyLog.form.countSuffix" fallback="개" />
+- L682: fallback="아직 작성한 주간 기록이 없습니다."
+- L697: fallback="주간 기간"
+- L721: fallback="감사 내용"
+- L732: fallback="기도 제목"
+- L743: fallback="진행 요약"
+- L754: fallback="어려웠던 점"
+- L765: fallback="코치에게 남긴 메시지"
+- L779: fallback="제출일"
+- L790: fallback="작성일"
+- L801: fallback="수정일"
+
+### src/app/password-reset/PasswordResetRequestForm.tsx
+
+- L30: setErrorMessage("이메일 발송에 실패했습니다. 다시 시도해 주세요.");
+- L40: <p className="text-lg font-semibold text-ink-strong">이메일이 발송되었습니다</p>
+- L42: <span className="font-medium text-ink-base">{email}</span> 으로 비밀번호
+- L43: 재설정 링크를 보냈습니다. 받은 편지함을 확인해 주세요.
+- L46: 이메일이 오지 않으면 스팸 폴더를 확인하거나, 잠시 후 다시 시도해 주세요.
+- L59: 이메일
+- L84: {status === "submitting" ? "발송 중..." : "재설정 이메일 보내기"}
+- L89: 로그인으로 돌아가기
+
+### src/app/password-reset/confirm/PasswordResetConfirmForm.tsx
+
+- L59: setErrorMessage("비밀번호가 일치하지 않습니다.");
+- L64: setErrorMessage("비밀번호는 8자 이상이어야 합니다.");
+- L75: setErrorMessage("비밀번호 변경에 실패했습니다. 링크가 만료되었을 수 있습니다.");
+- L87: <div className="mt-8 text-center text-ink-muted">링크를 확인하는 중...</div>
+- L94: <p className="font-semibold text-red-700">링크가 유효하지 않습니다</p>
+- L96: 링크가 만료되었거나 이미 사용되었습니다.
+- L102: 다시 요청하기
+- L112: 비밀번호가 변경되었습니다
+- L114: <p className="mt-2 text-sm text-ink-muted">잠시 후 대시보드로 이동합니다.</p>
+- L126: 새 비밀번호
+- L135: placeholder="8자 이상"
+- L147: 새 비밀번호 확인
+- L156: placeholder="비밀번호를 다시 입력하세요"
+- L174: {status === "submitting" ? "변경 중..." : "비밀번호 변경"}
+
+### src/app/password-reset/confirm/page.tsx
+
+- L14: <h1 className="mt-6 text-3xl font-semibold">새 비밀번호 설정</h1>
+- L16: 새로 사용할 비밀번호를 입력해 주세요.
+- L21: <div className="mt-8 text-center text-ink-muted">불러오는 중...</div>
+
+### src/app/password-reset/page.tsx
+
+- L13: <h1 className="mt-6 text-3xl font-semibold">비밀번호 재설정</h1>
+- L15: 가입한 이메일을 입력하시면 비밀번호 재설정 링크를 보내드립니다.
 
 ### src/app/profile/edit/page.tsx
 
-- L20: return value && value.trim().length > 0 ? value : "미지정";
-- L32: return id ? `ID: ${id.slice(0, 8)}...` : "미지정";
-- L40: return id ? `ID: ${id.slice(0, 8)}...` : "미지정";
-- L45: ? `${value}세대`
-- L46: : "미지정";
-- L108: 프로필
-- L110: <h1 className="mt-3 text-3xl font-semibold">프로필 수정</h1>
-- L112: 표시 이름, 전화번호, 소속 직분만 직접 수정할 수 있습니다.
-- L113: 소속/역할/세대 정보 변경은 관리자에게 요청해 주세요.
-- L121: 프로필로 돌아가기
-- L127: 지금 프로필을 불러올 수 없습니다.
-- L131: <h2 className="text-lg font-semibold">프로필</h2>
-- L133: 아직 프로필이 생성되지 않았습니다.
-- L140: 프로필로 돌아가기
-- L154: 이메일, 시스템 역할, 소속 국가, 소속 기관 및 단체, 소속
-- L155: 교회, 세대, 회원 상태는 직접 수정할 수 없습니다. 변경이
-- L156: 필요하면 관리자에게 요청해 주세요.
-- L160: <h2 className="text-lg font-semibold">기본 정보</h2>
-- L163: label="이름"
-- L167: label="이메일"
-- L168: note="이 항목은 관리자 승인 후 변경됩니다."
-- L179: 표시 이름
-- L196: 전화번호
-- L211: <h2 className="text-lg font-semibold">소속 정보</h2>
-- L214: label="소속 기관 및 단체"
-- L215: note="소속/역할/세대 정보 변경은 관리자에게 요청해 주세요."
-- L222: label="소속 국가"
-- L223: note="소속/역할/세대 정보 변경은 관리자에게 요청해 주세요."
-- L231: label="소속 교회"
-- L232: note="소속/역할/세대 정보 변경은 관리자에게 요청해 주세요."
-- L245: 소속 직분
-- L253: placeholder="예: 목회자, 선교사, 장로, 집사"
-- L260: <h2 className="text-lg font-semibold">역할 및 세대</h2>
-- L263: label="대표 시스템 역할"
-- L264: note="시스템 역할 변경은 관리자에게 요청해 주세요."
-- L268: : "미지정"
-- L272: label="세대"
-- L273: note="세대 정보 변경은 관리자에게 요청해 주세요."
-- L282: 활성 시스템 역할
-- L298: 활성 역할이 없습니다.
-- L305: <h2 className="text-lg font-semibold">시스템 자동 기록</h2>
-- L308: label="회원 상태"
-- L309: note="회원 상태 변경은 관리자에게 요청해 주세요."
-- L320: 저장
-- L326: 취소
+- L21: return value && value.trim().length > 0 ? value : "미지정";
+- L33: return id ? `ID: ${id.slice(0, 8)}...` : "미지정";
+- L41: return id ? `ID: ${id.slice(0, 8)}...` : "미지정";
+- L46: ? `${value}세대`
+- L47: : "미지정";
+- L110: 프로필
+- L112: <h1 className="mt-3 text-3xl font-semibold">프로필 수정</h1>
+- L114: 표시 이름, 전화번호, 소속 직분, 개인 시간대를 직접 수정할 수 있습니다.
+- L115: 소속/역할/세대 정보 변경은 관리자에게 요청해 주세요.
+- L123: 프로필로 돌아가기
+- L129: 지금 프로필을 불러올 수 없습니다.
+- L133: <h2 className="text-lg font-semibold">프로필</h2>
+- L135: 아직 프로필이 생성되지 않았습니다.
+- L142: 프로필로 돌아가기
+- L156: 이메일, 시스템 역할, 소속 국가, 소속 기관 및 단체, 소속
+- L157: 교회, 세대, 회원 상태는 직접 수정할 수 없습니다. 변경이
+- L158: 필요하면 관리자에게 요청해 주세요.
+- L162: <h2 className="text-lg font-semibold">기본 정보</h2>
+- L165: label="이름"
+- L169: label="이메일"
+- L170: note="이 항목은 관리자 승인 후 변경됩니다."
+- L181: 표시 이름
+- L198: 전화번호
+- L213: <h2 className="text-lg font-semibold">소속 정보</h2>
+- L216: label="소속 기관 및 단체"
+- L217: note="소속/역할/세대 정보 변경은 관리자에게 요청해 주세요."
+- L224: label="소속 국가"
+- L225: note="소속/역할/세대 정보 변경은 관리자에게 요청해 주세요."
+- L233: label="소속 교회"
+- L234: note="소속/역할/세대 정보 변경은 관리자에게 요청해 주세요."
+- L247: 소속 직분
+- L255: placeholder="예: 목회자, 선교사, 장로, 집사"
+- L262: <h2 className="text-lg font-semibold">시간대 설정</h2>
+- L268: 개인 시간대
+- L283: 개인 시간대는 하루 기록, 주간 기록, 월간 회고, 보고서
+- L284: 기준 날짜 계산에 우선 적용됩니다.
+- L290: <h2 className="text-lg font-semibold">역할 및 세대</h2>
+- L293: label="대표 시스템 역할"
+- L294: note="시스템 역할 변경은 관리자에게 요청해 주세요."
+- L298: : "미지정"
+- L302: label="세대"
+- L303: note="세대 정보 변경은 관리자에게 요청해 주세요."
+- L312: 활성 시스템 역할
+- L328: 활성 역할이 없습니다.
+- L335: <h2 className="text-lg font-semibold">시스템 자동 기록</h2>
+- L338: label="회원 상태"
+- L339: note="회원 상태 변경은 관리자에게 요청해 주세요."
+- L350: 저장
+- L356: 취소
 
 ### src/app/profile/page.tsx
 
-- L12: return "미지정";
-- L18: return "미지정";
-- L40: return value && value.trim().length > 0 ? value : "미지정";
-- L52: return id ? `ID: ${id.slice(0, 8)}...` : "미지정";
-- L60: return id ? `ID: ${id.slice(0, 8)}...` : "미지정";
-- L65: ? `${value}세대`
-- L66: : "미지정";
-- L118: 프로필
-- L120: <h1 className="mt-3 text-3xl font-semibold">내 프로필</h1>
-- L122: 회원가입과 초대 수락 때 입력한 본인 프로필 정보를 확인할 수 있습니다.
-- L131: 대시보드로 돌아가기
-- L137: 프로필 수정
-- L144: 지금 프로필을 불러올 수 없습니다.
-- L149: <h2 className="text-lg font-semibold">계정</h2>
-- L153: 로그인 이메일
-- L164: <h2 className="text-lg font-semibold">프로필</h2>
-- L166: 아직 프로필이 생성되지 않았습니다.
-- L170: 현재 계정 이메일: {result.data.authEmail}
-- L174: 초대를 받으셨다면 먼저 초대를 수락해 주세요.
-- L180: <h2 className="text-lg font-semibold">기본 정보</h2>
-- L183: label="이름"
-- L187: label="표시 이름"
-- L191: label="이메일"
-- L195: label="전화번호"
-- L202: <h2 className="text-lg font-semibold">소속 정보</h2>
-- L205: label="소속 기관 및 단체"
-- L212: label="소속 국가"
-- L220: label="소속 교회"
-- L227: label="소속 직분"
-- L234: <h2 className="text-lg font-semibold">역할 및 세대</h2>
-- L237: label="대표 시스템 역할"
-- L241: : "미지정"
-- L245: label="세대"
-- L254: 활성 시스템 역할
-- L261: <th className="px-3 py-2 font-medium">역할</th>
-- L262: <th className="px-3 py-2 font-medium">범위</th>
-- L263: <th className="px-3 py-2 font-medium">상태</th>
-- L265: 배정일
-- L296: 활성 역할이 없습니다.
-- L303: <h2 className="text-lg font-semibold">시스템 자동 기록</h2>
-- L307: 회원 상태
-- L320: label="가입일"
-- L324: label="최근 수정일"
+- L13: return "미지정";
+- L19: return "미지정";
+- L41: return value && value.trim().length > 0 ? value : "미지정";
+- L53: return id ? `ID: ${id.slice(0, 8)}...` : "미지정";
+- L61: return id ? `ID: ${id.slice(0, 8)}...` : "미지정";
+- L66: ? `${value}세대`
+- L67: : "미지정";
+- L124: 프로필
+- L126: <h1 className="mt-3 text-3xl font-semibold">내 프로필</h1>
+- L128: 회원가입과 초대 수락 때 입력한 본인 프로필 정보를 확인할 수 있습니다.
+- L137: 대시보드로 돌아가기
+- L143: 프로필 수정
+- L150: 지금 프로필을 불러올 수 없습니다.
+- L155: <h2 className="text-lg font-semibold">계정</h2>
+- L159: 로그인 이메일
+- L170: <h2 className="text-lg font-semibold">프로필</h2>
+- L172: 아직 프로필이 생성되지 않았습니다.
+- L176: 현재 계정 이메일: {result.data.authEmail}
+- L180: 초대를 받으셨다면 먼저 초대를 수락해 주세요.
+- L186: <h2 className="text-lg font-semibold">기본 정보</h2>
+- L189: label="이름"
+- L193: label="표시 이름"
+- L197: label="이메일"
+- L201: label="전화번호"
+- L208: <h2 className="text-lg font-semibold">소속 정보</h2>
+- L211: label="소속 기관 및 단체"
+- L218: label="소속 국가"
+- L226: label="소속 교회"
+- L233: label="소속 직분"
+- L237: label="개인 시간대"
+- L244: <h2 className="text-lg font-semibold">역할 및 세대</h2>
+- L247: label="대표 시스템 역할"
+- L251: : "미지정"
+- L255: label="세대"
+- L264: 활성 시스템 역할
+- L271: <th className="px-3 py-2 font-medium">역할</th>
+- L272: <th className="px-3 py-2 font-medium">범위</th>
+- L273: <th className="px-3 py-2 font-medium">상태</th>
+- L275: 배정일
+- L306: 활성 역할이 없습니다.
+- L313: <h2 className="text-lg font-semibold">시스템 자동 기록</h2>
+- L317: 회원 상태
+- L330: label="가입일"
+- L334: label="최근 수정일"
 
 ### src/app/unauthorized/page.tsx
 
@@ -3392,45 +4181,52 @@
 
 ### src/components/ConfirmSubmitButton.tsx
 
-- L13: confirmDescription = "이 작업은 되돌릴 수 없습니다. 계속 진행하시겠습니까?",
-- L14: confirmTitle = "정말 진행하시겠습니까?",
+- L15: confirmDescription = "이 작업은 되돌릴 수 없습니다. 계속 진행하시겠습니까?",
+- L16: confirmTitle = "정말 진행하시겠습니까?",
 
 ### src/components/LanguageSwitcher.tsx
 
-- L16: const activeLabel = locale === "en" ? "English" : "한국어";
-- L82: {t("language.change", "언어 변경")}
-- L120: <span className="text-xs">{t("language.comingSoon", "준비 중")}</span>
+- L18: const activeLabel = locale === "en" ? "English" : "한국어";
+- L90: {t("language.change", "언어 변경")}
+- L128: <span className="text-xs">{t("language.comingSoon", "준비 중")}</span>
 
 ### src/components/admin/AdminInvitationCreateForm.tsx
 
-- L81: ? "올바른 이메일 형식이 아닙니다."
-- L82: : "이메일을 입력해 주세요.",
-- L91: message: "범위 ID는 올바른 UUID여야 합니다.",
-- L100: message: "만료 기간은 1일부터 30일 사이로 선택해 주세요.",
-- L139: : "지금 초대를 생성할 수 없습니다.",
-- L153: setCopyMessage("복사했습니다.");
-- L155: setCopyMessage("복사하지 못했습니다. 링크를 직접 복사해 주세요.");
-- L163: <span className="text-sm font-medium text-slate-700">이메일</span>
-- L174: <span className="text-sm font-medium text-slate-700">초대 역할</span>
-- L189: <span className="text-sm font-medium text-slate-700">범위 유형</span>
-- L211: <span className="text-sm font-medium text-slate-700">범위 ID</span>
-- L218: ? "전체 범위에서는 사용하지 않습니다"
-- L219: : "범위 UUID"
-- L227: <span className="text-sm font-medium text-slate-700">만료 기간</span>
-- L233: <option value="7">7일</option>
-- L234: <option value="14">14일</option>
-- L235: <option value="30">30일</option>
-- L247: 지금 초대 이메일 보내기
-- L259: {isSubmitting ? "생성 중..." : "초대 생성"}
-- L266: 초대 목록으로 돌아가기
-- L272: <p className="font-semibold">초대를 생성했습니다.</p>
-- L274: 지금 이 링크를 복사해 주세요. 보안을 위해 원본 토큰은 다시
-- L275: 표시되지 않습니다.
-- L289: 복사
-- L294: <p className="mt-2 text-sm">이메일을 보냈습니다.</p>
-- L299: 이메일 설정이 없습니다. 링크를 직접 복사해 주세요.
-- L305: 이메일 전송에 실패했습니다. 링크를 직접 복사해 주세요.
-- L313: <p className="font-semibold">초대 생성에 실패했습니다.</p>
+- L157: "올바른 이메일 형식이 아닙니다.",
+- L161: "이메일을 입력해 주세요.",
+- L173: "범위 ID는 올바른 UUID여야 합니다.",
+- L185: "만료 기간은 1일부터 30일 사이로 선택해 주세요.",
+- L230: "지금 초대를 생성할 수 없습니다.",
+- L245: setCopyMessage(t("admin.invitations.new.form.copied", "복사했습니다."));
+- L250: "복사하지 못했습니다. 링크를 직접 복사해 주세요.",
+- L274: {t("admin.invitations.new.form.email", "이메일")}
+- L289: "조직 기본값 제안",
+- L300: "직접 권한 설정",
+- L317: "이 조직의 기본 초대 권한이 적용됩니다. 역할: 코칭 대상자 / 범위: 선택한 조직",
+- L324: "이 조직에는 아직 기본 권한 정책이 없습니다. 직접 권한과 범위를 선택해 주세요.",
+- L332: "조직 기본값을 사용하지 않고 직접 권한과 범위를 선택합니다.",
+- L342: "고급 권한 직접 설정",
+- L348: "조직 기본값을 사용하지 않는 경우에만 아래 역할과 범위를 직접 조정해 주세요. 관리자 권한은 접근 범위가 넓으므로 신중히 선택해야 합니다.",
+- L355: {t("admin.invitations.new.form.role", "초대 역할")}
+- L373: {t("admin.invitations.new.form.scopeType", "범위 유형")}
+- L398: {t("admin.invitations.new.form.scopeId", "범위 ID")}
+- L408: "전체 범위에서는 사용하지 않습니다",
+- L412: "범위 UUID",
+- L422: {t("admin.invitations.new.form.expiresInDays", "만료 기간")}
+- L432: {t("admin.invitations.new.form.daySuffix", "일")}
+- L448: "지금 초대 이메일 보내기",
+- L459: {t("admin.invitations.new.form.cancel", "취소")}
+- L468: ? t("admin.invitations.new.form.creating", "생성 중...")
+- L469: : t("admin.invitations.new.form.create", "초대 생성")}
+- L476: {t("admin.invitations.new.form.created", "초대를 생성했습니다.")}
+- L481: "지금 이 링크를 복사해 주세요. 보안을 위해 원본 토큰은 다시 표시되지 않습니다.",
+- L496: {t("admin.invitations.new.form.copy", "복사")}
+- L507: "초대 목록으로 이동",
+- L517: "새 초대 계속 만들기",
+- L523: {t("admin.invitations.new.form.emailSent", "이메일을 보냈습니다.")}
+- L531: "이메일 설정이 없습니다. 링크를 직접 복사해 주세요.",
+- L540: "이메일 전송에 실패했습니다. 링크를 직접 복사해 주세요.",
+- L552: "초대 생성에 실패했습니다.",
 
 ### src/components/admin/ResendInvitationButton.tsx
 
@@ -3448,67 +4244,235 @@
 - L65: : "지금 초대를 취소할 수 없습니다.",
 - L80: {isSubmitting ? "취소 중..." : "취소"}
 
+### src/components/coachee/GrowthSection.tsx
+
+- L29: return <Badge tone="info">코치 확인 가능</Badge>;
+- L35: 비공개
+- L44: editLabel = "수정",
+- L91: 실천 예: {practiceExample}
+- L119: <ProgressBar label="이번 달 실행률" showValue value={completionRate} />
+- L134: <p className="mt-3 text-xs text-ink-muted">등록된 세부 목표가 없습니다.</p>
+
+### src/components/coachee/MoksilgiAreaCard.tsx
+
+- L17: label: "영적",
+- L23: label: "지적",
+- L29: label: "신체적",
+- L35: label: "사회적",
+- L43: label: "기타",
+- L87: 세부목표 {detailGoalCount}개
+
+### src/components/coachee/MoksilgiPrintSummary.tsx
+
+- L184: <div aria-label="내 목실기 인쇄 요약" className="print-only">
+- L191: fallback="아직 작성된 내용이 없습니다."
+- L203: fallback="Ⅰ. 사명선언서 (Mission)"
+- L214: fallback="관련 성경구절"
+- L230: fallback="Ⅱ. 비전 (Vision)"
+- L243: plan.vision_year !== null ? `${plan.vision_year}년` : null,
+- L260: fallback="Ⅲ. 핵심가치 (Core Value)"
+- L285: fallback="실천 모습"
+- L302: fallback="Ⅳ. 목표"
+- L318: fallback="Ⅴ. 목표에 따른 실행전략 기획안"
+- L329: fallback={`목표 ${area.sort_order}: ${area.area_title}`}
+
+### src/components/coachee/MoksilgiSection.tsx
+
+- L40: 작성 완료
+- L43: <Badge tone="warning">작성 필요</Badge>
+- L49: <p className="mt-2 text-sm text-ink-muted">아직 작성되지 않았습니다.</p>
+- L56: {hasSummary || isComplete ? "수정" : "작성하기"}
+- L79: <span className="font-medium text-ink-base">작성 진행률</span>
+- L81: {completedCount} / {totalCount} 영역
+- L102: aria-label="목실기 섹션 이동"
+- L130: aria-label="오늘 홈으로 돌아가기"
+- L135: <span className="sr-only sm:not-sr-only">뒤로</span>
+- L137: <h1 className="text-base font-semibold text-ink-strong">목실기</h1>
+
+### src/components/coachee/TodayAreaCard.tsx
+
+- L14: label: "영적",
+- L20: label: "지적",
+- L26: label: "신체적",
+- L32: label: "사회적",
+- L64: 오늘 완료 {area.completedGoals}개 / 전체 {area.totalGoals}개
+
+### src/components/coachee/TodayTodoList.tsx
+
+- L5: /** 오늘 홈에서 보여줄 4영역 daily_check To-do 한 건. */
+- L11: /** 오늘 체크 여부 */
+- L13: /** 오늘을 제외하고 현재 체크되어 있는 날짜들(저장 시 보존용) */
+- L17: /** 4영역 도메인 색상 dot */
+- L35: * 오늘 실행 To-do 인라인 체크.
+- L36: * 저장은 상위에서 내려준 서버 액션(기존 월별 저장 로직 재사용)을 그대로 호출한다.
+- L37: * 단일 토글이 다른 날짜를 지우지 않도록, 이미 체크된 다른 날짜를 hidden 필드로 함께 제출한다.
+- L63: <p className="text-sm font-semibold text-ink-base">오늘 할 일</p>
+- L65: {done} / {total} 완료
+- L69: 탭하면 바로 저장돼요. 코치도 실행 현황을 함께 확인해요.
+
+### src/components/dashboard/CoacheeActionHub.tsx
+
+- L19: descriptionFallback: "오늘의 코칭 홈에서 하루를 시작합니다.",
+- L23: titleFallback: "오늘 체크",
+- L27: descriptionFallback: "내 목실기 목표와 실행전략을 작성하고 점검합니다.",
+- L32: titleFallback: "나의 목실기",
+- L36: descriptionFallback: "하루기록, 주간기록, 월간기록을 확인하고 작성합니다.",
+- L40: titleFallback: "나의 기록",
+- L44: descriptionFallback: "목표와 성장 방향을 확인합니다.",
+- L48: titleFallback: "나의 성장",
+- L103: <I18nText k="dashboard.myCoachingSpace" fallback="내 코칭" />
+- L107: aria-label="내 코칭 바로가기"
+
+### src/components/dashboard/DashboardHero.tsx
+
+- L31: <I18nText k="dashboard.personalHomeBadge" fallback="개인 홈" />
+- L34: <I18nText k="dashboard.title" fallback="나의 홈" />
+- L37: <I18nText k="dashboard.hello" fallback="안녕하세요" />,{" "}
+- L43: fallback="내 역할에 맞는 코칭 기록, 목실기, 담당 현황으로 이동하는 개인 시작 화면입니다."
+
+### src/components/layout/PageHeader.tsx
+
+- L8: /** 제목 아래 보조 설명 */
+- L10: /** 오른쪽 액션 버튼 영역 */
+- L12: /** 뒤로 가기 링크 (예: 상위 목록 페이지) */
+- L14: /** 뒤로 가기 링크 라벨 (기본: 뒤로 가기) */
+- L24: backLabel = "뒤로 가기",
+
+### src/components/layout/ShellLayout.tsx
+
+- L10: /** 사이드바 메뉴 구성 */
+- L12: /** 상단 바 오른쪽 영역 (사용자 정보, 로그아웃 버튼 등) */
+- L14: /** 사이드바 하단 고정 영역 (역할 배지, 언어 전환 등) */
+- L16: /** 로고 클릭 시 이동 경로 (기본: /dashboard) */
+- L18: /** 서비스 이름 (기본: GoCoaching) */
+- L64: {/* 데스크톱 사이드바 */}
+- L66: aria-label="사이드바"
+- L72: {/* 모바일 드로어 */}
+- L81: aria-label="사이드바"
+- L89: {/* 본문 영역 */}
+- L94: aria-label={mobileOpen ? "메뉴 닫기" : "메뉴 열기"}
+
+### src/components/layout/SidebarNav.tsx
+
+- L12: /** true이면 경로가 정확히 일치할 때만 active 처리 (기본: prefix 일치) */
+- L23: /** 메뉴 클릭 시 호출 (모바일 드로어 닫기 용도) */
+- L38: <nav aria-label="주 메뉴" className="flex flex-col gap-5">
+
+### src/components/navigation/CoacheeBottomTabs.tsx
+
+- L9: /** 탭 식별자 */
+- L11: /** 화면 표시 라벨 (Korean-first) */
+- L13: /** 연결 경로 */
+- L15: /** 활성 판정 방식: exact = 정확히 일치, prefix = 해당 경로로 시작 */
+- L17: /** 탭 아이콘 */
+- L119: label: "오늘",
+- L126: label: "목표",
+- L133: label: "체크",
+- L140: label: "기록",
+- L147: label: "리포트",
+- L163: * 피코치 모바일 하단 5탭 내비게이션.
+- L164: * presentational 컴포넌트로, 라우팅/권한 로직은 포함하지 않는다.
+- L171: aria-label="피코치 하단 메뉴"
+
+### src/components/navigation/CoacheeTopBar.tsx
+
+- L23: error.message || t("auth.signOutFailed", "로그아웃하지 못했습니다."),
+- L34: aria-label="코치이 상단 메뉴"
+- L39: {t("nav.myCoachingSpace", "내 코칭 공간")}
+- L42: aria-label="상위 메뉴"
+- L46: {t("nav.dashboard", "나의 홈")}
+- L57: ? t("auth.signingOut", "로그아웃 중...")
+- L58: : t("auth.signOut", "로그아웃")}
+
 ### src/components/navigation/PageNavigationButtons.tsx
 
-- L28: aria-label="페이지 이동"
-- L36: {t("common.previous", "이전 화면")}
-- L43: {t("common.next", "다음 화면")}
-- L49: {t("nav.dashboard", "대시보드")}
+- L33: ? t("nav.adminCenter", "관리자 센터")
+- L34: : t("nav.dashboard", "나의 홈");
+- L51: error.message || t("auth.signOutFailed", "로그아웃하지 못했습니다."),
+- L62: aria-label="페이지 이동"
+- L72: {backLabel ?? t("common.previous", "이전 화면")}
+- L82: {backLabel ?? t("common.previous", "이전 화면")}
+- L94: {t("common.next", "다음 화면")}
+- L116: ? t("auth.signingOut", "로그아웃 중...")
+- L117: : t("auth.signOut", "로그아웃")}
 
 ### src/components/print/PrintPageButton.tsx
 
-- L34: label = "인쇄/PDF 저장",
+- L42: label = "인쇄/PDF 저장",
+
+### src/lib/ai/providers/mock.ts
+
+- L18: "오늘의 묵상 방향",
+- L19: `지금 나눈 마음을 하나님 앞에 조용히 올려 드리며, \"${focus}\" 안에 담긴 갈망과 부담을 분별해 보세요.`,
+- L21: "묵상 질문",
+- L22: "1. 오늘 내 마음에서 가장 크게 움직이는 감정은 무엇인가요?",
+- L23: "2. 이 상황 속에서 하나님이 초대하시는 작은 순종은 무엇일까요?",
+- L24: "3. 내가 붙잡아야 할 약속의 말씀이나 진리는 무엇인가요?",
+- L26: "오늘의 작은 실천",
+- L27: "5분 동안 조용히 앉아 한 문장 기도로 오늘의 마음을 정리해 보세요.",
+- L29: "짧은 기도문",
+- L30: "주님, 제 마음을 살피시고 오늘 제가 할 수 있는 작은 순종을 보여 주세요. 아멘.",
+
+### src/lib/api/admin/affiliations.ts
+
+- L97: clientError ?? "소속 선택값 관리를 위한 서버 설정이 준비되지 않았습니다.",
+- L143: errors.push("국가 목록을 불러오지 못했습니다.");
+- L152: errors.push("소속 기관/교회 목록을 불러오지 못했습니다.");
+- L161: errors.push("지역/도시 목록을 불러오지 못했습니다.");
+- L170: errors.push("세부 교회 목록을 불러오지 못했습니다.");
+- L179: errors.push("그룹/팀/목장 목록을 불러오지 못했습니다.");
 
 ### src/lib/api/admin/coaching-genealogy.ts
 
-- L711: ? `${generationNumber}세대`
-- L712: : "미지정";
-- L974: message: "로그인이 필요합니다.",
-- L992: message: "관리자 프로필을 확인할 수 없습니다.",
-- L1011: message: "관리자 권한을 확인할 수 없습니다.",
-- L1025: message: "관리자 또는 코치메이커 권한이 필요합니다.",
-- L1123: ? candidateMap.get(candidate.currentCoachId)?.label ?? "담당 코치 확인 필요"
-- L1349: (coachProfile ? labelForProfile(coachProfile) : "코치 확인 필요"),
-- L1353: (coacheeProfile ? labelForProfile(coacheeProfile) : "코치이 확인 필요"),
-- L1403: message: "코치를 선택해 주세요.",
-- L1414: message: "배정할 코치이를 선택해 주세요.",
-- L1425: message: "코치와 코치이가 같은 사람일 수 없습니다.",
-- L1436: message: "세대 값은 1 이상의 숫자여야 합니다.",
-- L1447: message: "배정 범위 유형을 확인해 주세요.",
-- L1458: message: "global이 아닌 배정 범위에는 범위 ID가 필요합니다.",
-- L1473: "배정 처리를 위한 서버 설정이 준비되지 않았습니다.",
-- L1509: message: "배정 대상 정보를 확인하지 못했습니다.",
-- L1534: message: "배정 가능한 코치를 찾을 수 없습니다.",
-- L1549: message: "배정 가능한 코치이 목록을 확인해 주세요.",
-- L1578: message: "관리 범위 밖의 코칭 관계는 배정할 수 없습니다.",
-- L1603: message: "기존 배정 관계를 확인하지 못했습니다.",
-- L1624: message: "현재 선택 코치에게 이미 배정되어 있습니다.",
-- L1634: message: "이미 다른 담당 코치가 있습니다.",
-- L1660: message: "배정 관계 생성에 실패했습니다.",
-- L1668: message: "배정 관계가 생성되었습니다.",
-- L1694: message: "세대 업데이트에 실패했습니다.",
-- L1726: message: "배정 처리 중 오류가 발생했습니다.",
-- L1758: "계보도 데이터 조회를 위한 서버 설정이 준비되지 않았습니다.",
-- L1791: message: "코칭 계보 관계 데이터를 불러오지 못했습니다.",
-- L1840: message: "코칭 계보 프로필 데이터를 불러오지 못했습니다.",
-- L1887: message: "코칭 계보 기준 데이터를 불러오지 못했습니다.",
-- L2010: countryName: country?.name ?? "미지정",
-- L2031: regionName: region?.name ?? "미지정",
-- L2047: churchName: church?.name ?? "미지정",
-- L2195: message: "코칭 계보 데이터를 처리하는 중 오류가 발생했습니다.",
-- L2210: mostChangedGeneration: "미지정",
-- L2298: "미지정"
-- L2326: message: error ?? "서비스 클라이언트를 사용할 수 없습니다.",
-- L2399: message: "세대 변경 이력을 조회하는 중 오류가 발생했습니다.",
-- L2441: message: "세대 변경 대상 회원 정보를 조회하는 중 오류가 발생했습니다.",
-- L2565: "미지정";
-- L2570: profileName: targetProfile ? labelForProfile(targetProfile) : "미지정",
-- L2580: : "시스템/확인 필요",
-- L2584: countryName: country?.name ?? "미지정",
-- L2586: organizationName: organization?.name ?? "미지정",
-- L2587: churchName: church?.name ?? "미지정",
-- L2589: currentStatus: targetProfile?.status ?? "미지정",
-- L2656: message: "세대 변경 이력을 처리하는 중 오류가 발생했습니다.",
+- L719: ? `${generationNumber}세대`
+- L720: : "미지정";
+- L983: message: "로그인이 필요합니다.",
+- L1002: message: "관리자 프로필을 확인할 수 없습니다.",
+- L1022: message: "관리자 권한을 확인할 수 없습니다.",
+- L1036: message: "관리자 또는 코치메이커 권한이 필요합니다.",
+- L1134: ? candidateMap.get(candidate.currentCoachId)?.label ?? "담당 코치 확인 필요"
+- L1296: // 소속 정보 변경 후 최대 3분 반영 지연 가능.
+- L1550: (coachProfile ? labelForProfile(coachProfile) : "코치 확인 필요"),
+- L1554: (coacheeProfile ? labelForProfile(coacheeProfile) : "코치이 확인 필요"),
+- L1604: message: "코치를 선택해 주세요.",
+- L1615: message: "배정할 코치이를 선택해 주세요.",
+- L1626: message: "코치와 코치이가 같은 사람일 수 없습니다.",
+- L1637: message: "세대 값은 1 이상의 숫자여야 합니다.",
+- L1648: message: "배정 범위 유형을 확인해 주세요.",
+- L1659: message: "global이 아닌 배정 범위에는 범위 ID가 필요합니다.",
+- L1674: "배정 처리를 위한 서버 설정이 준비되지 않았습니다.",
+- L1710: message: "배정 대상 정보를 확인하지 못했습니다.",
+- L1735: message: "배정 가능한 코치를 찾을 수 없습니다.",
+- L1750: message: "배정 가능한 코치이 목록을 확인해 주세요.",
+- L1779: message: "관리 범위 밖의 코칭 관계는 배정할 수 없습니다.",
+- L1804: message: "기존 배정 관계를 확인하지 못했습니다.",
+- L1825: message: "현재 선택 코치에게 이미 배정되어 있습니다.",
+- L1835: message: "이미 다른 담당 코치가 있습니다.",
+- L1861: message: "배정 관계 생성에 실패했습니다.",
+- L1869: message: "배정 관계가 생성되었습니다.",
+- L1895: message: "세대 업데이트에 실패했습니다.",
+- L1927: message: "배정 처리 중 오류가 발생했습니다.",
+- L1961: "계보도 데이터 조회를 위한 서버 설정이 준비되지 않았습니다.",
+- L1995: message: "코칭 계보 관계 데이터를 불러오지 못했습니다.",
+- L2052: message: "코칭 계보 프로필 데이터를 불러오지 못했습니다.",
+- L2093: message: "코칭 계보 기준 데이터를 불러오지 못했습니다.",
+- L2215: countryName: country?.name ?? "미지정",
+- L2236: regionName: region?.name ?? "미지정",
+- L2252: churchName: church?.name ?? "미지정",
+- L2405: message: "코칭 계보 데이터를 처리하는 중 오류가 발생했습니다.",
+- L2420: mostChangedGeneration: "미지정",
+- L2508: "미지정"
+- L2536: message: error ?? "서비스 클라이언트를 사용할 수 없습니다.",
+- L2609: message: "세대 변경 이력을 조회하는 중 오류가 발생했습니다.",
+- L2651: message: "세대 변경 대상 회원 정보를 조회하는 중 오류가 발생했습니다.",
+- L2775: "미지정";
+- L2780: profileName: targetProfile ? labelForProfile(targetProfile) : "미지정",
+- L2790: : "시스템/확인 필요",
+- L2794: countryName: country?.name ?? "미지정",
+- L2796: organizationName: organization?.name ?? "미지정",
+- L2797: churchName: church?.name ?? "미지정",
+- L2799: currentStatus: targetProfile?.status ?? "미지정",
+- L2866: message: "세대 변경 이력을 처리하는 중 오류가 발생했습니다.",
 
 ### src/lib/api/admin/coaching-relationships.ts
 
@@ -3537,17 +4501,21 @@
 
 ### src/lib/api/admin/create-invitation.ts
 
-- L240: message: "올바른 이메일 주소를 입력해 주세요.",
-- L251: message: "초대 역할이 올바르지 않습니다.",
-- L262: message: "범위 유형이 올바르지 않습니다.",
-- L275: message: "전체 범위 초대에는 범위 ID를 넣을 수 없습니다.",
-- L286: message: "이 범위 유형에는 범위 ID가 필요합니다.",
-- L297: message: "만료 기간은 1일에서 30일 사이여야 합니다.",
-- L315: message: "초대 서비스를 지금 사용할 수 없습니다.",
-- L338: message: "지금 기존 초대를 확인할 수 없습니다.",
-- L349: message: "이 이메일과 범위에는 이미 대기 중인 초대가 있습니다.",
-- L396: message: "이 이메일과 범위에는 이미 대기 중인 초대가 있습니다.",
-- L410: message: "지금 초대를 생성할 수 없습니다.",
+- L278: message: "올바른 이메일 주소를 입력해 주세요.",
+- L293: message: "조직 기본 권한 초대는 코치이 역할만 허용됩니다.",
+- L304: message: "초대 역할이 올바르지 않습니다.",
+- L315: message: "범위 유형이 올바르지 않습니다.",
+- L329: message: "전체 범위 초대에는 범위 ID를 넣을 수 없습니다.",
+- L340: message: "이 범위 유형에는 범위 ID가 필요합니다.",
+- L354: message: "조직 기본 권한 초대에는 올바른 조직 ID가 필요합니다.",
+- L365: message: "만료 기간은 1일에서 30일 사이여야 합니다.",
+- L383: message: "초대 서비스를 지금 사용할 수 없습니다.",
+- L407: message: "조직을 확인하지 못했습니다.",
+- L422: message: "활성 조직에만 기본 권한 초대를 생성할 수 있습니다.",
+- L446: message: "지금 기존 초대를 확인할 수 없습니다.",
+- L457: message: "이 이메일과 범위에는 이미 대기 중인 초대가 있습니다.",
+- L504: message: "이 이메일과 범위에는 이미 대기 중인 초대가 있습니다.",
+- L518: message: "지금 초대를 생성할 수 없습니다.",
 
 ### src/lib/api/admin/generations.ts
 
@@ -3556,109 +4524,179 @@
 
 ### src/lib/api/admin/organizations.ts
 
-- L53: denomination: "교단/교파",
-- L54: mission_body: "선교단체",
-- L55: church_network: "교회 네트워크/노회",
-- L56: local_ministry: "지역 사역",
-- L57: nonprofit: "비영리단체",
-- L58: other: "기타",
-- L63: return "기타";
-- L82: clientError ?? "기관 및 단체 관리를 위한 서버 설정이 준비되지 않았습니다.",
-- L101: error: "국가 목록을 불러오지 못했습니다.",
-- L129: error: "기관 및 단체 목록을 불러오지 못했습니다.",
-- L151: country_name: country?.name ?? "미지정",
+- L55: denomination: "교단/교파",
+- L56: mission_body: "선교단체",
+- L57: church_network: "교회 네트워크/노회",
+- L58: local_ministry: "지역 사역",
+- L59: nonprofit: "비영리단체",
+- L60: other: "기타",
+- L65: return "기타";
+- L84: clientError ?? "기관 및 단체 관리를 위한 서버 설정이 준비되지 않았습니다.",
+- L103: error: "국가 목록을 불러오지 못했습니다.",
+- L131: error: "기관 및 단체 목록을 불러오지 못했습니다.",
+- L153: country_name: country?.name ?? "미지정",
+
+### src/lib/api/admin/system-announcements.ts
+
+- L142: error: "날짜 형식이 올바르지 않습니다.",
+- L151: error: "날짜 형식이 올바르지 않습니다.",
+- L166: return { ok: false, error: "요청 형식이 올바르지 않습니다." };
+- L173: error: `허용되지 않은 공지 항목입니다: ${unknownKeys.join(", ")}`,
+- L178: return { ok: false, error: "수정할 공지 항목이 없습니다." };
+- L186: return { ok: false, error: "공지 제목을 입력해 주세요." };
+- L194: return { ok: false, error: "공지 본문을 입력해 주세요." };
+- L201: return { ok: false, error: "공지 대상을 확인해 주세요." };
+- L208: return { ok: false, error: "공지 표시 위치를 확인해 주세요." };
+- L215: return { ok: false, error: "공지 활성 상태를 확인해 주세요." };
+- L223: return { ok: false, error: "공지 우선순위는 정수여야 합니다." };
+- L231: return { ok: false, error: "공지 시작일을 확인해 주세요." };
+- L239: return { ok: false, error: "공지 종료일을 확인해 주세요." };
+- L251: error: "공지 종료일은 시작일보다 늦어야 합니다.",
+- L320: return "공지 정보를 확인하지 못했습니다.";
+- L329: return "공지 종료일은 시작일보다 늦어야 합니다.";
+- L365: : "시스템 공지를 불러오지 못했습니다.",
+- L394: error: error?.message ?? "시스템 공지를 저장하지 못했습니다.",
+- L408: : "시스템 공지를 저장하지 못했습니다.",
+- L443: error: error?.message ?? "시스템 공지를 수정하지 못했습니다.",
+- L457: : "시스템 공지를 수정하지 못했습니다.",
+- L481: error: error?.message ?? "시스템 공지를 삭제하지 못했습니다.",
+- L495: : "시스템 공지를 삭제하지 못했습니다.",
+- L517: message: "최고관리자 권한이 필요합니다.",
+- L534: message: "활성 최고관리자 계정이 필요합니다.",
+- L602: // 공지 변경 후 최대 3분 반영 지연 가능.
+
+### src/lib/api/admin/system-settings.ts
+
+- L241: error instanceof Error ? error.message : "시스템 설정을 불러오지 못했습니다.";
+- L286: error instanceof Error ? error.message : "시스템 설정을 저장하지 못했습니다.";
+- L350: error instanceof Error ? error.message : "초대 만료 설정을 불러오지 못했습니다.";
+- L407: : "조직별 기본 권한 설정을 불러오지 못했습니다.";
+- L436: error: "조직 목록을 불러오지 못했습니다.",
+- L480: error: "조직별 기본 권한 설정을 불러오지 못했습니다.",
+- L503: country_name: countryMap.get(organization.country_id) ?? "미지정",
+- L523: : "조직별 기본 권한 설정을 불러오지 못했습니다.";
+- L552: error: "조직 목록을 불러오지 못했습니다.",
+- L597: error: "조직별 기본 권한 설정을 불러오지 못했습니다.",
+- L621: country_name: countryMap.get(organization.country_id) ?? "미지정",
+- L652: error: "1차 기본 권한 정책은 코치이만 허용합니다.",
+- L662: error instanceof Error ? error.message : "조직별 기본 권한을 저장하지 못했습니다.";
+- L691: error: "조직을 확인하지 못했습니다.",
+- L703: error: "활성 조직만 기본 권한 정책을 설정할 수 있습니다.",
+- L739: error: "조직별 기본 권한을 저장하지 못했습니다.",
 
 ### src/lib/api/admin/users.ts
 
-- L163: error: clientError ?? "소속 기관 및 단체 목록 조회를 위한 서버 설정이 없습니다.",
-- L176: error: "소속 기관 및 단체 목록을 불러오지 못했습니다.",
+- L344: // 소속/lookup 정보 변경 후 최대 3분 반영 지연 가능.
+- L469: "지역/도시 목록을 불러오지 못했습니다.",
+- L481: "소속 교회 목록을 불러오지 못했습니다.",
+- L493: "그룹/팀/목장 목록을 불러오지 못했습니다.",
+- L512: error: clientError ?? "소속 기관 및 단체 목록 조회를 위한 서버 설정이 없습니다.",
+- L560: error: "소속 기관 및 단체 목록을 불러오지 못했습니다.",
+- L610: // 소속/lookup 정보 변경 후 최대 3분 반영 지연 가능.
+- L720: // 회원 생성/수정/역할 변경 직후 최대 1분 반영 지연 가능.
 
 ### src/lib/api/coach-maker/coach-stats.ts
 
-- L187: "이름 없음"
-- L248: return "전체 범위";
-- L252: return "권한 없음";
-- L259: : `${role.scope_type}:미지정`,
-- L309: message: "코치별 현황을 불러오지 못했습니다.",
-- L326: message: "로그인이 필요합니다.",
-- L355: message: "프로필을 조회하는 중 오류가 발생했습니다.",
-- L365: message: "아직 프로필이 생성되지 않았습니다.",
-- L390: message: "역할 정보를 조회하는 중 오류가 발생했습니다.",
-- L402: message: "코치메이커 권한이 필요합니다.",
-- L424: message: "코치-코치이 관계 현황을 불러오지 못했습니다.",
-- L464: message: "코치/코치이 정보를 불러오지 못했습니다.",
-- L534: message: "주간 기록 현황을 불러오지 못했습니다.",
-- L548: message: "공유된 하루 기록 현황을 불러오지 못했습니다.",
-- L563: message: "공유된 월간 회고 현황을 불러오지 못했습니다.",
+- L223: "이름 없음"
+- L280: return "전체 범위";
+- L284: return "전체 범위";
+- L288: return "권한 없음";
+- L295: : `${role.scope_type}:미지정`,
+- L374: message: "코치별 현황을 불러오지 못했습니다.",
+- L390: message: "로그인이 필요합니다.",
+- L419: message: "프로필을 조회하는 중 오류가 발생했습니다.",
+- L429: message: "아직 프로필이 생성되지 않았습니다.",
+- L456: message: "역할 정보를 조회하는 중 오류가 발생했습니다.",
+- L468: message: "코치메이커 또는 최고관리자 권한이 필요합니다.",
+- L490: message: "코치-코치이 관계 현황을 불러오지 못했습니다.",
+- L530: message: "코치/코치이 정보를 불러오지 못했습니다.",
+- L604: message: "주간 기록 현황을 불러오지 못했습니다.",
+- L618: message: "공유된 하루 기록 현황을 불러오지 못했습니다.",
+- L633: message: "공유된 월간 회고 현황을 불러오지 못했습니다.",
+- L807: message: "로그인이 필요합니다.",
+- L836: message: "프로필을 조회하는 중 오류가 발생했습니다.",
+- L846: message: "아직 프로필이 생성되지 않았습니다.",
+- L872: message: "역할 정보를 조회하는 중 오류가 발생했습니다.",
+- L884: message: "코치메이커 또는 최고관리자 권한이 필요합니다.",
+- L910: message: "코칭 관계를 조회하는 중 오류가 발생했습니다.",
+- L957: message: "목실기 요약을 불러오지 못했습니다.",
+- L994: message: "목실기 요약을 불러오지 못했습니다.",
+- L1014: message: "소속 정보를 조회하는 중 오류가 발생했습니다.",
 
 ### src/lib/api/coach-maker/moksilgi-progress-detail.ts
 
 - L155: message: "지금 목실기 상세 현황을 불러올 수 없습니다.",
 - L199: monthLabel: `${month}월`,
 - L226: monthLabel: "누적",
-- L262: message: "코칭 관계를 조회하는 중 오류가 발생했습니다.",
-- L288: return { data: null, error: { code: "UNAUTHORIZED", message: "로그인이 필요합니다." } };
-- L301: return { data: null, error: { code: "PROFILE_QUERY_FAILED", message: "프로필을 조회하는 중 오류가 발생했습니다." } };
-- L305: return { data: null, error: { code: "PROFILE_NOT_FOUND", message: "아직 프로필이 생성되지 않았습니다." } };
-- L318: return { data: null, error: { code: "ROLES_QUERY_FAILED", message: "역할 정보를 조회하는 중 오류가 발생했습니다." } };
-- L325: return { data: null, error: { code: "ACCESS_DENIED", message: "코치메이커 권한이 없습니다." } };
-- L355: return { data: null, error: { code: "MOKSILGI_QUERY_FAILED", message: "목실기를 조회하는 중 오류가 발생했습니다." } };
-- L359: return { data: null, error: { code: "NOT_FOUND", message: "해당 목실기를 찾을 수 없습니다." } };
-- L368: return { data: null, error: { code: "NOT_FOUND", message: "해당 목실기를 찾을 수 없습니다." } };
-- L402: return { data: null, error: { code: "PERSON_PROFILE_QUERY_FAILED", message: "작성자 정보를 조회하는 중 오류가 발생했습니다." } };
-- L406: return { data: null, error: { code: "GOALS_QUERY_FAILED", message: "목실기 목표를 조회하는 중 오류가 발생했습니다." } };
-- L410: return { data: null, error: { code: "SUMMARY_QUERY_FAILED", message: "목실기 요약을 조회하는 중 오류가 발생했습니다." } };
+- L263: message: "코칭 관계를 조회하는 중 오류가 발생했습니다.",
+- L289: return { data: null, error: { code: "UNAUTHORIZED", message: "로그인이 필요합니다." } };
+- L302: return { data: null, error: { code: "PROFILE_QUERY_FAILED", message: "프로필을 조회하는 중 오류가 발생했습니다." } };
+- L306: return { data: null, error: { code: "PROFILE_NOT_FOUND", message: "아직 프로필이 생성되지 않았습니다." } };
+- L319: return { data: null, error: { code: "ROLES_QUERY_FAILED", message: "역할 정보를 조회하는 중 오류가 발생했습니다." } };
+- L326: return { data: null, error: { code: "ACCESS_DENIED", message: "코치메이커 권한이 없습니다." } };
+- L356: return { data: null, error: { code: "MOKSILGI_QUERY_FAILED", message: "목실기를 조회하는 중 오류가 발생했습니다." } };
+- L360: return { data: null, error: { code: "NOT_FOUND", message: "해당 목실기를 찾을 수 없습니다." } };
+- L369: return { data: null, error: { code: "NOT_FOUND", message: "해당 목실기를 찾을 수 없습니다." } };
+- L403: return { data: null, error: { code: "PERSON_PROFILE_QUERY_FAILED", message: "작성자 정보를 조회하는 중 오류가 발생했습니다." } };
+- L407: return { data: null, error: { code: "GOALS_QUERY_FAILED", message: "목실기 목표를 조회하는 중 오류가 발생했습니다." } };
+- L411: return { data: null, error: { code: "SUMMARY_QUERY_FAILED", message: "목실기 요약을 조회하는 중 오류가 발생했습니다." } };
 
 ### src/lib/api/coach-maker/moksilgi-progress.ts
 
-- L176: message: "지금 전체 목실기 성취 현황을 불러올 수 없습니다.",
-- L400: error: { code: "UNAUTHORIZED", message: "로그인이 필요합니다." },
-- L418: message: "프로필을 조회하는 중 오류가 발생했습니다.",
-- L428: message: "아직 프로필이 생성되지 않았습니다.",
-- L447: message: "역할 정보를 조회하는 중 오류가 발생했습니다.",
-- L461: message: "코치메이커 권한이 없습니다.",
-- L490: message: "코칭 관계를 조회하는 중 오류가 발생했습니다.",
-- L530: message: "코칭 관계를 조회하는 중 오류가 발생했습니다.",
-- L557: message: "목실기 정보를 조회하는 중 오류가 발생했습니다.",
-- L593: message: "프로필 정보를 조회하는 중 오류가 발생했습니다.",
-- L603: message: "목실기 요약을 조회하는 중 오류가 발생했습니다.",
+- L263: message: "지금 전체 목실기 성취 현황을 불러올 수 없습니다.",
+- L809: ? `${profile.generation_number}세대`
+- L956: error: { code: "UNAUTHORIZED", message: "로그인이 필요합니다." },
+- L976: message: "프로필을 조회하는 중 오류가 발생했습니다.",
+- L986: message: "아직 프로필이 생성되지 않았습니다.",
+- L1010: message: "역할 정보를 조회하는 중 오류가 발생했습니다.",
+- L1024: message: "코치메이커 권한이 없습니다.",
+- L1054: message: "코칭 관계를 조회하는 중 오류가 발생했습니다.",
+- L1105: message: "코칭 관계를 조회하는 중 오류가 발생했습니다.",
+- L1180: message: "목실기 정보를 조회하는 중 오류가 발생했습니다.",
+- L1226: message: "프로필 정보를 조회하는 중 오류가 발생했습니다.",
+- L1236: message: "목실기 요약을 조회하는 중 오류가 발생했습니다.",
+- L1320: message: "소속 정보를 조회하는 중 오류가 발생했습니다.",
 
 ### src/lib/api/coach/action-notes.ts
 
-- L369: message: "로그인이 필요합니다.",
-- L386: message: "사용자 프로필을 확인할 수 없습니다.",
-- L403: message: "권한 정보를 확인할 수 없습니다.",
-- L414: message: "권한이 없습니다.",
-- L449: return { ok: false, message: "허용되지 않은 상태값입니다." };
-- L457: return { ok: false, message: "허용되지 않은 우선순위입니다." };
-- L465: return { ok: false, message: "허용되지 않은 대상 구분입니다." };
-- L536: ? "권한이 없습니다."
-- L537: : "관리 액션 메모를 조회하는 중 오류가 발생했습니다.",
-- L555: message: "입력값 형식이 올바르지 않습니다.",
-- L566: return { ok: false, status: 400, message: "허용되지 않은 대상 구분입니다." };
-- L570: return { ok: false, status: 400, message: "대상 이름을 입력해 주세요." };
-- L574: return { ok: false, status: 400, message: "허용되지 않은 액션 유형입니다." };
-- L578: return { ok: false, status: 400, message: "허용되지 않은 우선순위입니다." };
-- L582: return { ok: false, status: 400, message: "메모 내용을 입력해 주세요." };
-- L642: ? "권한이 없습니다."
-- L643: : "관리 액션 메모를 생성하는 중 오류가 발생했습니다.",
-- L660: message: "입력값 형식이 올바르지 않습니다.",
-- L670: return { ok: false, status: 400, message: "메모 내용을 입력해 주세요." };
-- L680: return { ok: false, status: 400, message: "허용되지 않은 액션 유형입니다." };
-- L690: return { ok: false, status: 400, message: "허용되지 않은 우선순위입니다." };
-- L700: return { ok: false, status: 400, message: "허용되지 않은 상태값입니다." };
-- L726: message: "변경할 값이 없습니다.",
-- L741: return { ok: false, status: 400, message: "메모 ID가 올바르지 않습니다." };
-- L770: ? "권한이 없습니다."
-- L771: : "관리 액션 메모를 수정하는 중 오류가 발생했습니다.",
-- L776: return { ok: false, status: 404, message: "메모를 찾을 수 없습니다." };
-- L789: return { ok: false, status: 400, message: "메모 ID가 올바르지 않습니다." };
-- L806: message: "관리 액션 메모 처리에 실패했습니다.",
-- L822: message: "관리 액션 메모 처리에 실패했습니다.",
-- L831: message: "관리 액션 메모를 찾을 수 없습니다.",
-- L845: message: "이 관리 액션 메모를 제거할 권한이 없습니다.",
-- L865: message: "관리 액션 메모 처리에 실패했습니다.",
-- L874: message: "관리 액션 메모를 찾을 수 없습니다.",
+- L469: message: "로그인이 필요합니다.",
+- L486: message: "사용자 프로필을 확인할 수 없습니다.",
+- L503: message: "권한 정보를 확인할 수 없습니다.",
+- L514: message: "권한이 없습니다.",
+- L543: return { ok: false, message: "허용되지 않은 상태값입니다." };
+- L551: return { ok: false, message: "허용되지 않은 우선순위입니다." };
+- L559: return { ok: false, message: "허용되지 않은 대상 구분입니다." };
+- L664: ? "권한이 없습니다."
+- L665: : "관리 액션 메모를 조회하는 중 오류가 발생했습니다.",
+- L724: ? "권한이 없습니다."
+- L725: : "관리 액션 메모를 조회하는 중 오류가 발생했습니다.",
+- L748: message: "입력값 형식이 올바르지 않습니다.",
+- L759: return { ok: false, status: 400, message: "허용되지 않은 대상 구분입니다." };
+- L763: return { ok: false, status: 400, message: "대상 이름을 입력해 주세요." };
+- L767: return { ok: false, status: 400, message: "허용되지 않은 액션 유형입니다." };
+- L771: return { ok: false, status: 400, message: "허용되지 않은 우선순위입니다." };
+- L775: return { ok: false, status: 400, message: "메모 내용을 입력해 주세요." };
+- L838: message: "배정된 코치이에게만 내부 관리 메모를 작성할 수 있습니다.",
+- L853: message: "관리 액션 메모를 생성하는 중 오류가 발생했습니다.",
+- L869: ? "권한이 없습니다."
+- L870: : "관리 액션 메모를 생성하는 중 오류가 발생했습니다.",
+- L887: message: "입력값 형식이 올바르지 않습니다.",
+- L897: return { ok: false, status: 400, message: "메모 내용을 입력해 주세요." };
+- L907: return { ok: false, status: 400, message: "허용되지 않은 액션 유형입니다." };
+- L917: return { ok: false, status: 400, message: "허용되지 않은 우선순위입니다." };
+- L927: return { ok: false, status: 400, message: "허용되지 않은 상태값입니다." };
+- L953: message: "변경할 값이 없습니다.",
+- L968: return { ok: false, status: 400, message: "메모 ID가 올바르지 않습니다." };
+- L997: ? "권한이 없습니다."
+- L998: : "관리 액션 메모를 수정하는 중 오류가 발생했습니다.",
+- L1003: return { ok: false, status: 404, message: "메모를 찾을 수 없습니다." };
+- L1016: return { ok: false, status: 400, message: "메모 ID가 올바르지 않습니다." };
+- L1033: message: "관리 액션 메모 처리에 실패했습니다.",
+- L1049: message: "관리 액션 메모 처리에 실패했습니다.",
+- L1058: message: "관리 액션 메모를 찾을 수 없습니다.",
+- L1072: message: "이 관리 액션 메모를 제거할 권한이 없습니다.",
+- L1092: message: "관리 액션 메모 처리에 실패했습니다.",
+- L1101: message: "관리 액션 메모를 찾을 수 없습니다.",
 
 ### src/lib/api/coach/dashboard.ts
 
@@ -3787,52 +4825,56 @@
 
 ### src/lib/api/invitations/accept.ts
 
-- L199: message: "유효하지 않은 초대입니다.",
-- L205: message: "이미 사용된 초대입니다.",
-- L211: message: "만료된 초대입니다.",
-- L217: message: "초대 수락 중 오류가 발생했습니다.",
-- L245: "요청 본문이 올바른 JSON 형식이 아닙니다.",
-- L255: return jsonError(400, "MISSING_TOKEN", "초대 토큰이 없습니다.");
-- L259: return jsonError(400, "INVALID_COUNTRY", "소속 국가 값을 확인해 주세요.");
-- L263: return jsonError(400, "INVALID_MINISTRY_POSITION", "소속 직분 값을 확인해 주세요.");
-- L267: return jsonError(400, "INVALID_GENERATION", "세대 값을 확인해 주세요.");
-- L273: return jsonError(401, "UNAUTHORIZED", "로그인이 필요합니다.");
-- L282: "이 초대는 현재 로그인한 이메일 계정과 일치하지 않습니다.",
-- L297: "초대 수락에 필요한 서버 설정이 준비되지 않았습니다.",
-- L311: "이 초대는 현재 로그인한 이메일 계정과 일치하지 않습니다.",
-- L340: "초대 수락 중 오류가 발생했습니다.",
-- L363: "초대 수락 후 프로필 정보를 저장하는 중 오류가 발생했습니다.",
+- L225: message: "유효하지 않은 초대입니다.",
+- L231: message: "이미 사용된 초대입니다.",
+- L237: message: "만료된 초대입니다.",
+- L243: message: "초대 수락 중 오류가 발생했습니다.",
+- L385: "요청 본문이 올바른 JSON 형식이 아닙니다.",
+- L395: return jsonError(400, "MISSING_TOKEN", "초대 토큰이 없습니다.");
+- L399: return jsonError(400, "INVALID_COUNTRY", "소속 국가 값을 확인해 주세요.");
+- L403: return jsonError(400, "INVALID_MINISTRY_POSITION", "소속 직분 값을 확인해 주세요.");
+- L407: return jsonError(400, "INVALID_GENERATION", "세대 값을 확인해 주세요.");
+- L413: return jsonError(401, "UNAUTHORIZED", "로그인이 필요합니다.");
+- L422: "이 초대는 현재 로그인한 이메일 계정과 일치하지 않습니다.",
+- L437: "초대 수락에 필요한 서버 설정이 준비되지 않았습니다.",
+- L452: "초대 정보를 확인하는 중 오류가 발생했습니다.",
+- L457: return jsonError(404, "INVITE_NOT_FOUND", "유효하지 않은 초대입니다.");
+- L466: "이 초대는 현재 로그인한 이메일 계정과 일치하지 않습니다.",
+- L495: "초대 수락 중 오류가 발생했습니다.",
+- L515: "초대 수락 상태를 저장하는 중 오류가 발생했습니다.",
+- L538: "초대 수락 후 프로필 정보를 저장하는 중 오류가 발생했습니다.",
 
 ### src/lib/api/my-coaching/daily-records.ts
 
-- L270: message: "로그인이 필요합니다.",
-- L288: message: "하루 기록 처리 중 오류가 발생했습니다.",
-- L296: message: "현재 로그인 사용자의 프로필을 찾을 수 없습니다.",
-- L332: message: "입력값을 확인해 주세요.",
-- L340: message: "입력값을 확인해 주세요.",
-- L376: message: "하루 기록 처리 중 오류가 발생했습니다.",
-- L399: message: "입력값을 확인해 주세요.",
-- L411: message: "입력값을 확인해 주세요.",
-- L429: message: "하루 기록 처리 중 오류가 발생했습니다.",
-- L437: message: "이미 해당 날짜의 하루 기록이 있습니다.",
-- L467: message: "이미 해당 날짜의 하루 기록이 있습니다.",
-- L475: message: "하루 기록 처리 중 오류가 발생했습니다.",
-- L499: message: "입력값을 확인해 주세요.",
-- L517: message: "하루 기록 처리 중 오류가 발생했습니다.",
-- L525: message: "하루 기록을 찾을 수 없습니다.",
-- L539: message: "입력값을 확인해 주세요.",
-- L559: message: "하루 기록 처리 중 오류가 발생했습니다.",
-- L567: message: "이미 해당 날짜의 하루 기록이 있습니다.",
-- L603: message: "입력값을 확인해 주세요.",
-- L614: message: "입력값을 확인해 주세요.",
-- L629: message: "입력값을 확인해 주세요.",
-- L646: message: "입력값을 확인해 주세요.",
-- L665: message: "이미 해당 날짜의 하루 기록이 있습니다.",
-- L673: message: "하루 기록 처리 중 오류가 발생했습니다.",
-- L681: message: "하루 기록을 찾을 수 없습니다.",
-- L704: message: "입력값을 확인해 주세요.",
-- L726: message: "하루 기록 처리 중 오류가 발생했습니다.",
-- L734: message: "하루 기록을 찾을 수 없습니다.",
+- L287: message: "로그인이 필요합니다.",
+- L305: message: "하루 기록 처리 중 오류가 발생했습니다.",
+- L313: message: "현재 로그인 사용자의 프로필을 찾을 수 없습니다.",
+- L352: message: "입력값을 확인해 주세요.",
+- L360: message: "입력값을 확인해 주세요.",
+- L368: message: "입력값을 확인해 주세요.",
+- L426: message: "하루 기록 처리 중 오류가 발생했습니다.",
+- L449: message: "입력값을 확인해 주세요.",
+- L461: message: "입력값을 확인해 주세요.",
+- L479: message: "하루 기록 처리 중 오류가 발생했습니다.",
+- L487: message: "이미 해당 날짜의 하루 기록이 있습니다.",
+- L517: message: "이미 해당 날짜의 하루 기록이 있습니다.",
+- L525: message: "하루 기록 처리 중 오류가 발생했습니다.",
+- L549: message: "입력값을 확인해 주세요.",
+- L567: message: "하루 기록 처리 중 오류가 발생했습니다.",
+- L575: message: "하루 기록을 찾을 수 없습니다.",
+- L589: message: "입력값을 확인해 주세요.",
+- L609: message: "하루 기록 처리 중 오류가 발생했습니다.",
+- L617: message: "이미 해당 날짜의 하루 기록이 있습니다.",
+- L653: message: "입력값을 확인해 주세요.",
+- L664: message: "입력값을 확인해 주세요.",
+- L679: message: "입력값을 확인해 주세요.",
+- L696: message: "입력값을 확인해 주세요.",
+- L715: message: "이미 해당 날짜의 하루 기록이 있습니다.",
+- L723: message: "하루 기록 처리 중 오류가 발생했습니다.",
+- L731: message: "하루 기록을 찾을 수 없습니다.",
+- L754: message: "입력값을 확인해 주세요.",
+- L776: message: "하루 기록 처리 중 오류가 발생했습니다.",
+- L784: message: "하루 기록을 찾을 수 없습니다.",
 
 ### src/lib/api/my-coaching/feedback.ts
 
@@ -3907,149 +4949,1294 @@
 
 ### src/lib/api/my-coaching/moksilgi.ts
 
-- L31: value_name: "정직",
-- L32: meaning: "하나님 앞에서 진실하고 투명한 삶",
-- L36: value_name: "충성",
-- L37: meaning: "맡겨진 사명에 대한 헌신",
-- L41: value_name: "사람을 세워주기",
-- L42: meaning: "사랑으로 서로를 격려하고 성장 지원",
-- L55: area_title: "영적 성장",
-- L56: area_subtitle: "예수님은 하나님 앞에서 사랑스러워 가시더라",
-- L61: area_title: "지적 성장",
-- L62: area_subtitle: "예수님은 지혜가 자라며",
-- L67: area_title: "육체적 성장",
-- L68: area_subtitle: "예수님은 키가 자라며",
-- L73: area_title: "사회적 성장",
-- L74: area_subtitle: "예수님은 사람 앞에서 사랑스러워 가시더라",
-- L79: area_title: "기타",
-- L80: area_subtitle: "그 외 삶과 사역의 필요 영역",
-- L315: message: `${label}은(는) ${maxLength}자 이하여야 합니다.`,
-- L326: return { ok: false as const, message: `${label}을(를) 입력해 주세요.` };
-- L332: message: `${label}은(는) ${maxLength}자 이하여야 합니다.`,
-- L354: return { ok: false as const, message: `${label}은(는) 숫자여야 합니다.` };
-- L389: error: { code: "UNAUTHORIZED", message: "로그인이 필요합니다." },
-- L405: error: { code: "PROFILE_QUERY_FAILED", message: "프로필을 불러올 수 없습니다." },
-- L414: message: "아직 프로필이 생성되지 않았습니다.",
-- L427: message: "지금 목실기를 불러올 수 없습니다.",
-- L502: message: "지금 목실기를 불러올 수 없습니다.",
-- L532: message: "목표 영역을 불러올 수 없습니다.",
-- L550: message: "세부 목표를 불러올 수 없습니다.",
-- L575: const title = requiredText(formData.get("title"), 160, "제목");
-- L576: const subtitle = nullableText(formData.get("subtitle"), 160, "부제");
-- L577: const visionYear = nullableNumber(formData.get("vision_year"), "비전 목표 연도");
-- L592: author_name: nullableText(formData.get("author_name"), 120, "작성자"),
-- L593: region_name: nullableText(formData.get("region_name"), 120, "지역/목장"),
-- L594: team_name: nullableText(formData.get("team_name"), 120, "팀"),
-- L598: "지역팀장",
-- L600: coach_name: nullableText(formData.get("coach_name"), 120, "코치"),
-- L601: role_label: nullableText(formData.get("role_label"), 80, "직책"),
-- L602: generation_label: nullableText(formData.get("generation_label"), 80, "세대"),
-- L606: "사명선언 문장",
-- L611: "관련 성경구절",
-- L616: "사명 설명",
-- L621: "비전 문장",
-- L623: vision_metrics: nullableText(formData.get("vision_metrics"), 1000, "핵심 수치"),
-- L624: vision_target: nullableText(formData.get("vision_target"), 1000, "대상"),
-- L628: "비전 설명",
-- L630: main_goal: nullableText(formData.get("main_goal"), 1000, "전체 목표 문장"),
-- L634: "목표 설명",
-- L652: subtitle: subtitle.value ?? "목실기와 체크리스트",
-- L688: return { ok: false, error: { code: "SAVE_FAILED", message: "목실기를 저장할 수 없습니다." } };
-- L707: return { ok: false, error: { code: "SAVE_FAILED", message: "목실기를 저장할 수 없습니다." } };
-- L726: const title = requiredText(formData.get("detail_title"), 300, "세부 목표 제목");
-- L727: const description = nullableText(formData.get("detail_description"), 3000, "세부 목표 설명");
-- L728: const annualTarget = nullableNumber(formData.get("annual_target"), "연간 목표량");
-- L729: const monthlyTarget = nullableNumber(formData.get("monthly_target"), "월 목표량");
-- L730: const unit = nullableText(formData.get("unit"), 40, "단위");
-- L782: error: { code: "NOT_FOUND", message: "목실기 정보를 찾을 수 없습니다." },
-- L795: error: { code: "NOT_FOUND", message: "목표 영역을 찾을 수 없습니다." },
-- L822: return { ok: false, error: { code: "SAVE_FAILED", message: "세부 목표를 저장할 수 없습니다." } };
-- L849: return { ok: false, error: { code: "SAVE_FAILED", message: "세부 목표를 저장할 수 없습니다." } };
+- L43: area_title: "영적 성장",
+- L44: area_subtitle: "예수님은 하나님 앞에서 사랑스러워 가시더라",
+- L49: area_title: "지적 성장",
+- L50: area_subtitle: "예수님은 지혜가 자라며",
+- L55: area_title: "육체적 성장",
+- L56: area_subtitle: "예수님은 키가 자라며",
+- L61: area_title: "사회적 성장",
+- L62: area_subtitle: "예수님은 사람 앞에서 사랑스러워 가시더라",
+- L67: area_title: "기타",
+- L68: area_subtitle: "그 외 삶과 사역의 필요 영역",
+- L303: message: `${label}은(는) ${maxLength}자 이하여야 합니다.`,
+- L314: return { ok: false as const, message: `${label}을(를) 입력해 주세요.` };
+- L320: message: `${label}은(는) ${maxLength}자 이하여야 합니다.`,
+- L342: return { ok: false as const, message: `${label}은(는) 숫자여야 합니다.` };
+- L377: error: { code: "UNAUTHORIZED", message: "로그인이 필요합니다." },
+- L393: error: { code: "PROFILE_QUERY_FAILED", message: "프로필을 불러올 수 없습니다." },
+- L402: message: "아직 프로필이 생성되지 않았습니다.",
+- L415: message: "지금 목실기를 불러올 수 없습니다.",
+- L490: message: "지금 목실기를 불러올 수 없습니다.",
+- L520: message: "목표 영역을 불러올 수 없습니다.",
+- L538: message: "세부 목표를 불러올 수 없습니다.",
+- L563: const title = requiredText(formData.get("title"), 160, "제목");
+- L564: const subtitle = nullableText(formData.get("subtitle"), 160, "부제");
+- L565: const visionYear = nullableNumber(formData.get("vision_year"), "비전 목표 연도");
+- L580: author_name: nullableText(formData.get("author_name"), 120, "작성자"),
+- L584: "국가/소속/공동체",
+- L586: team_name: nullableText(formData.get("team_name"), 120, "팀"),
+- L590: "지역팀장",
+- L592: coach_name: nullableText(formData.get("coach_name"), 120, "코치"),
+- L593: role_label: nullableText(formData.get("role_label"), 80, "직책"),
+- L594: generation_label: nullableText(formData.get("generation_label"), 80, "세대"),
+- L598: "사명선언 문장",
+- L603: "관련 성경구절",
+- L608: "사명 설명",
+- L613: "비전 문장",
+- L615: vision_metrics: nullableText(formData.get("vision_metrics"), 1000, "핵심 수치"),
+- L616: vision_target: nullableText(formData.get("vision_target"), 1000, "대상"),
+- L620: "비전 설명",
+- L622: main_goal: nullableText(formData.get("main_goal"), 1000, "전체 목표 문장"),
+- L626: "목표 설명",
+- L644: subtitle: subtitle.value ?? "목실기와 체크리스트",
+- L680: return { ok: false, error: { code: "SAVE_FAILED", message: "목실기를 저장할 수 없습니다." } };
+- L699: return { ok: false, error: { code: "SAVE_FAILED", message: "목실기를 저장할 수 없습니다." } };
+- L718: const title = requiredText(formData.get("detail_title"), 300, "세부 목표 제목");
+- L719: const description = nullableText(formData.get("detail_description"), 3000, "세부 목표 설명");
+- L720: const annualTarget = nullableNumber(formData.get("annual_target"), "연간 목표량");
+- L721: const monthlyTarget = nullableNumber(formData.get("monthly_target"), "월 목표량");
+- L722: const unit = nullableText(formData.get("unit"), 40, "단위");
+- L774: error: { code: "NOT_FOUND", message: "목실기 정보를 찾을 수 없습니다." },
+- L787: error: { code: "NOT_FOUND", message: "목표 영역을 찾을 수 없습니다." },
+- L814: return { ok: false, error: { code: "SAVE_FAILED", message: "세부 목표를 저장할 수 없습니다." } };
+- L841: return { ok: false, error: { code: "SAVE_FAILED", message: "세부 목표를 저장할 수 없습니다." } };
 
 ### src/lib/api/my-coaching/monthly-reflections.ts
 
-- L309: message: "로그인이 필요합니다.",
-- L327: message: "월간 회고 처리 중 오류가 발생했습니다.",
-- L335: message: "현재 로그인 사용자의 프로필을 찾을 수 없습니다.",
-- L364: message: "입력값을 확인해 주세요.",
-- L372: message: "입력값을 확인해 주세요.",
-- L405: message: "월간 회고 처리 중 오류가 발생했습니다.",
-- L428: message: "입력값을 확인해 주세요.",
-- L442: message: "연도를 선택해 주세요.",
-- L451: message: "월을 선택해 주세요.",
-- L460: message: "공유 상태 또는 저장 상태를 확인해 주세요.",
-- L482: message: "월간 회고 처리 중 오류가 발생했습니다.",
-- L490: message: "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
-- L526: "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
-- L534: message: "월간 회고 처리 중 오류가 발생했습니다.",
-- L559: message: "월간 회고 ID를 확인할 수 없습니다.",
-- L568: message: "수정 입력값을 확인해 주세요.",
-- L581: message: "수정할 내용이 없습니다.",
-- L599: message: "월간 회고 처리 중 오류가 발생했습니다.",
-- L607: message: "월간 회고를 찾을 수 없습니다.",
-- L634: message: !nextYear ? "연도를 선택해 주세요." : "월을 선택해 주세요.",
-- L664: message: "월간 회고 처리 중 오류가 발생했습니다.",
-- L678: "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
-- L718: message: "공유 상태 또는 저장 상태를 확인해 주세요.",
-- L737: message: "공유 상태 또는 저장 상태를 확인해 주세요.",
-- L756: message: "공유 상태 또는 저장 상태를 확인해 주세요.",
-- L777: message: "입력값을 확인해 주세요.",
-- L789: message: "입력값을 확인해 주세요.",
-- L810: "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
-- L818: message: "월간 회고 처리 중 오류가 발생했습니다.",
-- L826: message: "월간 회고를 찾을 수 없습니다.",
-- L850: message: "월간 회고 ID를 확인할 수 없습니다.",
-- L876: message: "월간 회고 처리에 실패했습니다.",
-- L884: message: "월간 회고를 찾을 수 없습니다.",
+- L326: message: "로그인이 필요합니다.",
+- L344: message: "월간 회고 처리 중 오류가 발생했습니다.",
+- L352: message: "현재 로그인 사용자의 프로필을 찾을 수 없습니다.",
+- L384: message: "입력값을 확인해 주세요.",
+- L392: message: "입력값을 확인해 주세요.",
+- L400: message: "입력값을 확인해 주세요.",
+- L455: message: "월간 회고 처리 중 오류가 발생했습니다.",
+- L478: message: "입력값을 확인해 주세요.",
+- L492: message: "연도를 선택해 주세요.",
+- L501: message: "월을 선택해 주세요.",
+- L510: message: "공유 상태 또는 저장 상태를 확인해 주세요.",
+- L532: message: "월간 회고 처리 중 오류가 발생했습니다.",
+- L540: message: "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
+- L576: "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
+- L584: message: "월간 회고 처리 중 오류가 발생했습니다.",
+- L609: message: "월간 회고 ID를 확인할 수 없습니다.",
+- L618: message: "수정 입력값을 확인해 주세요.",
+- L631: message: "수정할 내용이 없습니다.",
+- L649: message: "월간 회고 처리 중 오류가 발생했습니다.",
+- L657: message: "월간 회고를 찾을 수 없습니다.",
+- L684: message: !nextYear ? "연도를 선택해 주세요." : "월을 선택해 주세요.",
+- L714: message: "월간 회고 처리 중 오류가 발생했습니다.",
+- L728: "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
+- L768: message: "공유 상태 또는 저장 상태를 확인해 주세요.",
+- L787: message: "공유 상태 또는 저장 상태를 확인해 주세요.",
+- L806: message: "공유 상태 또는 저장 상태를 확인해 주세요.",
+- L827: message: "입력값을 확인해 주세요.",
+- L839: message: "입력값을 확인해 주세요.",
+- L860: "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
+- L868: message: "월간 회고 처리 중 오류가 발생했습니다.",
+- L876: message: "월간 회고를 찾을 수 없습니다.",
+- L900: message: "월간 회고 ID를 확인할 수 없습니다.",
+- L926: message: "월간 회고 처리에 실패했습니다.",
+- L934: message: "월간 회고를 찾을 수 없습니다.",
+
+### src/lib/api/my-coaching/spiritual-companion.ts
+
+- L66: "저장된 대화 응답 형식을 확인할 수 없습니다.",
+- L111: readErrorMessage(payload, "저장된 대화를 불러올 수 없습니다."),
+- L136: readErrorMessage(payload, "AI 응답을 생성할 수 없습니다."),
+- L153: "AI 응답 형식을 확인할 수 없습니다.",
 
 ### src/lib/api/my-coaching/weekly-log.ts
 
-- L306: message: `${fieldLabel}은(는) 텍스트여야 합니다.`,
-- L322: message: `${fieldLabel}은(는) 2000자 이하여야 합니다.`,
-- L420: message: "로그인이 필요합니다.",
-- L439: message: "지금 주간 기록을 불러올 수 없습니다.",
-- L470: message: "지금 주간 기록을 불러올 수 없습니다.",
-- L627: message: "지금 주간 기록을 불러올 수 없습니다.",
-- L647: message: "지금 주간 기록을 불러올 수 없습니다.",
-- L666: message: "지금 주간 기록을 불러올 수 없습니다.",
-- L721: message: "지금 주간 기록을 불러올 수 없습니다.",
-- L748: message: "지금 주간 기록을 불러올 수 없습니다.",
-- L799: message: "아직 프로필이 생성되지 않았습니다.",
-- L806: const gratitude = normalizeTextarea(input.gratitude, "감사 제목");
-- L809: "기도 제목",
-- L813: "진행 상황",
-- L815: const difficulty = normalizeTextarea(input.difficulty, "어려웠던 점");
-- L818: "코치에게 남길 말",
-- L827: message: "코칭 관계를 선택해 주세요.",
-- L838: message: "올바른 저장 작업을 선택해 주세요.",
-- L875: message: "주간 기록 서비스를 지금 사용할 수 없습니다.",
-- L896: message: "지금 코칭 관계를 확인할 수 없습니다.",
-- L912: message: "이 계정에 연결된 활성 코칭 관계가 없습니다.",
-- L939: message: "지금 주간 기록을 불러올 수 없습니다.",
-- L982: message: "지금 주간 기록을 저장할 수 없습니다.",
-- L1019: message: "지금 주간 기록을 저장할 수 없습니다.",
-- L1056: message: "아직 프로필이 생성되지 않았습니다.",
-- L1070: message: "주간 기록 ID를 확인할 수 없습니다.",
-- L1088: message: "주간 기록 처리에 실패했습니다.",
-- L1112: message: "주간 기록 처리에 실패했습니다.",
-- L1123: message: "주간 기록을 찾을 수 없습니다.",
-- L1134: message: "이 주간 기록에 접근할 권한이 없습니다.",
-- L1157: message: "주간 기록 처리에 실패했습니다.",
-- L1172: message: "이 주간 기록에 접근할 권한이 없습니다.",
-- L1200: message: "주간 기록 처리에 실패했습니다.",
-- L1234: message: "아직 프로필이 생성되지 않았습니다.",
-- L1252: message: "지금 주간 기록을 불러올 수 없습니다.",
-- L1277: message: "지금 주간 기록을 불러올 수 없습니다.",
+- L317: message: `${fieldLabel}은(는) 텍스트여야 합니다.`,
+- L333: message: `${fieldLabel}은(는) 2000자 이하여야 합니다.`,
+- L428: message: "로그인이 필요합니다.",
+- L447: message: "지금 주간 기록을 불러올 수 없습니다.",
+- L478: message: "지금 주간 기록을 불러올 수 없습니다.",
+- L636: message: "지금 주간 기록을 불러올 수 없습니다.",
+- L656: message: "지금 주간 기록을 불러올 수 없습니다.",
+- L675: message: "지금 주간 기록을 불러올 수 없습니다.",
+- L730: message: "지금 주간 기록을 불러올 수 없습니다.",
+- L757: message: "지금 주간 기록을 불러올 수 없습니다.",
+- L808: message: "아직 프로필이 생성되지 않았습니다.",
+- L815: const gratitude = normalizeTextarea(input.gratitude, "감사 제목");
+- L818: "기도 제목",
+- L822: "진행 상황",
+- L824: const difficulty = normalizeTextarea(input.difficulty, "어려웠던 점");
+- L827: "코치에게 남길 말",
+- L836: message: "코칭 관계를 선택해 주세요.",
+- L847: message: "올바른 저장 작업을 선택해 주세요.",
+- L884: message: "주간 기록 서비스를 지금 사용할 수 없습니다.",
+- L905: message: "지금 코칭 관계를 확인할 수 없습니다.",
+- L921: message: "이 계정에 연결된 활성 코칭 관계가 없습니다.",
+- L949: message: "지금 주간 기록을 불러올 수 없습니다.",
+- L992: message: "지금 주간 기록을 저장할 수 없습니다.",
+- L1029: message: "지금 주간 기록을 저장할 수 없습니다.",
+- L1066: message: "아직 프로필이 생성되지 않았습니다.",
+- L1080: message: "주간 기록 ID를 확인할 수 없습니다.",
+- L1098: message: "주간 기록 처리에 실패했습니다.",
+- L1122: message: "주간 기록 처리에 실패했습니다.",
+- L1133: message: "주간 기록을 찾을 수 없습니다.",
+- L1144: message: "이 주간 기록에 접근할 권한이 없습니다.",
+- L1167: message: "주간 기록 처리에 실패했습니다.",
+- L1182: message: "이 주간 기록에 접근할 권한이 없습니다.",
+- L1210: message: "주간 기록 처리에 실패했습니다.",
+- L1248: message: "아직 프로필이 생성되지 않았습니다.",
+- L1266: message: "지금 주간 기록을 불러올 수 없습니다.",
+- L1319: message: "지금 주간 기록을 불러올 수 없습니다.",
 
 ### src/lib/api/profile/update-me.ts
 
-- L92: message: "표시 이름은 120자 이하로 입력해 주세요.",
-- L102: message: "전화번호는 50자 이하로 입력해 주세요.",
-- L112: message: "소속 직분은 100자 이하로 입력해 주세요.",
+- L132: message: "표시 이름은 120자 이하로 입력해 주세요.",
+- L142: message: "전화번호는 50자 이하로 입력해 주세요.",
+- L152: message: "소속 직분은 100자 이하로 입력해 주세요.",
+- L162: message: "개인 시간대는 올바른 IANA timezone으로 선택해 주세요.",
+
+### src/lib/coaching/weekly-aggregate.ts
+
+- L185: let nextWeekSuggestion = "이번 주 흐름을 유지하며 작은 실행 한 가지를 꾸준히 이어가 보세요.";
+- L187: nextWeekSuggestion = `${weakestArea.areaTitle} 영역의 목표를 하루 1개부터 체크해 보세요.`;
 
 ### src/lib/i18n/config.ts
 
 - L21: { code: "ko", flag: "🇰🇷", label: "한국어", status: "active" },
+
+### src/lib/i18n/ko.ts
+
+- L4: "common.save": "저장",
+- L5: "common.cancel": "취소",
+- L6: "common.search": "검색",
+- L7: "common.reset": "초기화",
+- L8: "common.filter": "필터",
+- L9: "common.sort": "정렬",
+- L10: "common.loading": "불러오는 중",
+- L11: "common.noData": "데이터가 없습니다.",
+- L12: "common.view": "보기",
+- L13: "common.edit": "수정",
+- L14: "common.delete": "삭제",
+- L15: "common.deleting": "삭제 중...",
+- L16: "common.deleteSuccess": "삭제되었습니다.",
+- L17: "common.deleteFailed": "삭제에 실패했습니다.",
+- L18: "common.print": "출력",
+- L19: "common.close": "닫기",
+- L20: "common.confirm": "확인",
+- L21: "common.back": "뒤로",
+- L22: "common.previous": "이전 화면",
+- L23: "common.next": "다음 화면",
+- L24: "common.all": "전체",
+- L25: "common.none": "없음",
+- L26: "common.selected": "선택됨",
+- L27: "common.createdAt": "생성일",
+- L28: "common.updatedAt": "최근 수정일",
+- L29: "common.error": "오류",
+- L31: "auth.login": "로그인",
+- L32: "auth.email": "이메일",
+- L33: "auth.password": "비밀번호",
+- L34: "auth.loginDescription": "Supabase Auth에 등록된 이메일과 비밀번호로 로그인합니다.",
+- L35: "auth.loginSuccess": "로그인되었습니다.",
+- L36: "auth.loginRequired": "로그인이 필요합니다.",
+- L38: "confirm.deleteTitle": "정말 삭제하시겠습니까?",
+- L39: "confirm.deleteDescription": "삭제할 항목을 다시 확인해 주세요.",
+- L40: "confirm.irreversibleWarning": "이 작업은 되돌릴 수 없습니다.",
+- L42: "validation.required": "필수 항목을 입력해 주세요.",
+- L43: "validation.invalidEmail": "올바른 이메일 형식이 아닙니다.",
+- L44: "validation.invalidNumber": "숫자 값이 올바르지 않습니다.",
+- L45: "validation.invalidDate": "날짜 형식이 올바르지 않습니다.",
+- L46: "validation.invalidSelection": "선택값이 올바르지 않습니다.",
+- L47: "validation.coachRequired": "코치를 선택해 주세요.",
+- L48: "validation.coacheeRequired": "코치이를 선택해 주세요.",
+- L49: "validation.coachAndCoacheeMustBeDifferent": "코치와 코치이는 같을 수 없습니다.",
+- L50: "validation.saveFailed": "저장 중 오류가 발생했습니다.",
+- L51: "validation.requiredFieldsMissing": "필수 항목을 모두 입력해 주세요.",
+- L53: "nav.dashboard": "나의 홈",
+- L54: "nav.adminCenter": "관리자 센터",
+- L55: "nav.coaching": "코칭 관리",
+- L56: "nav.members": "회원 관리",
+- L57: "nav.admin": "관리자",
+- L58: "nav.settings": "설정",
+- L59: "nav.coachMaker": "코치메이커",
+- L60: "nav.moksilgiProgress": "목실기 성취 현황",
+- L61: "nav.tree": "계보 트리",
+- L62: "nav.map": "지역 지도",
+- L63: "nav.genealogyTree": "세대별 계층 계보도",
+- L64: "nav.regionalMap": "지역 지도",
+- L66: "status.active": "활성",
+- L67: "status.inactive": "비활성",
+- L68: "status.suspended": "정지",
+- L69: "status.archived": "보관됨",
+- L70: "status.anonymized": "익명화",
+- L71: "status.draft": "임시저장",
+- L72: "status.submitted": "제출됨",
+- L73: "status.completed": "완료",
+- L74: "status.pending": "대기",
+- L76: "roles.super_admin": "최고 관리자",
+- L77: "roles.country_admin": "국가 관리자",
+- L78: "roles.organization_admin": "기관 관리자",
+- L79: "roles.church_admin": "교회 관리자",
+- L80: "roles.group_leader": "그룹 리더",
+- L81: "roles.coach_maker": "코치메이커",
+- L82: "roles.coach": "코치",
+- L83: "roles.coachee": "코치이",
+- L85: "dashboard.title": "나의 홈",
+- L86: "dashboard.subtitle": "내 역할에 맞는 코칭 기록, 목실기, 담당 현황으로 이동하는 개인 시작 화면입니다.",
+- L87: "dashboard.personalHomeBadge": "개인 홈",
+- L88: "dashboard.welcome": "환영합니다",
+- L89: "dashboard.hello": "안녕하세요",
+- L90: "dashboard.profile": "프로필",
+- L91: "dashboard.viewProfile": "프로필 보기",
+- L92: "dashboard.fullName": "전체 이름",
+- L93: "dashboard.displayName": "표시 이름",
+- L94: "dashboard.myRoles": "내 역할",
+- L95: "dashboard.quickLinks": "바로가기",
+- L96: "dashboard.myProfile": "내 프로필",
+- L97: "dashboard.adminUsers": "관리자: 사용자",
+- L98: "dashboard.adminInvitations": "관리자: 초대",
+- L99: "dashboard.adminCenter": "관리자 센터",
+- L100: "dashboard.adminCenterDescription": "회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간으로 이동합니다.",
+- L101: "admin.invitations.new.badge": "관리자",
+- L102: "admin.invitations.new.title": "초대 생성",
+- L103: "admin.invitations.new.description": "새 사용자를 초대하고 역할과 소속 범위를 지정합니다.",
+- L104: "admin.invitations.new.backToList": "초대 목록으로",
+- L105: "admin.invitations.new.form.email": "이메일",
+- L106: "admin.invitations.new.form.organizationDefaults": "조직 기본값 제안",
+- L107: "admin.invitations.new.form.manualPermission": "직접 권한 설정",
+- L108: "admin.invitations.new.form.organizationPolicyApplied": "이 조직의 기본 초대 권한이 적용됩니다. 역할: 코칭 대상자 / 범위: 선택한 조직",
+- L109: "admin.invitations.new.form.organizationPolicyMissing": "이 조직에는 아직 기본 권한 정책이 없습니다. 직접 권한과 범위를 선택해 주세요.",
+- L110: "admin.invitations.new.form.manualPermissionHelp": "조직 기본값을 사용하지 않고 직접 권한과 범위를 선택합니다.",
+- L111: "admin.invitations.new.form.advancedPermission": "고급 권한 직접 설정",
+- L112: "admin.invitations.new.form.advancedPermissionHelp": "조직 기본값을 사용하지 않는 경우에만 아래 역할과 범위를 직접 조정해 주세요. 관리자 권한은 접근 범위가 넓으므로 신중히 선택해야 합니다.",
+- L113: "admin.invitations.new.form.role": "초대 역할",
+- L114: "admin.invitations.new.form.scopeType": "범위 유형",
+- L115: "admin.invitations.new.form.scopeId": "범위 ID",
+- L116: "admin.invitations.new.form.globalScopePlaceholder": "전체 범위에서는 사용하지 않습니다",
+- L117: "admin.invitations.new.form.scopeUuidPlaceholder": "범위 UUID",
+- L118: "admin.invitations.new.form.expiresInDays": "만료 기간",
+- L119: "admin.invitations.new.form.daySuffix": "일",
+- L120: "admin.invitations.new.form.sendEmailNow": "지금 초대 이메일 보내기",
+- L121: "admin.invitations.new.form.cancel": "취소",
+- L122: "admin.invitations.new.form.creating": "생성 중...",
+- L123: "admin.invitations.new.form.create": "초대 생성",
+- L124: "admin.invitations.new.form.created": "초대를 생성했습니다.",
+- L125: "admin.invitations.new.form.copyLinkNotice": "지금 이 링크를 복사해 주세요. 보안을 위해 원본 토큰은 다시 표시되지 않습니다.",
+- L126: "admin.invitations.new.form.copy": "복사",
+- L127: "admin.invitations.new.form.copied": "복사했습니다.",
+- L128: "admin.invitations.new.form.copyFailed": "복사하지 못했습니다. 링크를 직접 복사해 주세요.",
+- L129: "admin.invitations.new.form.goToList": "초대 목록으로 이동",
+- L130: "admin.invitations.new.form.createAnother": "새 초대 계속 만들기",
+- L131: "admin.invitations.new.form.emailSent": "이메일을 보냈습니다.",
+- L132: "admin.invitations.new.form.emailNotConfigured": "이메일 설정이 없습니다. 링크를 직접 복사해 주세요.",
+- L133: "admin.invitations.new.form.emailSendFailed": "이메일 전송에 실패했습니다. 링크를 직접 복사해 주세요.",
+- L134: "admin.invitations.new.form.createFailed": "초대 생성에 실패했습니다.",
+- L135: "admin.invitations.new.form.invalidEmail": "올바른 이메일 형식이 아닙니다.",
+- L136: "admin.invitations.new.form.emailRequired": "이메일을 입력해 주세요.",
+- L137: "admin.invitations.new.form.invalidScopeId": "범위 ID는 올바른 UUID여야 합니다.",
+- L138: "admin.invitations.new.form.invalidExpiresInDays": "만료 기간은 1일부터 30일 사이로 선택해 주세요.",
+- L139: "admin.invitations.new.form.unavailable": "지금 초대를 생성할 수 없습니다.",
+- L140: "dashboard.coachWorkspace": "코치 작업 공간",
+- L141: "dashboard.myCoachingSpace": "내 코칭 공간",
+- L142: "dashboard.noProfile": "아직 프로필이 생성되지 않았습니다.",
+- L143: "dashboard.acceptInvitationFirst": "초대를 받으셨다면 먼저 초대를 수락해 주세요.",
+- L144: "dashboard.noActiveRole": "아직 활성 역할이 배정되지 않았습니다.",
+- L145: "dashboard.inactiveAccount": "비활성화된 계정입니다. 관리자에게 문의하세요.",
+- L146: "dashboard.loadFailed": "지금 대시보드를 불러올 수 없습니다.",
+- L147: "dashboard.accountStatus": "계정 상태 확인",
+- L148: "dashboard.coachingSpacePreparing": "코칭 공간이 준비 중입니다.",
+- L149: "dashboard.checkProfile": "프로필 확인하기",
+- L150: "dashboard.totalCoaches": "총 코치",
+- L151: "dashboard.totalCoachees": "총 코치이",
+- L152: "dashboard.maxGeneration": "최대 세대",
+- L153: "dashboard.unassigned": "미배정",
+- L154: "dashboard.countries": "개국",
+- L155: "dashboard.churches": "개 교회",
+- L156: "dashboard.coachMakerFeatures": "코치메이커 기능",
+- L157: "dashboard.adminFeatures": "관리자 기능",
+- L158: "dashboard.coachMakerDashboard": "코치메이커 대시보드",
+- L159: "dashboard.coachMakerCenter": "코치메이커 센터",
+- L160: "dashboard.moksilgiProgress": "전체 목실기 성취 현황",
+- L161: "dashboard.myMoksilgi": "나의 목실기",
+- L162: "dashboard.myRecords": "나의 기록",
+- L163: "dashboard.organizationSettings": "기관 및 단체 관리",
+- L164: "dashboard.organizationSettingsDescription": "회원 소속 기관 및 단체를 추가하고, 국가 연결과 사용 여부를 관리합니다.",
+- L165: "dashboard.genealogy": "세대별 계층 계보도",
+- L166: "dashboard.genealogyDescription": "코칭 관계가 세대별, 조직별, 코치-코치이 흐름으로 어떻게 이어지는지 시각적으로 확인합니다.",
+- L167: "dashboard.coachMakerDashboardDescription": "코치메이커가 담당하는 팀, 목실기 진행 현황, 코칭 구조를 확인합니다.",
+- L168: "dashboard.coachMakerCenterDescription": "담당 코치와 코치이의 성장 현황과 목실기 진행 상황을 관리합니다.",
+- L169: "dashboard.moksilgiProgressDescription": "코치메이커가 담당하는 지역/팀과 코치-코치이 관계의 목실기 월별 성취율을 확인합니다.",
+- L170: "dashboard.myMoksilgiDescription": "내 목실기 목표와 실행전략을 작성하고 점검합니다.",
+- L171: "dashboard.myRecordsDescription": "하루기록, 주간기록, 월간기록을 확인하고 작성합니다.",
+- L172: "dashboard.coachMakerFeaturesDescription": "코치메이커 센터, 전체 목실기 성취 현황, 나의 목실기와 나의 기록으로 바로 이동합니다.",
+- L173: "dashboard.adminFeaturesDescription": "최고관리자가 자주 확인하는 관리 화면으로 바로 이동합니다.",
+- L175: "myCoaching.badge": "코칭",
+- L176: "myCoaching.title": "내 코칭 공간",
+- L177: "myCoaching.subtitle": "내 계정에 연결된 코칭 관계를 읽기 전용으로 확인할 수 있습니다.",
+- L178: "myCoaching.loadFailed": "지금 코칭 공간을 불러올 수 없습니다.",
+- L179: "myCoaching.backToDashboard": "대시보드로 돌아가기",
+- L180: "myCoaching.myRecords": "나의 기록",
+- L181: "myCoaching.viewProfile": "프로필 보기",
+- L182: "myCoaching.welcome": "환영합니다",
+- L183: "myCoaching.hello": "안녕하세요",
+- L184: "myCoaching.nameSuffix": "님.",
+- L185: "myCoaching.intro": "여기는 내 코칭 공간입니다.",
+- L186: "myCoaching.myCoach": "내 코치",
+- L187: "myCoaching.noCoach": "아직 배정된 코치가 없습니다.",
+- L188: "myCoaching.myRelationships": "내 코칭 관계",
+- L189: "myCoaching.myMoksilgi": "나의 목실기",
+- L190: "myCoaching.myMoksilgiDescription": "목실기 목표 작성, 월별 점검, 연간 성취표를 한곳에서 확인합니다.",
+- L191: "myCoaching.writeMoksilgi": "목실기 작성하기",
+- L192: "myCoaching.writeMoksilgiDescription": "나의 목실기 목표와 세부 내용을 작성합니다.",
+- L193: "myCoaching.monthlyMoksilgi": "월별 목실기 점검",
+- L194: "myCoaching.monthlyMoksilgiDescription": "월별 실행 기록과 달성률을 점검합니다.",
+- L195: "myCoaching.viewAchievement": "나의 성취표 보기",
+- L196: "myCoaching.viewAchievementDescription": "연간 목실기 성취 현황을 확인합니다.",
+- L197: "myCoaching.recordsDescription": "하루, 주간, 월간 단위로 나의 코칭 여정과 실천 내용을 기록합니다.",
+- L198: "myCoaching.chooseRecord": "기록 선택하기",
+- L199: "myCoaching.chooseRecordDescription": "하루 기록, 주간 기록, 월간 기록 중 필요한 기록 방식을 선택합니다.",
+- L200: "myCoaching.coachFeedback": "코치 피드백",
+- L201: "myCoaching.coachFeedbackDescription": "코치가 남긴 피드백을 확인하고 다음 실행을 준비합니다.",
+- L202: "myCoaching.viewFeedback": "피드백 보기",
+- L203: "myCoaching.viewFeedbackDescription": "공개된 코치 피드백을 확인합니다.",
+- L204: "myCoaching.feedback.badge": "내 코칭",
+- L205: "myCoaching.feedback.title": "받은 피드백",
+- L206: "myCoaching.feedback.description": "코치가 남긴 주간 기록 피드백을 확인합니다.",
+- L207: "myCoaching.feedback.backToMyCoaching": "내 코칭 공간으로 돌아가기",
+- L208: "myCoaching.feedback.dashboard": "대시보드",
+- L209: "myCoaching.feedback.viewProfile": "프로필 보기",
+- L210: "myCoaching.feedback.noProfile": "아직 프로필이 생성되지 않았습니다.",
+- L211: "myCoaching.feedback.loadFailed": "지금 피드백을 불러올 수 없습니다.",
+- L212: "myCoaching.feedback.empty": "아직 받은 피드백이 없습니다.",
+- L213: "myCoaching.feedback.coach": "코치",
+- L214: "myCoaching.feedback.status.published": "게시됨",
+- L215: "myCoaching.feedback.status.draft": "임시 저장",
+- L216: "myCoaching.feedback.status.archived": "보관됨",
+- L217: "myCoaching.feedback.weekRange": "주간 기간",
+- L218: "myCoaching.feedback.submittedAt": "제출일",
+- L219: "myCoaching.feedback.createdAt": "작성일",
+- L220: "myCoaching.feedback.updatedAt": "수정일",
+- L221: "myCoaching.feedback.feedback": "피드백",
+- L222: "myCoaching.feedback.encouragement": "격려",
+- L223: "myCoaching.feedback.nextStep": "다음 단계",
+- L224: "myCoaching.feedback.none": "없음",
+- L225: "myCoaching.feedback.unknown": "알 수 없음",
+- L226: "myCoaching.spiritualCompanion.badge": "내 코칭",
+- L227: "myCoaching.spiritualCompanion.title": "AI 영적 형성 도우미",
+- L228: "myCoaching.spiritualCompanion.description": "기도 제목, 감사 제목, 묵상 주제를 바탕으로 짧은 묵상 질문을 제공합니다.",
+- L229: "myCoaching.spiritualCompanion.cardTitle": "AI 영적 형성 도우미",
+- L230: "myCoaching.spiritualCompanion.cardDescription": "기도 제목, 감사 제목, 묵상 주제를 바탕으로 짧은 묵상 질문을 받아볼 수 있습니다.",
+- L231: "myCoaching.spiritualCompanion.backToMyCoaching": "내 코칭 공간으로 돌아가기",
+- L232: "myCoaching.spiritualCompanion.dashboard": "대시보드",
+- L233: "myCoaching.spiritualCompanion.noticeTitle": "MVP 안내",
+- L234: "myCoaching.spiritualCompanion.notice": "현재는 외부 AI API를 호출하지 않는 mock 응답으로 동작합니다. 개인 묵상 보조 용도로만 사용해 주세요.",
+- L235: "myCoaching.spiritualCompanion.inputTitle": "오늘의 마음 나누기",
+- L236: "myCoaching.spiritualCompanion.inputDescription": "감사한 일, 기도 제목, 묵상 주제 중 하나를 짧게 적어 주세요.",
+- L237: "myCoaching.spiritualCompanion.messageLabel": "나눌 내용",
+- L238: "myCoaching.spiritualCompanion.examples.gratitude": "오늘 감사한 일과 기도 제목을 정리하고 싶습니다.",
+- L239: "myCoaching.spiritualCompanion.examples.weary": "마음이 지쳐 있는데 짧은 묵상 질문을 받고 싶습니다.",
+- L240: "myCoaching.spiritualCompanion.examples.ministry": "이번 주 사역을 돌아보며 기도하고 싶습니다.",
+- L241: "myCoaching.spiritualCompanion.placeholder": "오늘 감사한 일과 기도 제목을 적어 보세요.",
+- L242: "myCoaching.spiritualCompanion.privateNotice": "기본 공개 범위는 나만 보기입니다.",
+- L243: "myCoaching.spiritualCompanion.generate": "묵상 질문 받기",
+- L244: "myCoaching.spiritualCompanion.generating": "생성 중...",
+- L245: "myCoaching.spiritualCompanion.remainingPrefix": "오늘 남은 생성 횟수",
+- L246: "myCoaching.spiritualCompanion.remainingSuffix": "회",
+- L247: "myCoaching.spiritualCompanion.answerTitle": "AI 영적 형성 응답",
+- L248: "myCoaching.spiritualCompanion.answerDescription": "응답은 목회적 조언이 아닌 개인 묵상을 돕는 짧은 질문과 실천 제안입니다.",
+- L249: "myCoaching.spiritualCompanion.emptyAnswer": "묵상 가이드를 생성하면 이곳에 응답이 표시됩니다.",
+- L250: "myCoaching.spiritualCompanion.savedMessagesTitle": "최근 저장된 대화",
+- L251: "myCoaching.spiritualCompanion.savedMessagesDescription": "최근 20개 메시지를 시간순으로 표시합니다.",
+- L252: "myCoaching.spiritualCompanion.messagesLoading": "저장된 대화를 불러오는 중입니다.",
+- L253: "myCoaching.spiritualCompanion.messagesLoadFailed": "저장된 대화를 불러올 수 없습니다.",
+- L254: "myCoaching.spiritualCompanion.noSavedMessages": "아직 저장된 대화가 없습니다.",
+- L255: "myCoaching.spiritualCompanion.messageRole.user": "나",
+- L256: "myCoaching.spiritualCompanion.messageRole.assistant": "AI 도우미",
+- L257: "myCoaching.spiritualCompanion.limitReached": "오늘의 생성 가능 횟수를 모두 사용했습니다.",
+- L258: "myCoaching.spiritualCompanion.error": "지금 AI 응답을 생성할 수 없습니다.",
+- L259: "myCoaching.relationships.type.individual_coaching": "개인 코칭",
+- L260: "myCoaching.relationships.type.group_coaching": "그룹 코칭",
+- L261: "myCoaching.relationships.type.leadership_coaching": "리더십 코칭",
+- L262: "myCoaching.relationships.type.pastoral_coaching": "목회 코칭",
+- L263: "myCoaching.relationships.type.missionary_coaching": "선교사 코칭",
+- L264: "myCoaching.relationships.status.active": "활성",
+- L265: "myCoaching.relationships.status.paused": "일시중지",
+- L266: "myCoaching.relationships.status.ended": "종료",
+- L267: "myCoaching.relationships.status.archived": "보관됨",
+- L268: "myCoaching.relationships.scope": "범위",
+- L269: "myCoaching.relationships.scope.global": "전체",
+- L270: "myCoaching.relationships.scope.country": "국가",
+- L271: "myCoaching.relationships.scope.region": "지역",
+- L272: "myCoaching.relationships.scope.organization": "기관",
+- L273: "myCoaching.relationships.scope.church": "교회",
+- L274: "myCoaching.relationships.scope.group": "그룹",
+- L275: "myCoaching.relationships.scope.cohort": "코호트",
+- L276: "myCoaching.relationships.scope.coach": "코치",
+- L277: "myCoaching.relationships.scope.all": "전체",
+- L278: "myCoaching.relationships.startDate": "시작일",
+- L279: "myCoaching.relationships.createdAt": "생성일",
+- L280: "myCoaching.relationships.endedAt": "종료일",
+- L281: "myCoaching.records.badge": "코칭 기록",
+- L282: "myCoaching.records.title": "나의 기록",
+- L283: "myCoaching.records.reportTitle": "나의 기록 보고서",
+- L284: "myCoaching.records.description": "하루, 주간, 월간 단위로 나의 코칭 여정과 실천 내용을 기록합니다.",
+- L285: "myCoaching.records.generatedAt": "생성일",
+- L286: "myCoaching.records.timezone": "기준 시간대",
+- L287: "myCoaching.records.printRange": "인쇄 범위",
+- L288: "myCoaching.records.currentResults": "현재 결과 전체",
+- L289: "myCoaching.records.daily": "하루 기록",
+- L290: "myCoaching.records.weekly": "주간 기록",
+- L291: "myCoaching.records.monthly": "월간 기록",
+- L292: "myCoaching.records.monthlyReflection": "월간 회고",
+- L293: "myCoaching.records.printBasis": "출력 기준: 현재 검색/필터/정렬 결과",
+- L294: "myCoaching.records.noFilterRecentPrint": "필터 없음: 최근 기록 기준 출력",
+- L295: "myCoaching.records.appliedFilters": "적용된 필터",
+- L296: "myCoaching.records.recordCount": "기록 수",
+- L297: "myCoaching.records.printNotice": "현재 검색어, 기록 유형, 상태, 공유, 정렬 기준이 인쇄물에 반영됩니다.",
+- L298: "myCoaching.records.printNoticeDetail": "필터가 없으면 최근 하루/주간/월간 기록 중심으로 출력됩니다. 브라우저 인쇄창에서 PDF 저장을 선택할 수 있습니다. 모바일 브라우저에서는 PDF 저장 옵션이 기기와 브라우저에 따라 다르게 표시될 수 있습니다. 인쇄창이 열리지 않으면 Safari 또는 Chrome에서 다시 열어 주세요.",
+- L299: "myCoaching.records.print.currentResults": "현재 결과 전체 인쇄/PDF 저장",
+- L300: "myCoaching.records.print.daily": "하루 기록 인쇄/PDF 저장",
+- L301: "myCoaching.records.print.weekly": "주간 기록 인쇄/PDF 저장",
+- L302: "myCoaching.records.print.monthlyReflection": "월간 회고 인쇄/PDF 저장",
+- L303: "myCoaching.records.backToMyCoaching": "내 코칭 공간으로 돌아가기",
+- L304: "myCoaching.records.chooseType": "기록 방식 선택",
+- L305: "myCoaching.records.chooseTypeDescription": "하루, 주간, 월간 기록 중 필요한 기록 방식을 선택해 주세요.",
+- L306: "myCoaching.records.dailyDescription": "오늘의 묵상, 실천, 적용, 기도제목을 간단히 기록합니다.",
+- L307: "myCoaching.records.writeDaily": "하루 기록 작성",
+- L308: "myCoaching.records.weeklyDescription": "한 주간의 목표 실행과 목실기 실천을 정리합니다.",
+- L309: "myCoaching.records.writeWeekly": "주간 기록 작성",
+- L310: "myCoaching.records.monthlyDescription": "한 달 동안의 성장과 다음 달 계획을 정리합니다.",
+- L311: "myCoaching.records.writeMonthly": "월간 회고 작성",
+- L312: "myCoaching.records.searchFilterTitle": "나의 기록 검색/필터",
+- L313: "myCoaching.records.searchFilterDescription": "하루, 주간, 월간 기록을 함께 검색하고 필요한 조건으로 정리합니다.",
+- L314: "myCoaching.records.resetFilters": "필터 초기화",
+- L315: "myCoaching.records.applyFilters": "필터 적용",
+- L316: "myCoaching.records.filters.searchLabel": "검색어",
+- L317: "myCoaching.records.filters.searchPlaceholder": "제목, 돌아봄, 기도제목, 진행요약, 회고 내용 검색",
+- L318: "myCoaching.records.filters.recordType": "기록 유형",
+- L319: "myCoaching.records.filters.status": "상태",
+- L320: "myCoaching.records.filters.visibility": "공유",
+- L321: "myCoaching.records.filters.sort": "정렬",
+- L322: "myCoaching.records.filters.all": "전체",
+- L323: "myCoaching.records.filters.newest": "최신순",
+- L324: "myCoaching.records.filters.oldest": "오래된순",
+- L325: "myCoaching.records.filters.typeSort": "기록 유형순",
+- L326: "myCoaching.records.filters.statusSort": "상태순",
+- L327: "myCoaching.records.filters.draft": "임시저장",
+- L328: "myCoaching.records.filters.submitted": "제출완료",
+- L329: "myCoaching.records.filters.reviewed": "검토완료",
+- L330: "myCoaching.records.filters.unknown": "확인 필요",
+- L331: "myCoaching.records.filters.private": "나만 보기",
+- L332: "myCoaching.records.filters.coachShared": "코치에게 공유",
+- L333: "myCoaching.records.filters.resultCountPrefix": "전체",
+- L334: "myCoaching.records.filters.totalSuffix": "개 중",
+- L335: "myCoaching.records.filters.shownSuffix": "개 표시",
+- L336: "myCoaching.records.recentTitle": "최근 나의 기록",
+- L337: "myCoaching.records.recentDescription": "하루, 주간, 월간 기록의 최근 내용을 한눈에 확인합니다.",
+- L338: "myCoaching.records.recentDaily": "최근 하루 기록",
+- L339: "myCoaching.records.latestDailyThree": "최신 기록 날짜순 3개",
+- L340: "myCoaching.records.goDaily": "하루 기록으로 이동",
+- L341: "myCoaching.records.dailyLoadFailed": "하루 기록을 불러오지 못했습니다.",
+- L342: "myCoaching.records.noDaily": "아직 작성한 하루 기록이 없습니다.",
+- L343: "myCoaching.records.recentWeekly": "최근 주간 기록",
+- L344: "myCoaching.records.latestWeeklyThree": "최신 주간 기간순 3개",
+- L345: "myCoaching.records.goWeekly": "주간 기록으로 이동",
+- L346: "myCoaching.records.weeklyLoadFailed": "주간 기록을 불러오지 못했습니다.",
+- L347: "myCoaching.records.noWeekly": "아직 작성한 주간 기록이 없습니다.",
+- L348: "myCoaching.records.recentMonthly": "최근 월간 회고",
+- L349: "myCoaching.records.latestMonthlyThree": "최신 연도/월순 3개",
+- L350: "myCoaching.records.goMonthly": "월간 회고로 이동",
+- L351: "myCoaching.records.monthlyLoadFailed": "월간 회고를 불러오지 못했습니다.",
+- L352: "myCoaching.records.noMonthly": "아직 작성한 월간 회고가 없습니다.",
+- L353: "myCoaching.records.searchResults": "검색 결과",
+- L354: "myCoaching.records.noRecordsForConditions": "선택한 조건 또는 인쇄 범위에 해당하는 기록이 없습니다.",
+- L355: "myCoaching.records.resetOrCreate": "필터를 초기화하거나 새 기록을 작성해 주세요.",
+- L356: "myCoaching.records.dailyResults": "하루 기록 결과",
+- L357: "myCoaching.records.noDailyResults": "선택한 조건에 해당하는 하루 기록이 없습니다.",
+- L358: "myCoaching.records.weeklyResults": "주간 기록 결과",
+- L359: "myCoaching.records.noWeeklyResults": "선택한 조건에 해당하는 주간 기록이 없습니다.",
+- L360: "myCoaching.records.monthlyResults": "월간 회고 결과",
+- L361: "myCoaching.records.noMonthlyResults": "선택한 조건에 해당하는 월간 회고가 없습니다.",
+- L362: "myCoaching.records.dailyPage.badge": "나의 기록",
+- L363: "myCoaching.records.dailyPage.title": "하루 기록",
+- L364: "myCoaching.records.dailyPage.description": "오늘의 묵상, 실천, 적용, 기도제목을 기록합니다.",
+- L365: "myCoaching.records.dailyPage.backToRecords": "기록 선택으로 돌아가기",
+- L366: "myCoaching.records.dailyPage.backToMyCoaching": "마이코칭으로 돌아가기",
+- L367: "myCoaching.weeklyLog.badge": "코칭",
+- L368: "myCoaching.weeklyLog.title": "주간 기록",
+- L369: "myCoaching.weeklyLog.description": "이번 주 코칭 관계에 대한 기록을 작성합니다. 현재는 주간 기록을 작성하는 공간이며, 하루 기록과 월간 기록은 단계적으로 확장됩니다.",
+- L370: "myCoaching.weeklyLog.backToRecords": "나의 기록으로 돌아가기",
+- L371: "myCoaching.weeklyLog.backToMyCoaching": "내 코칭 공간으로 돌아가기",
+- L372: "myCoaching.weeklyLog.form.submitted": "주간 기록을 제출했습니다.",
+- L373: "myCoaching.weeklyLog.form.draftSaved": "주간 기록을 임시 저장했습니다.",
+- L374: "myCoaching.weeklyLog.form.removed": "주간 기록이 목록에서 제거되었습니다.",
+- L375: "myCoaching.weeklyLog.form.saveFailed": "지금 주간 기록을 저장할 수 없습니다.",
+- L376: "myCoaching.weeklyLog.form.serviceUnavailable": "주간 기록 서비스를 지금 사용할 수 없습니다.",
+- L377: "myCoaching.weeklyLog.form.invalidId": "주간 기록 ID를 확인할 수 없습니다.",
+- L378: "myCoaching.weeklyLog.form.processFailed": "주간 기록 처리에 실패했습니다.",
+- L379: "myCoaching.weeklyLog.form.notFound": "주간 기록을 찾을 수 없습니다.",
+- L380: "myCoaching.weeklyLog.form.forbidden": "이 주간 기록에 접근할 권한이 없습니다.",
+- L381: "myCoaching.weeklyLog.form.status.draft": "임시저장",
+- L382: "myCoaching.weeklyLog.form.status.submitted": "제출완료",
+- L383: "myCoaching.weeklyLog.form.status.unknown": "확인 필요",
+- L384: "myCoaching.weeklyLog.form.loadFailed": "지금 주간 기록을 불러올 수 없습니다.",
+- L385: "myCoaching.weeklyLog.form.noProfile": "아직 프로필이 생성되지 않았습니다.",
+- L386: "myCoaching.weeklyLog.form.acceptInvitationFirst": "초대를 받으셨다면 먼저 초대를 수락해 주세요.",
+- L387: "myCoaching.weeklyLog.form.viewProfile": "프로필 보기",
+- L388: "myCoaching.weeklyLog.form.thisWeek": "이번 주",
+- L389: "myCoaching.weeklyLog.form.period": "기간",
+- L390: "myCoaching.weeklyLog.form.author": "작성자",
+- L391: "myCoaching.weeklyLog.form.noCoach": "아직 배정된 코치가 없습니다.",
+- L392: "myCoaching.weeklyLog.form.myRelationships": "내 코칭 관계",
+- L393: "myCoaching.weeklyLog.form.reviewTitle": "주간 돌아보기",
+- L394: "myCoaching.weeklyLog.form.existingRecordNotice": "이번 주 기록이 있습니다. 아래 입력란에는 저장된 이번 주 기록 내용이 채워져 있습니다.",
+- L395: "myCoaching.weeklyLog.form.relationship": "코칭 관계",
+- L396: "myCoaching.weeklyLog.form.gratitude": "감사 제목",
+- L397: "myCoaching.weeklyLog.form.gratitudeContent": "감사 내용",
+- L398: "myCoaching.weeklyLog.form.prayerRequest": "기도 제목",
+- L399: "myCoaching.weeklyLog.form.progressSummary": "진행 요약",
+- L400: "myCoaching.weeklyLog.form.difficulty": "어려웠던 점",
+- L401: "myCoaching.weeklyLog.form.messageToCoach": "코치에게 남길 말",
+- L402: "myCoaching.weeklyLog.form.coachMessage": "코치에게 남긴 메시지",
+- L403: "myCoaching.weeklyLog.form.saveDraft": "임시 저장",
+- L404: "myCoaching.weeklyLog.form.submit": "주간 기록 제출",
+- L405: "myCoaching.weeklyLog.form.removeFromList": "목록에서 제거",
+- L406: "myCoaching.weeklyLog.form.myWeeklyLogs": "나의 주간 기록",
+- L407: "myCoaching.weeklyLog.form.myWeeklyLogsDescription": "현재 선택한 코칭 관계의 주간 기록을 최신순으로 확인합니다.",
+- L408: "myCoaching.weeklyLog.form.total": "전체",
+- L409: "myCoaching.weeklyLog.form.countSuffix": "개",
+- L410: "myCoaching.weeklyLog.form.empty": "아직 작성한 주간 기록이 없습니다.",
+- L411: "myCoaching.weeklyLog.form.weeklyPeriod": "주간 기간",
+- L412: "myCoaching.weeklyLog.form.submittedAt": "제출일",
+- L413: "myCoaching.weeklyLog.form.createdAt": "작성일",
+- L414: "myCoaching.weeklyLog.form.updatedAt": "수정일",
+- L415: "myCoaching.records.monthlyPage.badge": "나의 기록",
+- L416: "myCoaching.records.monthlyPage.title": "월간 회고",
+- L417: "myCoaching.records.monthlyPage.description": "한 달 동안의 성장, 어려움, 감사, 다음 달 계획을 정리합니다.",
+- L418: "myCoaching.records.monthlyPage.moksilgiNotice": "목실기 월별 점검은 실행 체크와 달성률을 기록하는 공간입니다.",
+- L419: "myCoaching.records.monthlyPage.reflectionNotice": "월간 회고는 한 달의 성장과 다음 달 계획을 정리하는 기록입니다.",
+- L420: "myCoaching.records.monthlyPage.backToRecords": "나의 기록으로 돌아가기",
+- L421: "myCoaching.records.monthlyPage.backToMyCoaching": "내 코칭 공간으로 돌아가기",
+- L422: "myCoaching.records.monthlyPage.goMonthlyMoksilgi": "목실기 월별 점검으로 이동",
+- L423: "myCoaching.records.monthlyPage.form.createTitle": "월간 회고 작성",
+- L424: "myCoaching.records.monthlyPage.form.editTitle": "월간 회고 수정",
+- L425: "myCoaching.records.monthlyPage.form.description": "한 달의 성장과 다음 달 계획을 정리해 주세요.",
+- L426: "myCoaching.records.monthlyPage.form.cancelEdit": "수정 취소",
+- L427: "myCoaching.records.monthlyPage.form.year": "연도",
+- L428: "myCoaching.records.monthlyPage.form.month": "월",
+- L429: "myCoaching.records.monthlyPage.form.selectMonth": "월 선택",
+- L430: "myCoaching.records.monthlyPage.form.yearSuffix": "년",
+- L431: "myCoaching.records.monthlyPage.form.monthSuffix": "월",
+- L432: "myCoaching.records.monthlyPage.form.summary": "한 달 요약",
+- L433: "myCoaching.records.monthlyPage.form.growthPoints": "성장한 점",
+- L434: "myCoaching.records.monthlyPage.form.difficulty": "어려웠던 점",
+- L435: "myCoaching.records.monthlyPage.form.nextMonthPlan": "다음 달 계획",
+- L436: "myCoaching.records.monthlyPage.form.visibility.label": "공유 옵션",
+- L437: "myCoaching.records.monthlyPage.form.visibility.filterLabel": "공유",
+- L438: "myCoaching.records.monthlyPage.form.visibility.private": "나만 보기",
+- L439: "myCoaching.records.monthlyPage.form.visibility.coach": "코치에게 공유",
+- L440: "myCoaching.records.monthlyPage.form.visibility.unknown": "미지정",
+- L441: "myCoaching.records.monthlyPage.form.status.label": "상태",
+- L442: "myCoaching.records.monthlyPage.form.status.draft": "임시저장",
+- L443: "myCoaching.records.monthlyPage.form.status.submitted": "제출",
+- L444: "myCoaching.records.monthlyPage.form.status.reviewed": "검토완료",
+- L445: "myCoaching.records.monthlyPage.form.status.unknown": "확인 필요",
+- L446: "myCoaching.records.monthlyPage.form.shareWithCoach": "코치에게 공유",
+- L447: "myCoaching.records.monthlyPage.form.saving": "저장 중...",
+- L448: "myCoaching.records.monthlyPage.form.save": "월간 회고 저장",
+- L449: "myCoaching.records.monthlyPage.form.update": "월간 회고 수정",
+- L450: "myCoaching.records.monthlyPage.form.saved": "월간 회고가 저장되었습니다.",
+- L451: "myCoaching.records.monthlyPage.form.updated": "월간 회고가 수정되었습니다.",
+- L452: "myCoaching.records.monthlyPage.form.removed": "월간 회고가 목록에서 제거되었습니다.",
+- L453: "myCoaching.records.monthlyPage.form.deleteConfirm": "월간 회고를 삭제하시겠습니까?",
+- L454: "myCoaching.records.monthlyPage.form.targetMonth": "대상",
+- L455: "myCoaching.records.monthlyPage.form.deleteIrreversible": "이 작업은 되돌릴 수 없습니다.",
+- L456: "myCoaching.records.monthlyPage.form.listTitle": "나의 월간 회고 목록",
+- L457: "myCoaching.records.monthlyPage.form.listDescription": "최신 연도와 월 순서로 표시됩니다.",
+- L458: "myCoaching.records.monthlyPage.form.search": "검색",
+- L459: "myCoaching.records.monthlyPage.form.searchPlaceholder": "한 달 요약, 성장한 점, 어려웠던 점, 다음 달 계획 검색",
+- L460: "myCoaching.records.monthlyPage.form.resultLabel": "월간 회고",
+- L461: "myCoaching.records.monthlyPage.form.resultCountPrefix": "전체",
+- L462: "myCoaching.records.monthlyPage.form.resultCountMiddle": "개 중",
+- L463: "myCoaching.records.monthlyPage.form.resultCountSuffix": "개 표시",
+- L464: "myCoaching.records.monthlyPage.form.yearFilter": "연도 필터",
+- L465: "myCoaching.records.monthlyPage.form.yearPlaceholder": "예: 2026",
+- L466: "myCoaching.records.monthlyPage.form.monthFilter": "월 필터",
+- L467: "myCoaching.records.monthlyPage.form.all": "전체",
+- L468: "myCoaching.records.monthlyPage.form.sortBy": "정렬 기준",
+- L469: "myCoaching.records.monthlyPage.form.yearMonth": "연도/월",
+- L470: "myCoaching.records.monthlyPage.form.createdAt": "작성일",
+- L471: "myCoaching.records.monthlyPage.form.updatedAt": "수정일",
+- L472: "myCoaching.records.monthlyPage.form.submittedAt": "제출일",
+- L473: "myCoaching.records.monthlyPage.form.reviewedAt": "검토일",
+- L474: "myCoaching.records.monthlyPage.form.sortDirection": "정렬 방향",
+- L475: "myCoaching.records.monthlyPage.form.desc": "내림차순",
+- L476: "myCoaching.records.monthlyPage.form.asc": "오름차순",
+- L477: "myCoaching.records.monthlyPage.form.applyFilters": "필터 적용",
+- L478: "myCoaching.records.monthlyPage.form.resetFilters": "초기화",
+- L479: "myCoaching.records.monthlyPage.form.loading": "월간 회고를 불러오는 중입니다.",
+- L480: "myCoaching.records.monthlyPage.form.empty": "아직 작성한 월간 회고가 없습니다.",
+- L481: "myCoaching.records.monthlyPage.form.noResults": "선택한 조건에 해당하는 월간 회고가 없습니다.",
+- L482: "myCoaching.records.monthlyPage.form.cardTitle": "월간 회고",
+- L483: "myCoaching.records.monthlyPage.form.edit": "수정",
+- L484: "myCoaching.records.monthlyPage.form.deleting": "삭제 중...",
+- L485: "myCoaching.records.monthlyPage.form.removeFromList": "목록에서 제거",
+- L486: "myCoaching.records.monthlyPage.form.errors.loginRequired": "로그인이 필요합니다.",
+- L487: "myCoaching.records.monthlyPage.form.errors.forbidden": "이 월간 회고에 접근할 권한이 없습니다.",
+- L488: "myCoaching.records.monthlyPage.form.errors.notFound": "월간 회고를 찾을 수 없습니다.",
+- L489: "myCoaching.records.monthlyPage.form.errors.processFailed": "월간 회고 처리에 실패했습니다.",
+- L490: "myCoaching.records.monthlyPage.form.errors.loadFailed": "월간 회고 목록을 불러오지 못했습니다.",
+- L491: "myCoaching.records.monthlyPage.form.errors.yearRequired": "연도를 선택해 주세요.",
+- L492: "myCoaching.records.monthlyPage.form.errors.monthRequired": "월을 선택해 주세요.",
+- L493: "myCoaching.records.monthlyPage.form.errors.duplicate": "이미 해당 월의 회고 기록이 있습니다. 기존 기록을 수정해 주세요.",
+- L494: "myCoaching.records.monthlyPage.form.errors.updateFailed": "월간 회고 수정에 실패했습니다.",
+- L495: "myCoaching.records.monthlyPage.form.errors.saveFailed": "월간 회고 저장에 실패했습니다.",
+- L496: "myCoaching.records.dailyPage.form.createTitle": "하루 기록 작성",
+- L497: "myCoaching.records.dailyPage.form.editTitle": "하루 기록 수정",
+- L498: "myCoaching.records.dailyPage.form.description": "기록 날짜와 오늘의 돌아봄을 남겨 주세요.",
+- L499: "myCoaching.records.dailyPage.form.cancelEdit": "수정 취소",
+- L500: "myCoaching.records.dailyPage.form.recordDate": "기록 날짜",
+- L501: "myCoaching.records.dailyPage.form.title": "제목",
+- L502: "myCoaching.records.dailyPage.form.titlePlaceholder": "오늘 기록의 제목",
+- L503: "myCoaching.records.dailyPage.form.reflection": "오늘의 돌아봄",
+- L504: "myCoaching.records.dailyPage.form.practice": "실천/적용",
+- L505: "myCoaching.records.dailyPage.form.prayerRequest": "기도제목",
+- L506: "myCoaching.records.dailyPage.form.visibility.label": "공유 옵션",
+- L507: "myCoaching.records.dailyPage.form.visibility.filterLabel": "공유",
+- L508: "myCoaching.records.dailyPage.form.visibility.private": "나만 보기",
+- L509: "myCoaching.records.dailyPage.form.visibility.coach": "코치에게 공유",
+- L510: "myCoaching.records.dailyPage.form.visibility.unknown": "미지정",
+- L511: "myCoaching.records.dailyPage.form.status.label": "상태",
+- L512: "myCoaching.records.dailyPage.form.status.draft": "임시저장",
+- L513: "myCoaching.records.dailyPage.form.status.submitted": "제출",
+- L514: "myCoaching.records.dailyPage.form.status.reviewed": "검토완료",
+- L515: "myCoaching.records.dailyPage.form.status.unknown": "확인 필요",
+- L516: "myCoaching.records.dailyPage.form.shareWithCoach": "코치에게 공유",
+- L517: "myCoaching.records.dailyPage.form.saving": "저장 중...",
+- L518: "myCoaching.records.dailyPage.form.save": "하루 기록 저장",
+- L519: "myCoaching.records.dailyPage.form.update": "하루 기록 수정",
+- L520: "myCoaching.records.dailyPage.form.saved": "하루 기록이 저장되었습니다.",
+- L521: "myCoaching.records.dailyPage.form.updated": "하루 기록이 수정되었습니다.",
+- L522: "myCoaching.records.dailyPage.form.removed": "하루 기록이 목록에서 제거되었습니다.",
+- L523: "myCoaching.records.dailyPage.form.deleteConfirm": "하루 기록을 삭제하시겠습니까?",
+- L524: "myCoaching.records.dailyPage.form.deleteIrreversible": "이 작업은 되돌릴 수 없습니다.",
+- L525: "myCoaching.records.dailyPage.form.listTitle": "나의 하루 기록 목록",
+- L526: "myCoaching.records.dailyPage.form.listDescription": "최신 기록 날짜순으로 표시됩니다.",
+- L527: "myCoaching.records.dailyPage.form.search": "검색",
+- L528: "myCoaching.records.dailyPage.form.searchPlaceholder": "제목, 돌아봄, 실천/적용, 기도제목 검색",
+- L529: "myCoaching.records.dailyPage.form.all": "전체",
+- L530: "myCoaching.records.dailyPage.form.sortBy": "정렬 기준",
+- L531: "myCoaching.records.dailyPage.form.sortDirection": "정렬 방향",
+- L532: "myCoaching.records.dailyPage.form.createdAt": "작성일",
+- L533: "myCoaching.records.dailyPage.form.updatedAt": "수정일",
+- L534: "myCoaching.records.dailyPage.form.desc": "내림차순",
+- L535: "myCoaching.records.dailyPage.form.asc": "오름차순",
+- L536: "myCoaching.records.dailyPage.form.resultLabel": "하루 기록",
+- L537: "myCoaching.records.dailyPage.form.resultCountPrefix": "전체",
+- L538: "myCoaching.records.dailyPage.form.resultCountMiddle": "개 중",
+- L539: "myCoaching.records.dailyPage.form.resultCountSuffix": "개 표시",
+- L540: "myCoaching.records.dailyPage.form.resetFilters": "필터 초기화",
+- L541: "myCoaching.records.dailyPage.form.loading": "하루 기록을 불러오는 중입니다.",
+- L542: "myCoaching.records.dailyPage.form.empty": "아직 작성한 하루 기록이 없습니다.",
+- L543: "myCoaching.records.dailyPage.form.noResults": "선택한 조건에 해당하는 하루 기록이 없습니다.",
+- L544: "myCoaching.records.dailyPage.form.edit": "수정",
+- L545: "myCoaching.records.dailyPage.form.deleting": "삭제 중...",
+- L546: "myCoaching.records.dailyPage.form.removeFromList": "목록에서 제거",
+- L547: "myCoaching.records.dailyPage.form.errors.invalidId": "하루 기록 ID를 확인할 수 없습니다.",
+- L548: "myCoaching.records.dailyPage.form.errors.loginRequired": "로그인이 필요합니다.",
+- L549: "myCoaching.records.dailyPage.form.errors.forbidden": "이 하루 기록에 접근할 권한이 없습니다.",
+- L550: "myCoaching.records.dailyPage.form.errors.notFound": "하루 기록을 찾을 수 없습니다.",
+- L551: "myCoaching.records.dailyPage.form.errors.processFailed": "하루 기록 처리에 실패했습니다.",
+- L552: "myCoaching.records.dailyPage.form.errors.loadFailed": "하루 기록 목록을 불러오지 못했습니다.",
+- L553: "myCoaching.records.dailyPage.form.errors.invalidDate": "올바른 기록 날짜를 선택해 주세요.",
+- L554: "myCoaching.records.dailyPage.form.errors.updateFailed": "하루 기록 수정에 실패했습니다.",
+- L555: "myCoaching.records.dailyPage.form.errors.saveFailed": "하루 기록 저장에 실패했습니다.",
+- L556: "myCoaching.moksilgi.badge": "목실기 작성",
+- L557: "myCoaching.moksilgi.title": "목표와 실행전략 기획안",
+- L558: "myCoaching.moksilgi.subtitle": "목실기와 체크리스트",
+- L559: "myCoaching.moksilgi.description": "사명선언서, 비전, 핵심가치, 목표와 실행전략을 작성합니다.",
+- L560: "myCoaching.moksilgi.reportTitle": "내 목실기 보고서",
+- L561: "myCoaching.moksilgi.printYear": "출력 연도",
+- L562: "myCoaching.moksilgi.generatedAt": "생성일",
+- L563: "myCoaching.moksilgi.backToMyCoaching": "내 코칭 공간으로 돌아가기",
+- L564: "myCoaching.moksilgi.loadFailed": "지금 목실기를 불러올 수 없습니다.",
+- L565: "myCoaching.moksilgi.saved": "저장되었습니다.",
+- L566: "myCoaching.moksilgi.saveFailed": "저장할 수 없습니다. 입력값을 확인해 주세요.",
+- L567: "myCoaching.moksilgi.basicInfo": "기본 정보",
+- L568: "myCoaching.moksilgi.missionTitle": "Ⅰ. 사명선언서 (Mission)",
+- L569: "myCoaching.moksilgi.visionTitle": "Ⅱ. 비전 (Vision)",
+- L570: "myCoaching.moksilgi.coreValueTitle": "Ⅲ. 핵심가치 (Core Value)",
+- L571: "myCoaching.moksilgi.goalTitle": "Ⅳ. 목표",
+- L572: "myCoaching.moksilgi.saveBasicInfo": "기본 정보 저장",
+- L573: "myCoaching.moksilgi.actionStrategyTitle": "Ⅴ. 목표에 따른 실행전략 기획안",
+- L574: "myCoaching.moksilgi.monthlyComingSoon": "월별 체크리스트와 달성률 계산은 다음 단계에서 추가됩니다.",
+- L575: "myCoaching.moksilgi.saveBasicInfoFirst": "기본 정보를 먼저 저장하면 목표 영역과 세부 목표를 작성할 수 있습니다.",
+- L576: "myCoaching.moksilgi.noDetailGoals": "아직 세부 목표가 없습니다.",
+- L577: "myCoaching.moksilgi.saveDetailGoal": "세부 목표 저장",
+- L578: "myCoaching.moksilgi.printMyMoksilgi": "내 목실기 출력",
+- L579: "myCoaching.moksilgi.form.title": "제목",
+- L580: "myCoaching.moksilgi.form.subtitle": "부제",
+- L581: "myCoaching.moksilgi.form.periodStartDate": "기간 시작일",
+- L582: "myCoaching.moksilgi.form.periodEndDate": "기간 종료일",
+- L583: "myCoaching.moksilgi.form.writtenDate": "작성일",
+- L584: "myCoaching.moksilgi.form.author": "작성자",
+- L585: "myCoaching.moksilgi.form.community": "국가/소속/공동체",
+- L586: "myCoaching.moksilgi.form.communityPlaceholder": "예: 태국 / CCT 22노회 / 치앙라이 교회 / 코칭그룹",
+- L587: "myCoaching.moksilgi.form.communityHelp": "내가 속한 국가와 함께 신앙과 사역을 나누는 공동체를 기록합니다.",
+- L588: "myCoaching.moksilgi.form.regionalLeader": "지역팀장",
+- L589: "myCoaching.moksilgi.form.coach": "코치",
+- L590: "myCoaching.moksilgi.form.role": "직책",
+- L591: "myCoaching.moksilgi.form.generation": "세대",
+- L592: "myCoaching.moksilgi.form.missionStatement": "사명선언 문장",
+- L593: "myCoaching.moksilgi.form.relatedBibleVerse": "관련 성경구절",
+- L594: "myCoaching.moksilgi.form.missionDescription": "사명 설명",
+- L595: "myCoaching.moksilgi.form.visionTargetYear": "비전 목표 연도",
+- L596: "myCoaching.moksilgi.form.keyMetric": "핵심 수치",
+- L597: "myCoaching.moksilgi.form.target": "대상",
+- L598: "myCoaching.moksilgi.form.visionStatement": "비전 문장",
+- L599: "myCoaching.moksilgi.form.visionDescription": "비전 설명",
+- L600: "myCoaching.moksilgi.form.valueName": "가치명",
+- L601: "myCoaching.moksilgi.form.meaning": "의미",
+- L602: "myCoaching.moksilgi.form.practice": "실천 모습",
+- L603: "myCoaching.moksilgi.form.overallGoalStatement": "전체 목표 문장",
+- L604: "myCoaching.moksilgi.form.goalDescription": "목표 설명",
+- L605: "myCoaching.moksilgi.goal.spiritual.title": "목표 1: 영적 성장",
+- L606: "myCoaching.moksilgi.goal.spiritual.subtitle": "예수님은 하나님 앞에서 사랑스러워 가시더라",
+- L607: "myCoaching.moksilgi.goal.intellectual.title": "목표 2: 지적 성장",
+- L608: "myCoaching.moksilgi.goal.intellectual.subtitle": "예수님은 지혜가 자라며",
+- L609: "myCoaching.moksilgi.goal.physical.title": "목표 3: 육체적 성장",
+- L610: "myCoaching.moksilgi.goal.physical.subtitle": "예수님은 키가 자라며",
+- L611: "myCoaching.moksilgi.goal.social.title": "목표 4: 사회적 성장",
+- L612: "myCoaching.moksilgi.goal.social.subtitle": "예수님은 사람 앞에서 사랑스러워 가시더라",
+- L613: "myCoaching.moksilgi.goal.other.title": "목표 5: 기타",
+- L614: "myCoaching.moksilgi.goal.other.subtitle": "그 외 삶과 사역의 필요 영역",
+- L615: "myCoaching.moksilgi.detailGoal.title": "세부 목표 제목",
+- L616: "myCoaching.moksilgi.detailGoal.description": "세부 목표 설명",
+- L617: "myCoaching.moksilgi.detailGoal.yearlyTarget": "연간 목표량",
+- L618: "myCoaching.moksilgi.detailGoal.monthlyTarget": "월 목표량",
+- L619: "myCoaching.moksilgi.detailGoal.unit": "단위",
+- L620: "myCoaching.moksilgi.detailGoal.measurementMethod": "측정 방식",
+- L621: "myCoaching.moksilgi.detailGoal.actionStrategy1": "실행전략 1",
+- L622: "myCoaching.moksilgi.detailGoal.actionStrategy2": "실행전략 2",
+- L623: "myCoaching.moksilgi.detailGoal.actionStrategy3": "실행전략 3",
+- L624: "myCoaching.moksilgi.measurement.dailyCheck": "매일 실행 확인",
+- L625: "myCoaching.moksilgi.measurement.weeklyCount": "매주 실행 확인",
+- L626: "myCoaching.moksilgi.measurement.monthlyNumber": "월간 수치 입력",
+- L628: "myCoaching.moksilgi.monthly.reportTitle": "월별 목실기 기록 보고서",
+- L629: "myCoaching.moksilgi.monthly.printPeriod": "출력 기간",
+- L630: "myCoaching.moksilgi.monthly.title": "목실기 월별 체크리스트",
+- L631: "myCoaching.moksilgi.monthly.subtitle": "월별 실행 기록과 달성률 자동 계산",
+- L632: "myCoaching.moksilgi.monthly.description": "세부 목표별 실행 상황을 기록하면 달성률이 자동 계산됩니다.",
+- L633: "myCoaching.moksilgi.monthly.year": "연도",
+- L634: "myCoaching.moksilgi.monthly.yearSuffix": "년",
+- L635: "myCoaching.moksilgi.monthly.month": "월",
+- L637: "myCoaching.moksilgi.monthly.monthOptionSuffix": "월",
+- L638: "myCoaching.moksilgi.monthly.search": "조회",
+- L639: "myCoaching.moksilgi.monthly.print": "월별 목실기 출력",
+- L640: "myCoaching.moksilgi.monthly.backToMoksilgi": "목실기 작성으로 돌아가기",
+- L641: "myCoaching.moksilgi.monthly.backToMyCoaching": "내 코칭 공간으로 돌아가기",
+- L642: "myCoaching.moksilgi.monthly.dashboard": "대시보드",
+- L643: "myCoaching.moksilgi.monthly.needBasicForm": "먼저 목실기 기본 작성 폼을 저장해 주세요.",
+- L644: "myCoaching.moksilgi.monthly.needDetailGoals": "먼저 세부 목표와 실행전략을 등록해 주세요.",
+- L645: "myCoaching.moksilgi.monthly.writeMoksilgi": "목실기 작성",
+- L646: "myCoaching.moksilgi.monthly.loadFailed": "지금 월별 체크리스트를 불러올 수 없습니다.",
+- L647: "myCoaching.moksilgi.monthly.actionStrategies": "실행전략",
+- L648: "myCoaching.moksilgi.monthly.currentAchievement": "현재 달성률",
+- L649: "myCoaching.moksilgi.monthly.monthColumn": "월 별",
+- L650: "myCoaching.moksilgi.monthly.achievementRate": "달성률",
+- L651: "myCoaching.moksilgi.monthly.targetValue": "월 목표량 / 현재 목표량 수정",
+- L652: "myCoaching.moksilgi.monthly.comment": "코멘트",
+- L653: "myCoaching.moksilgi.monthly.save": "저장",
+- L654: "myCoaching.moksilgi.monthly.summaryTitle": "월별 요약",
+- L655: "myCoaching.moksilgi.monthly.total": "종합",
+- L656: "myCoaching.moksilgi.monthly.average": "평균",
+- L657: "myCoaching.moksilgi.monthly.currentSelection": "현재 선택",
+- L658: "myCoaching.moksilgi.monthly.cumulative": "누적",
+- L659: "myCoaching.moksilgi.monthly.areaAverage": "영역 평균",
+- L660: "myCoaching.moksilgi.monthly.noAreaDetailGoals": "이 영역에는 세부 목표가 없습니다.",
+- L661: "myCoaching.moksilgi.monthly.dailyCheckHeader": "매일 실행 확인 V",
+- L662: "myCoaching.moksilgi.monthly.weeklyCheckHeader": "매주 실행 확인 V",
+- L663: "myCoaching.moksilgi.monthly.week1": "첫주",
+- L664: "myCoaching.moksilgi.monthly.week2": "둘째주",
+- L665: "myCoaching.moksilgi.monthly.week3": "셋째주",
+- L666: "myCoaching.moksilgi.monthly.week4": "넷째주",
+- L667: "myCoaching.moksilgi.monthly.week5": "다섯째주",
+- L669: "genealogy.title": "세대별 코칭 계보도",
+- L670: "genealogy.subtitle": "코칭 관계의 세대별 흐름과 지역 분포를 확인합니다.",
+- L671: "genealogy.tree": "계보 트리",
+- L672: "genealogy.map": "지역 지도",
+- L673: "genealogy.assign": "배정 관리",
+- L674: "genealogy.history": "변경 이력",
+- L675: "genealogy.selectedDetail": "선택 상세",
+- L676: "genealogy.selectedNodeInfo": "선택 노드 정보",
+- L677: "genealogy.overview": "전체 현황",
+- L678: "genealogy.generationDistribution": "세대별 인원 분포",
+- L679: "genealogy.countryOverview": "국가별 현황",
+- L680: "genealogy.printTree": "계보 트리 인쇄",
+- L681: "genealogy.printMap": "지역 지도 인쇄",
+- L682: "genealogy.noCoordinateWarning": "좌표가 없는 항목은 지도에 표시되지 않습니다.",
+- L683: "genealogy.generation": "세대",
+- L684: "genealogy.totalMembers": "전체 인원",
+- L685: "genealogy.coaches": "코치",
+- L686: "genealogy.coachees": "코치이",
+- L687: "genealogy.rootCoach": "루트코치",
+- L688: "genealogy.directCoachees": "직접 코치이",
+- L689: "genealogy.regionalMap": "지역별 코칭 분포 지도",
+- L690: "genealogy.pieRatio": "파이 = 세대 비율",
+- L691: "genealogy.country": "국가",
+- L692: "genealogy.church": "교회",
+- L693: "genealogy.region": "지역",
+- L694: "genealogy.resetFilters": "필터 초기화",
+- L695: "genealogy.noRelationships": "표시할 코칭 관계가 없습니다. 아직 활성 코칭 관계가 없습니다.",
+- L696: "genealogy.nodeClickHelp": "노드를 클릭하면 오른쪽 패널에서 상세 정보를 확인할 수 있습니다.",
+- L697: "genealogy.currentSelection": "현재 선택",
+- L698: "genealogy.noFilterOptions": "현재 활성 코칭 관계에 연결된 회원 중 국가/교회/세대 정보가 있는 회원이 없습니다. 배정 관리 탭에서 국가/세대가 입력된 회원을 코치 관계에 연결하면 필터 옵션이 표시됩니다.",
+- L699: "genealogy.goAssign": "배정 관리로 이동",
+- L700: "genealogy.printedAt": "출력일",
+- L701: "genealogy.generatedOnPrint": "인쇄 시 생성",
+- L702: "genealogy.filterCountry": "국가",
+- L703: "genealogy.filterRegion": "지역",
+- L704: "genealogy.filterChurch": "교회",
+- L705: "genealogy.filterGeneration": "세대",
+- L707: "members.title": "회원목록",
+- L708: "members.subtitle": "회원 기본 정보, 역할, 소속 정보를 확인하고 관리합니다.",
+- L709: "members.name": "이름",
+- L710: "members.email": "이메일",
+- L711: "members.status": "상태",
+- L712: "members.role": "역할",
+- L713: "members.scope": "범위",
+- L714: "members.organization": "소속 정보",
+- L715: "members.createdAt": "생성일",
+- L716: "members.updatedAt": "최근 수정일",
+- L717: "members.loginGuide": "로그인 안내",
+- L718: "members.statusManage": "상태 관리",
+- L719: "members.actions": "관리",
+- L720: "members.memberInfo": "회원 정보",
+- L721: "members.roleScope": "역할/범위",
+- L722: "members.recordInfo": "기록 정보",
+- L723: "members.searchPlaceholder": "이름, 이메일, 소속 직분으로 검색",
+- L724: "members.filterDescription": "검색, 필터, 정렬, 페이지네이션을 사용해 현재 목록을 확인합니다.",
+- L725: "members.currentListDescription": "검색, 필터, 정렬, 페이지네이션을 사용해 현재 목록을 확인합니다.",
+- L726: "members.noMembers": "등록된 회원이 없습니다.",
+- L727: "members.admin": "관리자",
+- L728: "members.usersAndRoles": "사용자 및 역할",
+- L729: "members.pageDescription": "프로필과 활성 역할을 조회하고, 필요한 경우 관리자가 직접 회원을 등록할 수 있습니다.",
+- L730: "members.invitationNotice": "기존 이메일 초대 방식은 그대로 유지됩니다. 직접 등록 시 임시 비밀번호는 별도로 전달해야 합니다.",
+- L731: "members.createRelationship": "코칭 관계 생성",
+- L732: "members.addMember": "회원 추가",
+- L733: "members.directCreate": "직접 회원 등록",
+- L734: "members.directCreateDescription": "기존 이메일 초대 방식은 유지하고, 필요한 경우에만 직접 등록합니다.",
+- L735: "members.directCreateHelp": "이메일 발송 없이 Supabase Auth 계정을 만들고 기존 프로필/역할 구조에 연결합니다.",
+- L736: "members.openCreate": "회원 등록 열기",
+- L737: "members.closeCreate": "회원 등록 닫기",
+- L738: "members.basicInfo": "기본 정보",
+- L739: "members.affiliationInfo": "소속 정보",
+- L740: "members.roleGeneration": "역할 및 세대",
+- L741: "members.systemRecords": "시스템 자동 기록",
+- L742: "members.fullName": "이름",
+- L743: "members.displayName": "표시 이름",
+- L744: "members.phone": "전화번호",
+- L745: "members.temporaryPassword": "임시 비밀번호",
+- L746: "members.country": "소속 국가",
+- L747: "members.church": "소속 교회",
+- L748: "members.ministryPosition": "소속 직분",
+- L749: "members.systemRole": "시스템 역할",
+- L750: "members.generation": "세대",
+- L751: "members.scopeType": "권한 범위 유형",
+- L752: "members.scopeId": "권한 범위 ID",
+- L753: "members.memberStatus": "회원 상태",
+- L754: "members.notSpecified": "미지정",
+- L755: "members.inactiveSuffix": "비활성",
+- L756: "members.saveProfile": "회원 정보 저장",
+- L757: "members.cancelEdit": "수정 취소",
+- L758: "members.editProfile": "회원 정보 수정",
+- L759: "members.editProfileNotice": "이메일과 시스템 역할은 별도 관리 기능에서 변경합니다.",
+- L760: "members.openEdit": "수정 열기",
+- L761: "members.closeEdit": "수정 닫기",
+- L762: "members.disable": "비활성화",
+- L763: "members.reactivate": "재활성화",
+- L764: "members.protectedSuperAdmin": "super_admin 보호",
+- L765: "members.needsReview": "확인 필요",
+- L766: "members.createdOn": "가입일",
+- L767: "members.updateProfileNotice": "이메일, 시스템 역할, 비밀번호는 이 수정 폼에서 변경하지 않습니다.",
+- L768: "members.createDirect": "직접 회원 등록",
+- L769: "members.tempPasswordNotice": "생성 성공 후 임시 비밀번호를 사용자에게 직접 전달하세요.",
+- L770: "members.noCountryOptions": "국가 목록을 불러오지 못했습니다. 미지정으로 등록할 수 있습니다.",
+- L771: "members.noOrganizationOptions": "소속 기관 및 단체 목록을 불러오지 못했습니다. 미지정으로 등록할 수 있습니다.",
+- L772: "members.ministryPositionHelp": "소속 직분은 목회자, 선교사, 전도사처럼 실제 소속 내 직분이며 시스템 권한이 아닙니다.",
+- L773: "members.systemRoleHelp": "시스템 역할은 권한을 결정하고, 세대는 회원 프로필의 generation_number에 숫자로 저장됩니다.",
+- L774: "members.globalScopePlaceholder": "global이면 비워 둡니다",
+- L775: "members.createdAsActive": "활성으로 생성",
+- L776: "members.createdAutomatically": "생성 시 기록",
+- L777: "members.updatedAutomatically": "생성/수정 시 기록",
+- L778: "members.activeSystemRoles": "활성 시스템 역할",
+- L779: "members.createdShort": "생성",
+- L780: "members.ministryRoleSeparation": "소속 직분은 실제 소속 내 직분이고, 시스템 역할은 권한을 결정하는 별도 값입니다.",
+- L781: "members.organizationName": "소속 기관 및 단체",
+- L782: "members.primarySystemRole": "대표 시스템 역할",
+- L783: "members.quickActions": "빠른 작업",
+- L784: "members.roleScopePermission": "역할 권한 범위",
+- L785: "members.roleStatus": "역할 상태",
+- L786: "members.signupInputInfo": "회원가입 입력 정보",
+- L787: "members.signupInputInfoDescription": "회원가입 또는 초대 수락 시 profiles에 저장된 기본 정보, 소속 정보, 세대와 시스템 자동 기록을 함께 확인합니다.",
+- L788: "members.updatedShort": "수정",
+- L790: "adminUsers.addMember": "회원 추가",
+- L791: "adminUsers.editMember": "회원 정보 수정",
+- L792: "adminUsers.memberForm": "회원 등록 폼",
+- L793: "adminUsers.memberDetails": "회원 상세",
+- L794: "adminUsers.loginGuide": "로그인 안내",
+- L795: "adminUsers.statusChange": "상태 변경",
+- L796: "adminUsers.statusChangeConfirm": "회원 상태를 변경합니다.",
+- L797: "adminUsers.saveSuccess": "저장되었습니다.",
+- L798: "adminUsers.saveFailed": "저장에 실패했습니다.",
+- L799: "adminUsers.updateSuccess": "회원 정보가 수정되었습니다.",
+- L800: "adminUsers.updateFailed": "회원 정보 수정에 실패했습니다.",
+- L801: "adminUsers.deleteConfirm": "삭제하시겠습니까?",
+- L802: "adminUsers.deleteSuccess": "삭제되었습니다.",
+- L803: "adminUsers.deleteFailed": "삭제에 실패했습니다.",
+- L804: "adminUsers.noUsers": "등록된 회원이 없습니다.",
+- L805: "adminUsers.searchPlaceholder": "이름, 이메일, 역할, 소속/조직",
+- L806: "adminUsers.resetFilters": "필터 초기화",
+- L807: "adminUsers.pageInfo": "전체 결과 {total}명 · 현재 페이지 {page} / {pages}",
+- L808: "adminUsers.filterInfo": "필터 결과 {filtered}명 / 현재 페이지 데이터 {total}명",
+- L809: "adminUsers.previousPage": "이전",
+- L810: "adminUsers.nextPage": "다음",
+- L811: "adminUsers.pageSize": "페이지 크기",
+- L812: "adminUsers.selectedRoleEmpty": "선택한 역할에 해당하는 회원이 없습니다.",
+- L813: "adminUsers.searchEmpty": "검색 조건에 맞는 회원이 없습니다.",
+- L814: "adminUsers.badgeEdit": "수정",
+- L815: "adminUsers.badgeNew": "신규",
+- L816: "adminUsers.badgeAuto": "자동",
+- L817: "adminUsers.badgeAdmin": "관리자 설정",
+- L818: "adminUsers.roleChange": "역할 변경",
+- L819: "adminUsers.addRole": "역할 추가",
+- L820: "adminUsers.noAdditionalRoles": "추가로 부여할 수 있는 역할이 없습니다.",
+- L821: "adminUsers.multiRoleNotice": "한 회원에게 coach와 coach_maker 역할을 함께 부여할 수 있습니다.",
+- L822: "adminUsers.protectedRoleNotice": "super_admin 역할은 이 화면에서 변경할 수 없습니다.",
+- L823: "adminUsers.currentListMemberInfo": "현재 목록에 표시된 회원 정보입니다.",
+- L825: "coachMaker.title": "코치메이커 대시보드",
+- L826: "coachMaker.subtitle": "담당 범위의 목실기 성취 현황과 코칭 진행 상태를 확인합니다.",
+- L827: "coachMaker.myCoachingManagement": "나의 코칭 관리",
+- L828: "coachMaker.myCoachingManagementDescription": "코치메이커가 동시에 코치 역할을 수행할 때 사용하는 개인 코칭 관리 기능입니다.",
+- L829: "coachMaker.myCoachingManagementCardDescription": "내가 코치로 담당하는 코치이와 코칭 기록을 확인합니다.",
+- L830: "coachMaker.moksilgiProgress": "전체 목실기 성취 현황",
+- L831: "coachMaker.moksilgiProgressDescription": "코치메이커가 담당 지역/팀의 목실기 진행 흐름을 확인하는 관리 기능입니다.",
+- L832: "coachMaker.moksilgiProgressCardDescription": "담당 지역/팀의 코치와 코치이 목실기 월별 성취율을 한눈에 확인합니다.",
+- L833: "coachMaker.coachingStructureManagement": "코칭 구조 관리",
+- L834: "coachMaker.coachingStructureDescription": "코칭 관계와 세대별 계층 구조를 시각적으로 확인하는 기능입니다.",
+- L835: "coachMaker.coachingGenealogy": "세대별 계층 계보도",
+- L836: "coachMaker.coachingGenealogyDescription": "내가 담당하거나 접근 가능한 코칭 관계의 세대별 흐름과 계층 구조를 확인합니다.",
+- L837: "coachMaker.personalCoachRole": "개인 코치 역할 기능",
+- L838: "coachMaker.teamMoksilgiManagement": "지역/팀 목실기 관리 기능",
+- L839: "coachMaker.coachingRelationshipFlow": "코칭 관계와 세대 흐름",
+- L840: "coachMaker.totalCoaches": "전체 코치 수",
+- L841: "coachMaker.totalCoachesDescription": "관리 범위 안에서 active 관계가 있는 코치 수입니다.",
+- L842: "coachMaker.totalCoachees": "전체 담당 코치이 수",
+- L843: "coachMaker.totalCoacheesDescription": "active 코칭 관계의 코치이 수입니다.",
+- L844: "coachMaker.weeklySubmitted": "이번 주 제출",
+- L845: "coachMaker.weeklySubmittedDescription": "이번 주 제출된 주간 기록 기준 코치이 수입니다.",
+- L846: "coachMaker.weeklyMissing": "이번 주 미제출",
+- L847: "coachMaker.weeklyMissingDescription": "담당 코치이 중 이번 주 제출이 확인되지 않은 인원입니다.",
+- L848: "coachMaker.noCoachStats": "관리 범위 안에 등록된 코치가 없거나 아직 배정된 코치-코치이 관계가 없습니다.",
+- L849: "coachMaker.viewRelationships": "코칭 관계 보기",
+- L850: "coachMaker.coachStatusHeading": "코치별 현황",
+- L851: "coachMaker.coachStatusDescription": "관리 범위 내 코치별 담당 코치이 통계",
+- L852: "coachMaker.coachStatusHelp": "기준으로 active 코칭 관계와 제출/공유 현황을 집계합니다. 개인 기록 본문은 표시하지 않습니다.",
+- L853: "coachMaker.sharedDailyRecords": "공유된 하루 기록",
+- L854: "coachMaker.sharedDailyRecordsDescription": "코치에게 공유된 하루 기록 수입니다.",
+- L855: "coachMaker.sharedMonthlyReflections": "공유된 월간 회고",
+- L856: "coachMaker.sharedMonthlyReflectionsDescription": "코치에게 공유된 월간 회고 수입니다.",
+- L857: "coachMaker.totalFeedback": "전체 피드백 수",
+- L858: "coachMaker.totalFeedbackDescription": "작성된 코치 피드백 수입니다.",
+- L859: "coachMaker.feedbackPending": "피드백 대기",
+- L860: "coachMaker.feedbackPendingDescription": "제출된 주간 기록 중 피드백이 없는 항목입니다.",
+- L861: "coachMaker.assignedCoachees": "담당 코치이",
+- L862: "coachMaker.report.backToDashboard": "대시보드로 돌아가기",
+- L863: "coachMaker.report.printOrPdf": "보고서 인쇄/PDF 저장",
+- L864: "coachMaker.report.badge": "코치메이커 보고서",
+- L865: "coachMaker.report.title": "코치메이커 운영 보고서",
+- L866: "coachMaker.report.generatedAt": "생성일",
+- L867: "coachMaker.report.year": "기준 연도",
+- L868: "coachMaker.report.timezone": "기준 시간대",
+- L869: "coachMaker.report.description": "목실기 성취 현황, 관심 필요 대상자, 관리 액션 메모의 핵심 운영 지표를 인쇄용으로 정리합니다.",
+- L870: "coachMaker.report.scopeSummary": "코치메이커 담당 범위 요약",
+- L871: "coachMaker.report.coachAssignmentStatus": "코치별 담당 코치이 현황",
+- L872: "coachMaker.report.moksilgiSummary": "목실기 성취 요약",
+- L873: "coachMaker.report.attentionTargets": "관심 필요 대상자",
+- L874: "coachMaker.report.actionMemoSummary": "관리 액션 메모 요약",
+- L875: "coachMaker.report.priorityActionList": "우선 조치 목록",
+- L876: "coachMaker.report.noScopeData": "선택한 조건에 해당하는 코치메이커 담당 범위 데이터가 없습니다.",
+- L877: "coachMaker.report.noCoachAssignmentData": "선택한 조건에 해당하는 코치별 담당 현황 데이터가 없습니다.",
+- L878: "coachMaker.report.noMoksilgiData": "선택한 조건에 해당하는 목실기 성취 데이터가 없습니다.",
+- L879: "coachMaker.report.noAttentionTargets": "선택한 조건에 해당하는 관심 필요 대상자가 없습니다.",
+- L880: "coachMaker.report.noActionMemos": "선택한 팀/기간에 해당하는 관리 액션 메모가 없습니다.",
+- L881: "coachMaker.report.filters.title": "보고서 기준",
+- L882: "coachMaker.report.filters.description": "목실기 성취 현황은 선택 연도 기준, 관리 액션 메모는 작성일 기간 기준으로 표시합니다. 팀 필터는 목실기 대상자와 관리 메모 모두에 공통 적용됩니다.",
+- L883: "coachMaker.report.filters.year": "연도",
+- L884: "coachMaker.report.filters.yearSuffix": "년",
+- L885: "coachMaker.report.filters.team": "팀",
+- L886: "coachMaker.report.filters.teamPlaceholder": "전체 또는 팀명 입력",
+- L887: "coachMaker.report.filters.from": "시작일",
+- L888: "coachMaker.report.filters.to": "종료일",
+- L889: "coachMaker.report.filters.apply": "필터 적용",
+- L890: "coachMaker.report.filters.reset": "필터 초기화",
+- L891: "coachMaker.report.filters.allTeams": "전체 팀",
+- L892: "coachMaker.report.filters.allPeriod": "전체 기간",
+- L893: "coachMaker.report.filters.moksilgiBasis": "목실기 기준",
+- L894: "coachMaker.report.filters.actionMemoBasis": "관리 메모 기준",
+- L895: "coachMaker.report.filters.teamBasis": "팀 기준",
+- L896: "coachMaker.report.filters.notSelected": "선택 안 함",
+- L897: "coachMaker.report.filters.all": "전체",
+- L898: "coachMaker.report.filterSummary.year": "기준 연도",
+- L899: "coachMaker.report.filterSummary.team": "팀",
+- L900: "coachMaker.report.filterSummary.period": "기간",
+- L901: "coachMaker.report.filterSummary.moksilgiBasis": "목실기 기준",
+- L902: "coachMaker.report.filterSummary.actionMemoBasis": "관리 메모 기준",
+- L903: "coachMaker.report.filterSummary.teamBasis": "팀 기준",
+- L904: "coachMaker.report.filterSummary.all": "전체",
+- L905: "coachMaker.report.filterSummary.allPeriod": "전체 기간",
+- L906: "coachMaker.report.filterSummary.allTeams": "전체 팀",
+- L907: "coachMaker.report.filterSummary.selectedYear": "선택 연도",
+- L908: "coachMaker.report.filterSummary.createdAt": "작성일",
+- L909: "coachMaker.report.actionType.coaching_encouragement": "코칭 권면",
+- L910: "coachMaker.report.actionType.contact_line": "LINE/전화 연락",
+- L911: "coachMaker.report.actionType.next_meeting_check": "다음 모임 점검",
+- L912: "coachMaker.report.actionType.other": "기타",
+- L913: "coachMaker.report.actionType.team_leader_check": "팀장 확인",
+- L914: "coachMaker.report.priority.high": "높음",
+- L915: "coachMaker.report.priority.normal": "보통",
+- L916: "coachMaker.report.priority.low": "낮음",
+- L917: "coachMaker.report.actionStatus.open": "진행 전",
+- L918: "coachMaker.report.actionStatus.in_progress": "진행 중",
+- L919: "coachMaker.report.actionStatus.completed": "완료",
+- L920: "coachMaker.report.actionStatus.archived": "보관됨",
+- L921: "coachMaker.report.targetType.attention_target": "관심 필요 대상자",
+- L922: "coachMaker.report.targetType.church": "교회",
+- L923: "coachMaker.report.targetType.coach": "코치",
+- L924: "coachMaker.report.targetType.coachee": "코칭 대상자",
+- L925: "coachMaker.report.targetType.organization": "기관",
+- L926: "coachMaker.report.targetType.team": "팀",
+- L927: "coachMaker.report.checkNeeded.none": "없음",
+- L928: "coachMaker.report.checkNeeded.missing": "미제출",
+- L929: "coachMaker.report.checkNeeded.peopleSuffix": "명",
+- L930: "coachMaker.report.checkNeeded.feedback": "피드백",
+- L931: "coachMaker.report.checkNeeded.itemsSuffix": "건",
+- L932: "coachMaker.report.autoSummary.noData": "선택한 조건에 해당하는 보고서 데이터가 없습니다.",
+- L933: "coachMaker.report.autoSummary.period.range": "기준",
+- L934: "coachMaker.report.autoSummary.period.from": "이후 기준",
+- L935: "coachMaker.report.autoSummary.period.to": "까지 기준",
+- L936: "coachMaker.report.autoSummary.period.allYear": "전체 기간 기준",
+- L937: "coachMaker.report.autoSummary.team.selected": "기준",
+- L938: "coachMaker.report.autoSummary.team.all": "전체 팀 기준",
+- L939: "coachMaker.report.autoSummary.body": "보고서 요약",
+- L940: "coachMaker.report.autoSummary.totalTargets": "전체 대상자",
+- L941: "coachMaker.report.autoSummary.participants": "목실기 기록 참여",
+- L942: "coachMaker.report.autoSummary.averageAchievement": "평균 성취율",
+- L943: "coachMaker.report.autoSummary.attentionTargets": "관심 필요 대상자",
+- L944: "coachMaker.report.autoSummary.followUpNeeded": "코치의 후속 관리가 필요합니다.",
+- L946: "coach.moksilgi.year": "연도",
+- L947: "coach.moksilgi.search": "조회",
+- L948: "coach.moksilgi.backToCoachHome": "코치 홈으로 돌아가기",
+- L949: "coach.moksilgi.dashboard": "대시보드",
+- L950: "coach.moksilgi.coachee": "코치이",
+- L951: "coach.moksilgi.totalAchievementSuffix": "년 총 달성률",
+- L952: "coach.moksilgi.missionSummary": "사명선언서 요약",
+- L953: "coach.moksilgi.visionSummary": "비전 요약",
+- L954: "coach.moksilgi.mainGoal": "전체 목표",
+- L955: "coach.moksilgi.spiritualGrowth": "영적 성장",
+- L956: "coach.moksilgi.intellectualGrowth": "지적 성장",
+- L957: "coach.moksilgi.physicalGrowth": "육체적 성장",
+- L958: "coach.moksilgi.socialGrowth": "사회적 성장",
+- L959: "coach.moksilgi.otherGrowth": "기타",
+- L960: "coach.moksilgi.total": "종합",
+- L961: "coach.moksilgi.average": "평균",
+- L962: "coach.moksilgi.updatedAt": "최근 수정일",
+- L963: "coach.moksilgi.author": "작성자",
+- L964: "coach.moksilgi.community": "소속/공동체",
+- L965: "coach.moksilgi.coach": "코치",
+- L966: "coach.moksilgi.summaryMonths": "요약 월 수",
+- L967: "coach.moksilgi.monthsSuffix": "개월",
+- L968: "coach.moksilgi.details": "상세 보기",
+- L969: "coach.moksilgi.accessDenied": "코치 권한이 없습니다.",
+- L970: "coach.moksilgi.loadFailed": "지금 코치이 목실기를 불러올 수 없습니다.",
+- L971: "coach.moksilgi.reportTitle": "코치이 목실기 목록 보고서",
+- L972: "coach.moksilgi.printYear": "출력 연도",
+- L973: "coach.moksilgi.generatedAt": "생성일",
+- L974: "coach.moksilgi.timezone": "기준 시간대",
+- L975: "coach.moksilgi.badge": "코치용 목실기",
+- L976: "coach.moksilgi.title": "담당 코치이 목실기",
+- L977: "coach.moksilgi.subtitle": "코치용 목실기 읽기 화면",
+- L978: "coach.moksilgi.description": "담당 코치이들이 작성한 목표와 실행전략 기획안과 성취 요약을 확인합니다.",
+- L979: "coach.moksilgi.mobilePrintNotice": "모바일 브라우저에서는 PDF 저장 옵션이 기기와 브라우저에 따라 다르게 표시될 수 있습니다. 인쇄창이 열리지 않으면 Safari 또는 Chrome에서 다시 열어 주세요.",
+- L980: "coach.moksilgi.empty": "아직 확인할 코치이 목실기가 없습니다.",
+- L981: "coach.moksilgi.detail.backToList": "코치이 목실기 목록으로 돌아가기",
+- L982: "coach.moksilgi.detail.viewCurrentYear": "올해로 보기",
+- L983: "coach.moksilgi.detail.noCoreValues": "등록된 핵심가치가 없습니다.",
+- L984: "coach.moksilgi.detail.practiceExample": "실천 모습",
+- L985: "coach.moksilgi.detail.annualTarget": "연간 목표량",
+- L986: "coach.moksilgi.detail.monthlyTarget": "월 목표량",
+- L987: "coach.moksilgi.detail.unit": "단위",
+- L988: "coach.moksilgi.detail.measurementType": "측정 방식",
+- L989: "coach.moksilgi.detail.actionStrategies": "실행전략",
+- L990: "coach.moksilgi.detail.noActionStrategies": "등록된 실행전략이 없습니다.",
+- L991: "coach.moksilgi.detail.noGoalAreas": "등록된 목표 영역이 없습니다.",
+- L992: "coach.moksilgi.detail.goalPrefix": "목표",
+- L993: "coach.moksilgi.detail.noDetailGoals": "등록된 세부 목표가 없습니다.",
+- L994: "coach.moksilgi.detail.goalAchievement": "목표 / 성취",
+- L995: "coach.moksilgi.detail.goal1Spiritual": "목표1: 영적 성장",
+- L996: "coach.moksilgi.detail.goal2Intellectual": "목표2: 지적 성장",
+- L997: "coach.moksilgi.detail.goal3Physical": "목표3: 육체적 성장",
+- L998: "coach.moksilgi.detail.goal4Social": "목표4: 사회적 성장",
+- L999: "coach.moksilgi.detail.goal5Other": "목표5: 기타",
+- L1000: "coach.moksilgi.detail.notFound": "해당 목실기를 찾을 수 없습니다.",
+- L1001: "coach.moksilgi.detail.loadFailed": "지금 목실기 상세 정보를 불러올 수 없습니다.",
+- L1002: "coach.moksilgi.detail.reportTitle": "코치이 목실기 상세 보고서",
+- L1003: "coach.moksilgi.detail.badge": "코치용 목실기 상세 보기",
+- L1004: "coach.moksilgi.detail.title": "코치이 목실기 상세",
+- L1005: "coach.moksilgi.detail.subtitle": "목표와 실행전략 기획안",
+- L1006: "coach.moksilgi.detail.description": "담당 코치이가 작성한 목실기와 연간 성취 요약을 확인합니다.",
+- L1007: "coach.moksilgi.detail.noMonthlyRecords": "아직 선택한 연도의 월별 체크리스트 기록이 없습니다.",
+- L1008: "coach.moksilgi.detail.coacheeInfo": "코치이 정보",
+- L1009: "coach.moksilgi.detail.name": "이름",
+- L1010: "coach.moksilgi.detail.email": "이메일",
+- L1011: "coach.moksilgi.detail.regionalLeader": "지역팀장",
+- L1012: "coach.moksilgi.detail.planTitle": "제목",
+- L1013: "coach.moksilgi.detail.planSubtitle": "부제",
+- L1014: "coach.moksilgi.detail.period": "기간",
+- L1015: "coach.moksilgi.detail.writtenAt": "작성일",
+- L1016: "coach.moksilgi.detail.status": "상태",
+- L1017: "coach.moksilgi.detail.missionSection": "Ⅰ. 사명선언서",
+- L1018: "coach.moksilgi.detail.missionStatement": "사명선언 문장",
+- L1019: "coach.moksilgi.detail.bibleVerse": "관련 성경구절",
+- L1020: "coach.moksilgi.detail.missionDescription": "사명 설명",
+- L1021: "coach.moksilgi.detail.visionSection": "Ⅱ. 비전",
+- L1022: "coach.moksilgi.detail.visionYear": "비전 목표 연도",
+- L1023: "coach.moksilgi.detail.visionStatement": "비전 문장",
+- L1024: "coach.moksilgi.detail.visionMetrics": "핵심 수치",
+- L1025: "coach.moksilgi.detail.visionTarget": "대상",
+- L1026: "coach.moksilgi.detail.visionDescription": "비전 설명",
+- L1027: "coach.moksilgi.detail.coreValuesSection": "Ⅲ. 핵심가치",
+- L1028: "coach.moksilgi.detail.goalsSection": "Ⅳ. 목표",
+- L1029: "coach.moksilgi.detail.mainGoalStatement": "전체 목표 문장",
+- L1030: "coach.moksilgi.detail.goalDescription": "목표 설명",
+- L1031: "coach.moksilgi.detail.actionPlanSection": "Ⅴ. 목표에 따른 실행전략 기획안",
+- L1032: "coach.moksilgi.detail.achievementTableSection": "개인 목표와 실행전략 성취표",
+- L1033: "coach.moksilgi.detail.achievementTableHelp": "년 연간 대비, 월별누적 성취율입니다. (단위%)",
+- L1035: "moksilgi.title": "전체 목실기 성취 현황",
+- L1036: "moksilgi.subtitle": "지역/팀의 코치와 코치이 목실기 월별 성취율을 한눈에 확인합니다.",
+- L1037: "moksilgi.reportTitle": "목실기 전체 진행 현황 보고서",
+- L1038: "moksilgi.reportYear": "출력 연도",
+- L1039: "moksilgi.generatedAt": "생성일",
+- L1040: "moksilgi.achievementStatus": "목실기 성취 현황",
+- L1041: "moksilgi.attentionTargets": "관심 필요 대상자 수",
+- L1042: "moksilgi.attentionTargetsDescription": "현재 월까지 성취율이 50% 미만인 대상자 수입니다.",
+- L1043: "moksilgi.attentionUsers": "관심 필요 대상자",
+- L1044: "moksilgi.attentionUsersDescription": "현재 월까지 성취율이 50% 미만인 대상자 중 낮은 성취율 순으로 최대 5명을 표시합니다.",
+- L1045: "moksilgi.completedTargets": "완료 인원",
+- L1046: "moksilgi.completedTargetsDescription": "12개월 누적 성취율이 100% 이상인 인원입니다.",
+- L1047: "moksilgi.currentAverage": "현재 월까지 평균 성취율",
+- L1048: "moksilgi.currentAverageDescription": "선택 연도 기준 현재 월까지의 평균 성취율입니다.",
+- L1049: "moksilgi.inProgressTargets": "진행 중 인원",
+- L1050: "moksilgi.inProgressTargetsDescription": "누적 성취율이 0% 초과 100% 미만인 인원입니다.",
+- L1051: "moksilgi.missingTargets": "미입력 대상자 수",
+- L1052: "moksilgi.missingTargetsDescription": "성취율 계산이 어렵거나 기록이 없는 대상자 수입니다.",
+- L1053: "moksilgi.missingTargetsReason": "기록이 없거나 성취율 계산이 어려운 대상자입니다.",
+- L1054: "moksilgi.noAttentionUsers": "관심 필요 대상자가 없습니다.",
+- L1055: "moksilgi.noProgressSummary": "아직 목실기 현황 데이터가 없습니다. 코치이가 목실기와 월별 기록을 저장하면 이곳에 요약이 표시됩니다.",
+- L1056: "moksilgi.notStartedTargets": "미완료 인원",
+- L1057: "moksilgi.notStartedTargetsDescription": "아직 누적 성취 기록이 없는 인원입니다.",
+- L1058: "moksilgi.quickCheck": "빠른 점검",
+- L1059: "moksilgi.summaryDescription": "접근 가능한 대상자의 목실기 진행 상태와 평균 성취율을 요약합니다.",
+- L1060: "moksilgi.totalTargetsDescription": "현재 접근 가능한 목실기 대상자 수입니다.",
+- L1061: "moksilgi.viewOverallProgress": "전체 목실기 현황 보기",
+- L1062: "moksilgi.viewProgress": "현황 보기",
+- L1063: "moksilgi.yearSummary": "년 목실기 요약",
+- L1064: "moksilgi.teamView": "지역/팀별 보기",
+- L1065: "moksilgi.relationshipView": "코치-코치이 관계별 보기",
+- L1066: "moksilgi.careNeededView": "돌봄 필요자 보기",
+- L1067: "moksilgi.coachName": "코치명",
+- L1068: "moksilgi.coacheeName": "코치이명",
+- L1069: "moksilgi.relationshipStatus": "관계상태",
+- L1070: "moksilgi.averageRate": "현재까지 평균 성취율",
+- L1071: "moksilgi.recentRecordMonth": "최근 기록 월",
+- L1072: "moksilgi.missingMonths": "미작성 개월 수",
+- L1073: "moksilgi.careReason": "돌봄 사유",
+- L1074: "moksilgi.recommendedAction": "권장 조치",
+- L1075: "moksilgi.good": "양호",
+- L1076: "moksilgi.attention": "관심",
+- L1077: "moksilgi.careNeeded": "돌봄 필요",
+- L1078: "moksilgi.noRecord": "기록 없음",
+- L1079: "moksilgi.year": "연도",
+- L1080: "moksilgi.region": "지역",
+- L1081: "moksilgi.team": "팀/목장",
+- L1082: "moksilgi.role": "직책",
+- L1083: "moksilgi.generation": "세대",
+- L1084: "moksilgi.keyword": "검색어",
+- L1085: "moksilgi.query": "조회",
+- L1086: "moksilgi.resetFilters": "필터 초기화",
+- L1087: "moksilgi.printProgress": "목실기 전체 현황 출력",
+- L1088: "moksilgi.accessDenied": "코치메이커 권한이 없습니다.",
+- L1089: "moksilgi.loadFailed": "지금 전체 목실기 성취 현황을 불러올 수 없습니다.",
+- L1090: "moksilgi.noProgressData": "아직 확인할 목실기 성취 현황이 없습니다.",
+- L1091: "moksilgi.totalTargets": "전체 대상자 수",
+- L1092: "moksilgi.completedCount": "완료 수",
+- L1093: "moksilgi.inProgressCount": "진행 수",
+- L1094: "moksilgi.notCompletedCount": "미완료 수",
+- L1095: "moksilgi.upToCurrent": "전체 성취(UP TO CURRENT)",
+- L1096: "moksilgi.fullYearAverage": "12개월 전체 성취 현황",
+- L1097: "moksilgi.queryYear": "조회 연도",
+- L1098: "moksilgi.queryScope": "조회 범위",
+- L1099: "moksilgi.allScope": "전체",
+- L1100: "moksilgi.directCoachingScope": "직접 코칭",
+- L1101: "moksilgi.csvExport": "CSV 내보내기",
+- L1102: "moksilgi.noCsvData": "내보낼 목실기 현황 데이터가 없습니다.",
+- L1103: "moksilgi.csvExported": "목실기 현황을 CSV로 내보냈습니다.",
+- L1104: "moksilgi.regionTeamVisible": "전체 {total}명 중 {visible}명 표시",
+- L1105: "moksilgi.relationshipVisible": "active 코칭 관계 {count}건 표시",
+- L1106: "moksilgi.careVisible": "돌봄 필요자 {count}명 표시",
+- L1107: "moksilgi.asc": "오름차순",
+- L1108: "moksilgi.desc": "내림차순",
+- L1109: "moksilgi.averageToCurrent": "현재 월까지 평균",
+- L1110: "moksilgi.noFilterResults": "현재 검색/필터 조건에 해당하는 목실기 성취 현황이 없습니다.",
+- L1111: "moksilgi.sequence": "순번",
+- L1112: "moksilgi.currentMonth": "현재 월까지",
+- L1113: "moksilgi.progressRate": "진행률",
+- L1114: "moksilgi.cumulative": "누적",
+- L1115: "moksilgi.details": "상세보기",
+- L1116: "moksilgi.averageAchievement": "평균 성취",
+- L1117: "moksilgi.noCareNeeded": "현재 돌봄 필요자가 없습니다.",
+- L1118: "moksilgi.noRelationshipRows": "표시할 코치-코치이 관계별 목실기 성취 현황이 없습니다.",
+- L1119: "moksilgi.noRecordReason": "아직 목실기 기록이 없습니다.",
+- L1120: "moksilgi.lowAverageReason": "평균 성취율이 50% 미만입니다.",
+- L1121: "moksilgi.missingRecentReason": "최근 2개월 이상 기록이 없습니다.",
+- L1122: "moksilgi.firstRecordAction": "첫 기록 작성 안내 필요",
+- L1123: "moksilgi.coachConsultAction": "코치 상담 필요",
+- L1124: "moksilgi.recordEncourageAction": "기록 독려 필요",
+- L1125: "moksilgi.allMissing": "전체 미작성",
+- L1126: "moksilgi.needsCheck": "확인 필요",
+- L1127: "moksilgi.months": "개월",
+- L1128: "moksilgi.month": "월",
+- L1129: "moksilgi.progressDetail": "목실기 진행 상세",
+- L1130: "moksilgi.basicInfo": "기본 정보",
+- L1131: "moksilgi.achievementSummary": "성취 요약",
+- L1132: "moksilgi.currentRate": "현재 월까지 성취율",
+- L1133: "moksilgi.fullYearRate": "12개월 전체 성취율",
+- L1134: "moksilgi.notCalculable": "계산 불가",
+- L1135: "moksilgi.excellent": "우수",
+- L1136: "moksilgi.inProgress": "진행 중",
+- L1137: "moksilgi.notCompleted": "미완료",
+- L1138: "moksilgi.notEntered": "미입력",
+- L1139: "moksilgi.pending": "이후 예정",
+- L1140: "moksilgi.monthlyProgressHelp": "현재 월까지의 항목과 이후 예정 항목을 구분해 표시합니다.",
+- L1142: "language.current": "현재 언어",
+- L1143: "language.change": "언어 변경",
+- L1144: "language.korean": "한국어",
+- L1146: "language.comingSoon": "준비 중",
+
+### src/lib/print/print-options.ts
+
+- L104: return { ok: false, error: "인쇄 옵션 형식이 올바르지 않습니다." };
+- L114: error: `허용되지 않은 인쇄 옵션입니다: ${unknownKeys.join(", ")}`,
+- L119: return { ok: false, error: "용지 크기는 a4만 허용됩니다." };
+- L126: return { ok: false, error: "인쇄 방향을 확인해 주세요." };
+- L130: return { ok: false, error: "인쇄 여백을 확인해 주세요." };
+- L144: return { ok: false, error: "인쇄 표시 옵션을 확인해 주세요." };
 
 ### src/lib/profile/getProfile.ts
 
@@ -4061,18 +6248,20 @@
 
 ### src/lib/profile/updateProfile.ts
 
-- L89: message: "소속 직분은 100자 이하로 입력해 주세요.",
-- L98: message: `${field} 값은 문자열 또는 null이어야 합니다.`,
-- L112: message: "수정할 수 없는 필드가 포함되어 있습니다.",
-- L163: message: "로그인이 필요합니다.",
-- L174: message: "요청 body는 JSON object여야 합니다.",
-- L196: "수정할 필드가 없습니다. display_name, phone, ministry_position 중 하나를 보내 주세요.",
-- L218: message: "프로필을 조회하는 중 오류가 발생했습니다.",
-- L230: "수정할 수 있는 프로필을 찾지 못했습니다. 프로필이 없거나 비활성 상태일 수 있습니다.",
-- L252: message: "프로필을 수정하는 중 오류가 발생했습니다.",
-- L269: "감사 로그 기록에 필요한 서버 설정이 준비되지 않았습니다.",
-- L292: message: "감사 로그 기록 중 오류가 발생했습니다.",
-- L308: message: "프로필을 처리하는 중 오류가 발생했습니다.",
+- L96: message: "기본 언어는 ko, en, th 중에서 선택해 주세요.",
+- L104: message: "시간대는 올바른 IANA timezone으로 입력해 주세요.",
+- L116: message: "소속 직분은 100자 이하로 입력해 주세요.",
+- L125: message: `${field} 값은 문자열 또는 null이어야 합니다.`,
+- L139: message: "수정할 수 없는 필드가 포함되어 있습니다.",
+- L194: message: "로그인이 필요합니다.",
+- L205: message: "요청 body는 JSON object여야 합니다.",
+- L227: "수정할 필드가 없습니다. display_name, preferred_language, phone, ministry_position, timezone 중 하나를 보내 주세요.",
+- L249: message: "프로필을 조회하는 중 오류가 발생했습니다.",
+- L261: "수정할 수 있는 프로필을 찾지 못했습니다. 프로필이 없거나 비활성 상태일 수 있습니다.",
+- L283: message: "프로필을 수정하는 중 오류가 발생했습니다.",
+- L300: "감사 로그 기록에 필요한 서버 설정이 준비되지 않았습니다.",
+- L323: message: "감사 로그 기록 중 오류가 발생했습니다.",
+- L339: message: "프로필을 처리하는 중 오류가 발생했습니다.",
 
 ### src/lib/supabase/service.ts
 

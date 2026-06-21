@@ -18,6 +18,24 @@ import type {
 const MAX_TEXT_LENGTH = 2000;
 const MAX_RECENT_WEEKLY_LOGS_LIMIT = 500;
 
+function isIsoDateKey(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
+}
+
+function normalizeWeekStartDate(value: string | null | undefined) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return isIsoDateKey(trimmed) ? trimmed : null;
+}
+
 type WeeklyLogRole = {
   role: UserRole;
   scope_type: ScopeType;
@@ -104,6 +122,8 @@ type WeeklyLogsListQuery = PromiseLike<{
     column: "status",
     value: WeeklyLogStatus,
   ) => WeeklyLogsListQuery;
+  gte: (column: "week_start", value: string) => WeeklyLogsListQuery;
+  lte: (column: "week_start", value: string) => WeeklyLogsListQuery;
   limit: (count: number) => WeeklyLogsListQuery;
   or: (filters: string) => WeeklyLogsListQuery;
   order: (
@@ -1221,33 +1241,61 @@ export async function getRecentMyWeeklyLogs({
   limit = 3,
   search = null,
   status = null,
+  profileId = null,
+  weekStartFrom = null,
+  weekStartTo = null,
 }: {
   limit?: number | null;
   search?: string | null;
   status?: string | null;
+  /** 페이지에서 이미 조회한 profile id — profiles 재조회 생략 */
+  profileId?: string | null;
+  /** week_start 하한 (YYYY-MM-DD) */
+  weekStartFrom?: string | null;
+  /** week_start 상한 (YYYY-MM-DD) */
+  weekStartTo?: string | null;
 } = {}): Promise<RecentMyWeeklyLogsResult> {
-  const me = await getCurrentProfileAndRoles();
+  let coacheeProfileId: string;
 
-  if (!me.ok) {
-    return {
-      ok: false,
-      error: {
-        status: 401,
-        code: me.error.code,
-        message: me.error.message,
-      },
-    };
-  }
+  if (profileId) {
+    const session = await getSession();
+    if (!session.user) {
+      return {
+        ok: false,
+        error: {
+          status: 401,
+          code: "UNAUTHORIZED",
+          message: "로그인이 필요합니다.",
+        },
+      };
+    }
+    coacheeProfileId = profileId;
+  } else {
+    const me = await getCurrentProfileAndRoles();
 
-  if (me.data.profile === null) {
-    return {
-      ok: false,
-      error: {
-        status: 404,
-        code: "PROFILE_NOT_FOUND",
-        message: "아직 프로필이 생성되지 않았습니다.",
-      },
-    };
+    if (!me.ok) {
+      return {
+        ok: false,
+        error: {
+          status: 401,
+          code: me.error.code,
+          message: me.error.message,
+        },
+      };
+    }
+
+    if (me.data.profile === null) {
+      return {
+        ok: false,
+        error: {
+          status: 404,
+          code: "PROFILE_NOT_FOUND",
+          message: "아직 프로필이 생성되지 않았습니다.",
+        },
+      };
+    }
+
+    coacheeProfileId = me.data.profile.id;
   }
 
   const { client: serviceClient, error: serviceClientError } =
@@ -1273,12 +1321,22 @@ export async function getRecentMyWeeklyLogs({
     .select(
       "id, relationship_id, coachee_profile_id, week_start, week_end, gratitude, prayer_request, progress_summary, difficulty, message_to_coach, status, version, submitted_at, created_at, updated_at",
     )
-    .eq("coachee_profile_id", me.data.profile.id)
+    .eq("coachee_profile_id", coacheeProfileId)
     .is("deleted_at", null);
+  const normalizedWeekStartFrom = normalizeWeekStartDate(weekStartFrom);
+  const normalizedWeekStartTo = normalizeWeekStartDate(weekStartTo);
   const normalizedStatus = normalizeOptionalWeeklyStatus(status);
   const searchPattern = buildIlikePattern(search);
   const normalizedLimit =
     limit === null ? MAX_RECENT_WEEKLY_LOGS_LIMIT : normalizePositiveInteger(limit);
+
+  if (normalizedWeekStartFrom) {
+    query = query.gte("week_start", normalizedWeekStartFrom);
+  }
+
+  if (normalizedWeekStartTo) {
+    query = query.lte("week_start", normalizedWeekStartTo);
+  }
 
   if (normalizedStatus) {
     query = query.eq("status", normalizedStatus);

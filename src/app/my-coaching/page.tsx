@@ -1,11 +1,10 @@
-import { redirect } from "next/navigation";
+import { requireCoacheePageProfile } from "@/lib/api/my-coaching/coachee-page-auth";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { TodayAreaCard } from "@/components/coachee/TodayAreaCard";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { getMyCoachingMe } from "@/lib/api/my-coaching/me";
 import type { MoksilgiCoreValue } from "@/lib/api/my-coaching/moksilgi";
 import {
   calculateTodayProgressSnapshot,
@@ -25,10 +24,6 @@ import { TodayTodoList, type TodayTodo } from "@/components/coachee/TodayTodoLis
 
 export const dynamic = "force-dynamic";
 
-type ProfileTimezoneRow = Pick<
-  Tables<"profiles">,
-  "id" | "timezone" | "organization_id" | "display_name" | "full_name" | "email"
->;
 type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
 type PlanRow = Pick<Tables<"moksilgi_plans">, "id" | "title" | "core_values_json">;
 type GoalAreaRow = Pick<
@@ -200,13 +195,9 @@ async function toggleTodayCheckAction(formData: FormData) {
 }
 
 export default async function MyCoachingPage() {
-  const me = await getMyCoachingMe();
+  const auth = await requireCoacheePageProfile("/my-coaching");
 
-  if (!me.ok && me.error.code === "UNAUTHORIZED") {
-    redirect("/login?redirectTo=%2Fmy-coaching");
-  }
-
-  if (!me.ok) {
+  if (!auth.ok && auth.reason === "fetch_failed") {
     return (
       <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
         <Card className="border-red-200 bg-red-50">
@@ -218,7 +209,7 @@ export default async function MyCoachingPage() {
     );
   }
 
-  if (!me.data.profile) {
+  if (!auth.ok && auth.reason === "no_profile") {
     return (
       <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
         <Card className="border-line-base bg-surface-card">
@@ -232,6 +223,12 @@ export default async function MyCoachingPage() {
       </main>
     );
   }
+
+  if (!auth.ok) {
+    return null;
+  }
+
+  const profile = auth.profile;
 
   const { client: serviceClient, error: serviceClientError } =
     createSupabaseServiceClient();
@@ -249,41 +246,19 @@ export default async function MyCoachingPage() {
     );
   }
 
-  const profileId = me.data.profile.id;
-  const { data: profileRow } = await serviceClient
-    .from("profiles")
-    .select("id, timezone, organization_id, display_name, full_name, email")
-    .eq("id", profileId)
-    .is("deleted_at", null)
-    .maybeSingle();
+  const profileId = profile.id;
 
-  const safeProfile = (profileRow as ProfileTimezoneRow | null) ?? null;
+  const orgTimezonePromise =
+    profile.organization_id && !profile.timezone
+      ? serviceClient
+          .from("organizations")
+          .select("default_timezone")
+          .eq("id", profile.organization_id)
+          .is("deleted_at", null)
+          .maybeSingle()
+      : Promise.resolve({ data: null as OrganizationTimezoneRow | null, error: null });
 
-  let organizationTimezone: string | null = null;
-  if (safeProfile?.organization_id) {
-    const { data: organizationRow } = await serviceClient
-      .from("organizations")
-      .select("default_timezone")
-      .eq("id", safeProfile.organization_id)
-      .is("deleted_at", null)
-      .maybeSingle();
-
-    organizationTimezone =
-      (organizationRow as OrganizationTimezoneRow | null)?.default_timezone ?? null;
-  }
-
-  const effectiveTimezone = resolveTimezoneFallback(
-    safeProfile?.timezone ?? null,
-    organizationTimezone,
-    null,
-  );
-  const todayDateKey = getTodayDateInTimezone(effectiveTimezone);
-  const todayLabel = formatTodayLabel(todayDateKey, effectiveTimezone);
-  const currentYear = getCurrentYearInTimezone(effectiveTimezone);
-  const currentMonth = getCurrentMonthInTimezone(effectiveTimezone);
-  const currentDay = Number(todayDateKey.slice(-2));
-
-  const { data: activePlan } = await serviceClient
+  const activePlanPromise = serviceClient
     .from("moksilgi_plans")
     .select("id, title, core_values_json")
     .eq("profile_id", profileId)
@@ -293,7 +268,26 @@ export default async function MyCoachingPage() {
     .limit(1)
     .maybeSingle();
 
-  const plan = (activePlan as PlanRow | null) ?? null;
+  const [organizationResult, activePlanResult] = await Promise.all([
+    orgTimezonePromise,
+    activePlanPromise,
+  ]);
+
+  const organizationTimezone =
+    (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ?? null;
+
+  const effectiveTimezone = resolveTimezoneFallback(
+    profile.timezone,
+    organizationTimezone,
+    null,
+  );
+  const todayDateKey = getTodayDateInTimezone(effectiveTimezone);
+  const todayLabel = formatTodayLabel(todayDateKey, effectiveTimezone);
+  const currentYear = getCurrentYearInTimezone(effectiveTimezone);
+  const currentMonth = getCurrentMonthInTimezone(effectiveTimezone);
+  const currentDay = Number(todayDateKey.slice(-2));
+
+  const plan = (activePlanResult.data as PlanRow | null) ?? null;
   let areaCards = ensureFourAreas([]);
   let totalGoals = 0;
   let totalCompletedGoals = 0;
@@ -349,10 +343,10 @@ export default async function MyCoachingPage() {
   }
 
   const userName =
-    safeProfile?.display_name ??
-    safeProfile?.full_name ??
-    safeProfile?.email ??
-    me.data.authEmail ??
+    profile.display_name ??
+    profile.full_name ??
+    profile.email ??
+    auth.authEmail ??
     "피코치";
 
   const coreValues = plan ? parseCoreValues(plan.core_values_json) : [];

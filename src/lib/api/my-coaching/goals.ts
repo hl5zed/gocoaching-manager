@@ -1,6 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import type {
   GoalPriority,
   GoalStatus,
@@ -23,9 +22,7 @@ const DESCRIPTION_MAX_LENGTH = 2000;
 const CATEGORY_MAX_LENGTH = 80;
 const UNIT_MAX_LENGTH = 40;
 
-type ServiceSupabaseClient = NonNullable<
-  ReturnType<typeof createSupabaseServiceClient>["client"]
->;
+type ServiceSupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
 
 type ProfileIdRow = {
   id: string;
@@ -352,25 +349,6 @@ function normalizeGoalStatus(value: unknown): GoalStatus | null {
   return GOAL_STATUSES.has(value as GoalStatus) ? (value as GoalStatus) : null;
 }
 
-function getServiceClientResult():
-  | { ok: true; serviceClient: ServiceSupabaseClient }
-  | { ok: false; error: MyCoachingGoalsError } {
-  const { client, error } = createSupabaseServiceClient();
-
-  if (!client) {
-    console.error("[MY_COACHING_GOALS_SERVICE_CLIENT_UNAVAILABLE]", error);
-    return {
-      ok: false,
-      error: {
-        code: "GOALS_QUERY_FAILED",
-        message: "지금 목표를 불러올 수 없습니다.",
-      },
-    };
-  }
-
-  return { ok: true, serviceClient: client };
-}
-
 async function getCurrentProfileContext(): Promise<CurrentProfileContext> {
   const session = await getSession();
 
@@ -410,16 +388,10 @@ async function getCurrentProfileContext(): Promise<CurrentProfileContext> {
     };
   }
 
-  const serviceClientResult = getServiceClientResult();
-
-  if (!serviceClientResult.ok) {
-    return { ok: false, error: serviceClientResult.error };
-  }
-
   return {
     ok: true,
     profileId: (profile as ProfileIdRow).id,
-    serviceClient: serviceClientResult.serviceClient,
+    serviceClient: supabase,
   };
 }
 

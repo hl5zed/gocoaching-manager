@@ -1,24 +1,35 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { requireCoacheePageProfile } from "@/lib/api/my-coaching/coachee-page-auth";
 import { PrintPageButton } from "@/components/print/PrintPageButton";
 import {
   getMyMoksilgiSummary,
   type MoksilgiPersonalSummaryRow,
 } from "@/lib/api/my-coaching/moksilgi-summary";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import {
+  getCurrentMonthInTimezone,
+  getCurrentYearInTimezone,
+  resolveTimezoneFallback,
+} from "@/lib/timezone";
+import type { Tables } from "@/types/database";
 
 export const dynamic = "force-dynamic";
+
+type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
 
 function firstParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function parseYear(params: Record<string, string | string[] | undefined>) {
-  const today = new Date();
-  const year = Number(firstParam(params.year) ?? today.getFullYear());
+function parseYear(
+  params: Record<string, string | string[] | undefined>,
+  timezone: string,
+) {
+  const defaultYear = getCurrentYearInTimezone(timezone);
+  const year = Number(firstParam(params.year) ?? defaultYear);
 
-  return Number.isInteger(year) && year >= 2000 && year <= 2100
-    ? year
-    : today.getFullYear();
+  return Number.isInteger(year) && year >= 2000 && year <= 2100 ? year : defaultYear;
 }
 
 function formatPercent(value: number | null | undefined) {
@@ -87,17 +98,15 @@ function SummaryRow({
 
 function AchievementTable({
   cumulativeRow,
+  currentMonth,
   rows,
   year,
 }: {
   cumulativeRow: MoksilgiPersonalSummaryRow;
+  currentMonth: number | null;
   rows: MoksilgiPersonalSummaryRow[];
   year: number;
 }) {
-  const today = new Date();
-  const currentMonth =
-    today.getFullYear() === year ? today.getMonth() + 1 : null;
-
   return (
     <section className="mt-6 rounded-card border border-line-base bg-surface-card p-6">
       <h2 className="text-lg font-semibold">
@@ -148,16 +157,12 @@ function ProfileMissing() {
 }
 
 function MonthOverMonthCard({
+  currentMonth,
   rows,
-  year,
 }: {
+  currentMonth: number;
   rows: MoksilgiPersonalSummaryRow[];
-  year: number;
 }) {
-  const today = new Date();
-  if (today.getFullYear() !== year) return null;
-
-  const currentMonth = today.getMonth() + 1;
   if (currentMonth <= 1) return null;
 
   const current = rows.find((row) => row.month === currentMonth);
@@ -198,8 +203,52 @@ export default async function MoksilgiSummaryPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = searchParams ? await searchParams : {};
-  const year = parseYear(params);
-  const result = await getMyMoksilgiSummary(year);
+  const auth = await requireCoacheePageProfile("/my-coaching/moksilgi/summary");
+
+  if (!auth.ok) {
+    return (
+      <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
+        <p className="text-sm text-ink-muted">개인 성취표를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.</p>
+      </main>
+    );
+  }
+
+  const profile = auth.profile;
+  const { client: serviceClient, error: serviceClientError } =
+    createSupabaseServiceClient();
+
+  if (!serviceClient) {
+    console.error("[MOKSILGI_SUMMARY_SERVICE_CLIENT_UNAVAILABLE]", serviceClientError);
+    return (
+      <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
+        <p className="text-sm text-red-700">개인 성취표를 준비할 수 없습니다.</p>
+      </main>
+    );
+  }
+
+  const organizationResult =
+    profile.organization_id && !profile.timezone
+      ? await serviceClient
+          .from("organizations")
+          .select("default_timezone")
+          .eq("id", profile.organization_id)
+          .is("deleted_at", null)
+          .maybeSingle()
+      : { data: null as OrganizationTimezoneRow | null, error: null };
+
+  const organizationTimezone =
+    (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ?? null;
+  const effectiveTimezone = resolveTimezoneFallback(
+    profile.timezone,
+    organizationTimezone,
+    null,
+  );
+  const year = parseYear(params, effectiveTimezone);
+  const currentYear = getCurrentYearInTimezone(effectiveTimezone);
+  const currentMonthInTimezone = getCurrentMonthInTimezone(effectiveTimezone);
+  const currentMonthForYear = year === currentYear ? currentMonthInTimezone : null;
+
+  const result = await getMyMoksilgiSummary(year, { profileId: profile.id });
 
   if (!result.ok && result.error.code === "UNAUTHORIZED") {
     redirect("/login?redirectTo=%2Fmy-coaching%2Fmoksilgi%2Fsummary");
@@ -269,10 +318,16 @@ export default async function MoksilgiSummaryPage({
               </p>
             </section>
 
-            <MonthOverMonthCard rows={result.data.rows} year={year} />
+            {year === currentYear ? (
+              <MonthOverMonthCard
+                currentMonth={currentMonthInTimezone}
+                rows={result.data.rows}
+              />
+            ) : null}
 
             <AchievementTable
               cumulativeRow={result.data.cumulativeRow}
+              currentMonth={currentMonthForYear}
               rows={result.data.rows}
               year={year}
             />

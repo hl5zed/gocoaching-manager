@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import {
   GrowthAreaGoalCard,
   GrowthCoreValueCard,
@@ -7,8 +6,8 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardContent, CardTitle } from "@/components/ui/Card";
+import { requireCoacheePageProfile } from "@/lib/api/my-coaching/coachee-page-auth";
 import { getMyMoksilgi, type MoksilgiCoreValue } from "@/lib/api/my-coaching/moksilgi";
-import { getMyCoachingMe } from "@/lib/api/my-coaching/me";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import {
   getCurrentMonthInTimezone,
@@ -49,7 +48,6 @@ function areaCompletionRate(
   return rateValue(summary[AREA_RATE_KEY[areaKey]]);
 }
 
-type ProfileTimezoneRow = Pick<Tables<"profiles">, "id" | "timezone" | "organization_id">;
 type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
 type SummaryRow = Pick<
   Tables<"moksilgi_monthly_summaries">,
@@ -106,13 +104,9 @@ function monthLabel(year: number, month: number) {
 }
 
 export default async function MyCoachingGrowthPage() {
-  const me = await getMyCoachingMe();
+  const auth = await requireCoacheePageProfile("/my-coaching/goals");
 
-  if (!me.ok && me.error.code === "UNAUTHORIZED") {
-    redirect("/login?redirectTo=%2Fmy-coaching%2Fgoals");
-  }
-
-  if (!me.ok || !me.data.profile) {
+  if (!auth.ok) {
     return (
       <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
         <Card className="border-red-200 bg-red-50">
@@ -124,23 +118,15 @@ export default async function MyCoachingGrowthPage() {
     );
   }
 
-  const moksilgi = await getMyMoksilgi();
-
-  if (!moksilgi.ok && moksilgi.error.code === "UNAUTHORIZED") {
-    redirect("/login?redirectTo=%2Fmy-coaching%2Fgoals");
-  }
-
-  if (!moksilgi.ok) {
-    return (
-      <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-4 text-sm text-red-700">
-            목실기 정보를 불러올 수 없습니다.
-          </CardContent>
-        </Card>
-      </main>
-    );
-  }
+  const profile = auth.profile;
+  const profileId = profile.id;
+  const preliminaryTimezone = resolveTimezoneFallback(
+    profile.timezone,
+    null,
+    null,
+  );
+  const year = getCurrentYearInTimezone(preliminaryTimezone);
+  const month = getCurrentMonthInTimezone(preliminaryTimezone);
 
   const { client: serviceClient, error: serviceClientError } =
     createSupabaseServiceClient();
@@ -158,55 +144,60 @@ export default async function MyCoachingGrowthPage() {
     );
   }
 
-  const profileId = me.data.profile.id;
-  const { data: profileRow } = await serviceClient
-    .from("profiles")
-    .select("id, timezone, organization_id")
-    .eq("id", profileId)
-    .is("deleted_at", null)
-    .maybeSingle();
-  const profile = (profileRow as ProfileTimezoneRow | null) ?? null;
+  const orgTimezonePromise =
+    profile.organization_id && !profile.timezone
+      ? serviceClient
+          .from("organizations")
+          .select("default_timezone")
+          .eq("id", profile.organization_id)
+          .is("deleted_at", null)
+          .maybeSingle()
+      : Promise.resolve({ data: null as OrganizationTimezoneRow | null, error: null });
 
-  let organizationTimezone: string | null = null;
-  if (profile?.organization_id) {
-    const { data: organizationRow } = await serviceClient
-      .from("organizations")
-      .select("default_timezone")
-      .eq("id", profile.organization_id)
-      .is("deleted_at", null)
-      .maybeSingle();
-    organizationTimezone =
-      (organizationRow as OrganizationTimezoneRow | null)?.default_timezone ?? null;
+  const [moksilgi, organizationResult] = await Promise.all([
+    getMyMoksilgi(profileId),
+    orgTimezonePromise,
+  ]);
+
+  if (!moksilgi.ok) {
+    return (
+      <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4 text-sm text-red-700">
+            목실기 정보를 불러올 수 없습니다.
+          </CardContent>
+        </Card>
+      </main>
+    );
   }
 
-  const timezone = resolveTimezoneFallback(
-    profile?.timezone ?? null,
-    organizationTimezone,
-    null,
-  );
-  const year = getCurrentYearInTimezone(timezone);
-  const month = getCurrentMonthInTimezone(timezone);
   const plan = moksilgi.data.plan;
   const coreValues = plan ? parseCoreValues(plan.core_values_json) : [];
   const editHref = "/my-coaching/moksilgi";
 
-  let summary: SummaryRow | null = null;
+  const summaryResult = plan
+    ? await serviceClient
+        .from("moksilgi_monthly_summaries")
+        .select(
+          "spiritual_rate, intellectual_rate, physical_rate, social_rate, average_rate, updated_at",
+        )
+        .eq("plan_id", plan.id)
+        .eq("profile_id", profileId)
+        .eq("year", year)
+        .eq("month", month)
+        .is("deleted_at", null)
+        .maybeSingle()
+    : { data: null as SummaryRow | null, error: null };
 
-  if (plan) {
-    const { data: summaryRow } = await serviceClient
-      .from("moksilgi_monthly_summaries")
-      .select(
-        "spiritual_rate, intellectual_rate, physical_rate, social_rate, average_rate, updated_at",
-      )
-      .eq("plan_id", plan.id)
-      .eq("profile_id", profileId)
-      .eq("year", year)
-      .eq("month", month)
-      .is("deleted_at", null)
-      .maybeSingle();
+  const organizationTimezone =
+    (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ?? null;
 
-    summary = (summaryRow as SummaryRow | null) ?? null;
-  }
+  const timezone = resolveTimezoneFallback(
+    profile.timezone,
+    organizationTimezone,
+    null,
+  );
+  const summary: SummaryRow | null = (summaryResult.data as SummaryRow | null) ?? null;
 
   const targetAreas = moksilgi.data.areas
     .filter(

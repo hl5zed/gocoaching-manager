@@ -320,10 +320,37 @@ async function getCurrentProfile(): Promise<CurrentProfileResult> {
   };
 }
 
+export type GetDailyRecordsOptions = {
+  /** 페이지에서 이미 조회한 profile id — profiles 재조회 생략 */
+  profileId?: string;
+  /** searchParams에 from/to 없을 때 적용할 기본 시작일 */
+  defaultFrom?: string;
+  /** searchParams에 to 없을 때 적용할 기본 종료일 */
+  defaultTo?: string;
+};
+
+async function resolveDailyRecordsProfile(
+  profileId?: string,
+): Promise<CurrentProfileResult> {
+  if (profileId) {
+    const session = await getSession();
+    if (!session.user) {
+      return {
+        ok: false,
+        status: 401,
+        message: "로그인이 필요합니다.",
+      };
+    }
+    return { ok: true, profileId };
+  }
+  return getCurrentProfile();
+}
+
 export async function getDailyRecords(
   searchParams: URLSearchParams,
+  options?: GetDailyRecordsOptions,
 ): Promise<DailyRecordResult<DailyRecordItem[]>> {
-  const currentProfile = await getCurrentProfile();
+  const currentProfile = await resolveDailyRecordsProfile(options?.profileId);
 
   if (!currentProfile.ok) {
     return currentProfile;
@@ -338,8 +365,16 @@ export async function getDailyRecords(
   const limit = normalizePositiveInteger(searchParams.get("limit"));
 
   const normalizedDate = date ? normalizeDate(date) : null;
-  const normalizedFrom = from ? normalizeDate(from) : null;
-  const normalizedTo = to ? normalizeDate(to) : null;
+  let normalizedFrom = from ? normalizeDate(from) : null;
+  let normalizedTo = to ? normalizeDate(to) : null;
+
+  if (!normalizedDate && !normalizedFrom && options?.defaultFrom) {
+    normalizedFrom = normalizeDate(options.defaultFrom);
+  }
+
+  if (!normalizedDate && !normalizedTo && options?.defaultTo) {
+    normalizedTo = normalizeDate(options.defaultTo);
+  }
 
   if (
     (date && !normalizedDate) ||

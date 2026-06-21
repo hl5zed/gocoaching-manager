@@ -1,9 +1,6 @@
-import { getSession } from "@/lib/auth/getSession";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { getMoksilgiContext, type ServiceClient } from "./context";
 import type { MoksilgiAreaKey, Tables } from "@/types/database";
 
-type ServiceClient = NonNullable<ReturnType<typeof createSupabaseServiceClient>["client"]>;
 type SafeError = {
   code:
     | "UNAUTHORIZED"
@@ -13,7 +10,6 @@ type SafeError = {
     | "VALIDATION_FAILED";
   message: string;
 };
-type ProfileIdRow = { id: string };
 type PlanRow = Pick<Tables<"moksilgi_plans">, "id" | "profile_id" | "title">;
 type SummaryRow = Pick<
   Tables<"moksilgi_monthly_summaries">,
@@ -101,55 +97,12 @@ function summaryValue(
   return safeNumber(summary?.[key]);
 }
 
-async function getProfileContext(): Promise<
-  | { ok: true; profileId: string; serviceClient: ServiceClient }
-  | { ok: false; error: SafeError }
-> {
-  const session = await getSession();
-
-  if (!session.user) {
-    return { ok: false, error: { code: "UNAUTHORIZED", message: "로그인이 필요합니다." } };
-  }
-
-  const supabase = await createSupabaseServerClient();
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("auth_user_id", session.user.id)
-    .is("deleted_at", null)
-    .neq("status", "anonymized")
-    .maybeSingle();
-
-  if (profileError) {
-    return { ok: false, error: { code: "PROFILE_QUERY_FAILED", message: "프로필을 불러올 수 없습니다." } };
-  }
-
-  if (!profile) {
-    return { ok: false, error: { code: "PROFILE_NOT_FOUND", message: "아직 프로필이 생성되지 않았습니다." } };
-  }
-
-  const { client, error: serviceError } = createSupabaseServiceClient();
-
-  if (!client) {
-    console.error("[MOKSILGI_SUMMARY_SERVICE_CLIENT_UNAVAILABLE]", serviceError);
-    return {
-      ok: false,
-      error: { code: "MOKSILGI_QUERY_FAILED", message: "지금 개인 성취표를 불러올 수 없습니다." },
-    };
-  }
-
-  return {
-    ok: true,
-    profileId: (profile as ProfileIdRow).id,
-    serviceClient: client,
-  };
-}
-
 async function getOwnedPlan(client: ServiceClient, profileId: string) {
   return client
     .from("moksilgi_plans")
     .select("id, profile_id, title")
     .eq("profile_id", profileId)
+    .eq("status", "active")
     .is("deleted_at", null)
     .order("updated_at", { ascending: false })
     .limit(1)
@@ -212,11 +165,16 @@ function buildCumulativeRow(
 
 export async function getMyMoksilgiSummary(
   year: number,
+  options?: { profileId?: string },
 ): Promise<MoksilgiPersonalSummaryResult> {
   const validation = validateYear(year);
   if (validation) return { ok: false, error: validation };
 
-  const context = await getProfileContext();
+  const context = await getMoksilgiContext({
+    logTag: "MOKSILGI_SUMMARY_SERVICE_CLIENT_UNAVAILABLE",
+    serviceClientUnavailableMessage: "지금 개인 성취표를 불러올 수 없습니다.",
+    ...(options?.profileId ? { profileId: options.profileId } : {}),
+  });
   if (!context.ok) return { ok: false, error: context.error };
 
   const { data: plan, error: planError } = await getOwnedPlan(

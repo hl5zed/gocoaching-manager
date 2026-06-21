@@ -87,6 +87,8 @@ type RoleRecord = {
   scope_id: string | null;
   status: "active";
   granted_at: string;
+  is_active: boolean;
+  expires_at: string | null;
 };
 
 type ProfilePerformanceLogger = {
@@ -143,49 +145,50 @@ export async function getMyProfile(
     }
 
     const profileRecord = profile as ProfileRecord;
-    const [countryResult, organizationResult, churchResult] = await Promise.all([
-      profileRecord.country_id
-        ? supabase
-            .from("countries")
-            .select("name, code")
-            .eq("id", profileRecord.country_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null, error: null }),
-      profileRecord.organization_id
-        ? supabase
-            .from("organizations")
-            .select("name")
-            .eq("id", profileRecord.organization_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null, error: null }),
-      profileRecord.church_id
-        ? supabase
-            .from("churches")
-            .select("name")
-            .eq("id", profileRecord.church_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null, error: null }),
-    ]);
+    const now = new Date().toISOString();
+
+    // All 4 lookups in parallel: country, organization, church, user_roles
+    const [countryResult, organizationResult, churchResult, rolesResult] =
+      await Promise.all([
+        profileRecord.country_id
+          ? supabase
+              .from("countries")
+              .select("name, code")
+              .eq("id", profileRecord.country_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+        profileRecord.organization_id
+          ? supabase
+              .from("organizations")
+              .select("name")
+              .eq("id", profileRecord.organization_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+        profileRecord.church_id
+          ? supabase
+              .from("churches")
+              .select("name")
+              .eq("id", profileRecord.church_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+        supabase
+          .from("user_roles")
+          .select("role, scope_type, scope_id, status, granted_at, is_active, expires_at")
+          .eq("profile_id", profileRecord.id)
+          .eq("status", "active")
+          .is("deleted_at", null),
+      ]);
+
     perf?.mark(
       "profile.affiliations_query",
-      [countryResult.data, organizationResult.data, churchResult.data].filter(
-        Boolean,
-      ).length,
+      [countryResult.data, organizationResult.data, churchResult.data].filter(Boolean).length,
     );
 
     const country = countryResult.data as CountryLookup | null;
     const organization = organizationResult.data as NameLookup | null;
     const church = churchResult.data as NameLookup | null;
 
-    const { data: roles, error: rolesError } = await supabase
-      .from("user_roles")
-      .select("role, scope_type, scope_id, status, granted_at")
-      .eq("profile_id", profileRecord.id)
-      .eq("status", "active")
-      .eq("is_active", true)
-      .is("deleted_at", null)
-      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
-    perf?.mark("profile.roles_query", roles?.length ?? 0);
+    const { data: rolesRaw, error: rolesError } = rolesResult;
 
     if (rolesError) {
       return {
@@ -196,6 +199,15 @@ export async function getMyProfile(
         },
       };
     }
+
+    // Filter active/non-expired roles client-side
+    const roles = ((rolesRaw ?? []) as RoleRecord[]).filter(
+      (r) =>
+        r.is_active === true &&
+        (r.expires_at === null || r.expires_at > now),
+    );
+
+    perf?.mark("profile.roles_query", roles.length);
 
     return {
       ok: true,
@@ -208,11 +220,11 @@ export async function getMyProfile(
           country_name: country?.name ?? null,
           organization_name: organization?.name ?? null,
         },
-        roles: ((roles ?? []) as RoleRecord[]).map((role) => ({
+        roles: roles.map((role) => ({
           role: role.role,
           scope_type: role.scope_type,
           scope_id: role.scope_id,
-          status: role.status,
+          status: "active" as const,
           assigned_at: role.granted_at,
         })),
       },

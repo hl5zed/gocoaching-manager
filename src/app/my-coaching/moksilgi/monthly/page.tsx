@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
+import { requireCoacheePageProfile } from "@/lib/api/my-coaching/coachee-page-auth";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MoksilgiAreaCard } from "@/components/coachee/MoksilgiAreaCard";
 import { MoksilgiAppBar } from "@/components/coachee/MoksilgiSection";
@@ -17,9 +18,17 @@ import {
   type MoksilgiMonthlyRecord,
   type MoksilgiMonthlySummary,
 } from "@/lib/api/my-coaching/moksilgi-monthly";
-import type { Json, MoksilgiAreaKey } from "@/types/database";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import {
+  getCurrentMonthInTimezone,
+  getCurrentYearInTimezone,
+  resolveTimezoneFallback,
+} from "@/lib/timezone";
+import type { Json, MoksilgiAreaKey, Tables } from "@/types/database";
 
 export const dynamic = "force-dynamic";
+
+type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
 
 const INPUT_CLASS =
   "mt-1.5 w-full rounded-control border border-line-base bg-surface-card px-3 py-2 text-ink-base outline-none focus:border-brand-600";
@@ -63,13 +72,17 @@ function firstParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function parseYearMonth(params: Record<string, string | string[] | undefined>) {
-  const today = new Date();
-  const year = Number(firstParam(params.year) ?? today.getFullYear());
-  const month = Number(firstParam(params.month) ?? today.getMonth() + 1);
+function parseYearMonth(
+  params: Record<string, string | string[] | undefined>,
+  timezone: string,
+) {
+  const defaultYear = getCurrentYearInTimezone(timezone);
+  const defaultMonth = getCurrentMonthInTimezone(timezone);
+  const year = Number(firstParam(params.year) ?? defaultYear);
+  const month = Number(firstParam(params.month) ?? defaultMonth);
   return {
-    year: Number.isInteger(year) && year >= 2000 && year <= 2100 ? year : today.getFullYear(),
-    month: Number.isInteger(month) && month >= 1 && month <= 12 ? month : today.getMonth() + 1,
+    year: Number.isInteger(year) && year >= 2000 && year <= 2100 ? year : defaultYear,
+    month: Number.isInteger(month) && month >= 1 && month <= 12 ? month : defaultMonth,
   };
 }
 
@@ -471,8 +484,23 @@ function MonthlyRecordForm({
   );
 }
 
+const AREA_RATE_KEY: Record<
+  MoksilgiAreaKey,
+  | "spiritual_rate"
+  | "intellectual_rate"
+  | "physical_rate"
+  | "social_rate"
+  | "other_rate"
+> = {
+  spiritual: "spiritual_rate",
+  intellectual: "intellectual_rate",
+  physical: "physical_rate",
+  social: "social_rate",
+  other: "other_rate",
+};
+
 function summaryValue(
-  summary: MoksilgiMonthlySummary | undefined,
+  summary: MoksilgiMonthlySummary | undefined | null,
   key:
     | "spiritual_rate"
     | "intellectual_rate"
@@ -484,6 +512,17 @@ function summaryValue(
 ) {
   const value = summary?.[key];
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function areaRateFromSummary(
+  areaKey: MoksilgiAreaKey,
+  summary: MoksilgiMonthlySummary | null,
+) {
+  if (!summary) {
+    return 0;
+  }
+
+  return summaryValue(summary, AREA_RATE_KEY[areaKey]);
 }
 
 function average(values: number[]) {
@@ -608,8 +647,57 @@ export default async function MoksilgiMonthlyPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = searchParams ? await searchParams : {};
-  const { year, month } = parseYearMonth(params);
-  const result = await getMyMoksilgiMonthly(year, month);
+  const auth = await requireCoacheePageProfile("/my-coaching/moksilgi/monthly");
+
+  if (!auth.ok) {
+    return (
+      <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
+        <Card>
+          <CardContent className="p-4 text-sm text-ink-muted">
+            월별 목실기를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+  const profile = auth.profile;
+  const { client: serviceClient, error: serviceClientError } =
+    createSupabaseServiceClient();
+
+  if (!serviceClient) {
+    console.error("[MOKSILGI_MONTHLY_SERVICE_CLIENT_UNAVAILABLE]", serviceClientError);
+    return (
+      <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4 text-sm text-red-700">
+            월별 목실기를 준비할 수 없습니다.
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+  const organizationResult =
+    profile.organization_id && !profile.timezone
+      ? await serviceClient
+          .from("organizations")
+          .select("default_timezone")
+          .eq("id", profile.organization_id)
+          .is("deleted_at", null)
+          .maybeSingle()
+      : { data: null as OrganizationTimezoneRow | null, error: null };
+
+  const organizationTimezone =
+    (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ?? null;
+  const effectiveTimezone = resolveTimezoneFallback(
+    profile.timezone,
+    organizationTimezone,
+    null,
+  );
+  const { year, month } = parseYearMonth(params, effectiveTimezone);
+
+  const result = await getMyMoksilgiMonthly(year, month, { profileId: profile.id });
   const saved = firstParam(params.saved) === "1";
   const error = firstParam(params.error) === "save";
 
@@ -618,26 +706,23 @@ export default async function MoksilgiMonthlyPage({
   }
 
   const hasData = result.ok && Boolean(result.data.plan) && result.data.detailGoals.length > 0;
+  const monthSummary = result.ok ? result.data.summary : null;
 
   const areaStats = hasData
     ? result.data.areas.map((area) => {
         const areaGoals = result.data.detailGoals.filter((goal) => goal.area_id === area.id);
         const areaRecords = result.data.records.filter((record) => record.area_id === area.id);
-        const areaAverage =
-          areaGoals.length > 0
-            ? areaGoals.reduce((sum, goal) => {
-                const record = areaRecords.find((item) => item.detail_goal_id === goal.id);
-                return sum + Math.min(100, record?.achievement_rate ?? 0);
-              }, 0) / areaGoals.length
-            : 0;
-        return { area, areaGoals, areaAverage, hasRecords: areaRecords.length > 0 };
+        return {
+          area,
+          areaGoals,
+          areaAverage: areaRateFromSummary(area.area_key, monthSummary),
+          hasRecords: areaRecords.length > 0,
+        };
       })
     : [];
 
   const recordedAreas = areaStats.filter((stat) => stat.hasRecords).length;
-  const monthAverage = average(
-    areaStats.filter((stat) => stat.areaGoals.length > 0).map((stat) => stat.areaAverage),
-  );
+  const monthAverage = summaryValue(monthSummary, "average_rate");
 
   return (
     <main className="print-root min-h-screen bg-surface-app px-4 py-5 pb-32 text-ink-base">
