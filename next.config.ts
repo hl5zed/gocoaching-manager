@@ -8,8 +8,8 @@ const nextConfig: NextConfig = {
     optimizePackageImports: [
       "@supabase/supabase-js",
       "@supabase/ssr",
-      "leaflet",
-      "react-leaflet",
+      // "leaflet",
+      // "react-leaflet",
       "@xyflow/react",
       "tailwind-merge",
       "clsx",
