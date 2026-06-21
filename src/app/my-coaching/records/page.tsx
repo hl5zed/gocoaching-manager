@@ -31,6 +31,7 @@ import { I18nText } from "@/lib/i18n/I18nProvider";
 export const dynamic = "force-dynamic";
 const RECENT_RECORDS_LIMIT = 3;
 const RECORDS_PAGE_LIST_LIMIT = 50;
+const RECORDS_PAGE_SEARCH_LIMIT = 200;
 
 type RecordTypeFilter = "all" | "daily" | "weekly" | "monthly";
 type StatusFilter = "all" | "draft" | "submitted" | "reviewed" | "unknown";
@@ -620,7 +621,9 @@ export default async function MyCoachingRecordsPage({
     visibilityFilter !== "all" ||
     sortOption !== "newest";
   const recordsLimit = hasActiveSearchOrFilter
-    ? RECORDS_PAGE_LIST_LIMIT
+    ? normalizeSearch(query).length > 0
+      ? RECORDS_PAGE_SEARCH_LIMIT
+      : RECORDS_PAGE_LIST_LIMIT
     : RECENT_RECORDS_LIMIT;
   const listDateRange = buildRecordsListDateRange(
     effectiveTimezone,
