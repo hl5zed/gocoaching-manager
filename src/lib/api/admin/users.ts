@@ -105,10 +105,6 @@ export type AdminUserSummary = {
 
 export type AdminUsersResult = {
   users: AdminUserSummary[];
-  summary: {
-    totalCount: number;
-    roleCounts: Record<UserRole, number>;
-  };
   error: string | null;
   page: number;
   limit: number;
@@ -140,20 +136,6 @@ export type AdminLookupSummary = {
   organization_id?: string | null;
   church_id?: string | null;
 };
-
-function createEmptyRoleCounts(): Record<UserRole, number> {
-  return Object.fromEntries(USER_ROLES.map((userRole) => [userRole, 0])) as Record<
-    UserRole,
-    number
-  >;
-}
-
-function createEmptySummary() {
-  return {
-    totalCount: 0,
-    roleCounts: createEmptyRoleCounts(),
-  };
-}
 
 function createEmptyRoleSummaryCounts(): AdminUserRoleSummaryCounts {
   return {
@@ -945,7 +927,6 @@ export async function getAdminUsers({
     perf.mark("auth_denied");
     return {
       users: [],
-      summary: createEmptySummary(),
       error: "Admin authorization is required to load users.",
       page: safePage,
       limit: safeLimit,
@@ -960,7 +941,6 @@ export async function getAdminUsers({
     perf.mark("service_client_unavailable");
     return {
       users: [],
-      summary: createEmptySummary(),
       error: "Unable to load users right now.",
       page: safePage,
       limit: safeLimit,
@@ -997,7 +977,6 @@ export async function getAdminUsers({
       .is("user_roles.deleted_at", null);
   }
 
-  const summary = createEmptySummary();
   const { data: profiles, error: profilesError } = await profilesQuery
     .order("created_at", { ascending: false })
     .range(from, to);
@@ -1008,7 +987,6 @@ export async function getAdminUsers({
     console.error("[ADMIN_USERS_PROFILES] profile lookup failed");
     return {
       users: [],
-      summary,
       error: "Unable to load users right now.",
       page: safePage,
       limit: safeLimit,
@@ -1023,7 +1001,6 @@ export async function getAdminUsers({
     perf.mark("complete", 0);
     return {
       users: [],
-      summary,
       error: null,
       page: safePage,
       limit: safeLimit,
@@ -1070,7 +1047,6 @@ export async function getAdminUsers({
     console.error("[ADMIN_USERS_ROLES] role lookup failed");
     return {
       users: [],
-      summary,
       error: "Unable to load users right now.",
       page: safePage,
       limit: safeLimit,
@@ -1131,7 +1107,6 @@ export async function getAdminUsers({
 
   return {
     users,
-    summary,
     error: null,
     page: safePage,
     limit: safeLimit,
