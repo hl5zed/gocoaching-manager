@@ -1,7 +1,6 @@
 "use client";
 
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, Tooltip } from "react-leaflet";
 import type { MapMarker } from "@/lib/api/admin/coaching-genealogy";
 
