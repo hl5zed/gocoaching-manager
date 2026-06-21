@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createApiPerformanceLogger } from "@/lib/performance";
@@ -197,7 +198,7 @@ function normalizeLookupIds(ids: string[]) {
   return Array.from(new Set(ids.filter((id) => id.trim().length > 0))).sort();
 }
 
-const LOOKUP_CACHE_TTL_MS = 3 * 60 * 1000;
+const LOOKUP_CACHE_TTL_MS = 60 * 1000;
 
 type LookupNameTable = "organizations" | "churches" | "groups" | "regions";
 
@@ -211,20 +212,8 @@ type CountryLookupCacheEntry = {
   value: Map<string, { code: string | null; name: string }>;
 };
 
-type AdminUserRoleSummaryCacheEntry = {
-  expiresAt: number;
-  value: AdminUserRoleSummaryCounts;
-};
-
 const lookupNameCache = new Map<string, LookupNameCacheEntry>();
 const countryLookupCache = new Map<string, CountryLookupCacheEntry>();
-const adminUserRoleSummaryCache = new Map<
-  string,
-  AdminUserRoleSummaryCacheEntry
->();
-
-const USER_ROLE_SUMMARY_CACHE_TTL_MS = 60 * 1000;
-const USER_ROLE_SUMMARY_CACHE_KEY = "global";
 
 function createLookupCacheKey(kind: string, ids: string[]) {
   return `${kind}:${ids.join(",")}`;
@@ -243,12 +232,6 @@ function cloneCountryMap(
       { code: country.code, name: country.name },
     ]),
   );
-}
-
-function cloneUserRoleSummary(value: AdminUserRoleSummaryCounts) {
-  return {
-    ...value,
-  };
 }
 
 function buildProfileSearchFilter(q: string) {
@@ -616,31 +599,13 @@ async function countActiveUserRole(
   };
 }
 
-export async function getAdminUserRoleSummary(
-  perf?: AdminUserPerformanceLogger,
-): Promise<{
+async function fetchAdminUserRoleSummaryFromDb(): Promise<{
   summary: AdminUserRoleSummaryCounts;
   error: string | null;
 }> {
-  const cachedSummary = adminUserRoleSummaryCache.get(
-    USER_ROLE_SUMMARY_CACHE_KEY,
-  );
-
-  if (cachedSummary && cachedSummary.expiresAt > Date.now()) {
-    const summary = cloneUserRoleSummary(cachedSummary.value);
-    perf?.mark("summary.cache_hit", summary.totalProfiles);
-    perf?.mark("summary.complete", summary.totalProfiles);
-
-    return {
-      summary,
-      error: null,
-    };
-  }
-
   const { client: serviceClient } = createSupabaseServiceClient();
 
   if (!serviceClient) {
-    perf?.mark("summary.service_client_unavailable");
     return {
       summary: createEmptyRoleSummaryCounts(),
       error: "Unable to load user summary right now.",
@@ -668,12 +633,6 @@ export async function getAdminUserRoleSummary(
     ...roleTargets.map((target) => countActiveUserRole(client, target.role)),
   ]);
 
-  perf?.mark("summary.profiles_count_query", profileCountResult.count ?? 0);
-  perf?.mark(
-    "summary.roles_count_query",
-    roleCountResults.reduce((total, result) => total + result.count, 0),
-  );
-
   if (profileCountResult.error) {
     return {
       summary: createEmptyRoleSummaryCounts(),
@@ -699,16 +658,24 @@ export async function getAdminUserRoleSummary(
     summary[roleTargets[index].key] = result.count;
   });
 
-  // 회원 생성/수정/역할 변경 직후 최대 1분 반영 지연 가능.
-  adminUserRoleSummaryCache.set(USER_ROLE_SUMMARY_CACHE_KEY, {
-    expiresAt: Date.now() + USER_ROLE_SUMMARY_CACHE_TTL_MS,
-    value: cloneUserRoleSummary(summary),
-  });
+  return { summary, error: null };
+}
 
-  return {
-    summary,
-    error: null,
-  };
+const getCachedAdminUserRoleSummary = unstable_cache(
+  fetchAdminUserRoleSummaryFromDb,
+  ["admin-user-role-summary"],
+  { tags: ["admin-user-role-summary"], revalidate: 60 },
+);
+
+export async function getAdminUserRoleSummary(
+  perf?: AdminUserPerformanceLogger,
+): Promise<{
+  summary: AdminUserRoleSummaryCounts;
+  error: string | null;
+}> {
+  const result = await getCachedAdminUserRoleSummary();
+  perf?.mark("summary.complete", result.summary.totalProfiles);
+  return result;
 }
 
 export async function getAdminUserDetail(

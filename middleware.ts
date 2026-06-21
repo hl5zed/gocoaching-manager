@@ -118,30 +118,26 @@ function getRoleErrorResponse(request: NextRequest) {
     : createUnauthorizedRedirect(request);
 }
 
-async function getCurrentProfileStatus(
+async function getProfileForMiddleware(
   supabase: SupabaseClient<Database>,
   authUserId: string,
-) {
+): Promise<
+  | { ok: true; profileId: string; status: ProfileStatus | null }
+  | { ok: false }
+> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("status")
+    .select("id, status")
     .eq("auth_user_id", authUserId)
     .is("deleted_at", null)
     .maybeSingle();
 
-  if (error) {
-    return {
-      ok: false as const,
-      status: null,
-    };
+  if (error || !data) {
+    return { ok: false };
   }
 
-  const profile = data as { status: ProfileStatus } | null;
-
-  return {
-    ok: true as const,
-    status: profile?.status ?? null,
-  };
+  const row = data as { id: string; status: ProfileStatus };
+  return { ok: true, profileId: row.id, status: row.status ?? null };
 }
 
 function getDisabledAccountResponse(request: NextRequest) {
@@ -193,15 +189,15 @@ export async function middleware(request: NextRequest) {
       : createLoginRedirect(request);
   }
 
-  const profileStatus = await getCurrentProfileStatus(supabase, user.id);
+  const profileForMiddleware = await getProfileForMiddleware(supabase, user.id);
 
-  if (!profileStatus.ok) {
+  if (!profileForMiddleware.ok) {
     return getRoleErrorResponse(request);
   }
 
   if (
-    profileStatus.status !== null &&
-    profileStatus.status !== "active" &&
+    profileForMiddleware.status !== null &&
+    profileForMiddleware.status !== "active" &&
     pathname !== "/dashboard"
   ) {
     return getDisabledAccountResponse(request);

@@ -1,6 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSession } from "@/lib/auth/getSession";
-import { getUserRoles } from "@/lib/auth/get-user-roles";
 import { hasRole } from "@/lib/auth/has-role";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database, UserRole } from "@/types/database";
@@ -50,11 +49,36 @@ export async function requireAdminProfile(): Promise<RequireAdminProfileResult> 
   }
 
   const supabase = await createSupabaseServerClient();
-  let roles: UserRole[];
 
-  try {
-    roles = await getUserRoles(supabase, session.user.id);
-  } catch {
+  const { data: profileData, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, email")
+    .eq("auth_user_id", session.user.id)
+    .neq("status", "anonymized")
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (profileError || !profileData) {
+    return {
+      ok: false,
+      status: 403,
+      code: "ADMIN_PROFILE_REQUIRED",
+      message: "Admin profile could not be resolved.",
+    };
+  }
+
+  const profileRecord = profileData as ProfileLookupRow;
+
+  const { data: rolesData, error: rolesError } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("profile_id", profileRecord.id)
+    .eq("status", "active")
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+
+  if (rolesError) {
     return {
       ok: false,
       status: 403,
@@ -62,6 +86,11 @@ export async function requireAdminProfile(): Promise<RequireAdminProfileResult> 
       message: "You do not have permission to perform this admin action.",
     };
   }
+
+  type UserRoleRow = { role: UserRole };
+  const roles: UserRole[] = ((rolesData ?? []) as UserRoleRow[]).map(
+    (r) => r.role,
+  );
 
   if (!hasRole(roles, ADMIN_WRITE_ROLES)) {
     return {
@@ -71,25 +100,6 @@ export async function requireAdminProfile(): Promise<RequireAdminProfileResult> 
       message: "You do not have permission to perform this admin action.",
     };
   }
-
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("id, email")
-    .eq("auth_user_id", session.user.id)
-    .neq("status", "anonymized")
-    .is("deleted_at", null)
-    .maybeSingle();
-
-  if (error || !profile) {
-    return {
-      ok: false,
-      status: 403,
-      code: "ADMIN_PROFILE_REQUIRED",
-      message: "Admin profile could not be resolved.",
-    };
-  }
-
-  const profileRecord = profile as ProfileLookupRow;
 
   return {
     ok: true,
