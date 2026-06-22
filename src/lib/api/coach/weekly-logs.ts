@@ -185,6 +185,7 @@ export async function getCoachWeeklyLogs(): Promise<GetCoachWeeklyLogsResult> {
       "id, coachee_profile_id, relationship_type, status, scope_type, scope_id",
     )
     .eq("coach_profile_id", profileId)
+    .eq("status", "active")
     .is("deleted_at", null);
 
   if (relationshipError) {

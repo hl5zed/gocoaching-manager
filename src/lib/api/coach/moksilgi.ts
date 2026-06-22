@@ -229,6 +229,7 @@ export async function getCoachMoksilgi(year: number): Promise<GetCoachMoksilgiRe
     .from("coaching_relationships")
     .select("id, coachee_profile_id")
     .eq("coach_profile_id", profileId)
+    .eq("status", "active")
     .is("deleted_at", null);
 
   if (relationshipsError) {
@@ -257,6 +258,7 @@ export async function getCoachMoksilgi(year: number): Promise<GetCoachMoksilgiRe
         "id, profile_id, title, subtitle, period_start, period_end, author_name, region_name, team_name, regional_leader_name, coach_name, role_label, generation_label, mission_statement, vision_year, vision_statement, main_goal, status, created_at, updated_at",
       )
       .in("profile_id", coacheeIds)
+      .eq("status", "active")
       .is("deleted_at", null)
       .order("updated_at", { ascending: false }),
     serviceClient

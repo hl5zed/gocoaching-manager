@@ -120,13 +120,6 @@ export default async function MyCoachingGrowthPage() {
 
   const profile = auth.profile;
   const profileId = profile.id;
-  const preliminaryTimezone = resolveTimezoneFallback(
-    profile.timezone,
-    null,
-    null,
-  );
-  const year = getCurrentYearInTimezone(preliminaryTimezone);
-  const month = getCurrentMonthInTimezone(preliminaryTimezone);
 
   const { client: serviceClient, error: serviceClientError } =
     createSupabaseServiceClient();
@@ -175,6 +168,17 @@ export default async function MyCoachingGrowthPage() {
   const coreValues = plan ? parseCoreValues(plan.core_values_json) : [];
   const editHref = "/my-coaching/moksilgi";
 
+  const organizationTimezone =
+    (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ?? null;
+
+  const timezone = resolveTimezoneFallback(
+    profile.timezone,
+    organizationTimezone,
+    null,
+  );
+  const year = getCurrentYearInTimezone(timezone);
+  const month = getCurrentMonthInTimezone(timezone);
+
   const summaryResult = plan
     ? await serviceClient
         .from("moksilgi_monthly_summaries")
@@ -189,14 +193,6 @@ export default async function MyCoachingGrowthPage() {
         .maybeSingle()
     : { data: null as SummaryRow | null, error: null };
 
-  const organizationTimezone =
-    (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ?? null;
-
-  const timezone = resolveTimezoneFallback(
-    profile.timezone,
-    organizationTimezone,
-    null,
-  );
   const summary: SummaryRow | null = (summaryResult.data as SummaryRow | null) ?? null;
 
   const targetAreas = moksilgi.data.areas

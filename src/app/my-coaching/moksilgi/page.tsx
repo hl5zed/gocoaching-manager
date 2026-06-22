@@ -169,7 +169,8 @@ function isMissionComplete(plan: MoksilgiPlan | null) {
 }
 
 function isVisionComplete(plan: MoksilgiPlan | null) {
-  return hasText(plan?.vision_statement) || plan?.vision_year !== null;
+  if (!plan) return false;
+  return hasText(plan.vision_statement) || plan.vision_year !== null;
 }
 
 function isCoreComplete(coreValues: MoksilgiCoreValue[]) {
@@ -477,7 +478,7 @@ function PlanForm({
         </div>
       </MoksilgiSection>
 
-      <input name="status" type="hidden" value={plan?.status ?? "draft"} />
+      <input name="status" type="hidden" value={plan?.status ?? "active"} />
     </form>
   );
 }

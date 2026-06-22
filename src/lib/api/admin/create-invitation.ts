@@ -109,6 +109,103 @@ export type CreateInvitationResult =
       error: CreateInvitationError;
     };
 
+const adminScopeRoles = new Set<UserRole>([
+  "church_admin",
+  "organization_admin",
+  "country_admin",
+]);
+
+type AdminRoleScopeRow = {
+  role: UserRole;
+  scope_type: ScopeType;
+  scope_id: string | null;
+};
+
+type InvitationScopeTarget = {
+  scope_type: ScopeType;
+  scope_id: string | null;
+};
+
+type InvitationScopeAccessError = {
+  status: number;
+  code: string;
+  message: string;
+};
+
+async function loadAdminRoleScopes(
+  supabase: SupabaseClient<Database>,
+  profileId: string,
+): Promise<AdminRoleScopeRow[]> {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role, scope_type, scope_id")
+    .eq("profile_id", profileId)
+    .eq("status", "active")
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+
+  if (error) {
+    return [];
+  }
+
+  return ((data ?? []) as AdminRoleScopeRow[]).filter((row) =>
+    adminScopeRoles.has(row.role),
+  );
+}
+
+function adminCanManageInvitationScope(
+  adminRoles: UserRole[],
+  adminScopes: AdminRoleScopeRow[],
+  target: InvitationScopeTarget,
+): boolean {
+  if (adminRoles.includes("super_admin")) {
+    return true;
+  }
+
+  if (target.scope_type === "global") {
+    return false;
+  }
+
+  if (!target.scope_id) {
+    return false;
+  }
+
+  return adminScopes.some(
+    (scope) =>
+      scope.scope_id !== null &&
+      scope.scope_type === target.scope_type &&
+      scope.scope_id === target.scope_id,
+  );
+}
+
+function createInvitationScopeAccessError(): InvitationScopeAccessError {
+  return {
+    status: 403,
+    code: "INVITATION_SCOPE_FORBIDDEN",
+    message: "해당 범위의 초대를 관리할 권한이 없습니다.",
+  };
+}
+
+async function assertAdminInvitationScopeAccess(
+  supabase: SupabaseClient<Database>,
+  profileId: string,
+  adminRoles: UserRole[],
+  target: InvitationScopeTarget,
+): Promise<{ ok: true } | { ok: false; error: InvitationScopeAccessError }> {
+  if (adminRoles.includes("super_admin")) {
+    return { ok: true };
+  }
+
+  const adminScopes = await loadAdminRoleScopes(supabase, profileId);
+
+  if (adminCanManageInvitationScope(adminRoles, adminScopes, target)) {
+    return { ok: true };
+  }
+
+  return { ok: false, error: createInvitationScopeAccessError() };
+}
+
 function logServerError(code: string, message: string) {
   console.error(`[${code}] ${message}`);
 }
@@ -364,6 +461,23 @@ export async function createAdminInvitation({
         code: "INVALID_EXPIRATION",
         message: "만료 기간은 1일에서 30일 사이여야 합니다.",
       },
+    };
+  }
+
+  const scopeAccess = await assertAdminInvitationScopeAccess(
+    admin.supabase,
+    admin.profile.id,
+    admin.roles,
+    {
+      scope_type: effectiveScopeType as ScopeType,
+      scope_id: normalizedScopeId,
+    },
+  );
+
+  if (!scopeAccess.ok) {
+    return {
+      ok: false,
+      error: scopeAccess.error,
     };
   }
 

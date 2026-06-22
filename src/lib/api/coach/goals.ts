@@ -196,6 +196,7 @@ export async function getCoachGoals(): Promise<GetCoachGoalsResult> {
     .from("coaching_relationships")
     .select("id, coachee_profile_id")
     .eq("coach_profile_id", profileId)
+    .eq("status", "active")
     .is("deleted_at", null);
 
   if (relationshipsError) {

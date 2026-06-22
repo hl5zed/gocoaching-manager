@@ -13,7 +13,12 @@ import { DailyRecordsClient } from "./DailyRecordsClient";
 
 export const dynamic = "force-dynamic";
 
-type DailyContextProfileRow = Pick<Tables<"profiles">, "id" | "timezone">;
+type DailyContextProfileRow = Pick<
+  Tables<"profiles">,
+  "id" | "timezone" | "organization_id"
+>;
+type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
+type ActivePlanRow = Pick<Tables<"moksilgi_plans">, "id">;
 type DailyContextSummaryRow = Pick<
   Tables<"moksilgi_monthly_summaries">,
   "total_rate" | "year" | "month"
@@ -34,7 +39,7 @@ export default async function DailyRecordsPage() {
   if (serviceClient) {
     const { data: profileRow } = await serviceClient
       .from("profiles")
-      .select("id, timezone")
+      .select("id, timezone, organization_id")
       .eq("auth_user_id", session.user.id)
       .is("deleted_at", null)
       .maybeSingle();
@@ -42,27 +47,68 @@ export default async function DailyRecordsPage() {
     const profile = (profileRow as DailyContextProfileRow | null) ?? null;
 
     if (profile) {
-      const timezone = resolveTimezoneFallback(profile.timezone ?? null, null, null);
+      const orgTimezonePromise =
+        profile.organization_id && !profile.timezone
+          ? serviceClient
+              .from("organizations")
+              .select("default_timezone")
+              .eq("id", profile.organization_id)
+              .is("deleted_at", null)
+              .maybeSingle()
+          : Promise.resolve({
+              data: null as OrganizationTimezoneRow | null,
+              error: null,
+            });
+
+      const activePlanPromise = serviceClient
+        .from("moksilgi_plans")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .eq("status", "active")
+        .is("deleted_at", null)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const [organizationResult, activePlanResult] = await Promise.all([
+        orgTimezonePromise,
+        activePlanPromise,
+      ]);
+
+      const organizationTimezone =
+        (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ??
+        null;
+
+      const timezone = resolveTimezoneFallback(
+        profile.timezone ?? null,
+        organizationTimezone,
+        null,
+      );
       const year = getCurrentYearInTimezone(timezone);
       const month = getCurrentMonthInTimezone(timezone);
 
-      const { data: summaryRow } = await serviceClient
-        .from("moksilgi_monthly_summaries")
-        .select("total_rate, year, month")
-        .eq("profile_id", profile.id)
-        .eq("year", year)
-        .eq("month", month)
-        .is("deleted_at", null)
-        .maybeSingle();
+      const plan = (activePlanResult.data as ActivePlanRow | null) ?? null;
 
-      const summary = (summaryRow as DailyContextSummaryRow | null) ?? null;
+      if (plan) {
+        const { data: summaryRow } = await serviceClient
+          .from("moksilgi_monthly_summaries")
+          .select("total_rate, year, month")
+          .eq("plan_id", plan.id)
+          .eq("profile_id", profile.id)
+          .eq("year", year)
+          .eq("month", month)
+          .is("deleted_at", null)
+          .maybeSingle();
 
-      if (summary) {
-        monthlyContext = {
-          totalRate: summary.total_rate,
-          year,
-          month,
-        };
+        const summary = (summaryRow as DailyContextSummaryRow | null) ?? null;
+
+        if (summary) {
+          monthlyContext = {
+            totalRate: summary.total_rate,
+            year,
+            month,
+          };
+        }
       }
     }
   }

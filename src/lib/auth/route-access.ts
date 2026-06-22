@@ -53,7 +53,11 @@ export function isProtectedPageRoute(pathname: string) {
     pathname.startsWith("/admin/") ||
     pathname === "/admin" ||
     pathname.startsWith("/super-admin/") ||
-    pathname === "/super-admin"
+    pathname === "/super-admin" ||
+    pathname.startsWith("/profile/") ||
+    pathname === "/profile" ||
+    pathname.startsWith("/coachee/") ||
+    pathname === "/coachee"
   );
 }
 
