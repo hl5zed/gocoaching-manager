@@ -4,6 +4,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getRolesByProfileId } from "@/lib/auth/get-user-roles";
 import { hasRole } from "@/lib/auth/has-role";
 import {
+  AUTH_EMAIL_HEADER,
+  AUTH_USER_ID_HEADER,
+  PROFILE_ID_HEADER,
+  PROFILE_STATUS_HEADER,
+} from "@/lib/auth/identity-headers";
+import {
   getAllowedRolesForPath,
   isApiRoute,
   isProtectedPageRoute,
@@ -41,6 +47,50 @@ function applySecurityHeaders(response: NextResponse) {
   }
 
   return response;
+}
+
+/**
+ * 다운스트림으로 forward할 요청 헤더에서 클라이언트가 위조해 보냈을 수 있는
+ * 인증 식별자 헤더를 먼저 제거한다(스푸핑 차단). 검증된 값은 인증 성공 경로에서만
+ * 다시 set한다. 모든 NextResponse.next forward 경로는 이 sanitized 헤더를 사용한다.
+ */
+function sanitizeForwardHeaders(request: NextRequest) {
+  const headers = new Headers(request.headers);
+  headers.delete(AUTH_USER_ID_HEADER);
+  headers.delete(AUTH_EMAIL_HEADER);
+  headers.delete(PROFILE_ID_HEADER);
+  headers.delete(PROFILE_STATUS_HEADER);
+  return headers;
+}
+
+/**
+ * 인증/권한 검증을 통과한 경로에서만 호출. 검증된 식별자를 요청 헤더에 실어
+ * 다운스트림(getSession 등)이 getUser 원격 왕복을 생략할 수 있게 한다.
+ * supabase 세션 갱신으로 baseResponse에 세팅된 쿠키를 새 응답에 그대로 복사한다.
+ */
+function buildAuthorizedResponse(
+  requestHeaders: Headers,
+  baseResponse: NextResponse,
+  user: { id: string; email?: string | null },
+  profileId: string,
+  status: ProfileStatus | null,
+) {
+  requestHeaders.set(AUTH_USER_ID_HEADER, user.id);
+  if (user.email) {
+    requestHeaders.set(AUTH_EMAIL_HEADER, user.email);
+  }
+  requestHeaders.set(PROFILE_ID_HEADER, profileId);
+  if (status) {
+    requestHeaders.set(PROFILE_STATUS_HEADER, status);
+  }
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+
+  for (const cookie of baseResponse.cookies.getAll()) {
+    response.cookies.set(cookie);
+  }
+
+  return applySecurityHeaders(response);
 }
 
 function createLoginRedirect(request: NextRequest) {
@@ -111,7 +161,10 @@ function createApiError(status: number, code: string, message: string) {
   );
 }
 
-function createMiddlewareSupabaseClient(request: NextRequest) {
+function createMiddlewareSupabaseClient(
+  request: NextRequest,
+  requestHeaders: Headers,
+) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -120,7 +173,7 @@ function createMiddlewareSupabaseClient(request: NextRequest) {
   }
 
   let response = NextResponse.next({
-    request,
+    request: { headers: requestHeaders },
   });
 
   const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -134,7 +187,7 @@ function createMiddlewareSupabaseClient(request: NextRequest) {
         });
 
         response = NextResponse.next({
-          request,
+          request: { headers: requestHeaders },
         });
 
         cookiesToSet.forEach(({ name, value, options }) => {
@@ -193,21 +246,31 @@ function getDisabledAccountResponse(request: NextRequest) {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // 모든 forward 경로는 클라이언트發 인증 헤더가 제거된 sanitized 헤더를 사용한다.
+  const requestHeaders = sanitizeForwardHeaders(request);
+
   if (isPublicRoute(pathname)) {
-    return applySecurityHeaders(NextResponse.next({ request }));
+    return applySecurityHeaders(
+      NextResponse.next({ request: { headers: requestHeaders } }),
+    );
   }
 
   const needsAuth = isProtectedPageRoute(pathname) || isApiRoute(pathname);
 
   if (!needsAuth) {
-    return applySecurityHeaders(NextResponse.next({ request }));
+    return applySecurityHeaders(
+      NextResponse.next({ request: { headers: requestHeaders } }),
+    );
   }
 
   let supabase: SupabaseClient<Database>;
   let getResponse: () => NextResponse;
 
   try {
-    ({ supabase, getResponse } = createMiddlewareSupabaseClient(request));
+    ({ supabase, getResponse } = createMiddlewareSupabaseClient(
+      request,
+      requestHeaders,
+    ));
   } catch {
     return isApiRoute(pathname)
       ? createApiError(
@@ -250,7 +313,13 @@ export async function middleware(request: NextRequest) {
   const allowedRoles = getAllowedRolesForPath(pathname);
 
   if (!allowedRoles) {
-    return applySecurityHeaders(getResponse());
+    return buildAuthorizedResponse(
+      requestHeaders,
+      getResponse(),
+      user,
+      profileForMiddleware.profileId,
+      profileForMiddleware.status,
+    );
   }
 
   try {
@@ -266,7 +335,13 @@ export async function middleware(request: NextRequest) {
     return getRoleErrorResponse(request);
   }
 
-  return applySecurityHeaders(getResponse());
+  return buildAuthorizedResponse(
+    requestHeaders,
+    getResponse(),
+    user,
+    profileForMiddleware.profileId,
+    profileForMiddleware.status,
+  );
 }
 
 export const config = {

@@ -332,15 +332,27 @@ export default async function MoksilgiSummaryPage({
     );
   }
 
-  const organizationResult =
+  // org timezone 조회는 메인 데이터 fetch와 독립적이므로 병렬로 실행한다.
+  // (직렬 await 시 timezone 왕복 후에야 데이터 fetch가 시작되어 워터폴 지연 발생)
+  const organizationTimezonePromise =
     profile.organization_id && !profile.timezone
-      ? await serviceClient
+      ? serviceClient
           .from("organizations")
           .select("default_timezone")
           .eq("id", profile.organization_id)
           .is("deleted_at", null)
           .maybeSingle()
-      : { data: null as OrganizationTimezoneRow | null, error: null };
+      : Promise.resolve({ data: null as OrganizationTimezoneRow | null, error: null });
+
+  // URL 파라미터가 있으면 timezone과 무관하게 year가 확정된다.
+  // 우선 prelim timezone(개인 timezone 또는 기본값)으로 파싱해 데이터 fetch를 바로 시작한다.
+  const prelimTimezone = resolveTimezoneFallback(profile.timezone, null, null);
+  const prelimYear = parseYear(params, prelimTimezone);
+
+  const [organizationResult, result] = await Promise.all([
+    organizationTimezonePromise,
+    getMyMoksilgiSummary(prelimYear, { profileId: profile.id }),
+  ]);
 
   const organizationTimezone =
     (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ?? null;
@@ -354,7 +366,12 @@ export default async function MoksilgiSummaryPage({
   const currentMonthInTimezone = getCurrentMonthInTimezone(effectiveTimezone);
   const currentMonthForYear = year === currentYear ? currentMonthInTimezone : null;
 
-  const result = await getMyMoksilgiSummary(year, { profileId: profile.id });
+  // edge case 보정: 개인 timezone 미설정 + year 파라미터 미지정 상태에서
+  // 연 경계 등으로 prelim 기본 year와 org timezone 기준 year가 달라지면,
+  // 정확한 year로 명시 redirect한다(이후 요청은 파라미터가 있어 재진입 루프 없음).
+  if (year !== prelimYear) {
+    redirect(`/my-coaching/moksilgi/summary?year=${year}`);
+  }
 
   if (!result.ok && result.error.code === "UNAUTHORIZED") {
     redirect("/login?redirectTo=%2Fmy-coaching%2Fmoksilgi%2Fsummary");
