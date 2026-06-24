@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import type {
@@ -1012,13 +1013,17 @@ async function resolveGenealogyAccess(perf?: GenealogyPerformanceLogger) {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: profile, error: profileError } = await supabase
+  const verifiedProfileId = await getVerifiedProfileId();
+
+  const profileQuery = supabase
     .from("profiles")
     .select("id")
-    .eq("auth_user_id", session.user.id)
     .neq("status", "anonymized")
-    .is("deleted_at", null)
-    .maybeSingle();
+    .is("deleted_at", null);
+
+  const { data: profile, error: profileError } = verifiedProfileId
+    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
   perf?.mark("auth.profile_lookup", profile ? 1 : 0);
 
   if (profileError || !profile) {

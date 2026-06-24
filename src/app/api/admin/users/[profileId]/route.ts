@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminUserDetail } from "@/lib/api/admin/users";
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { ADMIN_WRITE_ROLES } from "@/lib/auth/require-admin-profile";
 import { hasRole } from "@/lib/auth/has-role";
 import { createApiPerformanceLogger } from "@/lib/performance";
@@ -38,13 +39,17 @@ async function requireAdminDetailAccess() {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: profile, error: profileError } = await supabase
+  const verifiedProfileId = await getVerifiedProfileId();
+
+  const profileQuery = supabase
     .from("profiles")
     .select("id")
-    .eq("auth_user_id", session.user.id)
     .neq("status", "anonymized")
-    .is("deleted_at", null)
-    .maybeSingle();
+    .is("deleted_at", null);
+
+  const { data: profile, error: profileError } = verifiedProfileId
+    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
 
   if (profileError || !profile) {
     return {

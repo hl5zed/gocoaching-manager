@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { updateMonthlyReflection } from "@/lib/api/my-coaching/monthly-reflections";
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ type MonthlyDeleteAdminClient = {
   from: {
     (table: "profiles"): {
       select: (columns: "id") => {
-        eq: (column: "auth_user_id", value: string) => {
+        eq: (column: "auth_user_id" | "id", value: string) => {
           neq: (column: "status", value: "anonymized") => {
             is: (column: "deleted_at", value: null) => {
               maybeSingle: () => Promise<{
@@ -172,14 +173,23 @@ export async function DELETE(_request: Request, context: RouteContext) {
   }
 
   const admin = adminClient as unknown as MonthlyDeleteAdminClient;
+  const verifiedProfileId = await getVerifiedProfileId();
 
-  const { data: currentProfile, error: profileError } = await admin
-    .from("profiles")
-    .select("id")
-    .eq("auth_user_id", session.user.id)
-    .neq("status", "anonymized")
-    .is("deleted_at", null)
-    .maybeSingle();
+  const { data: currentProfile, error: profileError } = verifiedProfileId
+    ? await admin
+        .from("profiles")
+        .select("id")
+        .eq("id", verifiedProfileId)
+        .neq("status", "anonymized")
+        .is("deleted_at", null)
+        .maybeSingle()
+    : await admin
+        .from("profiles")
+        .select("id")
+        .eq("auth_user_id", session.user.id)
+        .neq("status", "anonymized")
+        .is("deleted_at", null)
+        .maybeSingle();
 
   if (profileError) {
     logMonthlyDeleteFailure("profile lookup failed", {

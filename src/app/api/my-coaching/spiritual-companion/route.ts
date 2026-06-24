@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAiProvider, type CompanionLocale } from "@/lib/ai/providers";
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DEFAULT_TIMEZONE, getTodayDateInTimezone } from "@/lib/timezone";
 
@@ -74,7 +75,7 @@ type SupabaseRpcResult<TData> = Promise<{
 
 type ProfilesTable = {
   select: (columns: "id, timezone") => {
-    eq: (column: "auth_user_id", value: string) => {
+    eq: (column: "auth_user_id" | "id", value: string) => {
       neq: (column: "status", value: "anonymized") => {
         is: (
           column: "deleted_at",
@@ -201,13 +202,23 @@ async function getCurrentProfile() {
   }
 
   const supabase = getSpiritualCompanionClient(await createSupabaseServerClient());
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("id, timezone")
-    .eq("auth_user_id", session.user.id)
-    .neq("status", "anonymized")
-    .is("deleted_at", null)
-    .maybeSingle();
+  const verifiedProfileId = await getVerifiedProfileId();
+
+  const { data: profile, error } = verifiedProfileId
+    ? await supabase
+        .from("profiles")
+        .select("id, timezone")
+        .eq("id", verifiedProfileId)
+        .neq("status", "anonymized")
+        .is("deleted_at", null)
+        .maybeSingle()
+    : await supabase
+        .from("profiles")
+        .select("id, timezone")
+        .eq("auth_user_id", session.user.id)
+        .neq("status", "anonymized")
+        .is("deleted_at", null)
+        .maybeSingle();
 
   if (error) {
     console.error("[SPIRITUAL_COMPANION_PROFILE_QUERY_FAILED]", error.message);
