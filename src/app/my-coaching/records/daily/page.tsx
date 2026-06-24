@@ -150,11 +150,10 @@ export default async function DailyRecordsPage() {
         {monthlyContext ? (
           <div className="mt-4 rounded-control border border-line-soft bg-surface-sunken p-3">
             <p className="text-sm font-semibold text-ink-base">
-              이번 달 누적 실행률 {monthlyContext.totalRate.toFixed(1)}%
+              이번 달 종합 실행률 {monthlyContext.totalRate.toFixed(1)}%
             </p>
             <p className="mt-1 text-xs text-ink-muted">
-              {monthlyContext.year}년 {monthlyContext.month}월 기준 · 오늘 기록이 이
-              수치에 반영됩니다.
+              {monthlyContext.year}년 {monthlyContext.month}월 목실기 요약 기준
             </p>
           </div>
         ) : null}
