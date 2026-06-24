@@ -24,7 +24,6 @@ type SummaryRow = Pick<
   | "average_rate"
   | "updated_at"
 >;
-type ProfileTimezoneRow = Pick<Tables<"profiles">, "id" | "timezone" | "organization_id">;
 type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
 type RecordRow = Pick<Tables<"moksilgi_monthly_records">, "detail_goal_id" | "daily_checks_json">;
 
@@ -116,7 +115,10 @@ export default async function MyCoachingMonthlyReportPage({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const me = await getMyCoachingMe();
+  const me = await getMyCoachingMe({
+    includeRoles: false,
+    includeRelationships: false,
+  });
   if (!me.ok && me.error.code === "UNAUTHORIZED") {
     redirect("/login?redirectTo=%2Fmy-coaching%2Freport%2Fmonthly");
   }
@@ -148,37 +150,20 @@ export default async function MyCoachingMonthlyReportPage({
     );
   }
 
-  const profileId = me.data.profile.id;
-  const { data: profileRow } = await serviceClient
-    .from("profiles")
-    .select("id, timezone, organization_id")
-    .eq("id", profileId)
-    .is("deleted_at", null)
-    .maybeSingle();
-  const profile = (profileRow as ProfileTimezoneRow | null) ?? null;
+  const profile = me.data.profile;
+  const profileId = profile.id;
 
-  let organizationTimezone: string | null = null;
-  if (profile?.organization_id) {
-    const { data: orgRow } = await serviceClient
-      .from("organizations")
-      .select("default_timezone")
-      .eq("id", profile.organization_id)
-      .is("deleted_at", null)
-      .maybeSingle();
-    organizationTimezone =
-      (orgRow as OrganizationTimezoneRow | null)?.default_timezone ?? null;
-  }
+  const orgTimezonePromise =
+    profile.organization_id && !profile.timezone
+      ? serviceClient
+          .from("organizations")
+          .select("default_timezone")
+          .eq("id", profile.organization_id)
+          .is("deleted_at", null)
+          .maybeSingle()
+      : Promise.resolve({ data: null as OrganizationTimezoneRow | null, error: null });
 
-  const timezone = resolveTimezoneFallback(
-    profile?.timezone ?? null,
-    organizationTimezone,
-    null,
-  );
-  const resolvedSearchParams = searchParams ? await searchParams : {};
-  const { year, month } = parseYearMonth(timezone, resolvedSearchParams);
-  const nav = monthNavigation(year, month);
-
-  const { data: planRow } = await serviceClient
+  const activePlanPromise = serviceClient
     .from("moksilgi_plans")
     .select("id")
     .eq("profile_id", profileId)
@@ -187,7 +172,24 @@ export default async function MyCoachingMonthlyReportPage({
     .order("updated_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  const planId = (planRow as { id: string } | null)?.id ?? null;
+
+  const [organizationResult, activePlanResult] = await Promise.all([
+    orgTimezonePromise,
+    activePlanPromise,
+  ]);
+
+  const organizationTimezone =
+    (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ?? null;
+
+  const timezone = resolveTimezoneFallback(
+    profile.timezone ?? null,
+    organizationTimezone,
+    null,
+  );
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const { year, month } = parseYearMonth(timezone, resolvedSearchParams);
+  const nav = monthNavigation(year, month);
+  const planId = (activePlanResult.data as { id: string } | null)?.id ?? null;
 
   let summary: SummaryRow | null = null;
   let records: RecordRow[] = [];
@@ -233,7 +235,7 @@ export default async function MyCoachingMonthlyReportPage({
     areaRates: rates,
   });
 
-  const feedbackResult = await getMyCoachingFeedback();
+  const feedbackResult = await getMyCoachingFeedback({ knownProfileId: profileId });
   const feedbackList = (feedbackResult.data ?? []).slice(0, 5);
 
   return (

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { hasRole } from "@/lib/auth/has-role";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database, UserRole } from "@/types/database";
@@ -49,14 +50,17 @@ export async function requireAdminProfile(): Promise<RequireAdminProfileResult> 
   }
 
   const supabase = await createSupabaseServerClient();
+  const verifiedProfileId = await getVerifiedProfileId();
 
-  const { data: profileData, error: profileError } = await supabase
+  const profileQuery = supabase
     .from("profiles")
     .select("id, email")
-    .eq("auth_user_id", session.user.id)
     .neq("status", "anonymized")
-    .is("deleted_at", null)
-    .maybeSingle();
+    .is("deleted_at", null);
+
+  const { data: profileData, error: profileError } = verifiedProfileId
+    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
 
   if (profileError || !profileData) {
     return {

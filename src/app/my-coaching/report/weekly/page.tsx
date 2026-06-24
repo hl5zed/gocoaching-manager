@@ -7,6 +7,8 @@ import { getMyCoachingFeedback } from "@/lib/api/my-coaching/feedback";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import {
   getCurrentWeekRangeInTimezone,
+  getCurrentYearInTimezone,
+  getCurrentMonthInTimezone,
   resolveTimezoneFallback,
 } from "@/lib/timezone";
 import { calculateWeeklyAggregate, buildWeekDateKeys } from "@/lib/coaching/weekly-aggregate";
@@ -14,7 +16,6 @@ import type { Tables } from "@/types/database";
 
 export const dynamic = "force-dynamic";
 
-type ProfileTimezoneRow = Pick<Tables<"profiles">, "id" | "timezone" | "organization_id">;
 type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
 type GoalAreaRow = Pick<
   Tables<"moksilgi_goal_areas">,
@@ -37,7 +38,10 @@ function formatDateRange(weekStart: string, weekEnd: string) {
 }
 
 export default async function MyCoachingWeeklyReportPage() {
-  const me = await getMyCoachingMe();
+  const me = await getMyCoachingMe({
+    includeRoles: false,
+    includeRelationships: false,
+  });
 
   if (!me.ok && me.error.code === "UNAUTHORIZED") {
     redirect("/login?redirectTo=%2Fmy-coaching%2Freport%2Fweekly");
@@ -71,40 +75,20 @@ export default async function MyCoachingWeeklyReportPage() {
     );
   }
 
-  const profileId = me.data.profile.id;
-  const { data: profileRow } = await serviceClient
-    .from("profiles")
-    .select("id, timezone, organization_id")
-    .eq("id", profileId)
-    .is("deleted_at", null)
-    .maybeSingle();
+  const profile = me.data.profile;
+  const profileId = profile.id;
 
-  const profile = (profileRow as ProfileTimezoneRow | null) ?? null;
-  let organizationTimezone: string | null = null;
+  const orgTimezonePromise =
+    profile.organization_id && !profile.timezone
+      ? serviceClient
+          .from("organizations")
+          .select("default_timezone")
+          .eq("id", profile.organization_id)
+          .is("deleted_at", null)
+          .maybeSingle()
+      : Promise.resolve({ data: null as OrganizationTimezoneRow | null, error: null });
 
-  if (profile?.organization_id) {
-    const { data: organizationRow } = await serviceClient
-      .from("organizations")
-      .select("default_timezone")
-      .eq("id", profile.organization_id)
-      .is("deleted_at", null)
-      .maybeSingle();
-    organizationTimezone =
-      (organizationRow as OrganizationTimezoneRow | null)?.default_timezone ?? null;
-  }
-
-  const effectiveTimezone = resolveTimezoneFallback(
-    profile?.timezone ?? null,
-    organizationTimezone,
-    null,
-  );
-  const currentWeek = getCurrentWeekRangeInTimezone(effectiveTimezone);
-  const weekDateKeys = buildWeekDateKeys({
-    weekStart: currentWeek.weekStart,
-    weekEnd: currentWeek.weekEnd,
-  });
-
-  const { data: activePlan } = await serviceClient
+  const activePlanPromise = serviceClient
     .from("moksilgi_plans")
     .select("id")
     .eq("profile_id", profileId)
@@ -114,7 +98,26 @@ export default async function MyCoachingWeeklyReportPage() {
     .limit(1)
     .maybeSingle();
 
-  const planId = (activePlan as { id: string } | null)?.id ?? null;
+  const [organizationResult, activePlanResult] = await Promise.all([
+    orgTimezonePromise,
+    activePlanPromise,
+  ]);
+
+  const organizationTimezone =
+    (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ?? null;
+
+  const effectiveTimezone = resolveTimezoneFallback(
+    profile.timezone ?? null,
+    organizationTimezone,
+    null,
+  );
+  const currentWeek = getCurrentWeekRangeInTimezone(effectiveTimezone);
+  const weekDateKeys = buildWeekDateKeys({
+    weekStart: currentWeek.weekStart,
+    weekEnd: currentWeek.weekEnd,
+  });
+
+  const planId = (activePlanResult.data as { id: string } | null)?.id ?? null;
 
   let aggregate = calculateWeeklyAggregate({
     areas: [],
@@ -127,10 +130,17 @@ export default async function MyCoachingWeeklyReportPage() {
     const monthsInWeek = [
       ...new Set(
         weekDateKeys.map((dateKey) => {
-          const date = new Date(`${dateKey}T00:00:00`);
+          const match = dateKey.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+          if (!match) {
+            const fallback = new Date(`${dateKey}T12:00:00`);
+            return {
+              year: getCurrentYearInTimezone(effectiveTimezone, fallback),
+              month: getCurrentMonthInTimezone(effectiveTimezone, fallback),
+            };
+          }
           return {
-            year: date.getFullYear(),
-            month: date.getMonth() + 1,
+            year: Number(match[1]),
+            month: Number(match[2]),
           };
         }),
       ),
@@ -174,7 +184,7 @@ export default async function MyCoachingWeeklyReportPage() {
     });
   }
 
-  const feedbackResult = await getMyCoachingFeedback();
+  const feedbackResult = await getMyCoachingFeedback({ knownProfileId: profileId });
   const latestFeedback =
     feedbackResult.data && feedbackResult.data.length > 0
       ? feedbackResult.data[0]

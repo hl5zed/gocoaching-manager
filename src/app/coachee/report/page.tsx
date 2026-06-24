@@ -518,18 +518,23 @@ export default async function CoacheeReportPage() {
   }
 
   const year = new Date().getFullYear();
-  const [meResult, goalsResult, moksilgiResult, summaryResult, feedbackResult] =
-    await Promise.all([
-      getMyCoachingMe(),
-      getMyCoachingGoals(),
-      getMyMoksilgi(),
-      getMyMoksilgiSummary(year),
-      getMyCoachingFeedback(),
-    ]);
+  const meResult = await getMyCoachingMe();
 
   if (!meResult.ok && meResult.error.code === "UNAUTHORIZED") {
     redirect("/login?redirectTo=%2Fcoachee%2Freport");
   }
+
+  const profileId = meResult.ok ? meResult.data.profile?.id ?? null : null;
+
+  const [goalsResult, moksilgiResult, summaryResult, feedbackResult] =
+    await Promise.all([
+      getMyCoachingGoals(profileId ? { knownProfileId: profileId } : undefined),
+      profileId ? getMyMoksilgi(profileId) : getMyMoksilgi(),
+      profileId
+        ? getMyMoksilgiSummary(year, { profileId })
+        : getMyMoksilgiSummary(year),
+      getMyCoachingFeedback(profileId ? { knownProfileId: profileId } : undefined),
+    ]);
 
   const profile = meResult.ok ? meResult.data.profile : null;
   const authEmail = meResult.ok ? meResult.data.authEmail : session.user.email ?? null;

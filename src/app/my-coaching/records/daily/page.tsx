@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { getSession } from "@/lib/auth/getSession";
+import { getDailyRecords } from "@/lib/api/my-coaching/daily-records";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import {
@@ -113,6 +114,9 @@ export default async function DailyRecordsPage() {
     }
   }
 
+  const recordsResult = await getDailyRecords(new URLSearchParams());
+  const initialRecords = recordsResult.ok ? recordsResult.data : undefined;
+
   return (
     <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
       <section className="mx-auto w-full max-w-md">
@@ -148,7 +152,11 @@ export default async function DailyRecordsPage() {
           </div>
         ) : null}
 
-        <DailyRecordsClient mode="today" returnTo="/my-coaching" />
+        <DailyRecordsClient
+          mode="today"
+          returnTo="/my-coaching"
+          initialRecords={initialRecords}
+        />
       </section>
     </main>
   );

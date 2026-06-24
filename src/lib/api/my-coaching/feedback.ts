@@ -113,7 +113,9 @@ function normalizeOptionalText(value: string | null) {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-export async function getMyCoachingFeedback(): Promise<GetMyCoachingFeedbackResult> {
+export async function getMyCoachingFeedback(options?: {
+  knownProfileId?: string;
+}): Promise<GetMyCoachingFeedbackResult> {
   const session = await getSession();
 
   if (!session.user) {
@@ -123,36 +125,41 @@ export async function getMyCoachingFeedback(): Promise<GetMyCoachingFeedbackResu
     };
   }
 
-  const supabase = await createSupabaseServerClient();
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("auth_user_id", session.user.id)
-    .is("deleted_at", null)
-    .neq("status", "anonymized")
-    .maybeSingle();
+  let profileId = options?.knownProfileId ?? null;
 
-  if (profileError) {
-    return {
-      data: null,
-      error: {
-        code: "PROFILE_QUERY_FAILED",
-        message: "프로필을 불러올 수 없습니다.",
-      },
-    };
+  if (!profileId) {
+    const supabase = await createSupabaseServerClient();
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("auth_user_id", session.user.id)
+      .is("deleted_at", null)
+      .neq("status", "anonymized")
+      .maybeSingle();
+
+    if (profileError) {
+      return {
+        data: null,
+        error: {
+          code: "PROFILE_QUERY_FAILED",
+          message: "프로필을 불러올 수 없습니다.",
+        },
+      };
+    }
+
+    if (!profile) {
+      return {
+        data: null,
+        error: {
+          code: "PROFILE_NOT_FOUND",
+          message: "아직 프로필이 생성되지 않았습니다.",
+        },
+      };
+    }
+
+    profileId = (profile as ProfileIdRow).id;
   }
 
-  if (!profile) {
-    return {
-      data: null,
-      error: {
-        code: "PROFILE_NOT_FOUND",
-        message: "아직 프로필이 생성되지 않았습니다.",
-      },
-    };
-  }
-
-  const profileRecord = profile as ProfileIdRow;
   const serviceClientResult = getServiceClientResult();
 
   if (!serviceClientResult.ok) {
@@ -165,7 +172,7 @@ export async function getMyCoachingFeedback(): Promise<GetMyCoachingFeedbackResu
     .select(
       "id, weekly_log_id, relationship_id, coach_profile_id, coachee_profile_id, feedback_text, encouragement, next_step, status, version, created_at, updated_at",
     )
-    .eq("coachee_profile_id", profileRecord.id)
+    .eq("coachee_profile_id", profileId)
     .eq("status", "published")
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
@@ -193,7 +200,7 @@ export async function getMyCoachingFeedback(): Promise<GetMyCoachingFeedbackResu
     .from("weekly_logs")
     .select("id, coachee_profile_id, week_start, week_end, status, submitted_at, updated_at")
     .in("id", weeklyLogIds)
-    .eq("coachee_profile_id", profileRecord.id)
+    .eq("coachee_profile_id", profileId)
     .is("deleted_at", null);
 
   if (weeklyLogsError) {
@@ -217,8 +224,8 @@ export async function getMyCoachingFeedback(): Promise<GetMyCoachingFeedbackResu
 
     return (
       weeklyLog !== undefined &&
-      item.coachee_profile_id === profileRecord.id &&
-      weeklyLog.coachee_profile_id === profileRecord.id
+      item.coachee_profile_id === profileId &&
+      weeklyLog.coachee_profile_id === profileId
     );
   });
 

@@ -491,6 +491,8 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
   const currentProfile = profile as CurrentProfileRow;
   const effectiveTimezone = getEffectiveTimezone(currentProfile.timezone);
   const weekRange = getCurrentWeekRange(effectiveTimezone);
+  const reflectionYear = getCurrentYearInTimezone(effectiveTimezone);
+  const reflectionMonth = getCurrentMonthInTimezone(effectiveTimezone);
   const { data: roles, error: rolesError } = await serviceClient
     .from("user_roles")
     .select("role, scope_type, scope_id, status")
@@ -677,6 +679,8 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
         .in("profile_id", coacheeIds)
         .eq("shared_with_coach", true)
         .eq("visibility", "coach")
+        .gte("record_date", weekRange.start)
+        .lte("record_date", weekRange.end)
         .is("deleted_at", null),
       serviceClient
         .from("monthly_reflections")
@@ -684,6 +688,8 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
         .in("profile_id", coacheeIds)
         .eq("shared_with_coach", true)
         .eq("visibility", "coach")
+        .eq("year", reflectionYear)
+        .eq("month", reflectionMonth)
         .is("deleted_at", null),
     ]);
 

@@ -8,7 +8,7 @@ import {
   getCurrentYearInTimezone,
   getEffectiveTimezone,
 } from "@/lib/timezone";
-import type { Tables, UserRole } from "@/types/database";
+import type { ScopeType, Tables, UserRole } from "@/types/database";
 
 const ALLOWED_ROLES = new Set<UserRole>([
   "coach_maker",
@@ -32,7 +32,62 @@ type ServiceSupabaseClient = NonNullable<
 >;
 type ProfileIdRow = { id: string };
 type CurrentProfileRow = { id: string; timezone: string | null };
-type CurrentRoleRow = { role: UserRole };
+type CurrentRoleRow = {
+  role: UserRole;
+  scope_type: ScopeType;
+  scope_id: string | null;
+};
+
+type ScopedRoleRow = CurrentRoleRow;
+
+async function resolveScopedProfileIds(
+  serviceClient: ServiceSupabaseClient,
+  roles: ScopedRoleRow[],
+): Promise<string[] | null> {
+  const orFilters = roles
+    .filter((r) => r.scope_id && r.scope_type !== "global" && r.scope_type !== "coach")
+    .map((r) => {
+      switch (r.scope_type) {
+        case "country":
+          return `country_id.eq.${r.scope_id}`;
+        case "region":
+          return `region_id.eq.${r.scope_id}`;
+        case "organization":
+          return `organization_id.eq.${r.scope_id}`;
+        case "church":
+          return `church_id.eq.${r.scope_id}`;
+        case "group":
+          return `group_id.eq.${r.scope_id}`;
+        case "cohort":
+          return `cohort_id.eq.${r.scope_id}`;
+        default:
+          return null;
+      }
+    })
+    .filter((v): v is string => v !== null);
+
+  if (orFilters.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await serviceClient
+    .from("profiles")
+    .select("id")
+    .or(orFilters.join(","))
+    .is("deleted_at", null)
+    .limit(MAX_DB_PREFILTER_PROFILE_IDS + 1);
+
+  if (error) {
+    return null;
+  }
+
+  const ids = ((data ?? []) as ProfileIdRow[]).map((row) => row.id);
+  if (ids.length > MAX_DB_PREFILTER_PROFILE_IDS) {
+    return null;
+  }
+
+  return ids;
+}
 type RelationshipRow = {
   id: string;
   coach_profile_id: string;
@@ -490,6 +545,73 @@ async function buildDbPrefilters(
     generationProfileIds,
     regionProfileIds,
   };
+}
+
+type PlansDbPrefilters = Awaited<ReturnType<typeof buildDbPrefilters>>;
+
+type PlansFilterableQuery = {
+  in: (column: string, values: string[]) => PlansFilterableQuery;
+  ilike: (column: string, pattern: string) => PlansFilterableQuery;
+  or: (filters: string) => PlansFilterableQuery;
+};
+
+function applyMoksilgiPlansFiltersToQuery<T extends PlansFilterableQuery>(
+  plansQuery: T,
+  options: {
+    accessibleProfileIds: string[] | null;
+    dbPrefilters: PlansDbPrefilters;
+    teamNamePattern: string | null;
+    roleLabelPattern: string | null;
+    regionNamePattern: string | null;
+    generationLabelPattern: string | null;
+    searchPattern: string | null;
+  },
+): T {
+  let q: PlansFilterableQuery = plansQuery;
+
+  if (options.accessibleProfileIds) {
+    q = q.in("profile_id", options.accessibleProfileIds);
+  }
+
+  if (options.teamNamePattern) {
+    q = q.ilike("team_name", options.teamNamePattern);
+  }
+
+  if (options.roleLabelPattern) {
+    q = q.ilike("role_label", options.roleLabelPattern);
+  }
+
+  if (options.regionNamePattern && options.dbPrefilters.regionProfileIds !== null) {
+    q = q.or(
+      columnOrProfileCondition(
+        "region_name",
+        options.regionNamePattern,
+        options.dbPrefilters.regionProfileIds,
+      ),
+    );
+  }
+
+  if (options.generationLabelPattern && options.dbPrefilters.generationProfileIds !== null) {
+    q = q.or(
+      columnOrProfileCondition(
+        "generation_label",
+        options.generationLabelPattern,
+        options.dbPrefilters.generationProfileIds,
+      ),
+    );
+  }
+
+  if (options.searchPattern && options.dbPrefilters.searchProfileIds !== null) {
+    q = q.or(
+      columnOrProfileCondition(
+        "author_name",
+        options.searchPattern,
+        options.dbPrefilters.searchProfileIds,
+      ),
+    );
+  }
+
+  return q as T;
 }
 
 function average(values: number[]) {
@@ -993,7 +1115,7 @@ export async function getCoachMakerMoksilgiProgress(
   const effectiveTimezone = getEffectiveTimezone(profileRecord.timezone);
   const { data: roles, error: rolesError } = await supabase
     .from("user_roles")
-    .select("role")
+    .select("role, scope_type, scope_id")
     .eq("profile_id", profileId)
     .in("role", Array.from(ALLOWED_ROLES))
     .eq("status", "active")
@@ -1091,11 +1213,48 @@ export async function getCoachMakerMoksilgiProgress(
       };
     }
   } else {
-    const { data: relationships, error: relationshipsError } = await serviceClient
+    const scopeRoles = (roles ?? []) as ScopedRoleRow[];
+    const hasFullRelationshipAccess = roleValues.includes("super_admin");
+
+    let relationshipQuery = serviceClient
       .from("coaching_relationships")
       .select("id, coach_profile_id, coachee_profile_id, status")
       .eq("status", "active")
       .is("deleted_at", null);
+
+    if (!hasFullRelationshipAccess) {
+      const scopedProfileIds = await resolveScopedProfileIds(serviceClient, scopeRoles);
+
+      if (scopedProfileIds !== null) {
+        const orParts: string[] = [];
+
+        for (const role of scopeRoles) {
+          if (
+            role.scope_id &&
+            role.scope_type !== "global" &&
+            role.scope_type !== "coach"
+          ) {
+            orParts.push(
+              `and(scope_type.eq.${role.scope_type},scope_id.eq.${role.scope_id})`,
+            );
+          }
+        }
+
+        if (scopedProfileIds.length > 0) {
+          const list = `(${scopedProfileIds.join(",")})`;
+          orParts.push(`coach_profile_id.in.${list}`);
+          orParts.push(`coachee_profile_id.in.${list}`);
+        }
+
+        relationshipQuery = relationshipQuery.or(
+          orParts.length > 0
+            ? orParts.join(",")
+            : "id.eq.00000000-0000-0000-0000-000000000000",
+        );
+      }
+    }
+
+    const { data: relationships, error: relationshipsError } = await relationshipQuery;
 
     if (relationshipsError) {
       return {
@@ -1119,75 +1278,97 @@ export async function getCoachMakerMoksilgiProgress(
   const generationLabelPattern = buildPostgrestOrIlikePattern(filters.generationLabel);
   const searchPattern = buildPostgrestOrIlikePattern(filters.search);
 
-  let plansQuery = serviceClient
-    .from("moksilgi_plans")
-    .select(
-      "id, profile_id, author_name, role_label, generation_label, region_name, team_name, updated_at",
-    )
-    .is("deleted_at", null)
-    .order("updated_at", { ascending: false });
+  const plansFilterOptions = {
+    accessibleProfileIds,
+    dbPrefilters,
+    teamNamePattern,
+    roleLabelPattern,
+    regionNamePattern,
+    generationLabelPattern,
+    searchPattern,
+  };
 
-  if (accessibleProfileIds) {
-    plansQuery = plansQuery.in("profile_id", accessibleProfileIds);
-  }
+  let planRows: PlanRow[] = [];
+  let overviewPlanRows: PlanRow[] = [];
+  let paginatedTotalRows: number | null = null;
 
-  if (teamNamePattern) {
-    plansQuery = plansQuery.ilike("team_name", teamNamePattern);
-  }
+  if (requestedPagination.isPaginated) {
+    const pageFrom = (requestedPagination.page - 1) * requestedPagination.pageSize;
+    const pageTo = pageFrom + requestedPagination.pageSize - 1;
+    const plansSelectQuery = () =>
+      applyMoksilgiPlansFiltersToQuery(
+        serviceClient
+          .from("moksilgi_plans")
+          .select(
+            "id, profile_id, author_name, role_label, generation_label, region_name, team_name, updated_at",
+          )
+          .is("deleted_at", null)
+          .order("updated_at", { ascending: false }),
+        plansFilterOptions,
+      );
 
-  if (roleLabelPattern) {
-    plansQuery = plansQuery.ilike("role_label", roleLabelPattern);
-  }
+    const [{ count, error: countError }, plansPageResult, allPlansResult] =
+      await Promise.all([
+        applyMoksilgiPlansFiltersToQuery(
+          serviceClient
+            .from("moksilgi_plans")
+            .select("id", { count: "exact", head: true })
+            .is("deleted_at", null),
+          plansFilterOptions,
+        ),
+        plansSelectQuery().range(pageFrom, pageTo),
+        plansSelectQuery(),
+      ]);
 
-  if (regionNamePattern && dbPrefilters.regionProfileIds !== null) {
-    plansQuery = plansQuery.or(
-      columnOrProfileCondition(
-        "region_name",
-        regionNamePattern,
-        dbPrefilters.regionProfileIds,
-      ),
+    const { data: plans, error: plansError } = plansPageResult;
+    const { data: allPlans, error: allPlansError } = allPlansResult;
+
+    if (countError || plansError || allPlansError) {
+      return {
+        data: null,
+        error: {
+          code: "MOKSILGI_QUERY_FAILED",
+          message: "목실기 정보를 조회하는 중 오류가 발생했습니다.",
+        },
+      };
+    }
+
+    planRows = (plans ?? []) as PlanRow[];
+    overviewPlanRows = (allPlans ?? []) as PlanRow[];
+    paginatedTotalRows = count ?? 0;
+    perf.mark("data.plans_query", planRows.length);
+    perf.mark("data.overview_plans_query", overviewPlanRows.length);
+  } else {
+    const { data: plans, error: plansError } = await applyMoksilgiPlansFiltersToQuery(
+      serviceClient
+        .from("moksilgi_plans")
+        .select(
+          "id, profile_id, author_name, role_label, generation_label, region_name, team_name, updated_at",
+        )
+        .is("deleted_at", null)
+        .order("updated_at", { ascending: false }),
+      plansFilterOptions,
     );
+    perf.mark("data.plans_query", plans?.length ?? 0);
+
+    if (plansError) {
+      return {
+        data: null,
+        error: {
+          code: "MOKSILGI_QUERY_FAILED",
+          message: "목실기 정보를 조회하는 중 오류가 발생했습니다.",
+        },
+      };
+    }
+
+    planRows = (plans ?? []) as PlanRow[];
+    overviewPlanRows = planRows;
   }
 
-  if (generationLabelPattern && dbPrefilters.generationProfileIds !== null) {
-    plansQuery = plansQuery.or(
-      columnOrProfileCondition(
-        "generation_label",
-        generationLabelPattern,
-        dbPrefilters.generationProfileIds,
-      ),
-    );
-  }
-
-  if (searchPattern && dbPrefilters.searchProfileIds !== null) {
-    plansQuery = plansQuery.or(
-      columnOrProfileCondition(
-        "author_name",
-        searchPattern,
-        dbPrefilters.searchProfileIds,
-      ),
-    );
-  }
-
-  const { data: plans, error: plansError } = await plansQuery;
-  perf.mark("data.plans_query", plans?.length ?? 0);
-
-  if (plansError) {
-    return {
-      data: null,
-      error: {
-        code: "MOKSILGI_QUERY_FAILED",
-        message: "목실기 정보를 조회하는 중 오류가 발생했습니다.",
-      },
-    };
-  }
-
-  const planRows = (plans ?? []) as PlanRow[];
-
-  const planIds = planRows.map((plan) => plan.id);
+  const summaryPlanIds = overviewPlanRows.map((plan) => plan.id);
   const profileIds = [
     ...new Set([
-      ...planRows.map((plan) => plan.profile_id),
+      ...overviewPlanRows.map((plan) => plan.profile_id),
       ...activeRelationships.flatMap((relationship) => [
         relationship.coach_profile_id,
         relationship.coachee_profile_id,
@@ -1204,11 +1385,11 @@ export async function getCoachMakerMoksilgiProgress(
           .in("id", profileIds)
           .is("deleted_at", null)
       : Promise.resolve({ data: [], error: null }),
-    planIds.length > 0
+    summaryPlanIds.length > 0
       ? serviceClient
           .from("moksilgi_monthly_summaries")
           .select("plan_id, month, average_rate")
-          .in("plan_id", planIds)
+          .in("plan_id", summaryPlanIds)
           .eq("year", selectedYear)
           .is("deleted_at", null)
       : Promise.resolve({ data: [], error: null }),
@@ -1338,22 +1519,34 @@ export async function getCoachMakerMoksilgiProgress(
     summariesByPlanId.set(summary.plan_id, current);
   }
 
-  const filteredRows = buildProgressRows({
+  const overviewFilteredRows = buildProgressRows({
     filters,
     lookups,
-    planRows,
+    planRows: overviewPlanRows,
     profilesById: profileById,
     selectedYear,
     summariesByPlanId,
   });
-  const printRows = buildPrintRows(filteredRows);
+  const tableFilteredRows = requestedPagination.isPaginated
+    ? buildProgressRows({
+        filters,
+        lookups,
+        planRows,
+        profilesById: profileById,
+        selectedYear,
+        summariesByPlanId,
+      })
+    : overviewFilteredRows;
+  const printRows = buildPrintRows(overviewFilteredRows);
   const summary = buildProgressSummary(printRows, selectedYear, effectiveTimezone);
   const overview = buildProgressOverview(printRows, selectedYear, effectiveTimezone);
   const pagination = buildPaginationMeta({
     ...requestedPagination,
-    totalRows: printRows.length,
+    totalRows: paginatedTotalRows ?? printRows.length,
   });
-  const tableRows = buildTableRows(printRows, pagination);
+  const tableRows = requestedPagination.isPaginated
+    ? tableFilteredRows.map((row, index) => ({ ...row, index: index + 1 }))
+    : buildTableRows(printRows, pagination);
   const rowsByProfileId = new Map(tableRows.map((row) => [row.profile_id, row]));
   const printRowsByProfileId = new Map(printRows.map((row) => [row.profile_id, row]));
   const relationshipRows = buildRelationshipProgressRows({
@@ -1369,7 +1562,7 @@ export async function getCoachMakerMoksilgiProgress(
     summariesByPlanId,
   });
 
-  perf.mark("build.rows", filteredRows.length);
+  perf.mark("build.rows", overviewFilteredRows.length);
   perf.mark("build.table_rows", tableRows.length);
   perf.mark("build.complete", tableRows.length);
 

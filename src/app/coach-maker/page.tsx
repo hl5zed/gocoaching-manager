@@ -578,8 +578,10 @@ function QuickLinksSection({
 
 export default async function CoachMakerPage() {
   const currentYear = new Date().getFullYear();
-  const coachStatsResult = await getCoachMakerCoachStats();
-  const moksilgiSummaryResult = await getCoachMakerMoksilgiDashboardSummary(currentYear);
+  const [coachStatsResult, moksilgiSummaryResult] = await Promise.all([
+    getCoachMakerCoachStats(),
+    getCoachMakerMoksilgiDashboardSummary(currentYear),
+  ]);
 
   if (moksilgiSummaryResult.error?.code === "UNAUTHORIZED") {
     redirect("/login?redirectTo=/coach-maker");

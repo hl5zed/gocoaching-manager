@@ -1,5 +1,12 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import {
+  getCurrentMonthInTimezone,
+  getCurrentWeekRangeInTimezone,
+  getCurrentYearInTimezone,
+  getEffectiveTimezone,
+} from "@/lib/timezone";
 import type {
   CoachingRelationshipStatus,
   ProfileRow,
@@ -17,7 +24,10 @@ const COACH_LEVEL_ROLES: ReadonlySet<UserRole> = new Set([
   "super_admin",
 ]);
 
-type CoachProfile = Pick<ProfileRow, "id" | "display_name" | "full_name" | "email">;
+type CoachProfile = Pick<
+  ProfileRow,
+  "id" | "display_name" | "full_name" | "email" | "timezone"
+>;
 
 type CoachRoleRow = {
   role: UserRole;
@@ -154,25 +164,11 @@ function logServerError(code: string, message: string) {
   console.error(`[${code}] ${message}`);
 }
 
-function toDateKey(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function getCurrentWeekRange() {
-  const now = new Date();
-  const day = now.getUTCDay();
-  const daysFromMonday = day === 0 ? 6 : day - 1;
-  const start = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-  );
-  start.setUTCDate(start.getUTCDate() - daysFromMonday);
-
-  const end = new Date(start);
-  end.setUTCDate(start.getUTCDate() + 6);
-
+function getCoachWeekRange(timezone: string) {
+  const weekRange = getCurrentWeekRangeInTimezone(timezone);
   return {
-    start: toDateKey(start),
-    end: toDateKey(end),
+    start: weekRange.weekStart,
+    end: weekRange.weekEnd,
   };
 }
 
@@ -244,13 +240,17 @@ async function getCurrentCoachAccess():
     };
   }
 
-  const { data: profile, error: profileError } = await serviceClient
+  const verifiedProfileId = await getVerifiedProfileId();
+
+  const profileQuery = serviceClient
     .from("profiles")
-    .select("id, display_name, full_name, email")
-    .eq("auth_user_id", session.user.id)
+    .select("id, display_name, full_name, email, timezone")
     .is("deleted_at", null)
-    .neq("status", "anonymized")
-    .maybeSingle();
+    .neq("status", "anonymized");
+
+  const { data: profile, error: profileError } = verifiedProfileId
+    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
 
   if (profileError) {
     logServerError(
@@ -352,7 +352,7 @@ export async function getCoachDashboard(): Promise<GetCoachDashboardResult> {
     return access;
   }
 
-  const weekRange = getCurrentWeekRange();
+  const weekRange = getCoachWeekRange(getEffectiveTimezone(access.profile?.timezone));
 
   if (access.profile === null) {
     return {
@@ -425,6 +425,13 @@ export async function getCoachDashboard(): Promise<GetCoachDashboardResult> {
   const relationshipIds = [...new Set(relationshipRows.map((row) => row.id))];
   const coacheeIds = [...new Set(relationshipRows.map((row) => row.coachee_profile_id))];
 
+  const reflectionYear = getCurrentYearInTimezone(
+    getEffectiveTimezone(profile.timezone),
+  );
+  const reflectionMonth = getCurrentMonthInTimezone(
+    getEffectiveTimezone(profile.timezone),
+  );
+
   const [
     coacheeResult,
     weeklyLogsResult,
@@ -442,6 +449,8 @@ export async function getCoachDashboard(): Promise<GetCoachDashboardResult> {
         "id, relationship_id, coachee_profile_id, week_start, week_end, status, submitted_at, updated_at, created_at",
       )
       .in("relationship_id", relationshipIds)
+      .lte("week_start", weekRange.end)
+      .gte("week_end", weekRange.start)
       .is("deleted_at", null),
     serviceClient
       .from("daily_records")
@@ -451,6 +460,8 @@ export async function getCoachDashboard(): Promise<GetCoachDashboardResult> {
       .in("profile_id", coacheeIds)
       .eq("shared_with_coach", true)
       .eq("visibility", "coach")
+      .gte("record_date", weekRange.start)
+      .lte("record_date", weekRange.end)
       .is("deleted_at", null),
     serviceClient
       .from("monthly_reflections")
@@ -460,6 +471,8 @@ export async function getCoachDashboard(): Promise<GetCoachDashboardResult> {
       .in("profile_id", coacheeIds)
       .eq("shared_with_coach", true)
       .eq("visibility", "coach")
+      .eq("year", reflectionYear)
+      .eq("month", reflectionMonth)
       .is("deleted_at", null),
   ]);
 

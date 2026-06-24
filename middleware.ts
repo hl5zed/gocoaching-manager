@@ -222,6 +222,7 @@ async function getProfileForMiddleware(
     .from("profiles")
     .select("id, status")
     .eq("auth_user_id", authUserId)
+    .neq("status", "anonymized")
     .is("deleted_at", null)
     .maybeSingle();
 

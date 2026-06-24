@@ -249,16 +249,18 @@ function toFormState(record: DailyRecord): FormState {
 export function DailyRecordsClient({
   mode = "full",
   returnTo,
+  initialRecords,
 }: {
   mode?: "full" | "today";
   returnTo?: string;
+  initialRecords?: DailyRecord[];
 }) {
   const router = useRouter();
   const { t } = useI18n();
-  const [records, setRecords] = useState<DailyRecord[]>([]);
+  const [records, setRecords] = useState<DailyRecord[]>(initialRecords ?? []);
   const [form, setForm] = useState<FormState>(() => createInitialFormState());
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(initialRecords === undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -348,8 +350,12 @@ export function DailyRecordsClient({
   }
 
   useEffect(() => {
+    if (initialRecords !== undefined) {
+      return;
+    }
+
     void loadRecords();
-  }, []);
+  }, [initialRecords]);
 
   function resetForm() {
     setForm(createInitialFormState());

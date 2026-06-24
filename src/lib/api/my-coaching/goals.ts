@@ -349,13 +349,23 @@ function normalizeGoalStatus(value: unknown): GoalStatus | null {
   return GOAL_STATUSES.has(value as GoalStatus) ? (value as GoalStatus) : null;
 }
 
-async function getCurrentProfileContext(): Promise<CurrentProfileContext> {
+async function getCurrentProfileContext(
+  knownProfileId?: string,
+): Promise<CurrentProfileContext> {
   const session = await getSession();
 
   if (!session.user) {
     return {
       ok: false,
       error: { code: "UNAUTHORIZED", message: "로그인이 필요합니다." },
+    };
+  }
+
+  if (knownProfileId) {
+    return {
+      ok: true,
+      profileId: knownProfileId,
+      serviceClient: await createSupabaseServerClient(),
     };
   }
 
@@ -395,8 +405,10 @@ async function getCurrentProfileContext(): Promise<CurrentProfileContext> {
   };
 }
 
-export async function getMyCoachingGoals(): Promise<GetMyCoachingGoalsResult> {
-  const context = await getCurrentProfileContext();
+export async function getMyCoachingGoals(options?: {
+  knownProfileId?: string;
+}): Promise<GetMyCoachingGoalsResult> {
+  const context = await getCurrentProfileContext(options?.knownProfileId);
 
   if (!context.ok) {
     return { ok: false, error: context.error };

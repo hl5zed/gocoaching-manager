@@ -13,6 +13,7 @@ import {
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import {
   getCurrentMonthInTimezone,
+  getCurrentWeekRangeInTimezone,
   getCurrentYearInTimezone,
   getTodayDateInTimezone,
   resolveTimezoneFallback,
@@ -60,20 +61,31 @@ function formatTodayLabel(todayDateKey: string, timezone: string) {
   }).format(date);
 }
 
-function getWeekMonthKeys(todayDateKey: string) {
-  const anchor = new Date(`${todayDateKey}T12:00:00`);
-  const dayOfWeek = anchor.getDay();
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const monday = new Date(anchor);
-  monday.setDate(anchor.getDate() + mondayOffset);
+function getWeekMonthKeys(timezone: string, todayDateKey: string) {
+  const match = todayDateKey.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    return [];
+  }
+
+  const referenceDate = new Date(
+    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12),
+  );
+  const { weekStart } = getCurrentWeekRangeInTimezone(timezone, referenceDate);
+  const startMatch = weekStart.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!startMatch) {
+    return [];
+  }
 
   const monthKeys = new Map<string, { year: number; month: number }>();
+  const cursor = new Date(
+    Date.UTC(Number(startMatch[1]), Number(startMatch[2]) - 1, Number(startMatch[3])),
+  );
+
   for (let index = 0; index < 7; index += 1) {
-    const day = new Date(monday);
-    day.setDate(monday.getDate() + index);
-    const year = day.getFullYear();
-    const month = day.getMonth() + 1;
+    const year = cursor.getUTCFullYear();
+    const month = cursor.getUTCMonth() + 1;
     monthKeys.set(`${year}-${month}`, { year, month });
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
 
   return [...monthKeys.values()];
@@ -316,7 +328,7 @@ export default async function MyCoachingPage() {
   let monthlyRecords: MonthlyRecordRow[] = [];
 
   if (plan) {
-    const weekMonthKeys = getWeekMonthKeys(todayDateKey);
+    const weekMonthKeys = getWeekMonthKeys(effectiveTimezone, todayDateKey);
     const recordsQuery = serviceClient
       .from("moksilgi_monthly_records")
       .select("detail_goal_id, daily_checks_json, year, month")
