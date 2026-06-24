@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/Card";
+import { getWeekDateKeysFromDateKey } from "@/lib/timezone";
 import type { Json } from "@/types/database";
 
 type Props = {
@@ -66,32 +67,11 @@ function isAnyRecordCheckedForDay(
   );
 }
 
-function formatDateKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
 function getWeekDays(todayDateKey: string): Array<{ dateKey: string; dayOfMonth: number }> {
-  const anchor = new Date(`${todayDateKey}T12:00:00`);
-  const dayOfWeek = anchor.getDay();
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-
-  const monday = new Date(anchor);
-  monday.setDate(anchor.getDate() + mondayOffset);
-
-  const days: Array<{ dateKey: string; dayOfMonth: number }> = [];
-  for (let index = 0; index < 7; index += 1) {
-    const day = new Date(monday);
-    day.setDate(monday.getDate() + index);
-    days.push({
-      dateKey: formatDateKey(day),
-      dayOfMonth: day.getDate(),
-    });
-  }
-
-  return days;
+  return getWeekDateKeysFromDateKey(todayDateKey).map((dateKey) => ({
+    dateKey,
+    dayOfMonth: Number(dateKey.slice(8, 10)),
+  }));
 }
 
 function resolveDayState(

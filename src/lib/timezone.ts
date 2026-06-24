@@ -127,6 +127,49 @@ export function getCurrentWeekRangeInTimezone(
   };
 }
 
+/** YYYY-MM-DD 달력 날짜 기준 월~일 7일 date key (서버 TZ와 무관한 UTC 달력 연산). */
+export function getWeekDateKeysFromDateKey(dateKey: string): string[] {
+  const parsed = parseDateOnly(dateKey);
+  if (!parsed) {
+    return [];
+  }
+
+  const date = new Date(Date.UTC(parsed.year, parsed.month - 1, parsed.day, 12));
+  const day = date.getUTCDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  const monday = new Date(date);
+  monday.setUTCDate(date.getUTCDate() + diffToMonday);
+
+  const keys: string[] = [];
+  for (let index = 0; index < 7; index += 1) {
+    const cursor = new Date(monday);
+    cursor.setUTCDate(monday.getUTCDate() + index);
+    keys.push(dateKeyFromUtcDate(cursor));
+  }
+
+  return keys;
+}
+
+/** 이번 주(월~일)에 걸치는 year/month 목록 — 주간 records fetch용. */
+export function getWeekMonthKeysFromDateKey(
+  dateKey: string,
+): Array<{ year: number; month: number }> {
+  const monthKeys = new Map<string, { year: number; month: number }>();
+
+  for (const key of getWeekDateKeysFromDateKey(dateKey)) {
+    const parsed = parseDateOnly(key);
+    if (!parsed) {
+      continue;
+    }
+    monthKeys.set(`${parsed.year}-${parsed.month}`, {
+      year: parsed.year,
+      month: parsed.month,
+    });
+  }
+
+  return [...monthKeys.values()];
+}
+
 function parseDateOnly(value: string) {
   const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) return null;
