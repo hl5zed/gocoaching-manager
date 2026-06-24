@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { ActiveRoleSlim, MeResponse, SafeProfile } from "@/types/profile";
 import type { User } from "@/types/auth";
@@ -65,14 +66,17 @@ export async function getProfile(): Promise<GetProfileResult> {
 
   try {
     const supabase = await createSupabaseServerClient();
+    const verifiedProfileId = await getVerifiedProfileId();
 
-    const { data: profile, error: profileError } = await supabase
+    const profileQuery = supabase
       .from("profiles")
       .select(profileSelectFields)
-      .eq("auth_user_id", session.user.id)
       .neq("status", "anonymized")
-      .is("deleted_at", null)
-      .maybeSingle();
+      .is("deleted_at", null);
+
+    const { data: profile, error: profileError } = verifiedProfileId
+      ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+      : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
 
     if (profileError) {
       return {

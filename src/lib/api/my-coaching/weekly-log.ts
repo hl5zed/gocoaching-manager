@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import {
   getCurrentWeekRangeInTimezone,
@@ -451,13 +452,17 @@ async function getCurrentProfileAndRoles() {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: profile, error: profileError } = await supabase
+  const verifiedProfileId = await getVerifiedProfileId();
+
+  const profileQuery = supabase
     .from("profiles")
     .select("id, email, full_name, display_name, status, timezone")
-    .eq("auth_user_id", session.user.id)
     .is("deleted_at", null)
-    .neq("status", "anonymized")
-    .maybeSingle();
+    .neq("status", "anonymized");
+
+  const { data: profile, error: profileError } = verifiedProfileId
+    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
 
   if (profileError) {
     return {

@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import type { CoachFeedbackStatus, WeeklyLogStatus } from "@/types/database";
@@ -125,7 +126,7 @@ export async function getMyCoachingFeedback(options?: {
     };
   }
 
-  let profileId = options?.knownProfileId ?? null;
+  let profileId = options?.knownProfileId ?? (await getVerifiedProfileId());
 
   if (!profileId) {
     const supabase = await createSupabaseServerClient();

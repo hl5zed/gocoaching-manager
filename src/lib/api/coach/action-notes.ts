@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Database, ScopeType, UserRole } from "@/types/database";
@@ -471,13 +472,17 @@ export async function requireActionNotesAccess(
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: profile, error: profileError } = await supabase
+  const verifiedProfileId = await getVerifiedProfileId();
+
+  const profileQuery = supabase
     .from("profiles")
     .select("id, organization_id, church_id")
-    .eq("auth_user_id", session.user.id)
     .eq("status", "active")
-    .is("deleted_at", null)
-    .maybeSingle();
+    .is("deleted_at", null);
+
+  const { data: profile, error: profileError } = verifiedProfileId
+    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
 
   if (profileError || !profile) {
     return {

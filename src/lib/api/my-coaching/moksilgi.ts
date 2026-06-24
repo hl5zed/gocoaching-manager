@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createMoksilgiVersion } from "./moksilgi-versions";
 import type { ServiceClient } from "./context";
@@ -382,13 +383,17 @@ async function getCurrentProfileContext(): Promise<CurrentProfileContext> {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: profile, error: profileError } = await supabase
+  const verifiedProfileId = await getVerifiedProfileId();
+
+  const profileQuery = supabase
     .from("profiles")
     .select("id")
-    .eq("auth_user_id", session.user.id)
     .is("deleted_at", null)
-    .neq("status", "anonymized")
-    .maybeSingle();
+    .neq("status", "anonymized");
+
+  const { data: profile, error: profileError } = verifiedProfileId
+    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
 
   if (profileError) {
     return {

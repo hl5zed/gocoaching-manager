@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import type { WeeklyLogRow } from "@/types/database";
@@ -140,11 +141,13 @@ export async function getCoachWeeklyLogDetail(
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("auth_user_id", session.user.id)
-    .maybeSingle();
+  const verifiedProfileId = await getVerifiedProfileId();
+
+  const profileQuery = supabase.from("profiles").select("id");
+
+  const { data: profile, error: profileError } = verifiedProfileId
+    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
 
   if (profileError) {
     return {

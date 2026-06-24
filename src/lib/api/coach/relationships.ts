@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import type {
   CoachingRelationshipStatus,
@@ -180,13 +181,17 @@ async function getCurrentCoachAccess() {
     };
   }
 
-  const { data: profile, error: profileError } = await serviceClient
+  const verifiedProfileId = await getVerifiedProfileId();
+
+  const profileQuery = serviceClient
     .from("profiles")
     .select("id, display_name, full_name, email, status")
-    .eq("auth_user_id", session.user.id)
     .is("deleted_at", null)
-    .neq("status", "anonymized")
-    .maybeSingle();
+    .neq("status", "anonymized");
+
+  const { data: profile, error: profileError } = verifiedProfileId
+    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
 
   if (profileError) {
     logServerError(

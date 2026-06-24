@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
   MonthlyReflectionInsert,
@@ -70,7 +71,7 @@ type QueryResult<TData> = Promise<{
 }>;
 
 type ProfileSelectChain = {
-  eq: (column: "auth_user_id", value: string) => ProfileSelectChain;
+  eq: (column: "auth_user_id" | "id", value: string) => ProfileSelectChain;
   neq: (column: "status", value: "anonymized") => ProfileSelectChain;
   is: (
     column: "deleted_at",
@@ -328,13 +329,23 @@ async function getCurrentProfile(): Promise<CurrentProfileResult> {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: profile, error } = await getProfilesClient(supabase)
-    .from("profiles")
-    .select("id")
-    .eq("auth_user_id", session.user.id)
-    .neq("status", "anonymized")
-    .is("deleted_at", null)
-    .maybeSingle();
+  const verifiedProfileId = await getVerifiedProfileId();
+
+  const { data: profile, error } = verifiedProfileId
+    ? await getProfilesClient(supabase)
+        .from("profiles")
+        .select("id")
+        .eq("id", verifiedProfileId)
+        .neq("status", "anonymized")
+        .is("deleted_at", null)
+        .maybeSingle()
+    : await getProfilesClient(supabase)
+        .from("profiles")
+        .select("id")
+        .eq("auth_user_id", session.user.id)
+        .neq("status", "anonymized")
+        .is("deleted_at", null)
+        .maybeSingle();
 
   if (error) {
     console.error("[MONTHLY_REFLECTION_PROFILE_QUERY_FAILED]", error.message);

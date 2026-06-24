@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
   GoalPriority,
@@ -365,6 +366,15 @@ async function getCurrentProfileContext(
     return {
       ok: true,
       profileId: knownProfileId,
+      serviceClient: await createSupabaseServerClient(),
+    };
+  }
+
+  const verifiedProfileId = await getVerifiedProfileId();
+  if (verifiedProfileId) {
+    return {
+      ok: true,
+      profileId: verifiedProfileId,
       serviceClient: await createSupabaseServerClient(),
     };
   }

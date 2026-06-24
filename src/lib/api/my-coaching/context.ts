@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /** @deprecated 이름은 legacy 호환용. 실제로는 JWT + RLS server client입니다. */
@@ -48,13 +49,17 @@ export async function getMoksilgiContext(options?: {
       return { ok: false, error: { code: "UNAUTHORIZED", message: "로그인이 필요합니다." } };
     }
 
-    const { data: profile, error } = await supabase
+    const verifiedProfileId = await getVerifiedProfileId();
+
+    const profileQuery = supabase
       .from("profiles")
       .select("id")
-      .eq("auth_user_id", session.user.id)
       .is("deleted_at", null)
-      .neq("status", "anonymized")
-      .maybeSingle();
+      .neq("status", "anonymized");
+
+    const { data: profile, error } = verifiedProfileId
+      ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+      : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
 
     if (error) {
       return { ok: false, error: { code: "PROFILE_QUERY_FAILED", message: "프로필을 불러올 수 없습니다." } };
