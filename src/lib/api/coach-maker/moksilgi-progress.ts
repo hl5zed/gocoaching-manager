@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { createApiPerformanceLogger } from "@/lib/performance";
@@ -1080,13 +1081,17 @@ export async function getCoachMakerMoksilgiProgress(
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: profile, error: profileError } = await supabase
+  const verifiedProfileId = await getVerifiedProfileId();
+
+  const profileQuery = supabase
     .from("profiles")
     .select("id, timezone")
-    .eq("auth_user_id", session.user.id)
     .is("deleted_at", null)
-    .eq("status", "active")
-    .maybeSingle();
+    .eq("status", "active");
+
+  const { data: profile, error: profileError } = verifiedProfileId
+    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
 
   perf.mark("auth.profile_lookup", profile ? 1 : 0);
 

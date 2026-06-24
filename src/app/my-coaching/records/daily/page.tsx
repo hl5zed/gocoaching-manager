@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { getDailyRecords } from "@/lib/api/my-coaching/daily-records";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -38,12 +39,18 @@ export default async function DailyRecordsPage() {
   const { client: serviceClient } = createSupabaseServiceClient();
 
   if (serviceClient) {
-    const { data: profileRow } = await serviceClient
+    const verifiedProfileId = await getVerifiedProfileId();
+
+    const profileQuery = serviceClient
       .from("profiles")
       .select("id, timezone, organization_id")
-      .eq("auth_user_id", session.user.id)
-      .is("deleted_at", null)
-      .maybeSingle();
+      .is("deleted_at", null);
+
+    const { data: profileRow } = verifiedProfileId
+      ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+      : session.user
+        ? await profileQuery.eq("auth_user_id", session.user.id).maybeSingle()
+        : { data: null };
 
     const profile = (profileRow as DailyContextProfileRow | null) ?? null;
 

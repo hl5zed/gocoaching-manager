@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import {
   DEFAULT_TIMEZONE,
@@ -456,13 +457,17 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
   }
 
   const { serviceClient } = serviceClientResult;
-  const { data: profile, error: profileError } = await serviceClient
+  const verifiedProfileId = await getVerifiedProfileId();
+
+  const profileQuery = serviceClient
     .from("profiles")
     .select("id, display_name, full_name, email, timezone")
-    .eq("auth_user_id", session.user.id)
     .is("deleted_at", null)
-    .eq("status", "active")
-    .maybeSingle();
+    .eq("status", "active");
+
+  const { data: profile, error: profileError } = verifiedProfileId
+    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
 
   if (profileError) {
     logServerError(
@@ -917,13 +922,17 @@ export async function getCoachMakerMoksilgiDashboardSummary(
   }
 
   const { serviceClient } = serviceClientResult;
-  const { data: profile, error: profileError } = await serviceClient
+  const verifiedProfileId = await getVerifiedProfileId();
+
+  const profileQuery = serviceClient
     .from("profiles")
     .select("id, display_name, full_name, email, timezone")
-    .eq("auth_user_id", session.user.id)
     .is("deleted_at", null)
-    .eq("status", "active")
-    .maybeSingle();
+    .eq("status", "active");
+
+  const { data: profile, error: profileError } = verifiedProfileId
+    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
 
   if (profileError) {
     logServerError(
