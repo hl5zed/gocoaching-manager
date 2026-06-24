@@ -1,8 +1,6 @@
 import { Suspense } from "react";
 import { PasswordResetConfirmForm } from "./PasswordResetConfirmForm";
 
-export const dynamic = "force-dynamic";
-
 export default function PasswordResetConfirmPage() {
   return (
     <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">

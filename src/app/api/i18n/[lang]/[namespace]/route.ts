@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
-export const dynamic = "force-dynamic";
+/** DB 번역 JSON — Cache-Control과 함께 1시간 revalidate */
+export const revalidate = 3600;
 
 const cacheHeaders = {
   "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",

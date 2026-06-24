@@ -1,7 +1,5 @@
 import { PasswordResetRequestForm } from "./PasswordResetRequestForm";
 
-export const dynamic = "force-dynamic";
-
 export default function PasswordResetPage() {
   return (
     <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
