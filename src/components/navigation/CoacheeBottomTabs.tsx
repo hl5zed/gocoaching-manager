@@ -14,6 +14,8 @@ type CoacheeTab = {
   href: string;
   /** 활성 판정 방식: exact = 정확히 일치, prefix = 해당 경로로 시작 */
   match: "exact" | "prefix";
+  /** href 외에도 활성으로 볼 경로 prefix (redirect 대상 등) */
+  alsoActivePrefixes?: string[];
   /** 탭 아이콘 */
   icon: ReactNode;
 };
@@ -131,8 +133,9 @@ const tabs: CoacheeTab[] = [
   {
     key: "check",
     label: "체크",
-    href: "/my-coaching/moksilgi/monthly",
+    href: "/my-coaching/check",
     match: "prefix",
+    alsoActivePrefixes: ["/my-coaching/moksilgi/monthly"],
     icon: <IconCheck />,
   },
   {
@@ -152,11 +155,15 @@ const tabs: CoacheeTab[] = [
 ];
 
 function isActive(pathname: string, tab: CoacheeTab): boolean {
+  const paths = [tab.href, ...(tab.alsoActivePrefixes ?? [])];
+
   if (tab.match === "exact") {
-    return pathname === tab.href;
+    return paths.some((href) => pathname === href);
   }
 
-  return pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+  return paths.some(
+    (href) => pathname === href || pathname.startsWith(`${href}/`),
+  );
 }
 
 /**

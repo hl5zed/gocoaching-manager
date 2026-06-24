@@ -386,6 +386,22 @@ export async function POST(request: Request) {
     );
   }
 
+  const session = await getSession();
+
+  if (!session.user) {
+    return jsonError(401, "UNAUTHORIZED", "로그인이 필요합니다.");
+  }
+
+  const authEmail = normalizeEmail(session.user.email);
+
+  if (!authEmail) {
+    return jsonError(
+      403,
+      "INVITATION_EMAIL_MISMATCH",
+      "이 초대는 현재 로그인한 이메일 계정과 일치하지 않습니다.",
+    );
+  }
+
   const rawToken = normalizeToken(body.token);
   const countryId = normalizeUuid(body.country_id);
   const ministryPosition = normalizeNullableText(body.ministry_position, 80);
@@ -405,22 +421,6 @@ export async function POST(request: Request) {
 
   if (!generationNumber.ok) {
     return jsonError(400, "INVALID_GENERATION", "세대 값을 확인해 주세요.");
-  }
-
-  const session = await getSession();
-
-  if (!session.user) {
-    return jsonError(401, "UNAUTHORIZED", "로그인이 필요합니다.");
-  }
-
-  const authEmail = normalizeEmail(session.user.email);
-
-  if (!authEmail) {
-    return jsonError(
-      403,
-      "INVITATION_EMAIL_MISMATCH",
-      "이 초대는 현재 로그인한 이메일 계정과 일치하지 않습니다.",
-    );
   }
 
   const { client: serviceClient, error: serviceClientError } =
