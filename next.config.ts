@@ -10,7 +10,6 @@ const nextConfig: NextConfig = {
       "@supabase/ssr",
       // "leaflet",
       // "react-leaflet",
-      "@xyflow/react",
       "tailwind-merge",
       "clsx",
     ],

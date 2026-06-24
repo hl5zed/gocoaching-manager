@@ -320,6 +320,63 @@ function hasCoachMakerFullAccess(roles: CoachMakerRoleRow[]) {
   return roles.some((role) => role.role === "super_admin");
 }
 
+const MAX_SCOPE_PREFILTER_PROFILE_IDS = 200;
+
+/**
+ * 역할 스코프(country/region/org/church/group/cohort)에 속한 프로필 id를 DB에서 미리 해석한다.
+ * 관계를 coach/coachee 프로필 스코프로도 매칭하므로 초집합 보장을 위해 필요하다.
+ * - 임계치를 넘거나 에러면 null 반환 → 호출부가 기존(전체 fetch) 동작으로 폴백.
+ * - 해석할 스코프가 없으면 빈 배열 반환.
+ */
+async function resolveScopedProfileIds(
+  serviceClient: ServiceSupabaseClient,
+  roles: CoachMakerRoleRow[],
+): Promise<string[] | null> {
+  const orFilters = roles
+    .filter((r) => r.scope_id && r.scope_type !== "global" && r.scope_type !== "coach")
+    .map((r) => {
+      switch (r.scope_type) {
+        case "country":
+          return `country_id.eq.${r.scope_id}`;
+        case "region":
+          return `region_id.eq.${r.scope_id}`;
+        case "organization":
+          return `organization_id.eq.${r.scope_id}`;
+        case "church":
+          return `church_id.eq.${r.scope_id}`;
+        case "group":
+          return `group_id.eq.${r.scope_id}`;
+        case "cohort":
+          return `cohort_id.eq.${r.scope_id}`;
+        default:
+          return null;
+      }
+    })
+    .filter((v): v is string => v !== null);
+
+  if (orFilters.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await serviceClient
+    .from("profiles")
+    .select("id")
+    .or(orFilters.join(","))
+    .is("deleted_at", null)
+    .limit(MAX_SCOPE_PREFILTER_PROFILE_IDS + 1);
+
+  if (error) {
+    return null;
+  }
+
+  const ids = ((data ?? []) as Array<{ id: string }>).map((row) => row.id);
+  if (ids.length > MAX_SCOPE_PREFILTER_PROFILE_IDS) {
+    return null;
+  }
+
+  return ids;
+}
+
 function uniqueSize(values: string[]) {
   return new Set(values).size;
 }
@@ -470,13 +527,51 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
     };
   }
 
-  const { data: relationships, error: relationshipsError } = await serviceClient
+  const fullAccess =
+    hasCoachMakerFullAccess(coachMakerRoles) ||
+    coachMakerRoles.some((role) => role.scope_type === "global");
+
+  let relationshipQuery = serviceClient
     .from("coaching_relationships")
     .select(
       "id, coach_profile_id, coachee_profile_id, relationship_type, status, scope_type, scope_id, started_at, created_at",
     )
     .eq("status", "active")
     .is("deleted_at", null);
+
+  if (!fullAccess) {
+    const scopedProfileIds = await resolveScopedProfileIds(serviceClient, coachMakerRoles);
+
+    if (scopedProfileIds !== null) {
+      const orParts: string[] = [];
+
+      for (const role of coachMakerRoles) {
+        if (role.scope_id && role.scope_type !== "global" && role.scope_type !== "coach") {
+          orParts.push(`and(scope_type.eq.${role.scope_type},scope_id.eq.${role.scope_id})`);
+        }
+      }
+
+      for (const role of coachMakerRoles) {
+        if (role.scope_type === "coach" && role.scope_id) {
+          orParts.push(`coach_profile_id.eq.${role.scope_id}`);
+        }
+      }
+
+      if (scopedProfileIds.length > 0) {
+        const list = `(${scopedProfileIds.join(",")})`;
+        orParts.push(`coach_profile_id.in.${list}`);
+        orParts.push(`coachee_profile_id.in.${list}`);
+      }
+
+      relationshipQuery = relationshipQuery.or(
+        orParts.length > 0
+          ? orParts.join(",")
+          : "id.eq.00000000-0000-0000-0000-000000000000",
+      );
+    }
+  }
+
+  const { data: relationships, error: relationshipsError } = await relationshipQuery;
 
   if (relationshipsError) {
     logServerError(

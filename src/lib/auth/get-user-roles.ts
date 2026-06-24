@@ -47,3 +47,28 @@ export async function getUserRoles(
 
   return ((roles ?? []) as UserRoleRow[]).map((role) => role.role);
 }
+
+/**
+ * profile_id를 이미 아는 경우 profiles 재조회 없이 user_roles만 조회한다.
+ * middleware처럼 직전에 profiles를 1회 조회한 경로에서 중복 조회를 제거하기 위함.
+ * getUserRoles 내부 user_roles 쿼리와 동일한 필터를 사용한다.
+ */
+export async function getRolesByProfileId(
+  supabase: SupabaseClient<Database>,
+  profileId: string,
+): Promise<UserRole[]> {
+  const { data: roles, error: rolesError } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("profile_id", profileId)
+    .eq("status", "active")
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+
+  if (rolesError) {
+    throw new Error("ROLE_QUERY_FAILED");
+  }
+
+  return ((roles ?? []) as UserRoleRow[]).map((role) => role.role);
+}

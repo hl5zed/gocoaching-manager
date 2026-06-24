@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/auth/getSession";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createMoksilgiVersion } from "./moksilgi-versions";
 import type { ServiceClient } from "./context";
 import type {
   InsertDto,
@@ -12,7 +13,7 @@ import type {
 } from "@/types/database";
 
 const PLAN_SELECT =
-  "id, profile_id, title, subtitle, period_start, period_end, written_at, author_name, region_name, team_name, regional_leader_name, coach_name, role_label, generation_label, mission_statement, mission_bible_verse, mission_description, vision_year, vision_statement, vision_metrics, vision_target, vision_description, core_values_json, main_goal, main_goal_description, status, created_at, updated_at";
+  "id, profile_id, title, subtitle, period_start, period_end, written_at, author_name, region_name, team_name, regional_leader_name, coach_name, role_label, generation_label, mission_statement, mission_bible_verse, mission_description, vision_year, vision_statement, vision_metrics, vision_target, vision_description, core_values_json, main_goal, main_goal_description, version_number, version_type, status, created_at, updated_at";
 const AREA_SELECT =
   "id, plan_id, area_key, area_title, area_subtitle, sort_order";
 const DETAIL_GOAL_SELECT =
@@ -114,6 +115,8 @@ export type MoksilgiPlan = Pick<
   | "core_values_json"
   | "main_goal"
   | "main_goal_description"
+  | "version_number"
+  | "version_type"
   | "status"
   | "created_at"
   | "updated_at"
@@ -470,6 +473,114 @@ async function ensureDefaultAreas(
   return { ok: true, areas: updatedAreas ?? areas };
 }
 
+async function createCurrentPlanVersionSnapshot({
+  changeReason,
+  planId,
+  profileId,
+  serviceClient,
+  versionNumber,
+}: {
+  changeReason: string;
+  planId: string;
+  profileId: string;
+  serviceClient: ServiceSupabaseClient;
+  versionNumber: number;
+}) {
+  const [planResult, areasResult, detailGoalsResult] = await Promise.all([
+    getOwnedPlan(serviceClient, profileId),
+    areaTable(serviceClient)
+      .select(AREA_SELECT)
+      .eq("plan_id", planId)
+      .is("deleted_at", null)
+      .order("sort_order", { ascending: true }),
+    detailGoalTable(serviceClient)
+      .select(DETAIL_GOAL_SELECT)
+      .eq("plan_id", planId)
+      .is("deleted_at", null)
+      .order("sort_order", { ascending: true }),
+  ]);
+
+  if (planResult.error || areasResult.error || detailGoalsResult.error) {
+    console.error("[MOKSILGI_VERSION_SNAPSHOT_FETCH_FAILED]", {
+      planId,
+      planError: planResult.error,
+      areasError: areasResult.error,
+      detailGoalsError: detailGoalsResult.error,
+    });
+    return;
+  }
+
+  if (!planResult.data || planResult.data.id !== planId) {
+    return;
+  }
+
+  const result = await createMoksilgiVersion({
+    plan_id: planId,
+    version_number: versionNumber,
+    version_type: "self_updated",
+    snapshot_json: {
+      plan: planResult.data,
+      goal_areas: areasResult.data ?? [],
+      detail_goals: detailGoalsResult.data ?? [],
+    },
+    change_reason: changeReason,
+    created_by: profileId,
+  });
+
+  if (!result.ok) {
+    console.error("[MOKSILGI_VERSION_SNAPSHOT_CREATE_FAILED]", {
+      planId,
+      error: result.error,
+    });
+  }
+}
+
+async function markPlanSelfUpdated({
+  changeReason,
+  plan,
+  profileId,
+  serviceClient,
+}: {
+  changeReason: string;
+  plan: MoksilgiPlan;
+  profileId: string;
+  serviceClient: ServiceSupabaseClient;
+}) {
+  const nextVersionNumber = plan.version_number + 1;
+  const now = new Date().toISOString();
+  const { error } = await planTable(serviceClient)
+    .update({
+      version_number: nextVersionNumber,
+      version_type: "self_updated",
+      change_reason: changeReason,
+      submitted_at: null,
+      approved_at: null,
+      approved_by_profile_id: null,
+      updated_at: now,
+    })
+    .eq("id", plan.id)
+    .eq("profile_id", profileId)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[MOKSILGI_VERSION_STATUS_UPDATE_FAILED]", {
+      planId: plan.id,
+      error,
+    });
+    return;
+  }
+
+  await createCurrentPlanVersionSnapshot({
+    changeReason,
+    planId: plan.id,
+    profileId,
+    serviceClient,
+    versionNumber: nextVersionNumber,
+  });
+}
+
 export async function getMyMoksilgi(knownProfileId?: string): Promise<GetMyMoksilgiResult> {
   let context: CurrentProfileContext;
 
@@ -686,8 +797,26 @@ export async function saveMyMoksilgiPlan(
   };
 
   if (planId.length > 0) {
+    const { data: existingPlan, error: existingPlanError } = await getOwnedPlan(
+      context.serviceClient,
+      context.profileId,
+    );
+
+    if (existingPlanError || !existingPlan || existingPlan.id !== planId) {
+      return { ok: false, error: { code: "NOT_FOUND", message: "목실기 정보를 찾을 수 없습니다." } };
+    }
+
+    const nextVersionNumber = existingPlan.version_number + 1;
     const { data: updatedPlan, error } = await planTable(context.serviceClient)
-      .update(payload)
+      .update({
+        ...payload,
+        version_number: nextVersionNumber,
+        version_type: "self_updated",
+        change_reason: "목실기 기본 정보 수정",
+        submitted_at: null,
+        approved_at: null,
+        approved_by_profile_id: null,
+      })
       .eq("id", planId)
       .eq("profile_id", context.profileId)
       .is("deleted_at", null)
@@ -699,6 +828,13 @@ export async function saveMyMoksilgiPlan(
     }
 
     await ensureDefaultAreas(context.serviceClient, updatedPlan.id);
+    await createCurrentPlanVersionSnapshot({
+      changeReason: "목실기 기본 정보 수정",
+      planId: updatedPlan.id,
+      profileId: context.profileId,
+      serviceClient: context.serviceClient,
+      versionNumber: nextVersionNumber,
+    });
     return { ok: true, planId: updatedPlan.id };
   }
 
@@ -832,6 +968,12 @@ export async function saveMyMoksilgiDetailGoal(
       return { ok: false, error: { code: "SAVE_FAILED", message: "세부 목표를 저장할 수 없습니다." } };
     }
 
+    await markPlanSelfUpdated({
+      changeReason: "세부 목표 수정",
+      plan,
+      profileId: context.profileId,
+      serviceClient: context.serviceClient,
+    });
     return { ok: true, planId: plan.id };
   }
 
@@ -859,5 +1001,36 @@ export async function saveMyMoksilgiDetailGoal(
     return { ok: false, error: { code: "SAVE_FAILED", message: "세부 목표를 저장할 수 없습니다." } };
   }
 
+  await markPlanSelfUpdated({
+    changeReason: "세부 목표 추가",
+    plan,
+    profileId: context.profileId,
+    serviceClient: context.serviceClient,
+  });
   return { ok: true, planId: plan.id };
 }
+
+export const MOKSILGI_VERSION_TYPES = [
+  "draft",
+  "submitted",
+  "approved",
+  "self_updated",
+  "review_requested",
+] as const;
+
+export type MoksilgiVersionType = (typeof MOKSILGI_VERSION_TYPES)[number];
+
+export function isMoksilgiVersionType(value: unknown): value is MoksilgiVersionType {
+  return (
+    typeof value === "string" &&
+    (MOKSILGI_VERSION_TYPES as readonly string[]).includes(value)
+  );
+}
+
+export const MOKSILGI_VERSION_TYPE_LABELS: Record<MoksilgiVersionType, string> = {
+  draft: "작성 중",
+  submitted: "코치 검토 대기",
+  approved: "코치 승인 완료",
+  self_updated: "자기 업데이트",
+  review_requested: "코치 재검토 요청",
+};

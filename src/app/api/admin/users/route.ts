@@ -116,7 +116,6 @@ type RoleStatusLookup = ActiveRoleLookup & {
   status: UserRoleStatus;
   is_active: boolean;
 };
-type AuthUserLookupResult = "found" | "not_found" | "failed";
 
 type CreateUserStage =
   | "auth"
@@ -1163,46 +1162,6 @@ function isDuplicateAuthUserError(error: { message?: string } | null) {
   );
 }
 
-function normalizeAuthEmail(value: string | null | undefined) {
-  return value?.trim().toLowerCase() ?? "";
-}
-
-async function findAuthUserByEmail(
-  adminClient: AdminClient,
-  email: string,
-): Promise<AuthUserLookupResult> {
-  const perPage = 1000;
-  const maxPages = 50;
-
-  for (let page = 1; page <= maxPages; page += 1) {
-    const { data, error } = await adminClient.auth.admin.listUsers({
-      page,
-      perPage,
-    });
-
-    if (error) {
-      console.error("[ADMIN_DIRECT_USER_CREATE_AUTH_LOOKUP_FAILED]", error.message);
-      return "failed";
-    }
-
-    const users = data.users;
-    const matchingUser = users.find(
-      (user) => normalizeAuthEmail(user.email) === email,
-    );
-
-    if (matchingUser) {
-      return "found";
-    }
-
-    if (users.length < perPage) {
-      return "not_found";
-    }
-  }
-
-  console.error("[ADMIN_DIRECT_USER_CREATE_AUTH_LOOKUP_LIMIT_REACHED]");
-  return "failed";
-}
-
 function formDataFromProfilePatch(input: unknown) {
   const source =
     input && typeof input === "object" && !Array.isArray(input)
@@ -1550,17 +1509,6 @@ export async function POST(request: Request) {
   if ((existingProfile as ExistingProfileLookup | null) !== null) {
     console.error("[ADMIN_USERS_CREATE_DUPLICATE_EMAIL] profile email already exists");
     return redirectWithError(request, "profile", "registered_profile");
-  }
-
-  const authUserLookup = await findAuthUserByEmail(typedAdminClient, email);
-
-  if (authUserLookup === "failed") {
-    return redirectWithError(request, "auth", "auth_lookup_failed");
-  }
-
-  if (authUserLookup === "found") {
-    console.error("[ADMIN_USERS_CREATE_DUPLICATE_EMAIL] auth user already exists");
-    return redirectWithError(request, "auth", "auth_without_profile");
   }
 
   const { data: authData, error: authError } =

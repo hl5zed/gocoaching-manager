@@ -134,11 +134,6 @@ export function PrintPageButton({
             min-height: auto !important;
           }
 
-          .print-root .grid,
-          .print-root .flex {
-            display: block !important;
-          }
-
           .print-root .overflow-x-auto,
           .print-root .overflow-y-auto,
           .print-root .overflow-hidden {

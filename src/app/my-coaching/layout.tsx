@@ -13,8 +13,8 @@ export default function MyCoachingLayout({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-surface-app">
-      <div className="mx-auto w-full max-w-md pb-24">
+    <div className="min-h-screen bg-surface-app print:bg-white">
+      <div className="mx-auto w-full max-w-md pb-24 print:max-w-none print:pb-0">
         <CoacheeTopBar />
         {children}
       </div>

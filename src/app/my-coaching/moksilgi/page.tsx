@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MoksilgiAreaCard } from "@/components/coachee/MoksilgiAreaCard";
+import { MoksilgiPastePanel } from "@/components/coachee/MoksilgiPastePanel";
 import { MoksilgiPrintSummary } from "@/components/coachee/MoksilgiPrintSummary";
 import {
   MoksilgiAppBar,
@@ -572,7 +573,7 @@ export default async function MyMoksilgiPage({
     : 0;
 
   return (
-    <main className="print-root min-h-screen bg-surface-app px-4 py-5 pb-32 text-ink-base">
+    <main className="print-root min-h-screen bg-surface-app px-4 py-5 pb-32 text-ink-base print:px-2 print:py-2 print:pb-0 print:bg-white">
       <MoksilgiAppBar
         actions={
           <>
@@ -594,7 +595,7 @@ export default async function MyMoksilgiPage({
         }
       />
 
-      <section className="mx-auto w-full max-w-md space-y-4">
+      <section className="mx-auto w-full max-w-md space-y-4 print:max-w-none">
         <Card className="border-line-base bg-surface-card print:hidden">
           <CardContent className="space-y-2 p-4">
             <Badge tone="info">
@@ -719,11 +720,15 @@ export default async function MyMoksilgiPage({
                       fallback="Ⅴ. 목표에 따른 실행전략 기획안"
                     />
                   </h2>
-                  <p className="rounded-control border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                    <I18nText
-                      k="myCoaching.moksilgi.monthlyComingSoon"
-                      fallback="월별 체크리스트와 달성률 계산은 다음 단계에서 추가됩니다."
-                    />
+                  <p className="rounded-control border border-line-soft bg-surface-sunken p-3 text-sm text-ink-muted">
+                    세부 목표를 저장하면{" "}
+                    <a
+                      className="font-medium text-brand-600 underline"
+                      href="/my-coaching/moksilgi/monthly"
+                    >
+                      월별 체크리스트
+                    </a>
+                    에서 매일 실행을 체크하고 달성률을 확인할 수 있습니다.
                   </p>
                   {!result.data.plan ? (
                     <p className="text-sm text-ink-base">
@@ -826,21 +831,24 @@ export default async function MyMoksilgiPage({
             </div>
 
             <div className="print:hidden fixed inset-x-0 bottom-20 z-20 mx-auto max-w-md px-4">
-              <div className="flex gap-2 rounded-xl border border-line-base bg-surface-card p-3 shadow-lg">
-                <Button className="flex-1" form="moksilgi-plan-form" type="submit" variant="primary">
-                  <I18nText k="myCoaching.moksilgi.saveBasicInfo" fallback="기본 정보 저장" />
-                </Button>
-                <PrintPageButton
-                  fileName={`moksilgi-my-record-${printYear}`}
-                  label={
-                    (
-                      <I18nText
-                        k="myCoaching.moksilgi.printMyMoksilgi"
-                        fallback="내 목실기 출력"
-                      />
-                    ) as unknown as string
-                  }
-                />
+              <div className="space-y-2">
+                <MoksilgiPastePanel />
+                <div className="flex gap-2 rounded-xl border border-line-base bg-surface-card p-3 shadow-lg">
+                  <Button className="flex-1" form="moksilgi-plan-form" type="submit" variant="primary">
+                    <I18nText k="myCoaching.moksilgi.saveBasicInfo" fallback="기본 정보 저장" />
+                  </Button>
+                  <PrintPageButton
+                    fileName={`moksilgi-my-record-${printYear}`}
+                    label={
+                      (
+                        <I18nText
+                          k="myCoaching.moksilgi.printMyMoksilgi"
+                          fallback="내 목실기 출력"
+                        />
+                      ) as unknown as string
+                    }
+                  />
+                </div>
               </div>
             </div>
           </>

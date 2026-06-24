@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getUserRoles } from "@/lib/auth/get-user-roles";
+import { getRolesByProfileId } from "@/lib/auth/get-user-roles";
 import { hasRole } from "@/lib/auth/has-role";
 import {
   getAllowedRolesForPath,
@@ -48,6 +48,46 @@ function createLoginRedirect(request: NextRequest) {
   const redirectTo = `${request.nextUrl.pathname}${request.nextUrl.search}`;
   redirectUrl.searchParams.set("redirectTo", redirectTo);
   return applySecurityHeaders(NextResponse.redirect(redirectUrl));
+}
+
+function isInvalidRefreshTokenError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const message =
+    "message" in error && typeof error.message === "string"
+      ? error.message.toLowerCase()
+      : "";
+
+  return (
+    message.includes("invalid refresh token") ||
+    message.includes("refresh token not found")
+  );
+}
+
+function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse) {
+  for (const cookie of request.cookies.getAll()) {
+    if (!cookie.name.startsWith("sb-")) {
+      continue;
+    }
+
+    request.cookies.delete(cookie.name);
+    response.cookies.set(cookie.name, "", {
+      maxAge: 0,
+      path: "/",
+    });
+  }
+
+  return response;
+}
+
+function createExpiredSessionResponse(request: NextRequest) {
+  const response = isApiRoute(request.nextUrl.pathname)
+    ? createApiError(401, "SESSION_EXPIRED", "세션이 만료되었습니다. 다시 로그인해 주세요.")
+    : createLoginRedirect(request);
+
+  return clearSupabaseAuthCookies(request, response);
 }
 
 function createUnauthorizedRedirect(request: NextRequest) {
@@ -184,6 +224,10 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
+    if (isInvalidRefreshTokenError(userError)) {
+      return createExpiredSessionResponse(request);
+    }
+
     return isApiRoute(pathname)
       ? createApiError(401, "UNAUTHORIZED", "로그인이 필요합니다.")
       : createLoginRedirect(request);
@@ -210,7 +254,10 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    const userRoles = await getUserRoles(supabase, user.id);
+    const userRoles = await getRolesByProfileId(
+      supabase,
+      profileForMiddleware.profileId,
+    );
 
     if (!hasRole(userRoles, allowedRoles)) {
       return getRoleErrorResponse(request);

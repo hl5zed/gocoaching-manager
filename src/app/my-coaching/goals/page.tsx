@@ -7,7 +7,13 @@ import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardContent, CardTitle } from "@/components/ui/Card";
 import { requireCoacheePageProfile } from "@/lib/api/my-coaching/coachee-page-auth";
-import { getMyMoksilgi, type MoksilgiCoreValue } from "@/lib/api/my-coaching/moksilgi";
+import {
+  getMyMoksilgi,
+  isMoksilgiVersionType,
+  MOKSILGI_VERSION_TYPE_LABELS,
+  type MoksilgiCoreValue,
+} from "@/lib/api/my-coaching/moksilgi";
+import { getLastApprovedVersion } from "@/lib/api/my-coaching/moksilgi-versions";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import {
   getCurrentMonthInTimezone,
@@ -179,21 +185,32 @@ export default async function MyCoachingGrowthPage() {
   const year = getCurrentYearInTimezone(timezone);
   const month = getCurrentMonthInTimezone(timezone);
 
-  const summaryResult = plan
-    ? await serviceClient
-        .from("moksilgi_monthly_summaries")
-        .select(
-          "spiritual_rate, intellectual_rate, physical_rate, social_rate, average_rate, updated_at",
-        )
-        .eq("plan_id", plan.id)
-        .eq("profile_id", profileId)
-        .eq("year", year)
-        .eq("month", month)
-        .is("deleted_at", null)
-        .maybeSingle()
-    : { data: null as SummaryRow | null, error: null };
+  const [summaryResult, lastApprovedResult] = await Promise.all([
+    plan
+      ? serviceClient
+          .from("moksilgi_monthly_summaries")
+          .select(
+            "spiritual_rate, intellectual_rate, physical_rate, social_rate, average_rate, updated_at",
+          )
+          .eq("plan_id", plan.id)
+          .eq("profile_id", profileId)
+          .eq("year", year)
+          .eq("month", month)
+          .is("deleted_at", null)
+          .maybeSingle()
+      : Promise.resolve({ data: null as SummaryRow | null, error: null }),
+    plan
+      ? getLastApprovedVersion(plan.id)
+      : Promise.resolve({ ok: true as const, data: null }),
+  ]);
 
   const summary: SummaryRow | null = (summaryResult.data as SummaryRow | null) ?? null;
+
+  const lastApproved = lastApprovedResult.ok ? lastApprovedResult.data : null;
+
+  const currentVersionType = isMoksilgiVersionType(plan?.version_type)
+    ? plan.version_type
+    : null;
 
   const targetAreas = moksilgi.data.areas
     .filter(
@@ -251,6 +268,25 @@ export default async function MyCoachingGrowthPage() {
                   </svg>
                   코치도 이 내용을 확인할 수 있어요
                 </p>
+                {currentVersionType && currentVersionType !== "approved" ? (
+                  <p className="flex items-center gap-1.5 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                    <span aria-hidden>⚠️</span>
+                    현재 상태:{" "}
+                    <span className="font-semibold">
+                      {MOKSILGI_VERSION_TYPE_LABELS[currentVersionType]}
+                    </span>
+                    {lastApproved ? ` · 코치 승인본: v${lastApproved.version_number}` : ""}
+                  </p>
+                ) : currentVersionType === "approved" && lastApproved ? (
+                  <p className="flex items-center gap-1.5 rounded-md bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+                    <span aria-hidden>✓</span>
+                    코치 승인 완료{" "}
+                    <span className="font-semibold">v{lastApproved.version_number}</span>
+                    {lastApproved.approved_at
+                      ? ` · ${new Date(lastApproved.approved_at).toLocaleDateString("ko-KR")}`
+                      : ""}
+                  </p>
+                ) : null}
                 <ButtonLink className="w-full" href={editHref} size="sm" variant="primary">
                   목표 설계 화면 열기
                 </ButtonLink>

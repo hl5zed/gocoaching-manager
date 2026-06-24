@@ -21,6 +21,7 @@ import type { Json, Tables } from "@/types/database";
 import { revalidatePath } from "next/cache";
 import { saveMyMoksilgiMonthlyRecord } from "@/lib/api/my-coaching/moksilgi-monthly";
 import { TodayTodoList, type TodayTodo } from "@/components/coachee/TodayTodoList";
+import { WeeklyCheckStrip } from "@/components/coachee/WeeklyCheckStrip";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,7 @@ type DetailGoalRow = Pick<
 >;
 type MonthlyRecordRow = Pick<
   Tables<"moksilgi_monthly_records">,
-  "detail_goal_id" | "daily_checks_json"
+  "detail_goal_id" | "daily_checks_json" | "year" | "month"
 >;
 
 const FOUR_AREA_KEYS = ["spiritual", "intellectual", "physical", "social"] as const;
@@ -57,6 +58,25 @@ function formatTodayLabel(todayDateKey: string, timezone: string) {
     timeZone: timezone,
     weekday: "short",
   }).format(date);
+}
+
+function getWeekMonthKeys(todayDateKey: string) {
+  const anchor = new Date(`${todayDateKey}T12:00:00`);
+  const dayOfWeek = anchor.getDay();
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(anchor);
+  monday.setDate(anchor.getDate() + mondayOffset);
+
+  const monthKeys = new Map<string, { year: number; month: number }>();
+  for (let index = 0; index < 7; index += 1) {
+    const day = new Date(monday);
+    day.setDate(monday.getDate() + index);
+    const year = day.getFullYear();
+    const month = day.getMonth() + 1;
+    monthKeys.set(`${year}-${month}`, { year, month });
+  }
+
+  return [...monthKeys.values()];
 }
 
 function ensureFourAreas(areas: TodayAreaProgress[]): TodayAreaProgress[] {
@@ -293,8 +313,26 @@ export default async function MyCoachingPage() {
   let totalCompletedGoals = 0;
   let overallRate = 0;
   let todayTodos: TodayTodo[] = [];
+  let monthlyRecords: MonthlyRecordRow[] = [];
 
   if (plan) {
+    const weekMonthKeys = getWeekMonthKeys(todayDateKey);
+    const recordsQuery = serviceClient
+      .from("moksilgi_monthly_records")
+      .select("detail_goal_id, daily_checks_json, year, month")
+      .eq("plan_id", plan.id)
+      .eq("profile_id", profileId)
+      .is("deleted_at", null);
+    const weeklyRecordsPromise =
+      weekMonthKeys.length === 1
+        ? recordsQuery
+            .eq("year", weekMonthKeys[0].year)
+            .eq("month", weekMonthKeys[0].month)
+        : recordsQuery.or(
+            weekMonthKeys
+              .map((key) => `and(year.eq.${key.year},month.eq.${key.month})`)
+              .join(","),
+          );
     const [areasResult, detailGoalsResult, recordsResult] = await Promise.all([
       serviceClient
         .from("moksilgi_goal_areas")
@@ -308,22 +346,19 @@ export default async function MyCoachingPage() {
         .eq("plan_id", plan.id)
         .is("deleted_at", null)
         .order("sort_order", { ascending: true }),
-      serviceClient
-        .from("moksilgi_monthly_records")
-        .select("detail_goal_id, daily_checks_json")
-        .eq("plan_id", plan.id)
-        .eq("profile_id", profileId)
-        .eq("year", currentYear)
-        .eq("month", currentMonth)
-        .is("deleted_at", null),
+      weeklyRecordsPromise,
     ]);
+    const records = ((recordsResult.data ?? []) as MonthlyRecordRow[]);
+    const currentMonthRecords = records.filter(
+      (record) => record.year === currentYear && record.month === currentMonth,
+    );
 
     const progress = calculateTodayProgressSnapshot({
       areas: ((areasResult.data ?? []) as GoalAreaRow[]).filter(
         (area) => area.area_key !== "other",
       ),
       detailGoals: (detailGoalsResult.data ?? []) as DetailGoalRow[],
-      monthlyRecords: (recordsResult.data ?? []) as MonthlyRecordRow[],
+      monthlyRecords: currentMonthRecords,
       todayDateKey,
       todayDayOfMonth: currentDay,
     });
@@ -335,11 +370,12 @@ export default async function MyCoachingPage() {
     todayTodos = buildTodayTodos({
       areas: (areasResult.data ?? []) as GoalAreaRow[],
       detailGoals: (detailGoalsResult.data ?? []) as DetailGoalRow[],
-      records: (recordsResult.data ?? []) as MonthlyRecordRow[],
+      records: currentMonthRecords,
       year: currentYear,
       month: currentMonth,
       todayDay: currentDay,
     });
+    monthlyRecords = records;
   }
 
   const userName =
@@ -440,6 +476,17 @@ export default async function MyCoachingPage() {
             today={currentDay}
             todos={todayTodos}
             year={currentYear}
+          />
+        ) : null}
+
+        {plan ? (
+          <WeeklyCheckStrip
+            records={monthlyRecords.map((record) => ({
+              daily_checks_json: record.daily_checks_json,
+              month: record.month,
+              year: record.year,
+            }))}
+            todayDateKey={todayDateKey}
           />
         ) : null}
 

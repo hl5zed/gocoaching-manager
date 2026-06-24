@@ -172,6 +172,7 @@ export function CoacheeBottomTabs() {
       className={cn(
         "fixed inset-x-0 bottom-0 z-40 border-t border-line-base bg-surface-card",
         "pb-[env(safe-area-inset-bottom)]",
+        "print:hidden",
       )}
     >
       <ul className="mx-auto flex w-full max-w-md items-stretch justify-around">

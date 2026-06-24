@@ -54,6 +54,21 @@ function safeRedirectPath(value: string | null) {
   return path;
 }
 
+function clearBrowserSupabaseAuthCookies() {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  for (const cookie of document.cookie.split(";")) {
+    const name = cookie.split("=")[0]?.trim();
+    if (!name?.startsWith("sb-")) {
+      continue;
+    }
+
+    document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`;
+  }
+}
+
 export function LoginForm({ translations }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -77,6 +92,7 @@ export function LoginForm({ translations }: LoginFormProps) {
     event.preventDefault();
     setErrorMessage(null);
     setIsSubmitting(true);
+    clearBrowserSupabaseAuthCookies();
 
     const supabase = createSupabaseBrowserClient();
     const { error } = await supabase.auth.signInWithPassword({

@@ -42,6 +42,15 @@ export type GoalPriority = (typeof GOAL_PRIORITIES)[number];
 export const MOKSILGI_STATUSES = ["draft", "active", "archived"] as const;
 export type MoksilgiStatus = (typeof MOKSILGI_STATUSES)[number];
 
+export const MOKSILGI_VERSION_TYPES = [
+  "draft",
+  "submitted",
+  "approved",
+  "self_updated",
+  "review_requested",
+] as const;
+export type MoksilgiVersionType = (typeof MOKSILGI_VERSION_TYPES)[number];
+
 export const MOKSILGI_AREA_KEYS = [
   "spiritual",
   "intellectual",
@@ -457,6 +466,12 @@ type TablesMap = {
       core_values_json: Json;
       main_goal: string | null;
       main_goal_description: string | null;
+      version_number: number;
+      version_type: MoksilgiVersionType;
+      change_reason: string | null;
+      submitted_at: string | null;
+      approved_at: string | null;
+      approved_by_profile_id: string | null;
       status: MoksilgiStatus;
       created_at: string;
       updated_at: string;
@@ -488,6 +503,12 @@ type TablesMap = {
       core_values_json?: Json;
       main_goal?: string | null;
       main_goal_description?: string | null;
+      version_number?: number;
+      version_type?: MoksilgiVersionType;
+      change_reason?: string | null;
+      submitted_at?: string | null;
+      approved_at?: string | null;
+      approved_by_profile_id?: string | null;
       status?: MoksilgiStatus;
       created_at?: string;
       updated_at?: string;
@@ -519,10 +540,57 @@ type TablesMap = {
       core_values_json?: Json;
       main_goal?: string | null;
       main_goal_description?: string | null;
+      version_number?: number;
+      version_type?: MoksilgiVersionType;
+      change_reason?: string | null;
+      submitted_at?: string | null;
+      approved_at?: string | null;
+      approved_by_profile_id?: string | null;
       status?: MoksilgiStatus;
       created_at?: string;
       updated_at?: string;
       deleted_at?: string | null;
+    }
+  >;
+  moksilgi_plan_versions: TableDefinition<
+    {
+      id: string;
+      plan_id: string;
+      version_number: number;
+      version_type: MoksilgiVersionType;
+      snapshot_json: Json;
+      change_reason: string | null;
+      created_by: string;
+      is_approved: boolean;
+      approved_at: string | null;
+      approved_by: string | null;
+      created_at: string;
+    },
+    {
+      id?: string;
+      plan_id: string;
+      version_number: number;
+      version_type: MoksilgiVersionType;
+      snapshot_json?: Json;
+      change_reason?: string | null;
+      created_by: string;
+      is_approved?: boolean;
+      approved_at?: string | null;
+      approved_by?: string | null;
+      created_at?: string;
+    },
+    {
+      id?: string;
+      plan_id?: string;
+      version_number?: number;
+      version_type?: MoksilgiVersionType;
+      snapshot_json?: Json;
+      change_reason?: string | null;
+      created_by?: string;
+      is_approved?: boolean;
+      approved_at?: string | null;
+      approved_by?: string | null;
+      created_at?: string;
     }
   >;
   moksilgi_goal_areas: TableDefinition<
