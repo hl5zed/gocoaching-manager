@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { normalizeTimezone } from "@/lib/timezone";
 import type { ProfileUpdate } from "@/types/database";
@@ -171,7 +172,7 @@ export async function updateMyProfile(
         columns: string,
       ) => {
         eq: (
-          column: "auth_user_id",
+          column: "auth_user_id" | "id",
           value: string,
         ) => {
           is: (
@@ -204,32 +205,36 @@ export async function updateMyProfile(
           column: "id",
           value: string,
         ) => {
-          eq: (
-            column: "auth_user_id",
-            value: string,
+          is: (
+            column: "deleted_at",
+            value: null,
           ) => {
-            is: (
-              column: "deleted_at",
-              value: null,
-            ) => {
-              neq: (
-                column: "status",
-                value: "anonymized",
-              ) => Promise<{
-                error: { message?: string } | null;
-              }>;
-            };
+            neq: (
+              column: "status",
+              value: "anonymized",
+            ) => Promise<{
+              error: { message?: string } | null;
+            }>;
           };
         };
       };
     };
 
-    const { data: profile, error: profileError } = await profilesTable
-      .select("id")
-      .eq("auth_user_id", session.user.id)
-      .is("deleted_at", null)
-      .neq("status", "anonymized")
-      .maybeSingle();
+    const verifiedProfileId = await getVerifiedProfileId();
+
+    const { data: profile, error: profileError } = verifiedProfileId
+      ? await profilesTable
+          .select("id")
+          .eq("id", verifiedProfileId)
+          .is("deleted_at", null)
+          .neq("status", "anonymized")
+          .maybeSingle()
+      : await profilesTable
+          .select("id")
+          .eq("auth_user_id", session.user.id)
+          .is("deleted_at", null)
+          .neq("status", "anonymized")
+          .maybeSingle();
 
     if (profileError) {
       return {
@@ -269,7 +274,6 @@ export async function updateMyProfile(
     const { error: updateError } = await profilesTable
       .update(payload)
       .eq("id", profile.id)
-      .eq("auth_user_id", session.user.id)
       .is("deleted_at", null)
       .neq("status", "anonymized");
 

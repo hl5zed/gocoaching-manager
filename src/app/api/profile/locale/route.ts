@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { isActiveLocale, type ActiveLocale } from "@/lib/i18n/config";
 import { createApiPerformanceLogger } from "@/lib/performance";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -24,7 +25,7 @@ const localeCache = new Map<string, LocaleCacheEntry>();
 
 type LocaleProfileTable = {
   select: (columns: string) => {
-    eq: (column: "auth_user_id", value: string) => {
+    eq: (column: "auth_user_id" | "id", value: string) => {
       neq: (column: "status", value: string) => {
         is: (column: "deleted_at", value: null) => {
           maybeSingle: () => Promise<{
@@ -39,7 +40,7 @@ type LocaleProfileTable = {
     locale_updated_at: string;
     preferred_locale: ActiveLocale;
   }) => {
-    eq: (column: "auth_user_id", value: string) => {
+    eq: (column: "auth_user_id" | "id", value: string) => {
       neq: (column: "status", value: string) => {
         is: (column: "deleted_at", value: null) => {
           select: (columns: string) => {
@@ -92,13 +93,21 @@ export async function GET() {
   try {
     const supabase = await createSupabaseServerClient();
     const profiles = supabase.from("profiles") as unknown as LocaleProfileTable;
+    const verifiedProfileId = await getVerifiedProfileId();
 
-    const { data, error } = await profiles
-      .select("preferred_locale")
-      .eq("auth_user_id", session.user.id)
-      .neq("status", "anonymized")
-      .is("deleted_at", null)
-      .maybeSingle();
+    const { data, error } = verifiedProfileId
+      ? await profiles
+          .select("preferred_locale")
+          .eq("id", verifiedProfileId)
+          .neq("status", "anonymized")
+          .is("deleted_at", null)
+          .maybeSingle()
+      : await profiles
+          .select("preferred_locale")
+          .eq("auth_user_id", session.user.id)
+          .neq("status", "anonymized")
+          .is("deleted_at", null)
+          .maybeSingle();
 
     perf.mark("profile.locale_lookup", data ? 1 : 0);
 
@@ -171,17 +180,27 @@ export async function PATCH(request: Request) {
   try {
     const supabase = await createSupabaseServerClient();
     const profiles = supabase.from("profiles") as unknown as LocaleProfileTable;
+    const verifiedProfileId = await getVerifiedProfileId();
+    const updatePayload = {
+      preferred_locale: locale,
+      locale_updated_at: new Date().toISOString(),
+    };
 
-    const { data, error } = await profiles
-      .update({
-        preferred_locale: locale,
-        locale_updated_at: new Date().toISOString(),
-      })
-      .eq("auth_user_id", session.user.id)
-      .neq("status", "anonymized")
-      .is("deleted_at", null)
-      .select("preferred_locale")
-      .maybeSingle();
+    const { data, error } = verifiedProfileId
+      ? await profiles
+          .update(updatePayload)
+          .eq("id", verifiedProfileId)
+          .neq("status", "anonymized")
+          .is("deleted_at", null)
+          .select("preferred_locale")
+          .maybeSingle()
+      : await profiles
+          .update(updatePayload)
+          .eq("auth_user_id", session.user.id)
+          .neq("status", "anonymized")
+          .is("deleted_at", null)
+          .select("preferred_locale")
+          .maybeSingle();
 
     if (error) {
       console.error("[PROFILE_LOCALE_UPDATE_FAILED]", error);

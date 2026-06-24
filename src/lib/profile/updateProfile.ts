@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { normalizeTimezone } from "@/lib/timezone";
@@ -231,14 +232,17 @@ export async function updateProfile(body: unknown): Promise<UpdateProfileResult>
 
   try {
     const supabase = await createSupabaseServerClient();
+    const verifiedProfileId = await getVerifiedProfileId();
 
-    const { data: oldProfile, error: profileError } = await supabase
+    const profileQuery = supabase
       .from("profiles")
       .select(safeProfileSelectFields)
-      .eq("auth_user_id", session.user.id)
       .neq("status", "anonymized")
-      .is("deleted_at", null)
-      .maybeSingle();
+      .is("deleted_at", null);
+
+    const { data: oldProfile, error: profileError } = verifiedProfileId
+      ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
+      : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
 
     if (profileError) {
       return {
@@ -268,7 +272,7 @@ export async function updateProfile(body: unknown): Promise<UpdateProfileResult>
 
     const { data: updatedProfile, error: updateError } = await profilesTable
       .update(payload)
-      .eq("auth_user_id", session.user.id)
+      .eq("id", oldSafeProfile.id)
       .neq("status", "anonymized")
       .is("deleted_at", null)
       .select(safeProfileSelectFields)
