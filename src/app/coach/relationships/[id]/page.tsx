@@ -12,7 +12,6 @@ import {
   getStatusLabel,
 } from "@/lib/ui/labels";
 
-export const dynamic = "force-dynamic";
 
 function getBackToRelationshipsHref(value: string | string[] | undefined) {
   if (typeof value !== "string") {

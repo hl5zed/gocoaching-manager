@@ -7,7 +7,6 @@ import {
 } from "@/lib/i18n/config";
 import { messages } from "@/lib/i18n/messages";
 
-export const dynamic = "force-dynamic";
 
 type LoginPageProps = {
   searchParams: Promise<{

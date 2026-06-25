@@ -31,7 +31,6 @@ import {
 } from "@/lib/timezone";
 import type { Json } from "@/types/database";
 
-export const dynamic = "force-dynamic";
 
 const STATUS_LABEL: Record<string, string> = {
   draft: "임시 저장",

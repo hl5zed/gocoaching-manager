@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 
-export const dynamic = "force-dynamic";
 
 export default async function SupabaseDebugPage() {
   if (process.env.NODE_ENV === "production") {

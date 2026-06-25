@@ -16,7 +16,6 @@ import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
 import { createApiPerformanceLogger } from "@/lib/performance";
 import type { ProfileStatus, UserRole } from "@/types/database";
 
-export const dynamic = "force-dynamic";
 
 function displayValue(value: string | null) {
   return value && value.trim().length > 0 ? value : "-";

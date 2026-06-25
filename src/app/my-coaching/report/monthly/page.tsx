@@ -11,7 +11,6 @@ import { resolveTimezoneFallback } from "@/lib/timezone";
 import { buildMonthlyViewSummary } from "@/lib/coaching/monthly-view";
 import type { Tables } from "@/types/database";
 
-export const dynamic = "force-dynamic";
 
 type SummaryRow = Pick<
   Tables<"moksilgi_monthly_summaries">,

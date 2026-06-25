@@ -22,7 +22,6 @@ import {
 } from "@/lib/timezone";
 import type { Json, MoksilgiAreaKey, Tables } from "@/types/database";
 
-export const dynamic = "force-dynamic";
 
 const FOUR_AREA_KEYS = [
   "spiritual",

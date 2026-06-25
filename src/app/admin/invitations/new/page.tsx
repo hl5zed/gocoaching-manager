@@ -8,7 +8,6 @@ import {
   getInvitationOrganizationDefaultRoleOptions,
 } from "@/lib/api/admin/system-settings";
 
-export const dynamic = "force-dynamic";
 
 export default async function NewAdminInvitationPage() {
   const [expiresInDaysResult, organizationDefaultRolesResult] = await Promise.all([

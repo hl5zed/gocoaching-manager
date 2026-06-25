@@ -27,7 +27,6 @@ import {
 } from "@/lib/api/my-coaching/moksilgi";
 import type { Json, MoksilgiMeasurementType } from "@/types/database";
 
-export const dynamic = "force-dynamic";
 
 const INPUT_CLASS =
   "mt-2 w-full rounded-control border border-line-base bg-surface-card px-3 py-2 text-ink-base outline-none focus:border-brand-600";

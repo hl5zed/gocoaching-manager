@@ -5,7 +5,6 @@ import { getAdminUsers } from "@/lib/api/admin/users";
 import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
 import { Badge, ButtonLink } from "@/components/ui";
 
-export const dynamic = "force-dynamic";
 
 type AdminUsers = Awaited<ReturnType<typeof getAdminUsers>>["users"];
 

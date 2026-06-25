@@ -8,7 +8,6 @@ import {
 import { createApiPerformanceLogger } from "@/lib/performance";
 import { CoachingGenealogyClient } from "./CoachingGenealogyClient";
 
-export const dynamic = "force-dynamic";
 
 const VALID_VIEWS = ["tree", "map", "assign", "history"] as const;
 type GenealogyView = (typeof VALID_VIEWS)[number];

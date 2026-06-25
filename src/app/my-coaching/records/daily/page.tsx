@@ -13,7 +13,6 @@ import {
 import type { Tables } from "@/types/database";
 import { DailyRecordsClient } from "./DailyRecordsClient";
 
-export const dynamic = "force-dynamic";
 
 type DailyContextProfileRow = Pick<
   Tables<"profiles">,

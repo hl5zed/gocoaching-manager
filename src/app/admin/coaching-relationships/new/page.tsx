@@ -18,7 +18,6 @@ import {
 } from "@/lib/ui/labels";
 import { isValidDate, isValidUuid, normalizeText } from "@/lib/validation/common";
 
-export const dynamic = "force-dynamic";
 
 function normalizeMessage(value: string | string[] | undefined) {
   if (Array.isArray(value)) {

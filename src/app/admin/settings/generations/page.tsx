@@ -3,7 +3,6 @@ import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 import { getAdminGenerationOptions } from "@/lib/api/admin/generations";
 import { GenerationsClient } from "./GenerationsClient";
 
-export const dynamic = "force-dynamic";
 
 export default async function AdminGenerationsPage() {
   await requireSuperAdmin();

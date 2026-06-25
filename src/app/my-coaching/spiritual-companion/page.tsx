@@ -4,7 +4,6 @@ import { getSession } from "@/lib/auth/getSession";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import { SpiritualCompanionClient } from "./SpiritualCompanionClient";
 
-export const dynamic = "force-dynamic";
 
 export default async function SpiritualCompanionPage() {
   const session = await getSession();

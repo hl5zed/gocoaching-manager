@@ -3,7 +3,6 @@ import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 import { getAdminCountries } from "@/lib/api/admin/countries";
 import { CountriesClient } from "./CountriesClient";
 
-export const dynamic = "force-dynamic";
 
 export default async function AdminCountriesPage() {
   await requireSuperAdmin();

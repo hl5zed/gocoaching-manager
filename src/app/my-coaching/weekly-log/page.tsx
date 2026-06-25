@@ -11,7 +11,6 @@ import {
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import { formatScope, getRelationshipTypeLabel } from "@/lib/ui/labels";
 
-export const dynamic = "force-dynamic";
 
 function normalizeMessage(value: string | string[] | undefined) {
   if (Array.isArray(value)) {

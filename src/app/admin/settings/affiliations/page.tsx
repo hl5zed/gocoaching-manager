@@ -3,7 +3,6 @@ import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 import { getAdminAffiliations } from "@/lib/api/admin/affiliations";
 import { AffiliationsClient } from "./AffiliationsClient";
 
-export const dynamic = "force-dynamic";
 
 export default async function AdminAffiliationsPage() {
   await requireSuperAdmin();

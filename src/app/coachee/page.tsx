@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/getSession";
 import { getMyCoachingMe } from "@/lib/api/my-coaching/me";
 
-export const dynamic = "force-dynamic";
 
 function displayValue(value: string | null | undefined) {
   const trimmed = value?.trim();

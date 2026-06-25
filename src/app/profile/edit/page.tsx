@@ -7,7 +7,6 @@ import { updateMyProfile } from "@/lib/api/profile/update-me";
 import { DEFAULT_TIMEZONE, TIMEZONE_OPTIONS } from "@/lib/timezone";
 import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
 
-export const dynamic = "force-dynamic";
 
 function normalizeMessage(value: string | string[] | undefined) {
   if (Array.isArray(value)) {

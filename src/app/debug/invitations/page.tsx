@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 import { InvitationDebugForm } from "./InvitationDebugForm";
 
-export const dynamic = "force-dynamic";
 
 export default async function InvitationDebugPage() {
   if (process.env.NODE_ENV === "production") {

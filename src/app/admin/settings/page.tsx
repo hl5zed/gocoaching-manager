@@ -14,7 +14,6 @@ import { OrganizationDefaultRoleSettings } from "./OrganizationDefaultRoleSettin
 import { SystemAnnouncementsClient } from "./SystemAnnouncementsClient";
 import { SystemSettingsForm } from "./SystemSettingsForm";
 
-export const dynamic = "force-dynamic";
 
 const settingCards = [
   {

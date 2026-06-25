@@ -28,7 +28,6 @@ import { AdminUserDirectCreatePanel } from "./AdminUserDirectCreatePanel";
 import { AdminUserRoleSummaryCards } from "./AdminUserRoleSummaryCards";
 import { LoginGuideCopyButton } from "./LoginGuideCopyButton";
 
-export const dynamic = "force-dynamic";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 function formatDateTime(value: string | null) {

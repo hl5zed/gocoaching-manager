@@ -16,7 +16,6 @@ import {
   ProgressBar,
 } from "@/components/ui";
 
-export const dynamic = "force-dynamic";
 
 const WEEKLY_STATUS_LABELS: Record<string, string> = {
   draft: "임시저장",

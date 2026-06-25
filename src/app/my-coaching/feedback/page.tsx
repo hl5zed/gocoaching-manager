@@ -7,7 +7,6 @@ import {
 } from "@/lib/api/my-coaching/feedback";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 
-export const dynamic = "force-dynamic";
 
 function formatDateTime(value: string | null) {
   if (!value) {

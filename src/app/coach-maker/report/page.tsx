@@ -31,7 +31,6 @@ import {
 import { PrintReportButton } from "./PrintReportButton";
 import { ReportFilters } from "./ReportFilters";
 
-export const dynamic = "force-dynamic";
 
 const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
 const UNASSIGNED_LABEL = "미지정";

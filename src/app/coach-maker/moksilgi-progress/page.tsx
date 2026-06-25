@@ -27,7 +27,6 @@ import {
 } from "@/lib/timezone";
 import { MoksilgiProgressClientTable } from "./MoksilgiProgressClientTable";
 
-export const dynamic = "force-dynamic";
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 50;

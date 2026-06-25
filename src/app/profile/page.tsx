@@ -6,7 +6,6 @@ import { getMyProfile } from "@/lib/api/profile/me";
 import { createApiPerformanceLogger } from "@/lib/performance";
 import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
 
-export const dynamic = "force-dynamic";
 
 function formatDateTime(value: string | null) {
   if (!value) {

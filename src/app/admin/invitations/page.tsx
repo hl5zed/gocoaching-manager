@@ -17,7 +17,6 @@ import {
   getStatusLabel,
 } from "@/lib/ui/labels";
 
-export const dynamic = "force-dynamic";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 

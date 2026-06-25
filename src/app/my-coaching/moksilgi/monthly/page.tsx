@@ -26,7 +26,6 @@ import {
 } from "@/lib/timezone";
 import type { Json, MoksilgiAreaKey, Tables } from "@/types/database";
 
-export const dynamic = "force-dynamic";
 
 type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
 

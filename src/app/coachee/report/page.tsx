@@ -24,7 +24,6 @@ import {
 import type { GoalPriority, GoalStatus, MoksilgiMeasurementType } from "@/types/database";
 import { PrintCoacheeReportButton } from "../PrintCoacheeReportButton";
 
-export const dynamic = "force-dynamic";
 
 const GOAL_STATUS_LABELS: Record<GoalStatus, string> = {
   active: "진행 중",

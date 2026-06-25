@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { getCoachGoals, type CoachGoalItem } from "@/lib/api/coach/goals";
 import type { GoalPriority, GoalStatus } from "@/types/database";
 
-export const dynamic = "force-dynamic";
 
 const STATUS_LABEL: Record<GoalStatus, string> = {
   active: "진행 중",

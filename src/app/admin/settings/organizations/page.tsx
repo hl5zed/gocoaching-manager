@@ -3,7 +3,6 @@ import { OrganizationsClient } from "./OrganizationsClient";
 import { getAdminOrganizations } from "@/lib/api/admin/organizations";
 import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 
-export const dynamic = "force-dynamic";
 
 export default async function AdminOrganizationsPage() {
   await requireSuperAdmin();

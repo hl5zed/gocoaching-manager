@@ -5,7 +5,6 @@ import {
   type CoachWeeklyLogDetail,
 } from "@/lib/api/coach/weekly-log-detail";
 
-export const dynamic = "force-dynamic";
 
 type CoachWeeklyLogDetailPageProps = {
   params: Promise<{

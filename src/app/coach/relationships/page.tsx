@@ -15,7 +15,6 @@ import {
   getStatusLabel,
 } from "@/lib/ui/labels";
 
-export const dynamic = "force-dynamic";
 
 const STATUS_OPTIONS: Array<{
   value: "all" | CoachingRelationshipStatus;

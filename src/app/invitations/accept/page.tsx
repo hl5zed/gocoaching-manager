@@ -5,7 +5,6 @@ import type { ScopeType, UserRole } from "@/types/database";
 import { formatScope, getRoleLabel } from "@/lib/ui/labels";
 import { AcceptInvitationButton } from "./AcceptInvitationButton";
 
-export const dynamic = "force-dynamic";
 
 type AcceptInvitationPageProps = {
   searchParams: Promise<{

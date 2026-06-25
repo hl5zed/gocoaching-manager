@@ -25,7 +25,6 @@ import { I18nText } from "@/lib/i18n/I18nProvider";
 import { RecordsTabClient } from "./RecordsTabClient";
 import type { TabRecord } from "./RecordsTabClient";
 
-export const dynamic = "force-dynamic";
 const RECORDS_PAGE_LIST_LIMIT = 50;
 const RECORDS_PAGE_SEARCH_LIMIT = 200;
 

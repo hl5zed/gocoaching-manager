@@ -10,7 +10,6 @@ import {
 } from "@/lib/api/coach-maker/moksilgi-progress-detail";
 import type { Json } from "@/types/database";
 
-export const dynamic = "force-dynamic";
 
 const STATUS_LABEL: Record<string, string> = {
   draft: "임시 저장",

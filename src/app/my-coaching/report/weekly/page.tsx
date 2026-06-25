@@ -14,7 +14,6 @@ import {
 import { calculateWeeklyAggregate, buildWeekDateKeys } from "@/lib/coaching/weekly-aggregate";
 import type { Tables } from "@/types/database";
 
-export const dynamic = "force-dynamic";
 
 type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
 type GoalAreaRow = Pick<

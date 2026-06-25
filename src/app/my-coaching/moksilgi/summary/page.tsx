@@ -14,7 +14,6 @@ import {
 } from "@/lib/timezone";
 import type { Tables } from "@/types/database";
 
-export const dynamic = "force-dynamic";
 
 type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
 

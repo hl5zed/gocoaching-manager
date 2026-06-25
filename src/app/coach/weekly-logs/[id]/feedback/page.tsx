@@ -7,7 +7,6 @@ import {
   type CoachWeeklyLogFeedbackForm,
 } from "@/lib/api/coach/weekly-log-feedback";
 
-export const dynamic = "force-dynamic";
 
 type CoachWeeklyLogFeedbackPageProps = {
   params: Promise<{

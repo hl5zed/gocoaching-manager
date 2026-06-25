@@ -5,7 +5,6 @@ import { getSession } from "@/lib/auth/getSession";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import { MonthlyReflectionsClient } from "./MonthlyReflectionsClient";
 
-export const dynamic = "force-dynamic";
 
 export default async function MonthlyReflectionsPage() {
   const session = await getSession();

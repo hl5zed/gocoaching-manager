@@ -12,7 +12,6 @@ import { PageNavigationButtons } from "@/components/navigation/PageNavigationBut
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import { ActionMemoDrafts, ActionMemoTaskSummary } from "./ActionMemoDrafts";
 
-export const dynamic = "force-dynamic";
 
 function formatPercent(value: number | null | undefined) {
   const numeric = typeof value === "number" && Number.isFinite(value) ? value : 0;

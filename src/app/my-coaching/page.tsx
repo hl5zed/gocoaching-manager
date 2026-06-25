@@ -24,7 +24,6 @@ import { saveMyMoksilgiMonthlyRecord } from "@/lib/api/my-coaching/moksilgi-mont
 import { TodayTodoList, type TodayTodo } from "@/components/coachee/TodayTodoList";
 import { WeeklyCheckStrip } from "@/components/coachee/WeeklyCheckStrip";
 
-export const dynamic = "force-dynamic";
 
 type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
 type PlanRow = Pick<Tables<"moksilgi_plans">, "id" | "title" | "core_values_json">;
