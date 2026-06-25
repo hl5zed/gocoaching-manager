@@ -1,7 +1,7 @@
 // =============================================================================
 // src/types/database.ts
 // Updated: 2026-05-07
-// Migration baseline: root SQL 0001-0012 + supabase/migrations 0013-0019
+// Migration baseline: docs/legacy-migrations 0001-0012 + supabase/migrations 0013+
 // Source: PROJECT_spec.md + current migrations in this repository
 //
 // SCHEMA_MISMATCH:

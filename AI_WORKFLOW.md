@@ -1018,22 +1018,19 @@ DB row 생성/변경이 있는 경우:
 - migration 파일은 사람이 직접 Supabase SQL Editor에서 적용하고 검증한다.
 - 부분 적용된 migration은 재실행 안전성(idempotent)을 반드시 고려한다.
 
-### migration 번호·위치 (CRITICAL_REVIEW B7 — 조사 결과, 2026-06)
+### migration 번호·위치 (CRITICAL_REVIEW B7 — 해결, 2026-06)
 
-정식 migration 경로는 `supabase/migrations/`이다 (현재 0013–0042).
+정식 migration 경로: `supabase/migrations/` (0013–0043).
 
-알려진 이슈:
+**적용된 조치 (승인 후):**
 
-1. **0014 파일 없음** — `0013_seed_basic_i18n_values.sql`과 `0015_add_invitation_accepted_audit_action.sql` 사이 번호 공백. Supabase CLI로 연속 migration 적용 시 실패할 수 있다.
-2. **루트 레거시 SQL** — 프로젝트 루트에 `0001`–`0012` SQL이 남아 있다. CLI 기본 경로(`supabase/migrations/`) 밖이므로 자동 인식되지 않는다. 이미 DB에 수동 적용된 복사본으로 취급한다.
+1. **`0014_noop_bridge.sql`** — prod에서 0013·0015 사이 공백을 git/참조용 noop으로 메움. `supabase db push` 사용하지 않음.
+2. **루트 `0001`–`0012`** — `docs/legacy-migrations/`로 이동만 (DB 재적용 없음). 수동 적용된 레거시 복사본.
 
-**승인 없이 하지 않을 것:**
+**여전히 하지 않을 것:**
 
-- 0014 placeholder migration 생성
-- 루트 `0001`–`0012` 이동·번호 재정렬
-- `supabase db reset` / `db push`로 schema 재적용
-
-해결 시: Supabase SQL Editor·스테이징에서 migration 이력을 먼저 대조한 뒤, 최소 범위 migration만 추가한다.
+- `supabase db reset` / 무분별한 `db push`
+- legacy SQL을 DB에 재실행
 
 
 ---
