@@ -549,7 +549,7 @@ async function handleRoleAdd({
     });
   }
 
-  revalidateTag("admin-user-role-summary", { expire: 0 });
+  revalidateTag("admin-user-role-summary", "max");
   return getAdminUsersRedirectWithMessage(request, {
     role_added: "1",
   });
@@ -681,7 +681,7 @@ async function handleRoleUpdate({
     });
   }
 
-  revalidateTag("admin-user-role-summary", { expire: 0 });
+  revalidateTag("admin-user-role-summary", "max");
   return getAdminUsersRedirectWithMessage(request, {
     role_updated: "1",
   });
@@ -894,7 +894,7 @@ async function handleStatusUpdate({
     });
   }
 
-  revalidateTag("admin-user-role-summary", { expire: 0 });
+  revalidateTag("admin-user-role-summary", "max");
   return getAdminUsersRedirectWithMessage(request, {
     status_updated: targetStatus,
   });
@@ -1581,7 +1581,7 @@ export async function POST(request: Request) {
 
   perf.mark("complete", 1);
 
-  revalidateTag("admin-user-role-summary", { expire: 0 });
+  revalidateTag("admin-user-role-summary", "max");
   return getAdminUsersRedirect(request, {
     created: "1",
     created_email: email,

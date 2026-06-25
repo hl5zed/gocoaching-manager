@@ -2,7 +2,8 @@ import "server-only";
 
 import { ADMIN_WRITE_ROLES, requireAdminProfile } from "@/lib/auth/require-admin-profile";
 import { getSession } from "@/lib/auth/getSession";
-import { getUserRoles } from "@/lib/auth/get-user-roles";
+import { getRolesByProfileId } from "@/lib/auth/get-user-roles";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { hasRole } from "@/lib/auth/has-role";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -559,7 +560,21 @@ export async function getActiveAnnouncementsForCurrentUser({
     }
 
     try {
-      roles = await getUserRoles(supabase, session.user.id);
+      const verifiedProfileId = await getVerifiedProfileId();
+      if (verifiedProfileId) {
+        roles = await getRolesByProfileId(supabase, verifiedProfileId);
+      } else {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("auth_user_id", session.user.id)
+          .neq("status", "anonymized")
+          .is("deleted_at", null)
+          .maybeSingle();
+        roles = profile
+          ? await getRolesByProfileId(supabase, (profile as { id: string }).id)
+          : [];
+      }
     } catch {
       return [];
     }
