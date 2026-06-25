@@ -5,7 +5,6 @@ import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DEFAULT_TIMEZONE, getTodayDateInTimezone } from "@/lib/timezone";
 
-export const dynamic = "force-dynamic";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",

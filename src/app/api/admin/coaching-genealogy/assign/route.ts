@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { assignCoachingGenealogy } from "@/lib/api/admin/coaching-genealogy";
 
-export const dynamic = "force-dynamic";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",

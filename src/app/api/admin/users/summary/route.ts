@@ -8,7 +8,6 @@ import { createApiPerformanceLogger } from "@/lib/performance";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/types/database";
 
-export const dynamic = "force-dynamic";
 
 const NO_STORE_HEADERS = {
   "Cache-Control": "no-store",

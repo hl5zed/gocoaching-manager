@@ -4,7 +4,6 @@ import {
   getDailyRecords,
 } from "@/lib/api/my-coaching/daily-records";
 
-export const dynamic = "force-dynamic";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",

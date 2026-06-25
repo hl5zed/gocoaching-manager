@@ -5,7 +5,6 @@ import { isActiveLocale, type ActiveLocale } from "@/lib/i18n/config";
 import { createApiPerformanceLogger } from "@/lib/performance";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",

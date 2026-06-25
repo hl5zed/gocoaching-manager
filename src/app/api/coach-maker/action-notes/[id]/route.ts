@@ -4,7 +4,6 @@ import {
   updateCoachActionNote,
 } from "@/lib/api/coach/action-notes";
 
-export const dynamic = "force-dynamic";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",

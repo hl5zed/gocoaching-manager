@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getProfile } from "@/lib/profile/getProfile";
 import { updateProfile } from "@/lib/profile/updateProfile";
 
-export const dynamic = "force-dynamic";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",

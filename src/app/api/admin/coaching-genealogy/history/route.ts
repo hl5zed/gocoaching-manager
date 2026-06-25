@@ -4,7 +4,6 @@ import {
   parseGenerationHistoryFilters,
 } from "@/lib/api/admin/coaching-genealogy";
 
-export const dynamic = "force-dynamic";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",

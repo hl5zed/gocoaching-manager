@@ -4,7 +4,6 @@ import { getSession } from "@/lib/auth/getSession";
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export const dynamic = "force-dynamic";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",

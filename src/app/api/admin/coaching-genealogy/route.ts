@@ -5,7 +5,6 @@ import {
 } from "@/lib/api/admin/coaching-genealogy";
 import { createApiPerformanceLogger } from "@/lib/performance";
 
-export const dynamic = "force-dynamic";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",

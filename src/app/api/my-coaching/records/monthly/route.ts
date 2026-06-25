@@ -4,7 +4,6 @@ import {
   getMonthlyReflections,
 } from "@/lib/api/my-coaching/monthly-reflections";
 
-export const dynamic = "force-dynamic";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",

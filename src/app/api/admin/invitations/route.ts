@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminInvitation } from "@/lib/api/admin/create-invitation";
 
-export const dynamic = "force-dynamic";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",

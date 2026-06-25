@@ -6,7 +6,6 @@ import {
   requireActiveSuperAdminForAnnouncements,
 } from "@/lib/api/admin/system-announcements";
 
-export const dynamic = "force-dynamic";
 
 const NO_STORE_HEADERS = {
   "Cache-Control": "no-store",

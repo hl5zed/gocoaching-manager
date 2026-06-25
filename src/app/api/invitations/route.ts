@@ -10,7 +10,6 @@ import {
   type UserRole,
 } from "@/types/database";
 
-export const dynamic = "force-dynamic";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",

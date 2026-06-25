@@ -10,7 +10,6 @@ import type {
   RpcDefinitions,
 } from "@/types/rpc";
 
-export const dynamic = "force-dynamic";
 
 const noStoreHeaders = {
   "Cache-Control": "no-store",
