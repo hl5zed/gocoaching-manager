@@ -1,8 +1,13 @@
 import { getSession } from "@/lib/auth/getSession";
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
+import {
+  computeMoksilgiYearSummaryMetrics,
+  pickLatestActivePlanPerProfile,
+  resolveActiveAreaKeys,
+} from "@/lib/coaching/moksilgi-year-summary";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
-import type { Tables } from "@/types/database";
+import type { MoksilgiAreaKey, Tables } from "@/types/database";
 import type { ActiveRoleSlim } from "@/types/profile";
 
 const COACH_LEVEL_ROLES = new Set([
@@ -68,6 +73,10 @@ type SummaryRow = Pick<
   | "average_rate"
 >;
 
+type GoalAreaRow = Pick<Tables<"moksilgi_goal_areas">, "id" | "plan_id" | "area_key">;
+
+type DetailGoalRow = Pick<Tables<"moksilgi_detail_goals">, "plan_id" | "area_id">;
+
 export type CoachMoksilgiItem = MoksilgiPlanRow & {
   coachee_display_name: string | null;
   coachee_full_name: string | null;
@@ -130,21 +139,16 @@ function validateYear(year: number) {
   return Number.isInteger(year) && year >= 2000 && year <= 2100;
 }
 
-function safeNumber(value: number | null | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
+function groupRowsByPlanId<T extends { plan_id: string }>(rows: T[]) {
+  const grouped = new Map<string, T[]>();
 
-function average(values: number[]) {
-  if (values.length === 0) return 0;
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
+  for (const row of rows) {
+    const current = grouped.get(row.plan_id) ?? [];
+    current.push(row);
+    grouped.set(row.plan_id, current);
+  }
 
-function summaryAverage(summaries: SummaryRow[], key: keyof SummaryRow) {
-  const values = summaries
-    .map((summary) => summary[key])
-    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
-
-  return average(values);
+  return grouped;
 }
 
 export async function getCoachMoksilgi(year: number): Promise<GetCoachMoksilgiResult> {
@@ -293,25 +297,45 @@ export async function getCoachMoksilgi(year: number): Promise<GetCoachMoksilgiRe
     };
   }
 
-  const plans = (plansResult.data ?? []) as MoksilgiPlanRow[];
+  const allPlans = (plansResult.data ?? []) as MoksilgiPlanRow[];
+
+  if (allPlans.length === 0) {
+    return { data: [], error: null };
+  }
+
+  const assignedCoacheeIds = new Set(coacheeIds);
+  const plans = pickLatestActivePlanPerProfile(
+    allPlans.filter((plan) => assignedCoacheeIds.has(plan.profile_id)),
+  );
 
   if (plans.length === 0) {
     return { data: [], error: null };
   }
 
-  const assignedCoacheeIds = new Set(coacheeIds);
   const planIds = plans.map((plan) => plan.id);
-  const { data: summaries, error: summariesError } = await serviceClient
-    .from("moksilgi_monthly_summaries")
-    .select(
-      "plan_id, year, month, spiritual_rate, intellectual_rate, physical_rate, social_rate, other_rate, total_rate, average_rate",
-    )
-    .in("plan_id", planIds)
-    .eq("year", selectedYear)
-    .is("deleted_at", null)
-    .order("month", { ascending: true });
+  const [summariesResult, areasResult, detailGoalsResult] = await Promise.all([
+    serviceClient
+      .from("moksilgi_monthly_summaries")
+      .select(
+        "plan_id, year, month, spiritual_rate, intellectual_rate, physical_rate, social_rate, other_rate, total_rate, average_rate",
+      )
+      .in("plan_id", planIds)
+      .eq("year", selectedYear)
+      .is("deleted_at", null)
+      .order("month", { ascending: true }),
+    serviceClient
+      .from("moksilgi_goal_areas")
+      .select("id, plan_id, area_key")
+      .in("plan_id", planIds)
+      .is("deleted_at", null),
+    serviceClient
+      .from("moksilgi_detail_goals")
+      .select("plan_id, area_id")
+      .in("plan_id", planIds)
+      .is("deleted_at", null),
+  ]);
 
-  if (summariesError) {
+  if (summariesResult.error || areasResult.error || detailGoalsResult.error) {
     return {
       data: null,
       error: {
@@ -327,39 +351,39 @@ export async function getCoachMoksilgi(year: number): Promise<GetCoachMoksilgiRe
       coachee,
     ]),
   );
-  const summariesByPlanId = new Map<string, SummaryRow[]>();
-
-  for (const summary of (summaries ?? []) as SummaryRow[]) {
-    const current = summariesByPlanId.get(summary.plan_id) ?? [];
-    current.push(summary);
-    summariesByPlanId.set(summary.plan_id, current);
-  }
+  const summariesByPlanId = groupRowsByPlanId((summariesResult.data ?? []) as SummaryRow[]);
+  const areasByPlanId = groupRowsByPlanId((areasResult.data ?? []) as GoalAreaRow[]);
+  const detailGoalsByPlanId = groupRowsByPlanId((detailGoalsResult.data ?? []) as DetailGoalRow[]);
 
   return {
-    data: plans
-      .filter((plan) => assignedCoacheeIds.has(plan.profile_id))
-      .map((plan) => {
-        const coachee = coacheeMap.get(plan.profile_id);
-        const planSummaries = summariesByPlanId.get(plan.id) ?? [];
-        const averageRate = average(planSummaries.map((summary) => safeNumber(summary.average_rate)));
+    data: plans.map((plan) => {
+      const coachee = coacheeMap.get(plan.profile_id);
+      const planSummaries = summariesByPlanId.get(plan.id) ?? [];
+      const planAreas = areasByPlanId.get(plan.id) ?? [];
+      const planDetailGoals = detailGoalsByPlanId.get(plan.id) ?? [];
+      const activeAreaKeys = resolveActiveAreaKeys(
+        planAreas.map((area) => ({ id: area.id, area_key: area.area_key as MoksilgiAreaKey })),
+        planDetailGoals,
+      );
+      const metrics = computeMoksilgiYearSummaryMetrics(planSummaries, activeAreaKeys);
 
-        return {
-          ...plan,
-          coachee_display_name: coachee?.display_name ?? null,
-          coachee_full_name: coachee?.full_name ?? null,
-          coachee_email: coachee?.email ?? null,
-          summary_year: selectedYear,
-          summary_count: planSummaries.length,
-          spiritual_rate: summaryAverage(planSummaries, "spiritual_rate"),
-          intellectual_rate: summaryAverage(planSummaries, "intellectual_rate"),
-          physical_rate: summaryAverage(planSummaries, "physical_rate"),
-          social_rate: summaryAverage(planSummaries, "social_rate"),
-          other_rate: summaryAverage(planSummaries, "other_rate"),
-          total_rate: summaryAverage(planSummaries, "total_rate"),
-          average_rate: averageRate,
-          total_achievement_rate: averageRate,
-        };
-      }),
+      return {
+        ...plan,
+        coachee_display_name: coachee?.display_name ?? null,
+        coachee_full_name: coachee?.full_name ?? null,
+        coachee_email: coachee?.email ?? null,
+        summary_year: selectedYear,
+        summary_count: metrics.summary_count,
+        spiritual_rate: metrics.spiritual_rate,
+        intellectual_rate: metrics.intellectual_rate,
+        physical_rate: metrics.physical_rate,
+        social_rate: metrics.social_rate,
+        other_rate: metrics.other_rate,
+        total_rate: metrics.total_rate,
+        average_rate: metrics.average_rate,
+        total_achievement_rate: metrics.total_achievement_rate,
+      };
+    }),
     error: null,
   };
 }

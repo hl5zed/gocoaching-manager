@@ -1,8 +1,14 @@
 import { getSession } from "@/lib/auth/getSession";
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
+import {
+  buildMoksilgiCumulativeRow,
+  buildMoksilgiMonthRows,
+  resolveActiveAreaKeys,
+  type MoksilgiYearSummaryRow,
+} from "@/lib/coaching/moksilgi-year-summary";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
-import type { MoksilgiAreaKey, Tables } from "@/types/database";
+import type { Tables } from "@/types/database";
 import type { ActiveRoleSlim } from "@/types/profile";
 
 const COACH_LEVEL_ROLES = new Set([
@@ -13,14 +19,6 @@ const COACH_LEVEL_ROLES = new Set([
   "country_admin",
   "super_admin",
 ]);
-const AREA_KEYS: MoksilgiAreaKey[] = [
-  "spiritual",
-  "intellectual",
-  "physical",
-  "social",
-  "other",
-];
-
 type ServiceSupabaseClient = NonNullable<
   ReturnType<typeof createSupabaseServiceClient>["client"]
 >;
@@ -107,17 +105,7 @@ type SummaryRow = Pick<
   | "average_rate"
 >;
 
-export type CoachMoksilgiSummaryRow = {
-  month: number | "cumulative";
-  monthLabel: string;
-  spiritual_rate: number;
-  intellectual_rate: number;
-  physical_rate: number;
-  social_rate: number;
-  other_rate: number;
-  total_rate: number;
-  average_rate: number;
-};
+export type CoachMoksilgiSummaryRow = MoksilgiYearSummaryRow;
 
 export type CoachMoksilgiDetail = {
   plan: PlanRow;
@@ -156,76 +144,6 @@ function getServiceClientResult():
 
 function validateYear(year: number) {
   return Number.isInteger(year) && year >= 2000 && year <= 2100;
-}
-
-function safeNumber(value: number | null | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
-
-function average(values: number[]) {
-  if (values.length === 0) return 0;
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
-function summaryValue(
-  summary: SummaryRow | undefined,
-  key:
-    | "spiritual_rate"
-    | "intellectual_rate"
-    | "physical_rate"
-    | "social_rate"
-    | "other_rate"
-    | "total_rate"
-    | "average_rate",
-) {
-  return safeNumber(summary?.[key]);
-}
-
-function buildSummaryRows(summaries: SummaryRow[]) {
-  const summaryByMonth = new Map(summaries.map((summary) => [summary.month, summary]));
-
-  return Array.from({ length: 12 }, (_, index) => {
-    const month = index + 1;
-    const summary = summaryByMonth.get(month);
-
-    return {
-      month,
-      monthLabel: `${month}월`,
-      spiritual_rate: summaryValue(summary, "spiritual_rate"),
-      intellectual_rate: summaryValue(summary, "intellectual_rate"),
-      physical_rate: summaryValue(summary, "physical_rate"),
-      social_rate: summaryValue(summary, "social_rate"),
-      other_rate: summaryValue(summary, "other_rate"),
-      total_rate: summaryValue(summary, "total_rate"),
-      average_rate: summaryValue(summary, "average_rate"),
-    } satisfies CoachMoksilgiSummaryRow;
-  });
-}
-
-function buildCumulativeRow(
-  rows: CoachMoksilgiSummaryRow[],
-  activeAreaKeys: MoksilgiAreaKey[],
-) {
-  const areaRates: Record<MoksilgiAreaKey, number> = {
-    spiritual: average(rows.map((row) => row.spiritual_rate)),
-    intellectual: average(rows.map((row) => row.intellectual_rate)),
-    physical: average(rows.map((row) => row.physical_rate)),
-    social: average(rows.map((row) => row.social_rate)),
-    other: average(rows.map((row) => row.other_rate)),
-  };
-  const activeRates = activeAreaKeys.map((key) => areaRates[key]);
-
-  return {
-    month: "cumulative",
-    monthLabel: "누적",
-    spiritual_rate: areaRates.spiritual,
-    intellectual_rate: areaRates.intellectual,
-    physical_rate: areaRates.physical,
-    social_rate: areaRates.social,
-    other_rate: areaRates.other,
-    total_rate: AREA_KEYS.reduce((sum, key) => sum + areaRates[key], 0),
-    average_rate: activeRates.length > 0 ? average(activeRates) : 0,
-  } satisfies CoachMoksilgiSummaryRow;
 }
 
 export async function getCoachMoksilgiDetail(
@@ -311,6 +229,7 @@ export async function getCoachMoksilgiDetail(
     .select("id")
     .eq("coach_profile_id", profileId)
     .eq("coachee_profile_id", planRow.profile_id)
+    .eq("status", "active")
     .is("deleted_at", null)
     .maybeSingle();
 
@@ -367,18 +286,9 @@ export async function getCoachMoksilgiDetail(
   const areas = (areasResult.data ?? []) as CoachMoksilgiGoalArea[];
   const detailGoals = (detailGoalsResult.data ?? []) as CoachMoksilgiDetailGoal[];
   const summaries = (summariesResult.data ?? []) as SummaryRow[];
-  const activeAreaKeys = [
-    ...new Set(
-      areas
-        .filter((area) => detailGoals.some((goal) => goal.area_id === area.id))
-        .map((area) => area.area_key),
-    ),
-  ];
-  const summaryRows = buildSummaryRows(summaries);
-  const cumulativeRow = buildCumulativeRow(
-    summaryRows,
-    activeAreaKeys.length > 0 ? activeAreaKeys : AREA_KEYS,
-  );
+  const activeAreaKeys = resolveActiveAreaKeys(areas, detailGoals);
+  const summaryRows = buildMoksilgiMonthRows(summaries);
+  const cumulativeRow = buildMoksilgiCumulativeRow(summaryRows, activeAreaKeys);
 
   return {
     data: {
