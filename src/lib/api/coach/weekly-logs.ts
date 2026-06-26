@@ -1,8 +1,8 @@
 import { getSession } from "@/lib/auth/getSession";
+import { ensureCoachLevelAccess } from "@/lib/auth/coach-api-access";
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
-import type { ActiveRoleSlim } from "@/types/profile";
 
 export type CoachWeeklyLogEntry = {
   id: string;
@@ -42,15 +42,6 @@ export type GetCoachWeeklyLogsError = {
 export type GetCoachWeeklyLogsResult =
   | { data: CoachWeeklyLogEntry[]; error: null }
   | { data: null; error: GetCoachWeeklyLogsError };
-
-const COACH_LEVEL_ROLES = new Set([
-  "coach",
-  "coach_maker",
-  "church_admin",
-  "organization_admin",
-  "country_admin",
-  "super_admin",
-]);
 
 type ServiceSupabaseClient = NonNullable<
   ReturnType<typeof createSupabaseServiceClient>["client"]
@@ -144,33 +135,14 @@ export async function getCoachWeeklyLogs(): Promise<GetCoachWeeklyLogsResult> {
   }
 
   const profileId = (profile as { id: string }).id;
-  const { data: roles, error: rolesError } = await supabase
-    .from("user_roles")
-    .select("id, role, scope_type, scope_id, granted_at, expires_at")
-    .eq("profile_id", profileId)
-    .eq("status", "active")
-    .eq("is_active", true)
-    .is("deleted_at", null);
+  const coachAccess = await ensureCoachLevelAccess(supabase, profileId);
 
-  if (rolesError) {
+  if (!coachAccess.ok) {
     return {
       data: null,
       error: {
-        code: "ROLES_QUERY_FAILED",
-        message: "역할 정보를 조회하는 중 오류가 발생했습니다.",
-      },
-    };
-  }
-
-  const activeRoles = (roles ?? []) as ActiveRoleSlim[];
-  const hasCoachAccess = activeRoles.some((role) => COACH_LEVEL_ROLES.has(role.role));
-
-  if (!hasCoachAccess) {
-    return {
-      data: null,
-      error: {
-        code: "ACCESS_DENIED",
-        message: "코치 권한이 없습니다.",
+        code: coachAccess.code,
+        message: coachAccess.message,
       },
     };
   }

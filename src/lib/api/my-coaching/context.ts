@@ -22,6 +22,8 @@ export async function getMoksilgiContext(options?: {
   serviceClientUnavailableMessage?: string;
   /** 페이지에서 이미 조회한 profile id — profiles 재조회 생략 */
   profileId?: string;
+  /** 호출부에서 이미 생성한 RLS server client — 재생성 생략 */
+  serviceClient?: ServiceClient;
 }): Promise<MoksilgiContext> {
   const logTag = options?.logTag ?? "MOKSILGI_SERVER_CLIENT_UNAVAILABLE";
   const unavailableMessage =
@@ -30,11 +32,15 @@ export async function getMoksilgiContext(options?: {
   let profileId: string;
   let supabase: ServiceClient;
 
-  try {
-    supabase = await createSupabaseServerClient();
-  } catch (error) {
-    console.error(`[${logTag}]`, error);
-    return { ok: false, error: { code: "MOKSILGI_QUERY_FAILED", message: unavailableMessage } };
+  if (options?.serviceClient) {
+    supabase = options.serviceClient;
+  } else {
+    try {
+      supabase = await createSupabaseServerClient();
+    } catch (error) {
+      console.error(`[${logTag}]`, error);
+      return { ok: false, error: { code: "MOKSILGI_QUERY_FAILED", message: unavailableMessage } };
+    }
   }
 
   if (options?.profileId) {

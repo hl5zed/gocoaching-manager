@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth/getSession";
+import { ensureCoachLevelAccess } from "@/lib/auth/coach-api-access";
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import {
   buildMoksilgiCumulativeRow,
@@ -9,16 +10,7 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import type { Tables } from "@/types/database";
-import type { ActiveRoleSlim } from "@/types/profile";
 
-const COACH_LEVEL_ROLES = new Set([
-  "coach",
-  "coach_maker",
-  "church_admin",
-  "organization_admin",
-  "country_admin",
-  "super_admin",
-]);
 type ServiceSupabaseClient = NonNullable<
   ReturnType<typeof createSupabaseServiceClient>["client"]
 >;
@@ -179,24 +171,13 @@ export async function getCoachMoksilgiDetail(
   }
 
   const profileId = (profile as ProfileIdRow).id;
-  const { data: roles, error: rolesError } = await supabase
-    .from("user_roles")
-    .select("id, role, scope_type, scope_id, granted_at, expires_at")
-    .eq("profile_id", profileId)
-    .eq("status", "active")
-    .eq("is_active", true)
-    .is("deleted_at", null);
+  const coachAccess = await ensureCoachLevelAccess(supabase, profileId);
 
-  if (rolesError) {
-    return { data: null, error: { code: "ROLES_QUERY_FAILED", message: "역할 정보를 조회하는 중 오류가 발생했습니다." } };
-  }
-
-  const hasCoachAccess = ((roles ?? []) as ActiveRoleSlim[]).some((role) =>
-    COACH_LEVEL_ROLES.has(role.role),
-  );
-
-  if (!hasCoachAccess) {
-    return { data: null, error: { code: "ACCESS_DENIED", message: "코치 권한이 없습니다." } };
+  if (!coachAccess.ok) {
+    return {
+      data: null,
+      error: { code: coachAccess.code, message: coachAccess.message },
+    };
   }
 
   const serviceClientResult = getServiceClientResult();

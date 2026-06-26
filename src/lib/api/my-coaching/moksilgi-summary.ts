@@ -71,7 +71,11 @@ async function getOwnedPlan(client: ServiceClient, profileId: string) {
     .eq("profile_id", profileId)
     .eq("status", "active")
     .is("deleted_at", null)
+    // Duplicate active plans are data anomalies; keep the normal case unchanged
+    // while making anomaly reads deterministic and newest-created first.
     .order("updated_at", { ascending: false })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .limit(1)
     .maybeSingle();
 }

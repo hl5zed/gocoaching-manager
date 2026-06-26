@@ -73,7 +73,10 @@ export default async function DailyRecordsPage() {
         .eq("profile_id", profile.id)
         .eq("status", "active")
         .is("deleted_at", null)
+        // Match the active-plan tie-breaker used by moksilgi read/write APIs.
         .order("updated_at", { ascending: false })
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
         .limit(1)
         .maybeSingle();
 

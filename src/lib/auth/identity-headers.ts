@@ -11,3 +11,11 @@ export const AUTH_USER_ID_HEADER = "x-gothrive-auth-user-id";
 export const AUTH_EMAIL_HEADER = "x-gothrive-auth-email";
 export const PROFILE_ID_HEADER = "x-gothrive-profile-id";
 export const PROFILE_STATUS_HEADER = "x-gothrive-profile-status";
+/** active preferred_locale — middleware 검증값만 */
+export const PROFILE_LOCALE_HEADER = "x-gothrive-profile-locale";
+/** "1"이면 middleware가 preferred_locale(active 또는 null) 조회를 완료했음을 의미 */
+export const PROFILE_LOCALE_KNOWN_HEADER = "x-gothrive-profile-locale-known";
+/** comma-separated active UserRole — role-gated route 통과 후 middleware만 set */
+export const VERIFIED_ROLES_HEADER = "x-gothrive-verified-roles";
+/** middleware가 profile locale을 검증한 뒤 클라이언트 hint용 (내부 header 미노출) */
+export const LOCALE_HINT_COOKIE = "gothrive-locale-hint";

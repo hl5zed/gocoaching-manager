@@ -1308,7 +1308,9 @@ export async function getCoachMakerMoksilgiProgress(
             "id, profile_id, author_name, role_label, generation_label, region_name, team_name, updated_at",
           )
           .is("deleted_at", null)
-          .order("updated_at", { ascending: false }),
+          .order("updated_at", { ascending: false })
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false }),
         plansFilterOptions,
       );
 
@@ -1351,7 +1353,9 @@ export async function getCoachMakerMoksilgiProgress(
           "id, profile_id, author_name, role_label, generation_label, region_name, team_name, updated_at",
         )
         .is("deleted_at", null)
-        .order("updated_at", { ascending: false }),
+        .order("updated_at", { ascending: false })
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false }),
       plansFilterOptions,
     );
     perf.mark("data.plans_query", plans?.length ?? 0);

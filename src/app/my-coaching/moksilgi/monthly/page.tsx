@@ -2,7 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { requireCoacheePageProfile } from "@/lib/api/my-coaching/coachee-page-auth";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { MoksilgiMonthlyRecordForm } from "@/components/coachee/MoksilgiMonthlyRecordForm";
 import { MoksilgiAreaCard } from "@/components/coachee/MoksilgiAreaCard";
 import { MoksilgiAppBar } from "@/components/coachee/MoksilgiSection";
 import { PrintPageButton } from "@/components/print/PrintPageButton";
@@ -14,20 +16,16 @@ import { I18nText } from "@/lib/i18n/I18nProvider";
 import {
   getMyMoksilgiMonthly,
   saveMyMoksilgiMonthlyRecord,
-  type MoksilgiMonthlyDetailGoal,
-  type MoksilgiMonthlyRecord,
   type MoksilgiMonthlySummary,
 } from "@/lib/api/my-coaching/moksilgi-monthly";
-import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   getCurrentMonthInTimezone,
   getCurrentYearInTimezone,
   resolveTimezoneFallback,
 } from "@/lib/timezone";
-import type { Json, MoksilgiAreaKey, Tables } from "@/types/database";
+import type { MoksilgiAreaKey } from "@/types/database";
 
-
-type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
 
 const INPUT_CLASS =
   "mt-1.5 w-full rounded-control border border-line-base bg-surface-card px-3 py-2 text-ink-base outline-none focus:border-brand-600";
@@ -71,6 +69,22 @@ function firstParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function hasExplicitYearMonth(params: Record<string, string | string[] | undefined>) {
+  return firstParam(params.year) !== undefined && firstParam(params.month) !== undefined;
+}
+
+function parseExplicitYearMonth(params: Record<string, string | string[] | undefined>) {
+  const year = Number(firstParam(params.year));
+  const month = Number(firstParam(params.month));
+  const defaultYear = new Date().getFullYear();
+  const defaultMonth = new Date().getMonth() + 1;
+
+  return {
+    year: Number.isInteger(year) && year >= 2000 && year <= 2100 ? year : defaultYear,
+    month: Number.isInteger(month) && month >= 1 && month <= 12 ? month : defaultMonth,
+  };
+}
+
 function parseYearMonth(
   params: Record<string, string | string[] | undefined>,
   timezone: string,
@@ -85,48 +99,6 @@ function parseYearMonth(
   };
 }
 
-function asObject(value: Json): Record<string, Json> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return {};
-  }
-
-  const result: Record<string, Json> = {};
-  for (const [key, item] of Object.entries(value)) {
-    if (item !== undefined) {
-      result[key] = item;
-    }
-  }
-  return result;
-}
-
-function boolMap(value: Json) {
-  const object = asObject(value);
-  const result = new Map<string, boolean>();
-  for (const [key, item] of Object.entries(object)) {
-    result.set(key, item === true);
-  }
-  return result;
-}
-
-function numberMap(value: Json) {
-  const object = asObject(value);
-  const result = new Map<string, number>();
-  for (const [key, item] of Object.entries(object)) {
-    result.set(key, typeof item === "number" ? item : 0);
-  }
-  return result;
-}
-
-function strategyList(value: Json) {
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === "string")
-    : [];
-}
-
-function daysInMonth(year: number, month: number) {
-  return new Date(year, month, 0).getDate();
-}
-
 function formatPercent(value: number | null | undefined) {
   const numeric = typeof value === "number" && Number.isFinite(value) ? value : 0;
   return `${numeric.toFixed(1)}%`;
@@ -139,12 +111,6 @@ function rateTone(value: number | null | undefined): "success" | "info" | "warni
   return "warning";
 }
 
-function displayValue(value: string | number | null | undefined) {
-  if (value === null || value === undefined) return "-";
-  if (typeof value === "number") return String(value);
-  return value.trim().length > 0 ? value : "-";
-}
-
 function MonthLabel({ month }: { month: number }) {
   return (
     <>
@@ -153,77 +119,6 @@ function MonthLabel({ month }: { month: number }) {
       <I18nText k="myCoaching.moksilgi.monthly.monthOptionSuffix" fallback="월" />
     </>
   );
-}
-
-function MeasurementLabel({ type }: { type: string }) {
-  switch (type) {
-    case "daily_check":
-      return <I18nText k="myCoaching.moksilgi.measurement.dailyCheck" fallback="매일 실행 확인" />;
-    case "weekly_count":
-      return <I18nText k="myCoaching.moksilgi.measurement.weeklyCount" fallback="매주 실행 확인" />;
-    case "monthly_number":
-      return <I18nText k="myCoaching.moksilgi.measurement.monthlyNumber" fallback="월간 수치 입력" />;
-    case "monthly_comment":
-      return <I18nText k="myCoaching.moksilgi.measurement.monthlyComment" fallback="COMMENT" />;
-    default:
-      return type;
-  }
-}
-
-function unitLabel(unit: string | null) {
-  const normalized = unit?.trim();
-
-  if (!normalized) return "실행량";
-  if (normalized === "일") return "일 수";
-  if (normalized === "권") return "권 수";
-  if (normalized === "회" || normalized === "번") return "횟 수";
-  if (normalized === "시간") return "시간";
-  if (normalized === "명") return "명 수";
-  return normalized;
-}
-
-function checkLabel(measurementType: string) {
-  switch (measurementType) {
-    case "daily_check":
-      return <I18nText k="myCoaching.moksilgi.monthly.dailyCheckHeader" fallback="매일 실행 확인 V" />;
-    case "weekly_count":
-      return <I18nText k="myCoaching.moksilgi.monthly.weeklyCheckHeader" fallback="매주 실행 확인 V" />;
-    case "monthly_number":
-    case "monthly_comment":
-      return "COMMENT";
-    default:
-      return "COMMENT";
-  }
-}
-
-function actualDisplay({
-  detailGoal,
-  record,
-  dailyChecks,
-  weeklyCounts,
-}: {
-  detailGoal: MoksilgiMonthlyDetailGoal;
-  record: MoksilgiMonthlyRecord | undefined;
-  dailyChecks: Map<string, boolean>;
-  weeklyCounts: Map<string, number>;
-}) {
-  const unit = detailGoal.unit?.trim() ?? "";
-
-  if (detailGoal.measurement_type === "daily_check") {
-    const checkedCount = [...dailyChecks.values()].filter(Boolean).length;
-    return `${checkedCount}${unit || "일"}`;
-  }
-
-  if (detailGoal.measurement_type === "weekly_count") {
-    const total = [...weeklyCounts.values()].reduce((sum, value) => sum + value, 0);
-    return `${total}${unit || "회"}`;
-  }
-
-  if (record?.actual_value !== null && record?.actual_value !== undefined) {
-    return `${record.actual_value}${unit ? unit : ""}`;
-  }
-
-  return "-";
 }
 
 async function saveMonthlyRecordAction(formData: FormData) {
@@ -239,14 +134,6 @@ async function saveMonthlyRecordAction(formData: FormData) {
   }
 
   redirect(`${base}&saved=1`);
-}
-
-function StatChip({ children }: { children: ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-control bg-surface-sunken px-2.5 py-1 text-xs font-medium text-ink-base">
-      {children}
-    </span>
-  );
 }
 
 function MonthSelector({ year, month }: { year: number; month: number }) {
@@ -279,205 +166,6 @@ function MonthSelector({ year, month }: { year: number; month: number }) {
       </label>
       <Button icon="search" type="submit" variant="primary">
         <I18nText k="myCoaching.moksilgi.monthly.search" fallback="조회" />
-      </Button>
-    </form>
-  );
-}
-
-function MonthlyRecordForm({
-  detailGoal,
-  record,
-  year,
-  month,
-}: {
-  detailGoal: MoksilgiMonthlyDetailGoal;
-  record: MoksilgiMonthlyRecord | undefined;
-  year: number;
-  month: number;
-}) {
-  const dailyChecks = boolMap(record?.daily_checks_json ?? {});
-  const weeklyCounts = numberMap(record?.weekly_counts_json ?? {});
-  const strategies = strategyList(detailGoal.strategies_json);
-  const unitHeader = unitLabel(detailGoal.unit);
-  const actionHeader = checkLabel(detailGoal.measurement_type);
-  const totalDays = daysInMonth(year, month);
-  const checkedDays = [...dailyChecks.values()].filter(Boolean).length;
-  const currentActualDisplay = actualDisplay({
-    detailGoal,
-    record,
-    dailyChecks,
-    weeklyCounts,
-  });
-  const isMonthly =
-    detailGoal.measurement_type === "monthly_number" ||
-    detailGoal.measurement_type === "monthly_comment";
-
-  return (
-    <form
-      action={saveMonthlyRecordAction}
-      className="space-y-4 rounded-xl border border-line-base bg-surface-app p-4"
-    >
-      <input name="detail_goal_id" type="hidden" value={detailGoal.id} />
-      <input name="year" type="hidden" value={year} />
-      <input name="month" type="hidden" value={month} />
-
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h4 className="font-semibold text-ink-strong">{detailGoal.title}</h4>
-          <p className="mt-1 text-xs leading-5 text-ink-muted">
-            <I18nText k="myCoaching.moksilgi.detailGoal.monthlyTarget" fallback="월 목표량" />:{" "}
-            {displayValue(detailGoal.monthly_target)} ·{" "}
-            <I18nText k="myCoaching.moksilgi.detailGoal.yearlyTarget" fallback="연간 목표량" />:{" "}
-            {displayValue(detailGoal.annual_target)} ·{" "}
-            <I18nText k="myCoaching.moksilgi.detailGoal.unit" fallback="단위" />:{" "}
-            {displayValue(detailGoal.unit)}
-          </p>
-          <p className="mt-0.5 text-xs leading-5 text-ink-muted">
-            <I18nText k="myCoaching.moksilgi.detailGoal.measurementMethod" fallback="측정 방식" />:{" "}
-            <MeasurementLabel type={detailGoal.measurement_type} />
-          </p>
-          {strategies.length > 0 ? (
-            <p className="mt-0.5 text-xs leading-5 text-ink-muted">
-              <I18nText k="myCoaching.moksilgi.monthly.actionStrategies" fallback="실행전략" />:{" "}
-              {strategies.join(", ")}
-            </p>
-          ) : null}
-        </div>
-        <Badge tone={rateTone(record?.achievement_rate)}>
-          <I18nText k="myCoaching.moksilgi.monthly.currentAchievement" fallback="현재 달성률" />{" "}
-          {formatPercent(record?.achievement_rate)}
-        </Badge>
-      </div>
-
-      {detailGoal.measurement_type === "daily_check" ? (
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-medium text-ink-muted">{actionHeader}</span>
-            <span className="text-xs font-semibold text-brand-600">
-              {checkedDays} / {totalDays}
-            </span>
-          </div>
-          <div className="grid grid-cols-7 gap-1.5">
-            {Array.from({ length: totalDays }, (_, index) => index + 1).map((day) => (
-              <label className="relative block" key={day}>
-                <input
-                  aria-label={`${day}일`}
-                  className="peer sr-only"
-                  defaultChecked={dailyChecks.get(String(day)) ?? false}
-                  name={`day_${day}`}
-                  type="checkbox"
-                />
-                <span className="flex h-9 items-center justify-center rounded-control border border-line-base bg-surface-card text-xs text-ink-muted transition-colors peer-checked:border-brand-600 peer-checked:bg-brand-600 peer-checked:font-medium peer-checked:text-white">
-                  {day}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {detailGoal.measurement_type === "weekly_count" ? (
-        <div>
-          <span className="text-xs font-medium text-ink-muted">{actionHeader}</span>
-          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
-            {[
-              { fallback: "첫주", key: "myCoaching.moksilgi.monthly.week1" },
-              { fallback: "둘째주", key: "myCoaching.moksilgi.monthly.week2" },
-              { fallback: "셋째주", key: "myCoaching.moksilgi.monthly.week3" },
-              { fallback: "넷째주", key: "myCoaching.moksilgi.monthly.week4" },
-              { fallback: "다섯째주", key: "myCoaching.moksilgi.monthly.week5" },
-            ].map((label, index) => (
-              <label className="block" key={label.key}>
-                <span className="text-xs font-medium text-ink-muted">
-                  <I18nText k={label.key} fallback={label.fallback} />
-                </span>
-                <input
-                  className={INPUT_CLASS}
-                  defaultValue={weeklyCounts.get(`week${index + 1}`) ?? 0}
-                  min={0}
-                  name={`week${index + 1}`}
-                  step="any"
-                  type="number"
-                />
-              </label>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {isMonthly ? (
-        <div className="grid gap-3">
-          <label className="block">
-            <span className={LABEL_CLASS}>{unitHeader}</span>
-            <input
-              className={INPUT_CLASS}
-              defaultValue={record?.actual_value ?? ""}
-              name="actual_value"
-              step="any"
-              type="number"
-            />
-          </label>
-          <label className="block">
-            <span className={LABEL_CLASS}>
-              <I18nText k="myCoaching.moksilgi.monthly.comment" fallback="코멘트" />
-            </span>
-            <textarea
-              className={INPUT_CLASS}
-              defaultValue={record?.comment ?? ""}
-              maxLength={2000}
-              name="comment"
-              rows={3}
-            />
-          </label>
-        </div>
-      ) : null}
-
-      {!isMonthly ? (
-        <div className="flex flex-wrap gap-2">
-          <StatChip>
-            {unitHeader}: {currentActualDisplay}
-          </StatChip>
-          <StatChip>
-            <I18nText k="myCoaching.moksilgi.monthly.achievementRate" fallback="달성률" />{" "}
-            {formatPercent(record?.achievement_rate)}
-          </StatChip>
-        </div>
-      ) : null}
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block">
-          <span className={LABEL_CLASS}>
-            <I18nText
-              k="myCoaching.moksilgi.monthly.targetValue"
-              fallback="월 목표량 / 현재 목표량 수정"
-            />
-          </span>
-          <input
-            className={INPUT_CLASS}
-            defaultValue={record?.target_value ?? detailGoal.monthly_target ?? ""}
-            name="target_value"
-            step="any"
-            type="number"
-          />
-        </label>
-        {!isMonthly ? (
-          <label className="block">
-            <span className={LABEL_CLASS}>
-              <I18nText k="myCoaching.moksilgi.monthly.comment" fallback="코멘트" />
-            </span>
-            <textarea
-              className={INPUT_CLASS}
-              defaultValue={record?.comment ?? ""}
-              maxLength={2000}
-              name="comment"
-              rows={3}
-            />
-          </label>
-        ) : null}
-      </div>
-
-      <Button icon="save" type="submit" variant="primary">
-        <I18nText k="myCoaching.moksilgi.monthly.save" fallback="저장" />
       </Button>
     </form>
   );
@@ -646,7 +334,31 @@ export default async function MoksilgiMonthlyPage({
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = searchParams ? await searchParams : {};
-  const auth = await requireCoacheePageProfile("/my-coaching/moksilgi/monthly");
+
+  // Supabase 클라이언트를 먼저 생성하고, 미들웨어가 설정한 profile ID 헤더를 읽어
+  // auth(profile 전체) 조회와 moksilgi plan 조회를 병렬로 시작합니다.
+  // /my-coaching 경로는 미들웨어 "profile" 요건 대상이므로 PROFILE_ID_HEADER가 보장됩니다.
+  const [supabase, verifiedProfileId] = await Promise.all([
+    createSupabaseServerClient(),
+    getVerifiedProfileId(),
+  ]);
+
+  const [auth, preloadedPlanResult] = await Promise.all([
+    requireCoacheePageProfile("/my-coaching/moksilgi/monthly"),
+    verifiedProfileId
+      ? supabase
+          .from("moksilgi_plans")
+          .select("id, profile_id, title")
+          .eq("profile_id", verifiedProfileId)
+          .eq("status", "active")
+          .is("deleted_at", null)
+          .order("updated_at", { ascending: false })
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
 
   if (!auth.ok) {
     return (
@@ -661,59 +373,38 @@ export default async function MoksilgiMonthlyPage({
   }
 
   const profile = auth.profile;
-  const { client: serviceClient, error: serviceClientError } =
-    createSupabaseServiceClient();
 
-  if (!serviceClient) {
-    console.error("[MOKSILGI_MONTHLY_SERVICE_CLIENT_UNAVAILABLE]", serviceClientError);
-    return (
-      <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-4 text-sm text-red-700">
-            월별 목실기를 준비할 수 없습니다.
-          </CardContent>
-        </Card>
-      </main>
+  let year: number;
+  let month: number;
+
+  if (hasExplicitYearMonth(params)) {
+    ({ year, month } = parseExplicitYearMonth(params));
+  } else {
+    // 소속 조직 기본 타임존은 requireCoacheePageProfile의 profile 조회 시
+    // FK 조인으로 함께 가져오므로 별도 organizations 왕복이 필요 없습니다.
+    const effectiveTimezone = resolveTimezoneFallback(
+      profile.timezone,
+      profile.organization_default_timezone,
+      null,
     );
+    ({ year, month } = parseYearMonth(params, effectiveTimezone));
   }
 
-  // org timezone 조회는 메인 데이터 fetch와 독립적이므로 병렬로 실행한다.
-  // (직렬 await 시 timezone 왕복 후에야 데이터 fetch가 시작되어 워터폴 지연 발생)
-  const organizationTimezonePromise =
-    profile.organization_id && !profile.timezone
-      ? serviceClient
-          .from("organizations")
-          .select("default_timezone")
-          .eq("id", profile.organization_id)
-          .is("deleted_at", null)
-          .maybeSingle()
-      : Promise.resolve({ data: null as OrganizationTimezoneRow | null, error: null });
+  // preloadedPlan은 verifiedProfileId로 조회한 결과가 "성공적으로 확정"된 경우에만 신뢰한다.
+  // - verifiedProfileId가 null(미들웨어 profile 헤더 부재)이면 preload 쿼리를 건너뛰어 data가 null이고,
+  //   error도 일시적으로 발생할 수 있다. 이때 null을 확정값으로 넘기면 plan이 실제로 있어도
+  //   "목실기 없음"으로 잘못 판정되어 데이터가 사라진다.
+  // - 따라서 신뢰 불가한 경우 undefined를 넘겨 getMyMoksilgiMonthly의 자체 조회(에러 처리 포함)로 fallback한다.
+  const trustedPreloadedPlan =
+    verifiedProfileId && !preloadedPlanResult.error
+      ? preloadedPlanResult.data
+      : undefined;
 
-  // URL 파라미터가 있으면 timezone과 무관하게 year/month가 확정된다.
-  // 우선 prelim timezone(개인 timezone 또는 기본값)으로 파싱해 데이터 fetch를 바로 시작한다.
-  const prelimTimezone = resolveTimezoneFallback(profile.timezone, null, null);
-  const { year: prelimYear, month: prelimMonth } = parseYearMonth(params, prelimTimezone);
-
-  const [organizationResult, result] = await Promise.all([
-    organizationTimezonePromise,
-    getMyMoksilgiMonthly(prelimYear, prelimMonth, { profileId: profile.id }),
-  ]);
-
-  const organizationTimezone =
-    (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ?? null;
-  const effectiveTimezone = resolveTimezoneFallback(
-    profile.timezone,
-    organizationTimezone,
-    null,
-  );
-  const { year, month } = parseYearMonth(params, effectiveTimezone);
-
-  // edge case 보정: 개인 timezone 미설정 + year/month 파라미터 미지정 상태에서
-  // 월 경계 등으로 prelim 기본 month와 org timezone 기준 month가 달라지면,
-  // 정확한 month로 명시 redirect한다(이후 요청은 파라미터가 있어 재진입 루프 없음).
-  if (year !== prelimYear || month !== prelimMonth) {
-    redirect(`/my-coaching/moksilgi/monthly?year=${year}&month=${month}`);
-  }
+  const result = await getMyMoksilgiMonthly(year, month, {
+    profileId: profile.id,
+    serviceClient: supabase,
+    preloadedPlan: trustedPreloadedPlan,
+  });
   const saved = firstParam(params.saved) === "1";
   const error = firstParam(params.error) === "save";
 
@@ -949,7 +640,8 @@ export default async function MoksilgiMonthlyPage({
                   ) : (
                     <div className="space-y-4">
                       {areaGoals.map((goal) => (
-                        <MonthlyRecordForm
+                        <MoksilgiMonthlyRecordForm
+                          action={saveMonthlyRecordAction}
                           detailGoal={goal}
                           key={goal.id}
                           month={month}

@@ -5,10 +5,16 @@ import {
   COACH_ROUTE_ROLES,
   SUPER_ADMIN_ROUTE_ROLES,
   getAllowedRolesForPath,
+  getMiddlewareAuthRequirement,
   isApiRoute,
+  isAuthOnlyApiRoute,
   isProtectedPageRoute,
   isPublicRoute,
 } from "@/lib/auth/route-access";
+import {
+  buildActiveAnnouncementsCacheKey,
+  hasProvidedAnnouncementRoles,
+} from "@/lib/api/admin/system-announcements";
 import { getDashboardQuickLinksState } from "@/lib/dashboard/quick-links";
 
 test("public route exceptions stay public", () => {
@@ -84,4 +90,27 @@ test("dashboard quick links show no-role message when no active roles exist", ()
   assert.equal(state.showCoachLink, false);
   assert.equal(state.showCoacheeMessage, false);
   assert.equal(state.showNoRoleMessage, true);
+});
+
+test("middleware auth requirement splits route cost tiers", () => {
+  assert.equal(getMiddlewareAuthRequirement("/login"), null);
+  assert.equal(getMiddlewareAuthRequirement("/api/i18n/messages"), "auth_only");
+  assert.equal(isAuthOnlyApiRoute("/api/i18n/messages"), true);
+  assert.equal(getMiddlewareAuthRequirement("/dashboard"), "auth_only");
+  assert.equal(getMiddlewareAuthRequirement("/dashboard/weekly"), "profile");
+  assert.equal(getMiddlewareAuthRequirement("/api/profile/locale"), "profile");
+  assert.equal(getMiddlewareAuthRequirement("/coach/dashboard"), "role_gate");
+  assert.equal(getMiddlewareAuthRequirement("/api/admin/users"), "role_gate");
+});
+
+test("announcements skip auth lookup when roles argument is provided", () => {
+  assert.equal(hasProvidedAnnouncementRoles(undefined), false);
+  assert.equal(hasProvidedAnnouncementRoles([]), true);
+  assert.equal(hasProvidedAnnouncementRoles(["coach"]), true);
+
+  assert.equal(buildActiveAnnouncementsCacheKey("dashboard", ["coach"]), "dashboard:all");
+  assert.equal(
+    buildActiveAnnouncementsCacheKey("dashboard", ["super_admin"]),
+    "dashboard:all,admin",
+  );
 });

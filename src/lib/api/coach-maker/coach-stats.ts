@@ -1047,7 +1047,9 @@ export async function getCoachMakerMoksilgiDashboardSummary(
     .from("moksilgi_plans")
     .select("id, profile_id, author_name, region_name, team_name")
     .is("deleted_at", null)
-    .order("updated_at", { ascending: false });
+    .order("updated_at", { ascending: false })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false });
 
   if (accessibleProfileIds) {
     plansQuery = plansQuery.in("profile_id", accessibleProfileIds);

@@ -1,38 +1,69 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getRolesByProfileId } from "@/lib/auth/get-user-roles";
+import {
+  getRolesByProfileId,
+  serializeVerifiedRoles,
+} from "@/lib/auth/get-user-roles";
 import { hasRole } from "@/lib/auth/has-role";
 import {
   AUTH_EMAIL_HEADER,
   AUTH_USER_ID_HEADER,
+  LOCALE_HINT_COOKIE,
   PROFILE_ID_HEADER,
+  PROFILE_LOCALE_HEADER,
+  PROFILE_LOCALE_KNOWN_HEADER,
   PROFILE_STATUS_HEADER,
+  VERIFIED_ROLES_HEADER,
 } from "@/lib/auth/identity-headers";
 import {
   getAllowedRolesForPath,
+  getMiddlewareAuthRequirement,
   isApiRoute,
-  isProtectedPageRoute,
   isPublicRoute,
 } from "@/lib/auth/route-access";
-import type { Database, ProfileStatus } from "@/types/database";
+import { isActiveLocale, type ActiveLocale } from "@/lib/i18n/config";
+import type { Database, ProfileStatus, UserRole } from "@/types/database";
 
 const SUPABASE_HOST = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
   : "*.supabase.co";
 
-const CONTENT_SECURITY_POLICY = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
-  "font-src 'self'",
-  `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST}`,
-  "frame-ancestors 'none'",
-  "form-action 'self'",
-  "object-src 'none'",
-  "base-uri 'self'",
-].join("; ");
+const CSP_REPORT_ONLY_ENABLED =
+  (process.env.CSP_REPORT_ONLY === "1" || process.env.CSP_REPORT_ONLY === "true") &&
+  process.env.VERCEL_ENV !== "production";
+
+const LOCALE_HINT_MAX_AGE_SECONDS = 300;
+
+function buildContentSecurityPolicy(options: { reportOnly: boolean }) {
+  const directives = [
+    "default-src 'self'",
+    options.reportOnly
+      ? "script-src 'self'"
+      : "script-src 'self' 'unsafe-inline'",
+    options.reportOnly
+      ? "style-src 'self'"
+      : "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self'",
+    `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST}`,
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+  ];
+
+  if (options.reportOnly) {
+    directives.push("report-uri /api/csp-report");
+  }
+
+  return directives.join("; ");
+}
+
+const CONTENT_SECURITY_POLICY = buildContentSecurityPolicy({ reportOnly: false });
+const CONTENT_SECURITY_POLICY_REPORT_ONLY = buildContentSecurityPolicy({
+  reportOnly: true,
+});
 
 const securityHeaders = {
   "Content-Security-Policy": CONTENT_SECURITY_POLICY,
@@ -46,42 +77,64 @@ function applySecurityHeaders(response: NextResponse) {
     response.headers.set(key, value);
   }
 
+  if (CSP_REPORT_ONLY_ENABLED) {
+    response.headers.set(
+      "Content-Security-Policy-Report-Only",
+      CONTENT_SECURITY_POLICY_REPORT_ONLY,
+    );
+  }
+
   return response;
 }
 
-/**
- * 다운스트림으로 forward할 요청 헤더에서 클라이언트가 위조해 보냈을 수 있는
- * 인증 식별자 헤더를 먼저 제거한다(스푸핑 차단). 검증된 값은 인증 성공 경로에서만
- * 다시 set한다. 모든 NextResponse.next forward 경로는 이 sanitized 헤더를 사용한다.
- */
 function sanitizeForwardHeaders(request: NextRequest) {
   const headers = new Headers(request.headers);
   headers.delete(AUTH_USER_ID_HEADER);
   headers.delete(AUTH_EMAIL_HEADER);
   headers.delete(PROFILE_ID_HEADER);
   headers.delete(PROFILE_STATUS_HEADER);
+  headers.delete(PROFILE_LOCALE_HEADER);
+  headers.delete(PROFILE_LOCALE_KNOWN_HEADER);
+  headers.delete(VERIFIED_ROLES_HEADER);
   return headers;
 }
 
-/**
- * 인증/권한 검증을 통과한 경로에서만 호출. 검증된 식별자를 요청 헤더에 실어
- * 다운스트림(getSession 등)이 getUser 원격 왕복을 생략할 수 있게 한다.
- * supabase 세션 갱신으로 baseResponse에 세팅된 쿠키를 새 응답에 그대로 복사한다.
- */
-function buildAuthorizedResponse(
+type ProfileMiddlewareContext = {
+  profileId: string;
+  status: ProfileStatus | null;
+  preferredLocale: ActiveLocale | null;
+};
+
+function setLocaleHintCookie(response: NextResponse, preferredLocale: ActiveLocale | null) {
+  response.cookies.set(LOCALE_HINT_COOKIE, preferredLocale ?? "none", {
+    path: "/",
+    sameSite: "lax",
+    maxAge: LOCALE_HINT_MAX_AGE_SECONDS,
+  });
+}
+
+function setProfileContextHeaders(
+  requestHeaders: Headers,
+  context: ProfileMiddlewareContext,
+) {
+  requestHeaders.set(PROFILE_ID_HEADER, context.profileId);
+  if (context.status) {
+    requestHeaders.set(PROFILE_STATUS_HEADER, context.status);
+  }
+  requestHeaders.set(PROFILE_LOCALE_KNOWN_HEADER, "1");
+  if (context.preferredLocale) {
+    requestHeaders.set(PROFILE_LOCALE_HEADER, context.preferredLocale);
+  }
+}
+
+function buildAuthOnlyResponse(
   requestHeaders: Headers,
   baseResponse: NextResponse,
   user: { id: string; email?: string | null },
-  profileId: string,
-  status: ProfileStatus | null,
 ) {
   requestHeaders.set(AUTH_USER_ID_HEADER, user.id);
   if (user.email) {
     requestHeaders.set(AUTH_EMAIL_HEADER, user.email);
-  }
-  requestHeaders.set(PROFILE_ID_HEADER, profileId);
-  if (status) {
-    requestHeaders.set(PROFILE_STATUS_HEADER, status);
   }
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
@@ -89,6 +142,34 @@ function buildAuthorizedResponse(
   for (const cookie of baseResponse.cookies.getAll()) {
     response.cookies.set(cookie);
   }
+
+  return applySecurityHeaders(response);
+}
+
+function buildProfileAuthorizedResponse(
+  requestHeaders: Headers,
+  baseResponse: NextResponse,
+  user: { id: string; email?: string | null },
+  context: ProfileMiddlewareContext,
+  verifiedRoles?: UserRole[],
+) {
+  requestHeaders.set(AUTH_USER_ID_HEADER, user.id);
+  if (user.email) {
+    requestHeaders.set(AUTH_EMAIL_HEADER, user.email);
+  }
+  setProfileContextHeaders(requestHeaders, context);
+
+  if (verifiedRoles) {
+    requestHeaders.set(VERIFIED_ROLES_HEADER, serializeVerifiedRoles(verifiedRoles));
+  }
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+
+  for (const cookie of baseResponse.cookies.getAll()) {
+    response.cookies.set(cookie);
+  }
+
+  setLocaleHintCookie(response, context.preferredLocale);
 
   return applySecurityHeaders(response);
 }
@@ -214,13 +295,10 @@ function getRoleErrorResponse(request: NextRequest) {
 async function getProfileForMiddleware(
   supabase: SupabaseClient<Database>,
   authUserId: string,
-): Promise<
-  | { ok: true; profileId: string; status: ProfileStatus | null }
-  | { ok: false }
-> {
+): Promise<{ ok: true; context: ProfileMiddlewareContext } | { ok: false }> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, status")
+    .select("id, status, preferred_locale")
     .eq("auth_user_id", authUserId)
     .neq("status", "anonymized")
     .is("deleted_at", null)
@@ -230,8 +308,23 @@ async function getProfileForMiddleware(
     return { ok: false };
   }
 
-  const row = data as { id: string; status: ProfileStatus };
-  return { ok: true, profileId: row.id, status: row.status ?? null };
+  const row = data as {
+    id: string;
+    status: ProfileStatus;
+    preferred_locale: string | null;
+  };
+  const preferredLocale = isActiveLocale(row.preferred_locale)
+    ? row.preferred_locale
+    : null;
+
+  return {
+    ok: true,
+    context: {
+      profileId: row.id,
+      status: row.status ?? null,
+      preferredLocale,
+    },
+  };
 }
 
 function getDisabledAccountResponse(request: NextRequest) {
@@ -246,9 +339,13 @@ function getDisabledAccountResponse(request: NextRequest) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // 모든 forward 경로는 클라이언트發 인증 헤더가 제거된 sanitized 헤더를 사용한다.
   const requestHeaders = sanitizeForwardHeaders(request);
+
+  if (pathname === "/api/csp-report") {
+    return applySecurityHeaders(
+      NextResponse.next({ request: { headers: requestHeaders } }),
+    );
+  }
 
   if (isPublicRoute(pathname)) {
     return applySecurityHeaders(
@@ -256,9 +353,9 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  const needsAuth = isProtectedPageRoute(pathname) || isApiRoute(pathname);
+  const authRequirement = getMiddlewareAuthRequirement(pathname);
 
-  if (!needsAuth) {
+  if (!authRequirement) {
     return applySecurityHeaders(
       NextResponse.next({ request: { headers: requestHeaders } }),
     );
@@ -274,11 +371,7 @@ export async function middleware(request: NextRequest) {
     ));
   } catch {
     return isApiRoute(pathname)
-      ? createApiError(
-          401,
-          "UNAUTHORIZED",
-          "로그인이 필요합니다.",
-        )
+      ? createApiError(401, "UNAUTHORIZED", "로그인이 필요합니다.")
       : createLoginRedirect(request);
   }
 
@@ -297,52 +390,63 @@ export async function middleware(request: NextRequest) {
       : createLoginRedirect(request);
   }
 
+  if (authRequirement === "auth_only") {
+    return buildAuthOnlyResponse(requestHeaders, getResponse(), user);
+  }
+
   const profileForMiddleware = await getProfileForMiddleware(supabase, user.id);
 
   if (!profileForMiddleware.ok) {
     return getRoleErrorResponse(request);
   }
 
+  const { context } = profileForMiddleware;
+
   if (
-    profileForMiddleware.status !== null &&
-    profileForMiddleware.status !== "active" &&
+    context.status !== null &&
+    context.status !== "active" &&
     pathname !== "/dashboard"
   ) {
     return getDisabledAccountResponse(request);
   }
 
-  const allowedRoles = getAllowedRolesForPath(pathname);
-
-  if (!allowedRoles) {
-    return buildAuthorizedResponse(
+  if (authRequirement === "profile") {
+    return buildProfileAuthorizedResponse(
       requestHeaders,
       getResponse(),
       user,
-      profileForMiddleware.profileId,
-      profileForMiddleware.status,
+      context,
+    );
+  }
+
+  const allowedRoles = getAllowedRolesForPath(pathname);
+
+  if (!allowedRoles) {
+    return buildProfileAuthorizedResponse(
+      requestHeaders,
+      getResponse(),
+      user,
+      context,
     );
   }
 
   try {
-    const userRoles = await getRolesByProfileId(
-      supabase,
-      profileForMiddleware.profileId,
-    );
+    const userRoles = await getRolesByProfileId(supabase, context.profileId);
 
     if (!hasRole(userRoles, allowedRoles)) {
       return getRoleErrorResponse(request);
     }
+
+    return buildProfileAuthorizedResponse(
+      requestHeaders,
+      getResponse(),
+      user,
+      context,
+      userRoles,
+    );
   } catch {
     return getRoleErrorResponse(request);
   }
-
-  return buildAuthorizedResponse(
-    requestHeaders,
-    getResponse(),
-    user,
-    profileForMiddleware.profileId,
-    profileForMiddleware.status,
-  );
 }
 
 export const config = {

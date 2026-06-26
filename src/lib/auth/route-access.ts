@@ -78,5 +78,51 @@ export function getAllowedRolesForPath(pathname: string): UserRole[] | null {
     return COACH_MAKER_ROUTE_ROLES;
   }
 
+  if (pathname.startsWith("/api/admin/")) {
+    return ADMIN_ROUTE_ROLES;
+  }
+
+  if (pathname.startsWith("/api/coach-maker/")) {
+    return COACH_MAKER_ROUTE_ROLES;
+  }
+
   return null;
+}
+
+/** middleware auth.getUser()만 필요 — profile/status/locale 조회 생략 */
+export function isAuthOnlyApiRoute(pathname: string) {
+  return pathname.startsWith("/api/i18n/");
+}
+
+export type MiddlewareAuthRequirement =
+  | "auth_only"
+  | "profile"
+  | "role_gate";
+
+/**
+ * null — 인증 불필요(공개·미매칭).
+ * auth_only — 세션만 검증.
+ * profile — profile + disabled 차단(페이지·profile API).
+ * role_gate — profile + user_roles + 역할 허용 목록.
+ */
+export function getMiddlewareAuthRequirement(
+  pathname: string,
+): MiddlewareAuthRequirement | null {
+  if (isPublicRoute(pathname)) {
+    return null;
+  }
+
+  if (!isProtectedPageRoute(pathname) && !isApiRoute(pathname)) {
+    return null;
+  }
+
+  if (getAllowedRolesForPath(pathname)) {
+    return "role_gate";
+  }
+
+  if (isAuthOnlyApiRoute(pathname)) {
+    return "auth_only";
+  }
+
+  return "profile";
 }

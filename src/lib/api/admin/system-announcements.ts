@@ -2,7 +2,7 @@ import "server-only";
 
 import { ADMIN_WRITE_ROLES, requireAdminProfile } from "@/lib/auth/require-admin-profile";
 import { getSession } from "@/lib/auth/getSession";
-import { getRolesByProfileId } from "@/lib/auth/get-user-roles";
+import { getRolesWithHeaderFallback } from "@/lib/auth/get-user-roles";
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { hasRole } from "@/lib/auth/has-role";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -90,6 +90,29 @@ type ActiveAnnouncementCacheEntry = {
 };
 
 const activeAnnouncementsCache = new Map<string, ActiveAnnouncementCacheEntry>();
+const activeAnnouncementsInflight = new Map<string, Promise<SystemAnnouncement[]>>();
+
+/** roles 인자가 주어지면(빈 배열 포함) auth/session/profile/roles 조회 경로를 타지 않는다. */
+export function hasProvidedAnnouncementRoles(
+  roles: UserRole[] | undefined,
+): roles is UserRole[] {
+  return roles !== undefined;
+}
+
+export function resolveAnnouncementAudiences(
+  roles: UserRole[],
+): SystemAnnouncementAudience[] {
+  const isAdmin = hasRole(roles, ADMIN_WRITE_ROLES);
+  return isAdmin ? ["all", "admin"] : ["all"];
+}
+
+export function buildActiveAnnouncementsCacheKey(
+  placement: SystemAnnouncementPlacement,
+  roles: UserRole[],
+): string {
+  const audiences = resolveAnnouncementAudiences(roles);
+  return `${placement}:${audiences.join(",")}`;
+}
 
 function getServiceClient(): DynamicSupabaseClient {
   const { client, error } = createSupabaseServiceClient();
@@ -549,10 +572,10 @@ export async function getActiveAnnouncementsForCurrentUser({
   placement: SystemAnnouncementPlacement;
   roles?: UserRole[];
 }): Promise<SystemAnnouncement[]> {
-  const supabase = await createSupabaseServerClient();
   let roles = existingRoles;
 
-  if (!roles) {
+  if (!hasProvidedAnnouncementRoles(roles)) {
+    const supabase = await createSupabaseServerClient();
     const session = await getSession();
 
     if (!session.user) {
@@ -562,7 +585,7 @@ export async function getActiveAnnouncementsForCurrentUser({
     try {
       const verifiedProfileId = await getVerifiedProfileId();
       if (verifiedProfileId) {
-        roles = await getRolesByProfileId(supabase, verifiedProfileId);
+        roles = await getRolesWithHeaderFallback(supabase, verifiedProfileId);
       } else {
         const { data: profile } = await supabase
           .from("profiles")
@@ -572,7 +595,7 @@ export async function getActiveAnnouncementsForCurrentUser({
           .is("deleted_at", null)
           .maybeSingle();
         roles = profile
-          ? await getRolesByProfileId(supabase, (profile as { id: string }).id)
+          ? await getRolesWithHeaderFallback(supabase, (profile as { id: string }).id)
           : [];
       }
     } catch {
@@ -580,45 +603,56 @@ export async function getActiveAnnouncementsForCurrentUser({
     }
   }
 
-  const isAdmin = hasRole(roles, ADMIN_WRITE_ROLES);
-  const audiences: SystemAnnouncementAudience[] = isAdmin ? ["all", "admin"] : ["all"];
-  const now = new Date().toISOString();
-  const cacheKey = `${placement}:${audiences.join(",")}`;
+  const cacheKey = buildActiveAnnouncementsCacheKey(placement, roles);
+  const audiences = resolveAnnouncementAudiences(roles);
   const cached = activeAnnouncementsCache.get(cacheKey);
 
   if (cached && cached.expiresAt > Date.now()) {
     return cached.announcements;
   }
 
-  const client = supabase as unknown as DynamicSupabaseClient;
-  const { data, error } = await client
-    .from("system_announcements")
-    .select(ACTIVE_SELECT_COLUMNS)
-    .eq("placement", placement)
-    .eq("is_active", true)
-    .is("deleted_at", null)
-    .in("audience", audiences)
-    .or(`starts_at.is.null,starts_at.lte.${now}`)
-    .or(`ends_at.is.null,ends_at.gte.${now}`)
-    .order("priority", { ascending: false })
-    .order("created_at", { ascending: false });
+  let inflight = activeAnnouncementsInflight.get(cacheKey);
 
-  if (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.warn("[SYSTEM_ANNOUNCEMENTS_ACTIVE_GET_FAILED]", error.message);
-    }
-    return [];
+  if (!inflight) {
+    inflight = (async () => {
+      const supabase = await createSupabaseServerClient();
+      const client = supabase as unknown as DynamicSupabaseClient;
+      const now = new Date().toISOString();
+      const { data, error } = await client
+        .from("system_announcements")
+        .select(ACTIVE_SELECT_COLUMNS)
+        .eq("placement", placement)
+        .eq("is_active", true)
+        .is("deleted_at", null)
+        .in("audience", audiences)
+        .or(`starts_at.is.null,starts_at.lte.${now}`)
+        .or(`ends_at.is.null,ends_at.gte.${now}`)
+        .order("priority", { ascending: false })
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        if (process.env.NODE_ENV === "development") {
+          console.warn("[SYSTEM_ANNOUNCEMENTS_ACTIVE_GET_FAILED]", error.message);
+        }
+        return [];
+      }
+
+      const announcements = ((data ?? []) as Record<string, unknown>[]).map(
+        mapActiveAnnouncement,
+      );
+
+      activeAnnouncementsCache.set(cacheKey, {
+        announcements,
+        expiresAt: Date.now() + ACTIVE_ANNOUNCEMENTS_CACHE_TTL_MS,
+      });
+
+      return announcements;
+    })().finally(() => {
+      activeAnnouncementsInflight.delete(cacheKey);
+    });
+
+    activeAnnouncementsInflight.set(cacheKey, inflight);
   }
 
-  const announcements = ((data ?? []) as Record<string, unknown>[]).map(
-    mapActiveAnnouncement,
-  );
-
-  // 공지 변경 후 최대 3분 반영 지연 가능.
-  activeAnnouncementsCache.set(cacheKey, {
-    announcements,
-    expiresAt: Date.now() + ACTIVE_ANNOUNCEMENTS_CACHE_TTL_MS,
-  });
-
-  return announcements;
+  return inflight;
 }

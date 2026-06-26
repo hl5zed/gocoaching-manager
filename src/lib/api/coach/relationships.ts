@@ -1,4 +1,9 @@
 import { getSession } from "@/lib/auth/getSession";
+import {
+  ensureCoachLevelAccess,
+  getCoachRoleRowsWithHeaderFallback,
+  type CoachRoleRow,
+} from "@/lib/auth/coach-api-access";
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import type {
@@ -6,17 +11,7 @@ import type {
   ProfileRow,
   RelationshipType,
   ScopeType,
-  UserRole,
 } from "@/types/database";
-
-const COACH_LEVEL_ROLES: ReadonlySet<UserRole> = new Set([
-  "coach",
-  "coach_maker",
-  "church_admin",
-  "organization_admin",
-  "country_admin",
-  "super_admin",
-]);
 
 const PAGE_SIZE = 50;
 
@@ -24,13 +19,6 @@ type CoachProfile = Pick<
   ProfileRow,
   "id" | "display_name" | "full_name" | "email" | "status"
 >;
-
-type CoachRoleRow = {
-  role: UserRole;
-  scope_type: ScopeType;
-  scope_id: string | null;
-  status: "active";
-};
 
 type RelationshipRow = {
   id: string;
@@ -219,19 +207,27 @@ async function getCurrentCoachAccess() {
   }
 
   const currentProfile = profile as CoachProfile;
-  const { data: roles, error: rolesError } = await serviceClient
-    .from("user_roles")
-    .select("role, scope_type, scope_id, status")
-    .eq("profile_id", currentProfile.id)
-    .eq("status", "active")
-    .eq("is_active", true)
-    .is("deleted_at", null)
-    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+  const coachAccess = await ensureCoachLevelAccess(serviceClient, currentProfile.id);
 
-  if (rolesError) {
+  if (!coachAccess.ok) {
+    return {
+      ok: false as const,
+      error: {
+        code: "FORBIDDEN" as const,
+        message: coachAccess.message,
+      },
+    };
+  }
+
+  const rolesResult = await getCoachRoleRowsWithHeaderFallback(
+    serviceClient,
+    currentProfile.id,
+  );
+
+  if (!rolesResult.ok) {
     logServerError(
       "COACH_ROLE_LOOKUP_FAILED",
-      rolesError.message ?? "Coach role lookup failed.",
+      rolesResult.message,
     );
     return {
       ok: false as const,
@@ -242,25 +238,12 @@ async function getCurrentCoachAccess() {
     };
   }
 
-  const activeRoles = (roles ?? []) as CoachRoleRow[];
-  const hasCoachRole = activeRoles.some((role) => COACH_LEVEL_ROLES.has(role.role));
-
-  if (!hasCoachRole) {
-    return {
-      ok: false as const,
-      error: {
-        code: "FORBIDDEN" as const,
-        message: "코치 권한이 없습니다.",
-      },
-    };
-  }
-
   return {
     ok: true as const,
     data: {
       serviceClient,
       profile: currentProfile,
-      roles: activeRoles,
+      roles: rolesResult.roles,
     },
   };
 }

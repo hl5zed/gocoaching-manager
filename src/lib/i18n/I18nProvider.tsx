@@ -17,6 +17,7 @@ import {
   STORAGE_KEY,
   type ActiveLocale,
 } from "./config";
+import { LOCALE_HINT_COOKIE } from "@/lib/auth/identity-headers";
 import { ko } from "./ko";
 
 type MessageDictionary = Record<string, string>;
@@ -43,19 +44,89 @@ function readLocaleFromPayload(payload: unknown) {
   return (payload as { locale?: unknown }).locale;
 }
 
-export function I18nProvider({ children }: { children: ReactNode }) {
+function readLocaleHintFromCookie(): ActiveLocale | "none" | null {
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  const match = document.cookie.match(
+    new RegExp(`(?:^|;\\s*)${LOCALE_HINT_COOKIE}=([^;]*)`),
+  );
+
+  if (!match) {
+    return null;
+  }
+
+  const value = decodeURIComponent(match[1]);
+
+  if (value === "none") {
+    return "none";
+  }
+
+  return isActiveLocale(value) ? value : null;
+}
+
+function readStoredLocale(): ActiveLocale | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const storedLocale = window.localStorage.getItem(STORAGE_KEY);
+  return isActiveLocale(storedLocale) ? storedLocale : null;
+}
+
+function resolveInitialLocale(initialLocale?: ActiveLocale | null) {
+  if (isActiveLocale(initialLocale)) {
+    return initialLocale;
+  }
+
+  return DEFAULT_LOCALE;
+}
+
+function scheduleDeferredLocaleFetch(callback: () => void, options?: { timeoutMs?: number }) {
+  const timeoutMs = options?.timeoutMs ?? 300;
+
+  if (typeof window.requestIdleCallback === "function") {
+    const idleId = window.requestIdleCallback(callback, {
+      timeout: Math.max(timeoutMs, 1500),
+    });
+
+    return () => {
+      window.cancelIdleCallback(idleId);
+    };
+  }
+
+  const timeoutId = window.setTimeout(callback, timeoutMs);
+
+  return () => {
+    window.clearTimeout(timeoutId);
+  };
+}
+
+export function I18nProvider({
+  children,
+  initialLocale = null,
+}: {
+  children: ReactNode;
+  initialLocale?: ActiveLocale | null;
+}) {
   const pathname = usePathname();
-  const [locale, setLocaleState] = useState<ActiveLocale>(DEFAULT_LOCALE);
+  const [locale, setLocaleState] = useState<ActiveLocale>(() =>
+    resolveInitialLocale(initialLocale),
+  );
   const [dict, setDict] = useState<MessageDictionary>(ko);
   const hasSyncedProfileLocaleRef = useRef(false);
 
   useEffect(() => {
-    const storedLocale = window.localStorage.getItem(STORAGE_KEY);
+    const storedLocale = readStoredLocale();
 
-    if (isActiveLocale(storedLocale)) {
+    if (storedLocale) {
       setLocaleState(storedLocale);
+    } else if (isActiveLocale(initialLocale)) {
+      setLocaleState(initialLocale);
+      window.localStorage.setItem(STORAGE_KEY, initialLocale);
     }
-  }, []);
+  }, [initialLocale]);
 
   useEffect(() => {
     if (pathname === "/login" || pathname?.startsWith("/login/")) {
@@ -91,12 +162,76 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    void loadProfileLocale();
+    const storedLocale = readStoredLocale();
+    const localeHint = readLocaleHintFromCookie();
+
+    if (storedLocale) {
+      const scheduleBackgroundSync = () => {
+        if (cancelled) {
+          return;
+        }
+
+        void loadProfileLocale();
+      };
+
+      if (typeof window.requestIdleCallback === "function") {
+        const idleId = window.requestIdleCallback(scheduleBackgroundSync, {
+          timeout: 5000,
+        });
+
+        return () => {
+          cancelled = true;
+          window.cancelIdleCallback(idleId);
+        };
+      }
+
+      const timeoutId = window.setTimeout(scheduleBackgroundSync, 2000);
+
+      return () => {
+        cancelled = true;
+        window.clearTimeout(timeoutId);
+      };
+    }
+
+    if (localeHint === "none") {
+      return;
+    }
+
+    if (isActiveLocale(localeHint)) {
+      setLocaleState(localeHint);
+      window.localStorage.setItem(STORAGE_KEY, localeHint);
+      return;
+    }
+
+    if (isActiveLocale(initialLocale)) {
+      return;
+    }
+
+    const runLocaleFetch = () => {
+      if (cancelled) {
+        return;
+      }
+
+      void loadProfileLocale();
+    };
+
+    if (pathname === "/dashboard") {
+      const cancelDeferredFetch = scheduleDeferredLocaleFetch(runLocaleFetch, {
+        timeoutMs: 300,
+      });
+
+      return () => {
+        cancelled = true;
+        cancelDeferredFetch();
+      };
+    }
+
+    runLocaleFetch();
 
     return () => {
       cancelled = true;
     };
-  }, [pathname]);
+  }, [initialLocale, pathname]);
 
   // When locale changes, load the matching dictionary
   useEffect(() => {

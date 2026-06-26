@@ -10,7 +10,6 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { getSession } from "@/lib/auth/getSession";
 import { getDashboardMe } from "@/lib/api/dashboard/me";
 import { getDashboardQuickLinksState } from "@/lib/dashboard/quick-links";
-import { getActiveAnnouncementsForCurrentUser } from "@/lib/api/admin/system-announcements";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
 import { createApiPerformanceLogger } from "@/lib/performance";
@@ -207,11 +206,7 @@ export default async function DashboardPage() {
     profile?.email ||
     authEmail ||
     "사용자";
-  const dashboardAnnouncements = await getActiveAnnouncementsForCurrentUser({
-    placement: "dashboard",
-    roles: roleValues,
-  });
-  perf.mark("dashboard.announcements_query", dashboardAnnouncements.length);
+  const dashboardAnnouncements = result.data.announcements;
   perf.mark("dashboard.complete", 1);
 
   return (

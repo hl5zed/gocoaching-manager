@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
+import type { ComponentProps, ButtonHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/ui/cn";
 import { Icon, type IconName } from "./Icon";
 
@@ -56,9 +56,9 @@ export function Button({
   );
 }
 
-export type ButtonLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> &
-  SharedProps & {
-    href: string;
+export type ButtonLinkProps = SharedProps &
+  Omit<ComponentProps<typeof Link>, "className"> & {
+    className?: string;
   };
 
 export function ButtonLink({

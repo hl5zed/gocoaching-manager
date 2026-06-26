@@ -20,7 +20,26 @@ export type MyCoachingRole = {
 export type MyCoachingProfile = Pick<
   ProfileRow,
   "id" | "email" | "full_name" | "display_name" | "status" | "timezone" | "organization_id"
->;
+> & {
+  /** profiles.organization_id FK 조인으로 함께 조회한 소속 조직 기본 타임존 (없으면 null) */
+  organization_default_timezone: string | null;
+};
+
+type EmbeddedOrgTimezone = { default_timezone: string | null };
+type ProfileWithOrgRow = Pick<
+  ProfileRow,
+  "id" | "email" | "full_name" | "display_name" | "status" | "timezone" | "organization_id"
+> & {
+  organizations: EmbeddedOrgTimezone | EmbeddedOrgTimezone[] | null;
+};
+
+function extractOrgTimezone(
+  embed: EmbeddedOrgTimezone | EmbeddedOrgTimezone[] | null | undefined,
+): string | null {
+  if (!embed) return null;
+  const row = Array.isArray(embed) ? embed[0] : embed;
+  return row?.default_timezone ?? null;
+}
 
 type RoleRecord = {
   role: UserRole;
@@ -120,7 +139,9 @@ export async function getMyCoachingMe(
 
     const profileQuery = supabase
       .from("profiles")
-      .select("id, email, full_name, display_name, status, timezone, organization_id")
+      .select(
+        "id, email, full_name, display_name, status, timezone, organization_id, organizations(default_timezone)",
+      )
       .is("deleted_at", null)
       .neq("status", "anonymized");
 
@@ -150,7 +171,17 @@ export async function getMyCoachingMe(
       };
     }
 
-    const profileRecord = profile as MyCoachingProfile;
+    const rawProfile = profile as ProfileWithOrgRow;
+    const profileRecord: MyCoachingProfile = {
+      id: rawProfile.id,
+      email: rawProfile.email,
+      full_name: rawProfile.full_name,
+      display_name: rawProfile.display_name,
+      status: rawProfile.status,
+      timezone: rawProfile.timezone,
+      organization_id: rawProfile.organization_id,
+      organization_default_timezone: extractOrgTimezone(rawProfile.organizations),
+    };
     const now = new Date().toISOString();
 
     const [rolesResult, relationshipsResult] = await Promise.all([

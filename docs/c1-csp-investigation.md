@@ -66,11 +66,41 @@ base-uri 'self'
 
 ## 다음 단계 (승인 필요)
 
-| 순서 | 작업 |
-|------|------|
-| 1 | B1 **0043** staging SQL Editor 적용 ([b1-0043-staging-runbook.md](./b1-0043-staging-runbook.md)) |
-| 2 | C1 CSP **Report-Only** pilot (middleware, staging only) |
-| 3 | C2 `as any` — DB 타입 재생성 + LOCK 파일 최소 수정 |
-| 4 | C7 쓰기 경로 단일화 — backfill 계획 수립 |
+| 순서 | 작업 | 상태 |
+|------|------|------|
+| 1 | B1 **0043** staging SQL Editor 적용 ([b1-0043-staging-runbook.md](./b1-0043-staging-runbook.md)) | 수동 |
+| 2 | C1 CSP **Report-Only** pilot | ✅ 코드 반영 (아래 참고) |
+| 3 | C2 `as any` — DB 타입 재생성 + LOCK 파일 최소 수정 | 대기 |
+| 4 | C7 쓰기 경로 단일화 — backfill 계획 수립 | 대기 |
 
 **C1 script `unsafe-inline` 즉시 제거는 권장하지 않음.**
+
+---
+
+## Report-Only pilot (staging)
+
+**Enforcing CSP** (`Content-Security-Policy`) — 변경 없음 (`unsafe-inline` 유지).
+
+**Report-Only CSP** (`Content-Security-Policy-Report-Only`) — `CSP_REPORT_ONLY=1` 일 때만 추가:
+
+- `script-src 'self'` (no `unsafe-inline`) — 위반 관측용
+- `style-src 'self'` (no `unsafe-inline`)
+- `report-uri /api/csp-report` → `POST /api/csp-report` (Vercel/staging 로그 `[CSP_REPORT]`)
+  - middleware/route 모두 `CSP_REPORT_ONLY=1|true`이고 `VERCEL_ENV != production`일 때만 활성
+  - 비활성 환경에서는 route가 `404` no-log
+  - body 10KB 초과는 `413`
+  - 로그는 allowlist 필드만 기록하며 URL 필드는 query/hash 제거
+
+### staging 활성화
+
+Vercel **staging** 프로젝트 → Environment Variables:
+
+```
+CSP_REPORT_ONLY=1
+```
+
+재배포 후 주요 페이지 탐색 → **Logs**에서 `[CSP_REPORT]` 검색.
+
+### prod
+
+`CSP_REPORT_ONLY` **설정하지 않음**. 실수로 설정되어도 `VERCEL_ENV=production`이면 Report-Only 헤더 미전송, `/api/csp-report` no-log `404`.

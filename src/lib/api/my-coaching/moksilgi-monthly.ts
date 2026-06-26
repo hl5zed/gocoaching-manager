@@ -1,3 +1,4 @@
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { getMoksilgiContext, type ServiceClient } from "./context";
 import type {
   InsertDto,
@@ -137,10 +138,14 @@ type SummaryTable = {
     error: PostgrestErrorLike | null;
   }>;
   update: (values: UpdateDto<"moksilgi_monthly_summaries">) => {
-    eq: (column: "id", value: string) => Promise<{
-      data: null;
-      error: PostgrestErrorLike | null;
-    }>;
+    eq: (column: "id", value: string) => {
+      select: (columns: "id") => {
+        maybeSingle: () => Promise<{
+          data: IdRow | null;
+          error: PostgrestErrorLike | null;
+        }>;
+      };
+    };
   };
 };
 
@@ -221,6 +226,28 @@ function capForSummary(value: number) {
   return Math.min(100, Math.max(0, value));
 }
 
+type MonthlyPerfStage =
+  | "monthly.context"
+  | "monthly.plan"
+  | "monthly.page_data"
+  | "monthly.save.round1"
+  | "monthly.save.upsert"
+  | "monthly.save.summary";
+
+function markMonthlyPerf(stage: MonthlyPerfStage, durationMs: number) {
+  if (process.env.NODE_ENV !== "development") {
+    return;
+  }
+
+  console.info(
+    `[API_PERFORMANCE] ${JSON.stringify({
+      route: "/my-coaching/moksilgi/monthly",
+      stage,
+      durationMs: Math.round(durationMs),
+    })}`,
+  );
+}
+
 async function getOwnedPlan(client: ServiceClient, profileId: string) {
   return client
     .from("moksilgi_plans")
@@ -228,7 +255,11 @@ async function getOwnedPlan(client: ServiceClient, profileId: string) {
     .eq("profile_id", profileId)
     .eq("status", "active")
     .is("deleted_at", null)
+    // Duplicate active plans are data anomalies; keep the normal case unchanged
+    // while making anomaly reads deterministic and newest-created first.
     .order("updated_at", { ascending: false })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .limit(1)
     .maybeSingle();
 }
@@ -251,27 +282,73 @@ async function getPlanData(client: ServiceClient, planId: string) {
   return { areasResult, detailsResult };
 }
 
+type SummaryStructureArea = Pick<MoksilgiMonthlyArea, "id" | "area_key">;
+type SummaryStructureDetail = Pick<MoksilgiMonthlyDetailGoal, "id" | "area_id">;
+
+/** summary 재계산용 최소 컬럼만 조회 (저장 시 full getPlanData 대체) */
+async function getSummaryStructure(client: ServiceClient, planId: string) {
+  const [areasResult, detailsResult] = await Promise.all([
+    client
+      .from("moksilgi_goal_areas")
+      .select("id, area_key")
+      .eq("plan_id", planId)
+      .is("deleted_at", null),
+    client
+      .from("moksilgi_detail_goals")
+      .select("id, area_id")
+      .eq("plan_id", planId)
+      .is("deleted_at", null),
+  ]);
+  return { areasResult, detailsResult };
+}
+
 export async function getMyMoksilgiMonthly(
   year: number,
   month: number,
-  options?: { profileId?: string },
+  options?: {
+    profileId?: string;
+    serviceClient?: ServiceClient;
+    /**
+     * 호출부에서 미리 조회한 moksilgi plan — 제공 시 plan DB 조회를 생략합니다.
+     * undefined(미전달) vs null(조회했으나 없음)을 구별합니다.
+     */
+    preloadedPlan?: { id: string; profile_id: string; title: string | null } | null;
+  },
 ): Promise<GetMyMoksilgiMonthlyResult> {
   const validation = validateYearMonth(year, month);
   if (validation) return { ok: false, error: validation };
 
+  const contextStartedAt = performance.now();
   const context = await getMoksilgiContext(
-    options?.profileId ? { profileId: options.profileId } : undefined,
+    options?.profileId || options?.serviceClient
+      ? {
+          profileId: options.profileId,
+          serviceClient: options.serviceClient,
+        }
+      : undefined,
   );
+  markMonthlyPerf("monthly.context", performance.now() - contextStartedAt);
   if (!context.ok) return { ok: false, error: context.error };
 
-  const { data: plan, error: planError } = await getOwnedPlan(
-    context.serviceClient,
-    context.profileId,
-  );
-  const ownedPlan = plan as PlanRow | null;
-  if (planError) {
-    return { ok: false, error: { code: "MOKSILGI_QUERY_FAILED", message: "목실기 정보를 불러올 수 없습니다." } };
+  const planStartedAt = performance.now();
+  let ownedPlan: PlanRow | null;
+
+  if (options?.preloadedPlan !== undefined) {
+    // 페이지에서 병렬로 미리 조회한 plan을 재사용 — DB 왕복 생략
+    ownedPlan = options.preloadedPlan as PlanRow | null;
+    markMonthlyPerf("monthly.plan", performance.now() - planStartedAt);
+  } else {
+    const { data: plan, error: planError } = await getOwnedPlan(
+      context.serviceClient,
+      context.profileId,
+    );
+    markMonthlyPerf("monthly.plan", performance.now() - planStartedAt);
+    if (planError) {
+      return { ok: false, error: { code: "MOKSILGI_QUERY_FAILED", message: "목실기 정보를 불러올 수 없습니다." } };
+    }
+    ownedPlan = plan as PlanRow | null;
   }
+
   if (!ownedPlan) {
     return {
       ok: true,
@@ -288,10 +365,10 @@ export async function getMyMoksilgiMonthly(
     };
   }
 
+  const pageDataStartedAt = performance.now();
   const [
     { areasResult, detailsResult },
     recordsResult,
-    summaryResult,
     yearlySummariesResult,
   ] = await Promise.all([
     getPlanData(context.serviceClient, ownedPlan.id),
@@ -309,26 +386,20 @@ export async function getMyMoksilgiMonthly(
       .eq("plan_id", ownedPlan.id)
       .eq("profile_id", context.profileId)
       .eq("year", year)
-      .eq("month", month)
-      .is("deleted_at", null)
-      .maybeSingle(),
-    context.serviceClient
-      .from("moksilgi_monthly_summaries")
-      .select(SUMMARY_SELECT)
-      .eq("plan_id", ownedPlan.id)
-      .eq("profile_id", context.profileId)
-      .eq("year", year)
       .is("deleted_at", null)
       .order("month", { ascending: true }),
   ]);
+  markMonthlyPerf("monthly.page_data", performance.now() - pageDataStartedAt);
 
   if (areasResult.error || detailsResult.error) {
     return { ok: false, error: { code: "MOKSILGI_QUERY_FAILED", message: "목실기 목표를 불러올 수 없습니다." } };
   }
 
-  if (recordsResult.error || summaryResult.error || yearlySummariesResult.error) {
+  if (recordsResult.error || yearlySummariesResult.error) {
     return { ok: false, error: { code: "MOKSILGI_QUERY_FAILED", message: "월별 기록을 불러올 수 없습니다." } };
   }
+
+  const yearlySummaries = (yearlySummariesResult.data ?? []) as MoksilgiMonthlySummary[];
 
   return {
     ok: true,
@@ -337,8 +408,8 @@ export async function getMyMoksilgiMonthly(
       areas: (areasResult.data ?? []) as MoksilgiMonthlyArea[],
       detailGoals: (detailsResult.data ?? []) as MoksilgiMonthlyDetailGoal[],
       records: (recordsResult.data ?? []) as MoksilgiMonthlyRecord[],
-      summary: (summaryResult.data as MoksilgiMonthlySummary | null) ?? null,
-      yearlySummaries: (yearlySummariesResult.data ?? []) as MoksilgiMonthlySummary[],
+      summary: yearlySummaries.find((summary) => summary.month === month) ?? null,
+      yearlySummaries,
       year,
       month,
     },
@@ -352,11 +423,12 @@ export async function getMyMoksilgiMonthly(
 async function recalculateSummaryWithContext(
   context: { ok: true; profileId: string; serviceClient: ServiceClient },
   planId: string,
-  areas: MoksilgiMonthlyArea[],
-  details: MoksilgiMonthlyDetailGoal[],
+  areas: SummaryStructureArea[],
+  details: SummaryStructureDetail[],
   year: number,
   month: number,
 ): Promise<SaveMyMoksilgiMonthlyRecordResult> {
+  const summaryStartedAt = performance.now();
   const [recordsResult, summaryCheckResult] = await Promise.all([
     context.serviceClient
       .from("moksilgi_monthly_records")
@@ -377,9 +449,14 @@ async function recalculateSummaryWithContext(
       .maybeSingle(),
   ]);
   const { data: records, error: recordsError } = recordsResult;
-  const { data: existing } = summaryCheckResult;
+  const { data: existing, error: existingError } = summaryCheckResult;
   if (recordsError) {
     return { ok: false, error: { code: "MOKSILGI_QUERY_FAILED", message: "월별 기록을 불러올 수 없습니다." } };
+  }
+  // summaryCheckResult 조회 실패 시 INSERT를 시도하면 unique constraint 위반이 발생할 수 있으므로 중단.
+  if (existingError) {
+    markMonthlyPerf("monthly.save.summary", performance.now() - summaryStartedAt);
+    return { ok: false, error: { code: "MOKSILGI_QUERY_FAILED", message: "월별 요약 상태를 확인할 수 없습니다." } };
   }
 
   const recordMap = new Map(
@@ -419,10 +496,19 @@ async function recalculateSummaryWithContext(
   const existingSummary = existing as IdRow | null;
 
   if (existingSummary) {
-    const { error } = await summaryTable(context.serviceClient)
+    // UPDATE 후 row를 select해서 실제로 반영됐는지 확인.
+    // Supabase .update().eq() 는 RLS에 의해 0 rows 업데이트돼도 error=null을 반환할 수 있으므로
+    // .select("id").maybeSingle()로 명시적으로 검증한다.
+    const { data: updated, error } = await summaryTable(context.serviceClient)
       .update({ ...values, total_rate: totalRate, average_rate: averageRate, updated_at: now })
-      .eq("id", existingSummary.id);
-    return error ? { ok: false, error: { code: "SAVE_FAILED", message: "월별 요약을 저장할 수 없습니다." } } : { ok: true };
+      .eq("id", existingSummary.id)
+      .select("id")
+      .maybeSingle();
+    markMonthlyPerf("monthly.save.summary", performance.now() - summaryStartedAt);
+    if (error || !updated) {
+      return { ok: false, error: { code: "SAVE_FAILED", message: "월별 요약을 저장할 수 없습니다." } };
+    }
+    return { ok: true };
   }
 
   const { error } = await summaryTable(context.serviceClient).insert({
@@ -437,6 +523,7 @@ async function recalculateSummaryWithContext(
     updated_at: now,
     deleted_at: null,
   });
+  markMonthlyPerf("monthly.save.summary", performance.now() - summaryStartedAt);
   return error ? { ok: false, error: { code: "SAVE_FAILED", message: "월별 요약을 저장할 수 없습니다." } } : { ok: true };
 }
 
@@ -462,7 +549,14 @@ export async function recalculateMyMoksilgiMonthlySummary(
   const areas = (areasResult.data ?? []) as MoksilgiMonthlyArea[];
   const details = (detailsResult.data ?? []) as MoksilgiMonthlyDetailGoal[];
 
-  return recalculateSummaryWithContext(context, planId, areas, details, year, month);
+  return recalculateSummaryWithContext(
+    context,
+    planId,
+    areas.map((area) => ({ id: area.id, area_key: area.area_key })),
+    details.map((detail) => ({ id: detail.id, area_id: detail.area_id })),
+    year,
+    month,
+  );
 }
 
 // 세부 목표 저장 시 필요한 최소 필드 타입
@@ -479,7 +573,12 @@ export async function saveMyMoksilgiMonthlyRecord(
   const validation = validateYearMonth(year, month);
   if (validation) return { ok: false, error: validation };
 
-  const context = await getMoksilgiContext();
+  const contextStartedAt = performance.now();
+  const verifiedProfileId = await getVerifiedProfileId();
+  const context = await getMoksilgiContext(
+    verifiedProfileId ? { profileId: verifiedProfileId } : undefined,
+  );
+  markMonthlyPerf("monthly.context", performance.now() - contextStartedAt);
   if (!context.ok) return { ok: false, error: context.error };
 
   const detailGoalId =
@@ -491,10 +590,7 @@ export async function saveMyMoksilgiMonthlyRecord(
   }
 
   // Round 1 (병렬): plan + 세부목표 + 기존 기록 동시 조회.
-  // - existingRecord: detail_goal_id + profile_id + year + month로 조회 (plan_id 불필요).
-  //   unique index (detail_goal_id, year, month) WHERE deleted_at IS NULL 활용.
-  // - detailById: RLS가 사용자 소유 plan으로 접근을 제한.
-  // Round 1 결과로 Round 2에서 record upsert + getPlanData를 병렬로 실행 가능.
+  const round1StartedAt = performance.now();
   const [planResult, detailResult, existingResult] = await Promise.all([
     getOwnedPlan(context.serviceClient, context.profileId),
     context.serviceClient
@@ -513,6 +609,7 @@ export async function saveMyMoksilgiMonthlyRecord(
       .is("deleted_at", null)
       .maybeSingle(),
   ]);
+  markMonthlyPerf("monthly.save.round1", performance.now() - round1StartedAt);
 
   const ownedPlan = planResult.data as PlanRow | null;
   const detail = detailResult.data as SaveDetailGoal | null;
@@ -561,10 +658,8 @@ export async function saveMyMoksilgiMonthlyRecord(
     updated_at: now,
   };
 
-  // Round 2 (병렬): record upsert + getPlanData 동시 실행.
-  // Round 1에서 existingRecord를 알고 있으므로 upsert 브랜치를 즉시 결정 가능.
-  // getPlanData는 summary 재계산에 필요한 areas/details를 가져오는데,
-  // upsert와 독립적이므로 병렬로 실행해 대기 시간을 줄인다.
+  // Round 2 (병렬): record upsert + summary 구조 lightweight 조회.
+  const upsertStartedAt = performance.now();
   const upsertP: Promise<{ data: IdRow | null; error: PostgrestErrorLike | null }> =
     existingRecord !== null
       ? recordTable(context.serviceClient)
@@ -587,12 +682,13 @@ export async function saveMyMoksilgiMonthlyRecord(
             deleted_at: null,
           } as InsertDto<"moksilgi_monthly_records">)
           .select("id")
-          .single();
+                .single();
 
   const [upsertResult, { areasResult, detailsResult }] = await Promise.all([
     upsertP,
-    getPlanData(context.serviceClient, ownedPlan.id),
+    getSummaryStructure(context.serviceClient, ownedPlan.id),
   ]);
+  markMonthlyPerf("monthly.save.upsert", performance.now() - upsertStartedAt);
 
   if (upsertResult.error || !upsertResult.data) {
     return { ok: false, error: { code: "SAVE_FAILED", message: "월별 기록을 저장할 수 없습니다." } };
@@ -601,9 +697,8 @@ export async function saveMyMoksilgiMonthlyRecord(
     return { ok: false, error: { code: "MOKSILGI_QUERY_FAILED", message: "목실기 목표를 불러올 수 없습니다." } };
   }
 
-  const areas = (areasResult.data ?? []) as MoksilgiMonthlyArea[];
-  const details = (detailsResult.data ?? []) as MoksilgiMonthlyDetailGoal[];
+  const areas = (areasResult.data ?? []) as SummaryStructureArea[];
+  const details = (detailsResult.data ?? []) as SummaryStructureDetail[];
 
-  // areas/details를 Round 2에서 이미 가져왔으므로 recalculate 시 재조회하지 않습니다.
   return recalculateSummaryWithContext(context, ownedPlan.id, areas, details, year, month);
 }

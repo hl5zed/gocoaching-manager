@@ -5,19 +5,10 @@ import {
   pickLatestActivePlanPerProfile,
   resolveActiveAreaKeys,
 } from "@/lib/coaching/moksilgi-year-summary";
+import { ensureCoachLevelAccess } from "@/lib/auth/coach-api-access";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import type { MoksilgiAreaKey, Tables } from "@/types/database";
-import type { ActiveRoleSlim } from "@/types/profile";
-
-const COACH_LEVEL_ROLES = new Set([
-  "coach",
-  "coach_maker",
-  "church_admin",
-  "organization_admin",
-  "country_admin",
-  "super_admin",
-]);
 
 type ServiceSupabaseClient = NonNullable<
   ReturnType<typeof createSupabaseServiceClient>["client"]
@@ -196,33 +187,14 @@ export async function getCoachMoksilgi(year: number): Promise<GetCoachMoksilgiRe
   }
 
   const profileId = (profile as { id: string }).id;
-  const { data: roles, error: rolesError } = await supabase
-    .from("user_roles")
-    .select("id, role, scope_type, scope_id, granted_at, expires_at")
-    .eq("profile_id", profileId)
-    .eq("status", "active")
-    .eq("is_active", true)
-    .is("deleted_at", null);
+  const coachAccess = await ensureCoachLevelAccess(supabase, profileId);
 
-  if (rolesError) {
+  if (!coachAccess.ok) {
     return {
       data: null,
       error: {
-        code: "ROLES_QUERY_FAILED",
-        message: "역할 정보를 조회하는 중 오류가 발생했습니다.",
-      },
-    };
-  }
-
-  const activeRoles = (roles ?? []) as ActiveRoleSlim[];
-  const hasCoachAccess = activeRoles.some((role) => COACH_LEVEL_ROLES.has(role.role));
-
-  if (!hasCoachAccess) {
-    return {
-      data: null,
-      error: {
-        code: "ACCESS_DENIED",
-        message: "코치 권한이 없습니다.",
+        code: coachAccess.code,
+        message: coachAccess.message,
       },
     };
   }
@@ -269,7 +241,9 @@ export async function getCoachMoksilgi(year: number): Promise<GetCoachMoksilgiRe
       .in("profile_id", coacheeIds)
       .eq("status", "active")
       .is("deleted_at", null)
-      .order("updated_at", { ascending: false }),
+      .order("updated_at", { ascending: false })
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false }),
     serviceClient
       .from("profiles")
       .select("id, display_name, full_name, email")

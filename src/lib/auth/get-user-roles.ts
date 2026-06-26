@@ -1,58 +1,48 @@
+import { headers } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, UserRole } from "@/types/database";
-
-type ProfileIdRow = {
-  id: string;
-};
+import { VERIFIED_ROLES_HEADER } from "@/lib/auth/identity-headers";
+import { USER_ROLES, type Database, type UserRole } from "@/types/database";
 
 type UserRoleRow = {
   role: UserRole;
 };
 
-export async function getUserRoles(
-  supabase: SupabaseClient<Database>,
-  userId: string,
-): Promise<UserRole[]> {
-  // This project stores role ownership in user_roles.profile_id, not auth.users.id.
-  // Existing code resolves auth.users.id -> profiles.id -> user_roles.profile_id.
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("auth_user_id", userId)
-    .neq("status", "anonymized")
-    .is("deleted_at", null)
-    .maybeSingle();
+const VALID_USER_ROLES = new Set<string>(USER_ROLES);
 
-  if (profileError) {
-    throw new Error("ROLE_PROFILE_LOOKUP_FAILED");
-  }
+export function serializeVerifiedRoles(roles: UserRole[]): string {
+  return roles.join(",");
+}
 
-  if (!profile) {
+export function parseVerifiedRolesHeader(value: string): UserRole[] {
+  if (value.length === 0) {
     return [];
   }
 
-  const profileRecord = profile as ProfileIdRow;
-  const { data: roles, error: rolesError } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("profile_id", profileRecord.id)
-    .eq("status", "active")
-    .eq("is_active", true)
-    .is("deleted_at", null)
-    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
-
-  if (rolesError) {
-    throw new Error("ROLE_QUERY_FAILED");
-  }
-
-  return ((roles ?? []) as UserRoleRow[]).map((role) => role.role);
+  return value
+    .split(",")
+    .map((role) => role.trim())
+    .filter((role): role is UserRole => VALID_USER_ROLES.has(role));
 }
 
 /**
- * profile_id를 이미 아는 경우 profiles 재조회 없이 user_roles만 조회한다.
- * middleware처럼 직전에 profiles를 1회 조회한 경로에서 중복 조회를 제거하기 위함.
- * getUserRoles 내부 user_roles 쿼리와 동일한 필터를 사용한다.
+ * middleware role-gated 경로에서 set한 roles.
+ * undefined — header 없음(비 role-gate 경로 등) → DB fallback.
  */
+export async function getVerifiedRolesFromHeaders(): Promise<UserRole[] | undefined> {
+  try {
+    const headerStore = await headers();
+    const value = headerStore.get(VERIFIED_ROLES_HEADER);
+
+    if (value === null) {
+      return undefined;
+    }
+
+    return parseVerifiedRolesHeader(value);
+  } catch {
+    return undefined;
+  }
+}
+
 export async function getRolesByProfileId(
   supabase: SupabaseClient<Database>,
   profileId: string,
@@ -71,4 +61,45 @@ export async function getRolesByProfileId(
   }
 
   return ((roles ?? []) as UserRoleRow[]).map((role) => role.role);
+}
+
+/** header 우선, 없으면 profile_id로 user_roles 조회 */
+export async function getRolesWithHeaderFallback(
+  supabase: SupabaseClient<Database>,
+  profileId: string,
+): Promise<UserRole[]> {
+  const verifiedRoles = await getVerifiedRolesFromHeaders();
+
+  if (verifiedRoles !== undefined) {
+    return verifiedRoles;
+  }
+
+  return getRolesByProfileId(supabase, profileId);
+}
+
+export async function getUserRoles(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+): Promise<UserRole[]> {
+  type ProfileIdRow = {
+    id: string;
+  };
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("auth_user_id", userId)
+    .neq("status", "anonymized")
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (profileError) {
+    throw new Error("ROLE_PROFILE_LOOKUP_FAILED");
+  }
+
+  if (!profile) {
+    return [];
+  }
+
+  return getRolesByProfileId(supabase, (profile as ProfileIdRow).id);
 }

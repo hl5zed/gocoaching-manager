@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
+import { DEFAULT_LOCALE } from "@/lib/i18n/config";
 
 export const metadata: Metadata = {
   title: "GoCoaching Manager",
@@ -13,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang={DEFAULT_LOCALE}>
       <body>
         <I18nProvider>{children}</I18nProvider>
       </body>

@@ -180,23 +180,24 @@ type CurrentProfileContext =
   | { ok: true; profileId: string; serviceClient: ServiceSupabaseClient }
   | { ok: false; error: MoksilgiError };
 
+type PlanOrderChain = {
+  order: (
+    column: "updated_at" | "created_at" | "id",
+    options: { ascending: boolean },
+  ) => PlanOrderChain;
+  limit: (count: 1) => {
+    maybeSingle: () => Promise<{
+      data: MoksilgiPlan | null;
+      error: PostgrestErrorLike | null;
+    }>;
+  };
+};
+
 type PlanTable = {
   select: (columns: typeof PLAN_SELECT) => {
     eq: (column: "profile_id", value: string) => {
       eq: (column: "status", value: MoksilgiStatus) => {
-        is: (column: "deleted_at", value: null) => {
-          order: (
-            column: "updated_at",
-            options: { ascending: boolean },
-          ) => {
-            limit: (count: 1) => {
-              maybeSingle: () => Promise<{
-                data: MoksilgiPlan | null;
-                error: PostgrestErrorLike | null;
-              }>;
-            };
-          };
-        };
+        is: (column: "deleted_at", value: null) => PlanOrderChain;
       };
     };
   };
@@ -424,7 +425,11 @@ async function getOwnedPlan(
     .eq("profile_id", profileId)
     .eq("status", "active")
     .is("deleted_at", null)
+    // Duplicate active plans are data anomalies; keep the normal case unchanged
+    // while making anomaly reads deterministic and newest-created first.
     .order("updated_at", { ascending: false })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .limit(1)
     .maybeSingle();
 }

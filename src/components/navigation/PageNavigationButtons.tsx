@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { useI18n } from "@/lib/i18n/useI18n";
@@ -26,8 +26,10 @@ export function PageNavigationButtons({
   showForward = false,
 }: PageNavigationButtonsProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { t } = useI18n();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const isOnDashboardHome = pathname === dashboardHref;
   const homeLabel =
     dashboardHref === "/admin"
       ? t("nav.adminCenter", "관리자 센터")
@@ -94,14 +96,28 @@ export function PageNavigationButtons({
           {t("common.next", "다음 화면")}
         </Button>
       ) : null}
-      <ButtonLink
-        className={navButtonClassName}
-        href={dashboardHref}
-        icon="dashboard"
-        size="sm"
-      >
-        {homeLabel}
-      </ButtonLink>
+      {isOnDashboardHome ? (
+        <Button
+          aria-current="page"
+          className={navButtonClassName}
+          disabled
+          icon="dashboard"
+          size="sm"
+          type="button"
+        >
+          {homeLabel}
+        </Button>
+      ) : (
+        <ButtonLink
+          className={navButtonClassName}
+          href={dashboardHref}
+          icon="dashboard"
+          prefetch={false}
+          size="sm"
+        >
+          {homeLabel}
+        </ButtonLink>
+      )}
       <LanguageSwitcher />
       <Button
         className={navButtonClassName}

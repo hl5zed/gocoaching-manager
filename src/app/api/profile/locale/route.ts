@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/getSession";
-import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
+import {
+  getVerifiedProfileId,
+  getVerifiedProfileLocaleResolution,
+} from "@/lib/auth/verified-identity";
 import { isActiveLocale, type ActiveLocale } from "@/lib/i18n/config";
+import {
+  getCachedProfileLocale,
+  setCachedProfileLocale,
+} from "@/lib/i18n/locale-cache";
 import { createApiPerformanceLogger } from "@/lib/performance";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -13,14 +20,6 @@ const noStoreHeaders = {
 type LocaleProfileRow = {
   preferred_locale: string | null;
 };
-
-type LocaleCacheEntry = {
-  expiresAt: number;
-  locale: ActiveLocale | null;
-};
-
-const LOCALE_CACHE_TTL_MS = 3 * 60 * 1000;
-const localeCache = new Map<string, LocaleCacheEntry>();
 
 type LocaleProfileTable = {
   select: (columns: string) => {
@@ -75,24 +74,39 @@ export async function GET() {
   }
 
   const cacheKey = session.user.id;
-  const cached = localeCache.get(cacheKey);
+  const cachedLocale = getCachedProfileLocale(cacheKey);
 
-  if (cached && cached.expiresAt > Date.now()) {
+  if (cachedLocale !== undefined) {
     perf.mark("profile.locale_lookup", 1);
     perf.mark("locale.complete", 1);
     return NextResponse.json(
       {
         ok: true,
-        locale: cached.locale,
+        locale: cachedLocale,
       },
       { headers: noStoreHeaders },
     );
   }
 
   try {
+    const localeResolution = await getVerifiedProfileLocaleResolution();
+
+    if (localeResolution.kind === "resolved") {
+      setCachedProfileLocale(cacheKey, localeResolution.locale);
+      perf.mark("profile.locale_lookup", 1);
+      perf.mark("locale.complete", 1);
+      return NextResponse.json(
+        {
+          ok: true,
+          locale: localeResolution.locale,
+        },
+        { headers: noStoreHeaders },
+      );
+    }
+
+    const verifiedProfileId = await getVerifiedProfileId();
     const supabase = await createSupabaseServerClient();
     const profiles = supabase.from("profiles") as unknown as LocaleProfileTable;
-    const verifiedProfileId = await getVerifiedProfileId();
 
     const { data, error } = verifiedProfileId
       ? await profiles
@@ -123,10 +137,7 @@ export async function GET() {
       : null;
 
     // locale 변경 직후 최대 3분 반영 지연 가능.
-    localeCache.set(cacheKey, {
-      expiresAt: Date.now() + LOCALE_CACHE_TTL_MS,
-      locale,
-    });
+    setCachedProfileLocale(cacheKey, locale);
     perf.mark("locale.complete", locale ? 1 : 0);
 
     return NextResponse.json(
@@ -216,10 +227,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    localeCache.set(session.user.id, {
-      expiresAt: Date.now() + LOCALE_CACHE_TTL_MS,
-      locale,
-    });
+    setCachedProfileLocale(session.user.id, locale);
 
     return NextResponse.json(
       { ok: true, locale },
