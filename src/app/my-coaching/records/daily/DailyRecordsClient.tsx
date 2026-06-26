@@ -524,6 +524,28 @@ export function DailyRecordsClient({
               오늘 하루를 짧게 돌아보며 남겨보세요. 한두 줄이면 충분해요. 남긴 내용은 코치와의 다음 코칭 준비에 쓰여요.
             </p>
             <div className="rounded-card border border-line-soft bg-surface-card p-3">
+              <label className="text-sm font-medium text-ink-base" htmlFor="title">
+                {t("myCoaching.records.dailyPage.form.title", "제목")}{" "}
+                <span className="font-normal text-ink-muted">(선택)</span>
+              </label>
+              <input
+                className="mt-1 w-full rounded-control border border-line-base px-3 py-2 text-sm"
+                id="title"
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    title: event.target.value,
+                  }))
+                }
+                placeholder={t(
+                  "myCoaching.records.dailyPage.form.titlePlaceholder",
+                  "오늘 기록의 제목",
+                )}
+                type="text"
+                value={form.title}
+              />
+            </div>
+            <div className="rounded-card border border-line-soft bg-surface-card p-3">
               <label className="text-sm font-medium text-ink-base" htmlFor="gratitude">
                 감사한 일
               </label>

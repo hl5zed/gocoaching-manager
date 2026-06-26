@@ -1,4 +1,5 @@
 import { requireCoacheePageProfile } from "@/lib/api/my-coaching/coachee-page-auth";
+import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { TodayAreaCard } from "@/components/coachee/TodayAreaCard";
 import { Badge } from "@/components/ui/Badge";
@@ -25,7 +26,6 @@ import { TodayTodoList, type TodayTodo } from "@/components/coachee/TodayTodoLis
 import { WeeklyCheckStrip } from "@/components/coachee/WeeklyCheckStrip";
 
 
-type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
 type PlanRow = Pick<Tables<"moksilgi_plans">, "id" | "title" | "core_values_json">;
 type GoalAreaRow = Pick<
   Tables<"moksilgi_goal_areas">,
@@ -196,7 +196,26 @@ async function toggleTodayCheckAction(formData: FormData) {
 }
 
 export default async function MyCoachingPage() {
-  const auth = await requireCoacheePageProfile("/my-coaching");
+  const { client: serviceClient, error: serviceClientError } =
+    createSupabaseServiceClient();
+
+  // auth와 plan 조회를 병렬로 시작 (monthly 페이지와 동일한 패턴)
+  const verifiedProfileId = await getVerifiedProfileId();
+
+  const [auth, preloadedPlanResult] = await Promise.all([
+    requireCoacheePageProfile("/my-coaching"),
+    verifiedProfileId && serviceClient
+      ? serviceClient
+          .from("moksilgi_plans")
+          .select("id, title, core_values_json")
+          .eq("profile_id", verifiedProfileId)
+          .eq("status", "active")
+          .is("deleted_at", null)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve({ data: null as PlanRow | null, error: null }),
+  ]);
 
   if (!auth.ok && auth.reason === "fetch_failed") {
     return (
@@ -231,9 +250,6 @@ export default async function MyCoachingPage() {
 
   const profile = auth.profile;
 
-  const { client: serviceClient, error: serviceClientError } =
-    createSupabaseServiceClient();
-
   if (!serviceClient) {
     console.error("[MY_COACHING_HOME_SERVICE_CLIENT_UNAVAILABLE]", serviceClientError);
     return (
@@ -249,37 +265,31 @@ export default async function MyCoachingPage() {
 
   const profileId = profile.id;
 
-  const orgTimezonePromise =
-    profile.organization_id && !profile.timezone
-      ? serviceClient
-          .from("organizations")
-          .select("default_timezone")
-          .eq("id", profile.organization_id)
+  // preloadedPlan은 verifiedProfileId가 있고 에러가 없을 때만 신뢰
+  const plan =
+    verifiedProfileId && !preloadedPlanResult.error
+      ? (preloadedPlanResult.data as PlanRow | null) ?? null
+      : null;
+
+  // plan이 없고 verifiedProfileId도 없었다면 직접 조회 (fallback)
+  const activePlanResult =
+    plan === null && !verifiedProfileId
+      ? await serviceClient
+          .from("moksilgi_plans")
+          .select("id, title, core_values_json")
+          .eq("profile_id", profileId)
+          .eq("status", "active")
           .is("deleted_at", null)
+          .order("updated_at", { ascending: false })
+          .limit(1)
           .maybeSingle()
-      : Promise.resolve({ data: null as OrganizationTimezoneRow | null, error: null });
+      : null;
 
-  const activePlanPromise = serviceClient
-    .from("moksilgi_plans")
-    .select("id, title, core_values_json")
-    .eq("profile_id", profileId)
-    .eq("status", "active")
-    .is("deleted_at", null)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const [organizationResult, activePlanResult] = await Promise.all([
-    orgTimezonePromise,
-    activePlanPromise,
-  ]);
-
-  const organizationTimezone =
-    (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ?? null;
+  const resolvedPlan = plan ?? (activePlanResult?.data as PlanRow | null) ?? null;
 
   const effectiveTimezone = resolveTimezoneFallback(
     profile.timezone,
-    organizationTimezone,
+    profile.organization_default_timezone,
     null,
   );
   const todayDateKey = getTodayDateInTimezone(effectiveTimezone);
@@ -288,7 +298,6 @@ export default async function MyCoachingPage() {
   const currentMonth = getCurrentMonthInTimezone(effectiveTimezone);
   const currentDay = Number(todayDateKey.slice(-2));
 
-  const plan = (activePlanResult.data as PlanRow | null) ?? null;
   let areaCards = ensureFourAreas([]);
   let totalGoals = 0;
   let totalCompletedGoals = 0;
@@ -296,12 +305,12 @@ export default async function MyCoachingPage() {
   let todayTodos: TodayTodo[] = [];
   let monthlyRecords: MonthlyRecordRow[] = [];
 
-  if (plan) {
+  if (resolvedPlan) {
     const weekMonthKeys = getWeekMonthKeysFromDateKey(todayDateKey);
     const recordsQuery = serviceClient
       .from("moksilgi_monthly_records")
       .select("detail_goal_id, daily_checks_json, year, month")
-      .eq("plan_id", plan.id)
+      .eq("plan_id", resolvedPlan.id)
       .eq("profile_id", profileId)
       .is("deleted_at", null);
     const weeklyRecordsPromise =
@@ -318,13 +327,13 @@ export default async function MyCoachingPage() {
       serviceClient
         .from("moksilgi_goal_areas")
         .select("id, area_key, area_title, sort_order")
-        .eq("plan_id", plan.id)
+        .eq("plan_id", resolvedPlan.id)
         .is("deleted_at", null)
         .order("sort_order", { ascending: true }),
       serviceClient
         .from("moksilgi_detail_goals")
         .select("id, area_id, title, sort_order, measurement_type")
-        .eq("plan_id", plan.id)
+        .eq("plan_id", resolvedPlan.id)
         .is("deleted_at", null)
         .order("sort_order", { ascending: true }),
       weeklyRecordsPromise,
@@ -366,7 +375,7 @@ export default async function MyCoachingPage() {
     auth.authEmail ??
     "피코치";
 
-  const coreValues = plan ? parseCoreValues(plan.core_values_json) : [];
+  const coreValues = resolvedPlan ? parseCoreValues(resolvedPlan.core_values_json) : [];
 
   return (
     <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
@@ -460,7 +469,7 @@ export default async function MyCoachingPage() {
           />
         ) : null}
 
-        {plan ? (
+        {resolvedPlan ? (
           <WeeklyCheckStrip
             records={monthlyRecords.map((record) => ({
               daily_checks_json: record.daily_checks_json,

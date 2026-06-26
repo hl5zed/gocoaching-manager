@@ -22,7 +22,7 @@ type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">
 type ActivePlanRow = Pick<Tables<"moksilgi_plans">, "id">;
 type DailyContextSummaryRow = Pick<
   Tables<"moksilgi_monthly_summaries">,
-  "total_rate" | "year" | "month"
+  "average_rate" | "year" | "month"
 >;
 
 export default async function DailyRecordsPage() {
@@ -32,7 +32,7 @@ export default async function DailyRecordsPage() {
     redirect("/login?redirectTo=%2Fmy-coaching%2Frecords%2Fdaily");
   }
 
-  let monthlyContext: { totalRate: number; year: number; month: number } | null =
+  let monthlyContext: { averageRate: number; year: number; month: number } | null =
     null;
 
   const { client: serviceClient } = createSupabaseServiceClient();
@@ -102,7 +102,7 @@ export default async function DailyRecordsPage() {
       if (plan) {
         const { data: summaryRow } = await serviceClient
           .from("moksilgi_monthly_summaries")
-          .select("total_rate, year, month")
+          .select("average_rate, year, month")
           .eq("plan_id", plan.id)
           .eq("profile_id", profile.id)
           .eq("year", year)
@@ -114,7 +114,7 @@ export default async function DailyRecordsPage() {
 
         if (summary) {
           monthlyContext = {
-            totalRate: summary.total_rate,
+            averageRate: summary.average_rate,
             year,
             month,
           };
@@ -152,7 +152,7 @@ export default async function DailyRecordsPage() {
         {monthlyContext ? (
           <div className="mt-4 rounded-control border border-line-soft bg-surface-sunken p-3">
             <p className="text-sm font-semibold text-ink-base">
-              이번 달 종합 실행률 {monthlyContext.totalRate.toFixed(1)}%
+              이번 달 평균 실행률 {monthlyContext.averageRate.toFixed(1)}%
             </p>
             <p className="mt-1 text-xs text-ink-muted">
               {monthlyContext.year}년 {monthlyContext.month}월 목실기 요약 기준

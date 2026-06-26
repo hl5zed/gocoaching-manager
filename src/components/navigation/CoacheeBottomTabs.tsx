@@ -18,6 +18,8 @@ type CoacheeTab = {
   alsoActivePrefixes?: string[];
   /** 탭 아이콘 */
   icon: ReactNode;
+  /** false: Next.js Link prefetch 비활성화 (redirect 전용 탭 등) */
+  prefetch?: false;
 };
 
 function IconToday() {
@@ -137,6 +139,7 @@ const tabs: CoacheeTab[] = [
     match: "prefix",
     alsoActivePrefixes: ["/my-coaching/moksilgi/monthly"],
     icon: <IconCheck />,
+    prefetch: false,
   },
   {
     key: "record",
@@ -197,6 +200,7 @@ export function CoacheeBottomTabs() {
                     : "text-ink-muted hover:text-ink-base",
                 )}
                 href={tab.href}
+                prefetch={tab.prefetch}
               >
                 <span aria-hidden>{tab.icon}</span>
                 <span className="leading-none">{tab.label}</span>

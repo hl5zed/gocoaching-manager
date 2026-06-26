@@ -137,7 +137,7 @@ function HeroCard({
 
   const delta =
     current && previous
-      ? Math.round((current.total_rate - previous.total_rate) * 10) / 10
+      ? Math.round((current.average_rate - previous.average_rate) * 10) / 10
       : null;
 
   const deltaSign = delta !== null && delta > 0 ? "+" : "";
@@ -162,7 +162,7 @@ function HeroCard({
           <div className="mt-4 border-t border-white/10 pt-4">
             <p className="text-xs text-white/60">이번 달({currentMonth}월) 종합 실행률</p>
             <div className="mt-1 flex items-baseline gap-3">
-              <span className="text-2xl font-semibold">{formatPercent(current.total_rate)}</span>
+              <span className="text-2xl font-semibold">{formatPercent(current.average_rate)}</span>
               {delta !== null && (
                 <span className={`text-sm font-medium ${deltaColor}`}>
                   {deltaArrow} {deltaSign}{delta.toFixed(1)}%p
@@ -171,8 +171,8 @@ function HeroCard({
             </div>
             {previous ? (
               <p className="mt-0.5 text-xs text-white/50">
-                지난달 {formatPercent(previous.total_rate)} → 이번 달{" "}
-                {formatPercent(current.total_rate)}
+                지난달 {formatPercent(previous.average_rate)} → 이번 달{" "}
+                {formatPercent(current.average_rate)}
               </p>
             ) : null}
           </div>

@@ -23,6 +23,7 @@ import {
 import type { Json, MoksilgiAreaKey, Tables } from "@/types/database";
 
 
+
 const FOUR_AREA_KEYS = [
   "spiritual",
   "intellectual",
@@ -53,7 +54,6 @@ function areaCompletionRate(
   return rateValue(summary[AREA_RATE_KEY[areaKey]]);
 }
 
-type OrganizationTimezoneRow = Pick<Tables<"organizations">, "default_timezone">;
 type SummaryRow = Pick<
   Tables<"moksilgi_monthly_summaries">,
   | "spiritual_rate"
@@ -142,20 +142,7 @@ export default async function MyCoachingGrowthPage() {
     );
   }
 
-  const orgTimezonePromise =
-    profile.organization_id && !profile.timezone
-      ? serviceClient
-          .from("organizations")
-          .select("default_timezone")
-          .eq("id", profile.organization_id)
-          .is("deleted_at", null)
-          .maybeSingle()
-      : Promise.resolve({ data: null as OrganizationTimezoneRow | null, error: null });
-
-  const [moksilgi, organizationResult] = await Promise.all([
-    getMyMoksilgi(profileId),
-    orgTimezonePromise,
-  ]);
+  const moksilgi = await getMyMoksilgi(profileId);
 
   if (!moksilgi.ok) {
     return (
@@ -173,12 +160,9 @@ export default async function MyCoachingGrowthPage() {
   const coreValues = plan ? parseCoreValues(plan.core_values_json) : [];
   const editHref = "/my-coaching/moksilgi";
 
-  const organizationTimezone =
-    (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ?? null;
-
   const timezone = resolveTimezoneFallback(
     profile.timezone,
-    organizationTimezone,
+    profile.organization_default_timezone,
     null,
   );
   const year = getCurrentYearInTimezone(timezone);

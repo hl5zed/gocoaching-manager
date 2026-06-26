@@ -40,7 +40,9 @@ function buildContentSecurityPolicy(options: { reportOnly: boolean }) {
     "default-src 'self'",
     options.reportOnly
       ? "script-src 'self'"
-      : "script-src 'self' 'unsafe-inline'",
+      : process.env.NODE_ENV === "production"
+        ? "script-src 'self' 'unsafe-inline'"
+        : "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
     options.reportOnly
       ? "style-src 'self'"
       : "style-src 'self' 'unsafe-inline'",
