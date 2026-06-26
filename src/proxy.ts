@@ -375,13 +375,13 @@ export async function proxy(request: NextRequest) {
       : createLoginRedirect(request);
   }
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  // 비대칭 JWT 서명 키 사용 시 JWKS 로컬 검증으로 네트워크 왕복(~200ms)을 생략한다.
+  // HS256(대칭) 키일 경우 getClaims() 내부에서 getUser()로 자동 폴백하므로 동작은 동일하게 안전하다.
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims();
 
-  if (userError || !user) {
-    if (isInvalidRefreshTokenError(userError)) {
+  if (claimsError || !claimsData) {
+    if (isInvalidRefreshTokenError(claimsError)) {
       return createExpiredSessionResponse(request);
     }
 
@@ -389,6 +389,11 @@ export async function proxy(request: NextRequest) {
       ? createApiError(401, "UNAUTHORIZED", "로그인이 필요합니다.")
       : createLoginRedirect(request);
   }
+
+  const user = {
+    id: claimsData.claims.sub,
+    email: claimsData.claims.email ?? null,
+  };
 
   if (authRequirement === "auth_only") {
     return buildAuthOnlyResponse(requestHeaders, getResponse(), user);
