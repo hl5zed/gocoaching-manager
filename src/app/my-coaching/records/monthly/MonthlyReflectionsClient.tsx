@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/lib/i18n/useI18n";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -246,10 +247,12 @@ function getSafeStatus(value: string): MonthlyReflectionStatus {
 }
 
 export function MonthlyReflectionsClient() {
+  const searchParams = useSearchParams();
   const { t } = useI18n();
   const [records, setRecords] = useState<MonthlyReflection[]>([]);
   const [form, setForm] = useState<FormState>(() => createInitialFormState());
   const [editingId, setEditingId] = useState<string | null>(null);
+  const editParamHandled = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -369,6 +372,15 @@ export function MonthlyReflectionsClient() {
   useEffect(() => {
     void loadRecords();
   }, []);
+
+  useEffect(() => {
+    const editId = searchParams.get("edit");
+    if (!editId || editParamHandled.current || records.length === 0) return;
+    const target = records.find((r) => r.id === editId);
+    if (!target) return;
+    editParamHandled.current = true;
+    startEdit(target);
+  }, [searchParams, records]);
 
   function resetForm() {
     setForm(createInitialFormState());

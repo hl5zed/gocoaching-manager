@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui";
@@ -76,25 +76,63 @@ function getStatusTone(status: RecordStatus): "success" | "warning" | "neutral" 
   return "neutral";
 }
 
-function RecordRow({ record }: { record: TabRecord }) {
+function getEditHref(record: TabRecord): string {
+  if (record.type === "daily") return `/my-coaching/records/daily?edit=${record.id}`;
+  if (record.type === "monthly") return `/my-coaching/records/monthly?edit=${record.id}`;
+  return "/my-coaching/weekly-log";
+}
+
+function RecordRow({
+  record,
+  onDelete,
+  deleting,
+}: {
+  record: TabRecord;
+  onDelete: (record: TabRecord) => void;
+  deleting: boolean;
+}) {
   return (
-    <a
-      className="flex items-start justify-between gap-3 rounded-control border border-line-base bg-surface-card px-4 py-3 hover:bg-surface-hover"
-      href={record.href}
-    >
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-ink-strong">{record.title}</p>
-        <p className="mt-0.5 text-sm text-ink-muted">{record.dateLabel}</p>
-        {record.primaryText ? (
-          <p className="mt-1 line-clamp-1 text-sm text-ink-base">{record.primaryText}</p>
-        ) : null}
+    <div className="rounded-control border border-line-base bg-surface-card px-4 py-3">
+      <div className="flex items-start justify-between gap-3">
+        <a className="min-w-0 flex-1 hover:opacity-80" href={record.href}>
+          <p className="truncate font-medium text-ink-strong">{record.title}</p>
+          <p className="mt-0.5 text-sm text-ink-muted">{record.dateLabel}</p>
+          {record.primaryText ? (
+            <p className="mt-1 line-clamp-1 text-sm text-ink-base">{record.primaryText}</p>
+          ) : null}
+        </a>
+        <div className="shrink-0 pt-0.5">
+          <Badge tone={getStatusTone(record.status)}>
+            {getStatusLabel(record.status)}
+          </Badge>
+        </div>
       </div>
-      <div className="shrink-0 pt-0.5">
-        <Badge tone={getStatusTone(record.status)}>
-          {getStatusLabel(record.status)}
-        </Badge>
+      <div className="mt-2 flex items-center gap-2 border-t border-line-base pt-2">
+        <a
+          className="rounded px-2 py-1 text-xs font-medium text-ink-base hover:bg-surface-hover"
+          href={getEditHref(record)}
+        >
+          수정
+        </a>
+        {record.type !== "weekly" ? (
+          <button
+            className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-40"
+            disabled={deleting}
+            onClick={() => onDelete(record)}
+            type="button"
+          >
+            {deleting ? "삭제 중…" : "삭제"}
+          </button>
+        ) : (
+          <a
+            className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+            href="/my-coaching/weekly-log"
+          >
+            삭제 (주간 기록 페이지에서)
+          </a>
+        )}
       </div>
-    </a>
+    </div>
   );
 }
 
@@ -132,6 +170,37 @@ export function RecordsTabClient({ initialTab, daily, weekly, monthly }: Props) 
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [router, pathname, searchParams],
+  );
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = useCallback(
+    async (record: TabRecord) => {
+      if (record.type === "weekly") return;
+      const typeLabel = record.type === "daily" ? "하루 기록" : "월간 회고";
+      if (!window.confirm(`이 ${typeLabel}을(를) 삭제하시겠습니까?`)) return;
+
+      setDeletingId(record.id);
+      const apiPath =
+        record.type === "daily"
+          ? `/api/my-coaching/records/daily/${record.id}`
+          : `/api/my-coaching/records/monthly/${record.id}`;
+
+      try {
+        const res = await fetch(apiPath, { method: "DELETE" });
+        const json = (await res.json()) as { ok: boolean; message?: string };
+        if (!json.ok) {
+          alert(json.message ?? "삭제에 실패했습니다.");
+        } else {
+          router.refresh();
+        }
+      } catch {
+        alert("삭제 중 오류가 발생했습니다.");
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [router],
   );
 
   const tabDataMap: Record<RecordType, TabData> = { daily, weekly, monthly };
@@ -184,7 +253,12 @@ export function RecordsTabClient({ initialTab, daily, weekly, monthly }: Props) 
         ) : (
           <div className="flex flex-col gap-2">
             {currentData.records.map((record) => (
-              <RecordRow key={record.id} record={record} />
+              <RecordRow
+                key={record.id}
+                record={record}
+                onDelete={handleDelete}
+                deleting={deletingId === record.id}
+              />
             ))}
           </div>
         )}

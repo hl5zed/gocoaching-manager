@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n/useI18n";
 import { Badge } from "@/components/ui/Badge";
 import { getClientTimezone, getTodayDateInTimezone } from "@/lib/timezone";
@@ -256,10 +256,12 @@ export function DailyRecordsClient({
   initialRecords?: DailyRecord[];
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
   const [records, setRecords] = useState<DailyRecord[]>(initialRecords ?? []);
   const [form, setForm] = useState<FormState>(() => createInitialFormState());
   const [editingId, setEditingId] = useState<string | null>(null);
+  const editParamHandled = useRef(false);
   const [isLoading, setIsLoading] = useState(initialRecords === undefined);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -356,6 +358,15 @@ export function DailyRecordsClient({
 
     void loadRecords();
   }, [initialRecords]);
+
+  useEffect(() => {
+    const editId = searchParams.get("edit");
+    if (!editId || editParamHandled.current || records.length === 0) return;
+    const target = records.find((r) => r.id === editId);
+    if (!target) return;
+    editParamHandled.current = true;
+    startEdit(target);
+  }, [searchParams, records]);
 
   function resetForm() {
     setForm(createInitialFormState());

@@ -10,29 +10,38 @@ type PrintRecordsButtonProps = {
   suggestedTitles: Record<PrintRange, string>;
 };
 
-const printRangeButtons: Array<{
+const allButton = {
+  fallback: "전체 인쇄/PDF",
+  labelKey: "myCoaching.records.print.currentResults",
+  value: "all" as PrintRange,
+};
+
+const subButtons: Array<{
   fallback: string;
   labelKey: string;
+  shortLabelKey: string;
+  shortFallback: string;
   value: PrintRange;
 }> = [
   {
-    fallback: "현재 결과 전체 인쇄/PDF 저장",
-    labelKey: "myCoaching.records.print.currentResults",
-    value: "all",
-  },
-  {
     fallback: "하루 기록 인쇄/PDF 저장",
     labelKey: "myCoaching.records.print.daily",
+    shortLabelKey: "myCoaching.records.print.daily.short",
+    shortFallback: "하루",
     value: "daily",
   },
   {
     fallback: "주간 기록 인쇄/PDF 저장",
     labelKey: "myCoaching.records.print.weekly",
+    shortLabelKey: "myCoaching.records.print.weekly.short",
+    shortFallback: "주간",
     value: "weekly",
   },
   {
     fallback: "월간 회고 인쇄/PDF 저장",
     labelKey: "myCoaching.records.print.monthlyReflection",
+    shortLabelKey: "myCoaching.records.print.monthlyReflection.short",
+    shortFallback: "월간",
     value: "monthly",
   },
 ];
@@ -88,19 +97,31 @@ export function PrintRecordsButton({
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {printRangeButtons.map((button) => (
-        <Button
-          icon="print"
-          key={button.value}
-          onClick={() => handlePrint(button.value)}
-          size="sm"
-          type="button"
-          variant={printRange === button.value ? "primary" : "secondary"}
-        >
-          {t(button.labelKey, button.fallback)}
-        </Button>
-      ))}
+    <div className="flex flex-col gap-1.5">
+      <Button
+        icon="print"
+        onClick={() => handlePrint(allButton.value)}
+        size="sm"
+        type="button"
+        variant={printRange === allButton.value ? "primary" : "secondary"}
+      >
+        {t(allButton.labelKey, allButton.fallback)}
+      </Button>
+      <div className="flex gap-1.5">
+        {subButtons.map((button) => (
+          <Button
+            aria-label={t(button.labelKey, button.fallback)}
+            icon="print"
+            key={button.value}
+            onClick={() => handlePrint(button.value)}
+            size="sm"
+            type="button"
+            variant={printRange === button.value ? "primary" : "secondary"}
+          >
+            {t(button.shortLabelKey, button.shortFallback)}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 }

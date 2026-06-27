@@ -1023,30 +1023,20 @@ export default async function MyCoachingRecordsPage({
           </div>
           <div className="print:hidden">
             <div className="rounded-card border border-line-base bg-surface-card p-3 shadow-sm">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-col gap-2">
                 <div className="shrink-0">
                   <LanguageSwitcher />
                 </div>
-                <div className="flex min-w-0 justify-start lg:justify-end">
-                  <PrintRecordsButton suggestedTitles={suggestedPrintTitles} />
-                </div>
+                <PrintRecordsButton suggestedTitles={suggestedPrintTitles} />
               </div>
             </div>
 
-            <div className="mt-3 rounded-control border border-line-base bg-surface-sunken p-3 text-sm leading-6 text-ink-muted">
-              <p>
-                <I18nText
-                  k="myCoaching.records.printNotice"
-                  fallback="현재 검색어, 기록 유형, 상태, 공유, 정렬 기준이 인쇄물에 반영됩니다."
-                />
-              </p>
-              <p className="mt-1">
-                <I18nText
-                  k="myCoaching.records.printNoticeDetail"
-                  fallback="필터가 없으면 최근 하루/주간/월간 기록 중심으로 출력됩니다. 브라우저 인쇄창에서 PDF 저장을 선택할 수 있습니다. 모바일 브라우저에서는 PDF 저장 옵션이 기기와 브라우저에 따라 다르게 표시될 수 있습니다. 인쇄창이 열리지 않으면 Safari 또는 Chrome에서 다시 열어 주세요."
-                />
-              </p>
-            </div>
+            <p className="mt-2 text-xs text-ink-muted">
+              <I18nText
+                k="myCoaching.records.printNotice"
+                fallback="현재 검색어, 기록 유형, 상태, 공유, 정렬 기준이 인쇄물에 반영됩니다."
+              />
+            </p>
 
             <nav className="mt-4 flex flex-col gap-2 border-t border-line-base pt-4 sm:flex-row sm:flex-wrap">
               <ButtonLink href="/my-coaching/moksilgi" icon="report" size="sm" variant="secondary">
