@@ -206,9 +206,6 @@ export default async function CoachRelationshipDetailPage({
             >
               코칭 관계 목록으로 돌아가기
             </Link>
-            <Link className="font-medium text-brand-600 underline" href="/coach">
-              코치 대시보드로 돌아가기
-            </Link>
           </div>
         </div>
 
@@ -325,18 +322,6 @@ export default async function CoachRelationshipDetailPage({
               href={backToRelationshipsHref}
             >
               코칭 관계 목록으로 돌아가기
-            </Link>
-            <Link
-              className="text-sm font-medium text-brand-600 underline"
-              href="/coach"
-            >
-              코치 대시보드로 돌아가기
-            </Link>
-            <Link
-              className="text-sm font-medium text-brand-600 underline"
-              href="/profile"
-            >
-              내 프로필
             </Link>
           </div>
         </section>

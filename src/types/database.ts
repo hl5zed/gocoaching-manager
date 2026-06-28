@@ -51,6 +51,14 @@ export const MOKSILGI_VERSION_TYPES = [
 ] as const;
 export type MoksilgiVersionType = (typeof MOKSILGI_VERSION_TYPES)[number];
 
+export const MOKSILGI_REVIEW_STATUSES = [
+  "reviewing",
+  "changes_requested",
+  "confirmed",
+  "approved",
+] as const;
+export type MoksilgiReviewStatus = (typeof MOKSILGI_REVIEW_STATUSES)[number];
+
 export const MOKSILGI_AREA_KEYS = [
   "spiritual",
   "intellectual",
@@ -591,6 +599,38 @@ type TablesMap = {
       approved_at?: string | null;
       approved_by?: string | null;
       created_at?: string;
+    }
+  >;
+  moksilgi_plan_reviews: TableDefinition<
+    {
+      id: string;
+      plan_id: string;
+      version_id: string | null;
+      coach_profile_id: string;
+      review_status: MoksilgiReviewStatus;
+      feedback_content: string | null;
+      created_at: string;
+      updated_at: string;
+    },
+    {
+      id?: string;
+      plan_id: string;
+      version_id?: string | null;
+      coach_profile_id: string;
+      review_status?: MoksilgiReviewStatus;
+      feedback_content?: string | null;
+      created_at?: string;
+      updated_at?: string;
+    },
+    {
+      id?: string;
+      plan_id?: string;
+      version_id?: string | null;
+      coach_profile_id?: string;
+      review_status?: MoksilgiReviewStatus;
+      feedback_content?: string | null;
+      created_at?: string;
+      updated_at?: string;
     }
   >;
   moksilgi_goal_areas: TableDefinition<

@@ -74,19 +74,6 @@ function priorityBadgeClass(priority: GoalPriority) {
   }
 }
 
-function Nav() {
-  return (
-    <nav className="flex gap-3 text-sm">
-      <Link href="/coach" className="text-blue-600 hover:underline">
-        코치 홈으로 돌아가기
-      </Link>
-      <span className="text-ink-faint">/</span>
-      <Link href="/dashboard" className="text-blue-600 hover:underline">
-        대시보드
-      </Link>
-    </nav>
-  );
-}
 
 export default async function CoachGoalsPage() {
   const result = await getCoachGoals();
@@ -117,7 +104,6 @@ export default async function CoachGoalsPage() {
     return (
       <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
         <div className="mx-auto max-w-5xl">
-          <Nav />
           <p className="mt-8 rounded-control border border-red-200 bg-red-50 px-4 py-3 text-red-700">
             코치 권한이 없습니다.
           </p>
@@ -130,7 +116,6 @@ export default async function CoachGoalsPage() {
     return (
       <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
         <div className="mx-auto max-w-5xl">
-          <Nav />
           <p className="mt-8 rounded-control border border-red-200 bg-red-50 px-4 py-3 text-red-700">
             지금 코치이 목표를 불러올 수 없습니다.
           </p>
@@ -144,8 +129,6 @@ export default async function CoachGoalsPage() {
   return (
     <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <div className="mx-auto max-w-5xl">
-        <Nav />
-
         <h1 className="mt-6 text-2xl font-semibold">코치이 목표</h1>
         <p className="mt-2 text-sm text-ink-muted">
           담당 코치이들이 작성한 목표를 확인합니다.

@@ -20,12 +20,16 @@ import {
   getMyMoksilgi,
   saveMyMoksilgiDetailGoal,
   saveMyMoksilgiPlan,
+  MOKSILGI_VERSION_TYPE_LABELS,
   type MoksilgiCoreValue,
   type MoksilgiDetailGoal,
   type MoksilgiGoalArea,
   type MoksilgiPlan,
 } from "@/lib/api/my-coaching/moksilgi";
-import type { Json, MoksilgiMeasurementType } from "@/types/database";
+import { getMoksilgiVersions } from "@/lib/api/my-coaching/moksilgi-versions";
+import { submitMoksilgiToCoach } from "@/lib/api/my-coaching/moksilgi-submit";
+import { getMyMoksilgiCoachReviews, type CoacheeReviewItem } from "@/lib/api/my-coaching/moksilgi-feedback";
+import type { Json, MoksilgiMeasurementType, MoksilgiReviewStatus, MoksilgiVersionType } from "@/types/database";
 
 
 const INPUT_CLASS =
@@ -279,6 +283,19 @@ async function saveDetailGoalAction(formData: FormData) {
   }
 
   redirect("/my-coaching/moksilgi?saved=detail");
+}
+
+async function submitToCoachAction(formData: FormData) {
+  "use server";
+
+  const planId = String(formData.get("plan_id") ?? "");
+  const result = await submitMoksilgiToCoach(planId);
+
+  if (!result.ok) {
+    redirect("/my-coaching/moksilgi?error=submit");
+  }
+
+  redirect("/my-coaching/moksilgi?saved=submitted");
 }
 
 function TextInput({
@@ -554,6 +571,45 @@ export default async function MyMoksilgiPage({
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const saved = normalizeMessage(resolvedSearchParams.saved);
   const error = normalizeMessage(resolvedSearchParams.error);
+
+  const plan = result.ok ? result.data.plan : null;
+  let versions: Array<{
+    id: string;
+    version_number: number;
+    version_type: MoksilgiVersionType;
+    change_reason: string | null;
+    created_at: string;
+    is_approved: boolean;
+  }> = [];
+  let coachReviews: CoacheeReviewItem[] = [];
+  if (plan) {
+    const [versionsResult, reviewsResult] = await Promise.all([
+      getMoksilgiVersions(plan.id),
+      getMyMoksilgiCoachReviews(plan.id),
+    ]);
+    if (versionsResult.ok) {
+      versions = versionsResult.data;
+    }
+    if (reviewsResult.ok) {
+      coachReviews = reviewsResult.data;
+    }
+  }
+
+  type VersionEntry = (typeof versions)[0] & { kind: "version" };
+  type ReviewEntry = CoacheeReviewItem & { kind: "review" };
+  type TimelineEntry = VersionEntry | ReviewEntry;
+  const timelineEntries: TimelineEntry[] = [
+    ...versions.map((v) => ({ ...v, kind: "version" as const })),
+    ...coachReviews.map((r) => ({ ...r, kind: "review" as const })),
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const TIMELINE_VISIBLE = 5;
+  const visibleTimeline = timelineEntries.slice(0, TIMELINE_VISIBLE);
+  const hiddenTimeline = timelineEntries.slice(TIMELINE_VISIBLE);
+  const submitCount = versions.filter((v) => v.version_type === "submitted").length;
+  const approvedReview = coachReviews.find(
+    (r) => r.review_status === "approved" || r.review_status === "confirmed",
+  );
+
   const editSection = normalizeEditSection(resolvedSearchParams.edit);
   const printYear = new Date().getFullYear();
 
@@ -682,14 +738,26 @@ export default async function MyMoksilgiPage({
               plan={result.data.plan}
             />
 
-            {saved ? (
+            {saved === "submitted" ? (
+              <Card className="print-hidden border-blue-200 bg-blue-50">
+                <CardContent className="p-4 text-sm text-blue-900">
+                  코치에게 제출되었습니다. 코치가 검토 후 피드백을 남겨드립니다.
+                </CardContent>
+              </Card>
+            ) : saved ? (
               <Card className="print-hidden border-emerald-200 bg-emerald-50">
                 <CardContent className="p-4 text-sm text-emerald-900">
                   <I18nText k="myCoaching.moksilgi.saved" fallback="저장되었습니다." />
                 </CardContent>
               </Card>
             ) : null}
-            {error ? (
+            {error === "submit" ? (
+              <Card className="print-hidden border-red-200 bg-red-50">
+                <CardContent className="p-4 text-sm text-red-700">
+                  제출할 수 없습니다. 잠시 후 다시 시도해 주세요.
+                </CardContent>
+              </Card>
+            ) : error ? (
               <Card className="print-hidden border-red-200 bg-red-50">
                 <CardContent className="p-4 text-sm text-red-700">
                   <I18nText
@@ -827,6 +895,286 @@ export default async function MyMoksilgiPage({
                 </div>
               ) : null}
               </section>
+
+              {timelineEntries.length > 0 ? (
+                <section className="mt-4 space-y-3" id="section-history">
+                  <Card className="border-line-base bg-surface-card">
+                    <CardContent className="space-y-4 p-4">
+                      <h2 className="text-base font-semibold text-ink-base">활동 이력</h2>
+
+                      {/* 요약 통계 */}
+                      {plan ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="rounded-control border border-line-soft bg-surface-app p-3">
+                            <p className="text-xs text-ink-muted">현재 상태</p>
+                            <div className="mt-1.5">
+                              <Badge
+                                tone={
+                                  plan.version_type === "submitted"
+                                    ? "info"
+                                    : plan.version_type === "review_requested"
+                                      ? "warning"
+                                      : plan.version_type === "approved"
+                                        ? "success"
+                                        : "neutral"
+                                }
+                              >
+                                {plan.version_type === "submitted"
+                                  ? "코치 검토 대기"
+                                  : plan.version_type === "review_requested"
+                                    ? "보완 요청"
+                                    : plan.version_type === "approved"
+                                      ? "코치 승인"
+                                      : "작성 중"}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="rounded-control border border-line-soft bg-surface-app p-3">
+                            <p className="text-xs text-ink-muted">총 제출 횟수</p>
+                            <p className="mt-1.5 text-base font-semibold text-ink-base">
+                              {submitCount}회
+                            </p>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {/* 승인 배너 */}
+                      {plan && plan.version_type === "approved" ? (
+                        <div className="flex flex-wrap items-center gap-2 rounded-control border border-emerald-200 bg-emerald-50 px-3 py-2.5">
+                          <Badge tone="success">승인 완료</Badge>
+                          <span className="text-sm font-medium text-emerald-800">
+                            코치가 승인한 목실기입니다.
+                          </span>
+                          {approvedReview ? (
+                            <span className="ml-auto text-xs text-emerald-600">
+                              {new Date(approvedReview.created_at).toLocaleDateString("ko-KR")}
+                            </span>
+                          ) : null}
+                        </div>
+                      ) : null}
+
+                      {/* 타임라인 */}
+                      <div>
+                        <h3 className="mb-3 text-xs font-medium text-ink-muted">최근 활동</h3>
+                        <ul>
+                          {visibleTimeline.map((entry, idx) => {
+                            const isLast =
+                              idx === visibleTimeline.length - 1 && hiddenTimeline.length === 0;
+                            if (entry.kind === "version") {
+                              const dotBg =
+                                entry.version_type === "submitted"
+                                  ? "bg-blue-400"
+                                  : entry.version_type === "review_requested"
+                                    ? "bg-amber-400"
+                                    : entry.is_approved
+                                      ? "bg-emerald-400"
+                                      : "bg-zinc-300";
+                              const tone =
+                                entry.version_type === "submitted"
+                                  ? ("info" as const)
+                                  : entry.version_type === "review_requested"
+                                    ? ("warning" as const)
+                                    : entry.is_approved
+                                      ? ("success" as const)
+                                      : ("neutral" as const);
+                              return (
+                                <li className="flex gap-3 py-2" key={entry.id}>
+                                  <div className="flex flex-col items-center">
+                                    <span
+                                      className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${dotBg}`}
+                                    />
+                                    {!isLast && (
+                                      <span className="mt-1 w-px flex-1 bg-line-soft" />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 flex-1 pb-2">
+                                    <div className="flex flex-wrap items-center gap-1.5">
+                                      <Badge tone={tone}>v{entry.version_number}</Badge>
+                                      <span className="text-xs text-ink-base">
+                                        {MOKSILGI_VERSION_TYPE_LABELS[entry.version_type] ??
+                                          entry.version_type}
+                                      </span>
+                                      <span className="text-xs text-ink-faint">
+                                        {new Date(entry.created_at).toLocaleDateString("ko-KR")}
+                                      </span>
+                                    </div>
+                                    {entry.change_reason ? (
+                                      <p className="mt-0.5 text-xs text-ink-muted">
+                                        {entry.change_reason}
+                                      </p>
+                                    ) : null}
+                                  </div>
+                                </li>
+                              );
+                            }
+                            const reviewTone =
+                              entry.review_status === "approved" ||
+                              entry.review_status === "confirmed"
+                                ? ("success" as const)
+                                : entry.review_status === "changes_requested"
+                                  ? ("warning" as const)
+                                  : ("info" as const);
+                            const reviewDot =
+                              entry.review_status === "approved" ||
+                              entry.review_status === "confirmed"
+                                ? "bg-emerald-500"
+                                : entry.review_status === "changes_requested"
+                                  ? "bg-amber-500"
+                                  : "bg-blue-500";
+                            const reviewLabel =
+                              entry.review_status === "approved"
+                                ? "코치 승인"
+                                : entry.review_status === "confirmed"
+                                  ? "확인 완료"
+                                  : entry.review_status === "changes_requested"
+                                    ? "보완 요청"
+                                    : "코치 검토 중";
+                            return (
+                              <li className="flex gap-3 py-2" key={entry.id}>
+                                <div className="flex flex-col items-center">
+                                  <span
+                                    className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${reviewDot}`}
+                                  />
+                                  {!isLast && (
+                                    <span className="mt-1 w-px flex-1 bg-line-soft" />
+                                  )}
+                                </div>
+                                <div className="min-w-0 flex-1 pb-2">
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    <Badge tone={reviewTone}>{reviewLabel}</Badge>
+                                    <span className="text-xs text-ink-muted">코치 피드백</span>
+                                    <span className="text-xs text-ink-faint">
+                                      {new Date(entry.created_at).toLocaleDateString("ko-KR")}
+                                    </span>
+                                  </div>
+                                  {entry.feedback_content ? (
+                                    <p className="mt-0.5 text-xs text-ink-muted">
+                                      {entry.feedback_content.length > 80
+                                        ? `${entry.feedback_content.slice(0, 80)}…`
+                                        : entry.feedback_content}
+                                    </p>
+                                  ) : null}
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                        {hiddenTimeline.length > 0 ? (
+                          <details className="mt-1">
+                            <summary className="flex cursor-pointer list-none items-center gap-1 rounded-control px-2 py-1.5 text-xs text-ink-muted hover:bg-surface-app">
+                              이전 이력 {hiddenTimeline.length}개 더 보기
+                            </summary>
+                            <ul className="mt-1">
+                              {hiddenTimeline.map((entry, idx) => {
+                                const isLast = idx === hiddenTimeline.length - 1;
+                                if (entry.kind === "version") {
+                                  const dotBg =
+                                    entry.version_type === "submitted"
+                                      ? "bg-blue-400"
+                                      : entry.version_type === "review_requested"
+                                        ? "bg-amber-400"
+                                        : entry.is_approved
+                                          ? "bg-emerald-400"
+                                          : "bg-zinc-300";
+                                  const tone =
+                                    entry.version_type === "submitted"
+                                      ? ("info" as const)
+                                      : entry.version_type === "review_requested"
+                                        ? ("warning" as const)
+                                        : entry.is_approved
+                                          ? ("success" as const)
+                                          : ("neutral" as const);
+                                  return (
+                                    <li className="flex gap-3 py-2" key={entry.id}>
+                                      <div className="flex flex-col items-center">
+                                        <span
+                                          className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${dotBg}`}
+                                        />
+                                        {!isLast && (
+                                          <span className="mt-1 w-px flex-1 bg-line-soft" />
+                                        )}
+                                      </div>
+                                      <div className="min-w-0 flex-1 pb-2">
+                                        <div className="flex flex-wrap items-center gap-1.5">
+                                          <Badge tone={tone}>v{entry.version_number}</Badge>
+                                          <span className="text-xs text-ink-base">
+                                            {MOKSILGI_VERSION_TYPE_LABELS[entry.version_type] ??
+                                              entry.version_type}
+                                          </span>
+                                          <span className="text-xs text-ink-faint">
+                                            {new Date(entry.created_at).toLocaleDateString(
+                                              "ko-KR",
+                                            )}
+                                          </span>
+                                        </div>
+                                        {entry.change_reason ? (
+                                          <p className="mt-0.5 text-xs text-ink-muted">
+                                            {entry.change_reason}
+                                          </p>
+                                        ) : null}
+                                      </div>
+                                    </li>
+                                  );
+                                }
+                                const reviewTone =
+                                  entry.review_status === "approved" ||
+                                  entry.review_status === "confirmed"
+                                    ? ("success" as const)
+                                    : entry.review_status === "changes_requested"
+                                      ? ("warning" as const)
+                                      : ("info" as const);
+                                const reviewDot =
+                                  entry.review_status === "approved" ||
+                                  entry.review_status === "confirmed"
+                                    ? "bg-emerald-500"
+                                    : entry.review_status === "changes_requested"
+                                      ? "bg-amber-500"
+                                      : "bg-blue-500";
+                                const reviewLabel =
+                                  entry.review_status === "approved"
+                                    ? "코치 승인"
+                                    : entry.review_status === "confirmed"
+                                      ? "확인 완료"
+                                      : entry.review_status === "changes_requested"
+                                        ? "보완 요청"
+                                        : "코치 검토 중";
+                                return (
+                                  <li className="flex gap-3 py-2" key={entry.id}>
+                                    <div className="flex flex-col items-center">
+                                      <span
+                                        className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${reviewDot}`}
+                                      />
+                                      {!isLast && (
+                                        <span className="mt-1 w-px flex-1 bg-line-soft" />
+                                      )}
+                                    </div>
+                                    <div className="min-w-0 flex-1 pb-2">
+                                      <div className="flex flex-wrap items-center gap-1.5">
+                                        <Badge tone={reviewTone}>{reviewLabel}</Badge>
+                                        <span className="text-xs text-ink-muted">코치 피드백</span>
+                                        <span className="text-xs text-ink-faint">
+                                          {new Date(entry.created_at).toLocaleDateString("ko-KR")}
+                                        </span>
+                                      </div>
+                                      {entry.feedback_content ? (
+                                        <p className="mt-0.5 text-xs text-ink-muted">
+                                          {entry.feedback_content.length > 80
+                                            ? `${entry.feedback_content.slice(0, 80)}…`
+                                            : entry.feedback_content}
+                                        </p>
+                                      ) : null}
+                                    </div>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </details>
+                        ) : null}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </section>
+              ) : null}
             </div>
 
             <div className="print:hidden fixed inset-x-0 bottom-20 z-20 mx-auto max-w-md px-4">
@@ -848,6 +1196,36 @@ export default async function MyMoksilgiPage({
                     }
                   />
                 </div>
+                {plan ? (
+                  plan.version_type === "submitted" ? (
+                    <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-center text-sm text-blue-800">
+                      코치 검토 대기 중
+                    </div>
+                  ) : plan.version_type === "review_requested" ? (
+                    <div className="space-y-2">
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                        코치가 보완을 요청했습니다. 내용을 수정한 뒤 재제출하세요.
+                      </div>
+                      <form action={submitToCoachAction}>
+                        <input name="plan_id" type="hidden" value={plan.id} />
+                        <Button className="w-full" type="submit" variant="secondary">
+                          보완 후 재제출
+                        </Button>
+                      </form>
+                    </div>
+                  ) : plan.version_type === "approved" ? (
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm text-emerald-800">
+                      코치가 승인한 목실기입니다.
+                    </div>
+                  ) : (
+                    <form action={submitToCoachAction}>
+                      <input name="plan_id" type="hidden" value={plan.id} />
+                      <Button className="w-full" type="submit" variant="secondary">
+                        코치에게 제출
+                      </Button>
+                    </form>
+                  )
+                ) : null}
               </div>
             </div>
           </>

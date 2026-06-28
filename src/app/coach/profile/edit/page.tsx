@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/getSession";
 import { getMyProfile } from "@/lib/api/profile/me";
 import { updateMyProfile } from "@/lib/api/profile/update-me";
-import { ProfileEditView } from "../ProfileEditView";
+import { ProfileEditView } from "../../../profile/ProfileEditView";
 
 function normalizeMessage(value: string | string[] | undefined) {
   if (Array.isArray(value)) {
@@ -12,7 +12,7 @@ function normalizeMessage(value: string | string[] | undefined) {
   return value ?? "";
 }
 
-export default async function EditProfilePage({
+export default async function CoachEditProfilePage({
   searchParams,
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -20,13 +20,13 @@ export default async function EditProfilePage({
   const session = await getSession();
 
   if (!session.user) {
-    redirect("/login?redirectTo=%2Fprofile%2Fedit");
+    redirect("/login?redirectTo=%2Fcoach%2Fprofile%2Fedit");
   }
 
   const result = await getMyProfile();
 
   if (!result.ok && result.error.code === "UNAUTHORIZED") {
-    redirect("/login?redirectTo=%2Fprofile%2Fedit");
+    redirect("/login?redirectTo=%2Fcoach%2Fprofile%2Fedit");
   }
 
   const resolvedSearchParams = searchParams ? await searchParams : {};
@@ -44,17 +44,17 @@ export default async function EditProfilePage({
 
     if (!updateResult.ok) {
       const nextError = encodeURIComponent(updateResult.error.message);
-      redirect(`/profile/edit?error=${nextError}`);
+      redirect(`/coach/profile/edit?error=${nextError}`);
     }
 
-    redirect("/profile");
+    redirect("/coach/profile");
   }
 
   return (
     <ProfileEditView
       action={saveProfile}
-      backHref="/profile"
-      cancelHref="/profile"
+      backHref="/coach/profile"
+      cancelHref="/coach/profile"
       errorMessage={errorMessage}
       result={result}
     />

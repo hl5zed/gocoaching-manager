@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { PrintPageButton } from "@/components/print/PrintPageButton";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import {
@@ -12,7 +11,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  FieldLabel,
+
   ProgressBar,
   TextInput,
 } from "@/components/ui";
@@ -23,6 +22,14 @@ import {
   type CoachMoksilgiGoalArea,
   type CoachMoksilgiSummaryRow,
 } from "@/lib/api/coach/moksilgi-detail";
+import {
+  getCoachMoksilgiPlanStatus,
+  createCoachReview,
+  REVIEW_STATUS_LABELS,
+  PLAN_VERSION_TYPE_LABELS,
+  type CoachPlanReview,
+} from "@/lib/api/coach/moksilgi-review";
+import type { MoksilgiReviewStatus } from "@/types/database";
 import {
   DEFAULT_TIMEZONE,
   formatDateInTimezone,
@@ -57,6 +64,39 @@ type CoreValueItem = {
   meaning: string;
   practice_example: string;
 };
+
+const VALID_REVIEW_STATUSES = new Set<MoksilgiReviewStatus>([
+  "reviewing",
+  "changes_requested",
+  "confirmed",
+  "approved",
+]);
+
+async function saveReviewAction(formData: FormData) {
+  "use server";
+
+  const planId = String(formData.get("plan_id") ?? "");
+  const reviewStatusRaw = String(formData.get("review_status") ?? "");
+  const feedbackContent = String(formData.get("feedback_content") ?? "");
+
+  const reviewStatus = VALID_REVIEW_STATUSES.has(
+    reviewStatusRaw as MoksilgiReviewStatus,
+  )
+    ? (reviewStatusRaw as MoksilgiReviewStatus)
+    : "reviewing";
+
+  const result = await createCoachReview({
+    plan_id: planId,
+    review_status: reviewStatus,
+    feedback_content: feedbackContent,
+  });
+
+  if (!result.ok) {
+    redirect(`/coach/moksilgi/${planId}?error=review`);
+  }
+
+  redirect(`/coach/moksilgi/${planId}?saved=review`);
+}
 
 function firstParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -149,9 +189,17 @@ function InfoGrid({
   );
 }
 
-function PageNav({ planId, year }: { planId: string; year: number }) {
+function TopBar({
+  planId,
+  year,
+  fileName,
+}: {
+  planId: string;
+  year: number;
+  fileName: string;
+}) {
   return (
-    <nav className="print-hidden flex flex-wrap items-center gap-2 text-sm">
+    <div className="print-hidden flex flex-wrap items-center justify-between gap-3">
       <ButtonLink
         href={`/coach/moksilgi?year=${year}`}
         icon="arrow-left"
@@ -160,45 +208,33 @@ function PageNav({ planId, year }: { planId: string; year: number }) {
       >
         <I18nText k="coach.moksilgi.detail.backToList" fallback="코치이 목실기 목록으로 돌아가기" />
       </ButtonLink>
-      <ButtonLink href="/coach" icon="users" size="sm" variant="ghost">
-        <I18nText k="coach.moksilgi.backToCoachHome" fallback="코치 홈으로 돌아가기" />
-      </ButtonLink>
-      <ButtonLink href="/dashboard" icon="dashboard" size="sm" variant="ghost">
-        <I18nText k="coach.moksilgi.dashboard" fallback="대시보드" />
-      </ButtonLink>
-      <LanguageSwitcher />
-      <span className="sr-only">{planId}</span>
-    </nav>
-  );
-}
-
-function YearSelector({ planId, year }: { planId: string; year: number }) {
-  return (
-    <form className="print-hidden mt-5 flex flex-wrap items-end gap-3" method="get">
-      <label className="block min-w-0">
-        <FieldLabel>
-          <I18nText k="coach.moksilgi.year" fallback="연도" />
-        </FieldLabel>
-        <TextInput
-          className="mt-2 w-36"
-          defaultValue={year}
-          max={2100}
-          min={2000}
-          name="year"
-          type="number"
-        />
-      </label>
-      <Button icon="search" type="submit">
-        <I18nText k="coach.moksilgi.search" fallback="조회" />
-      </Button>
-      <ButtonLink
-        href={`/coach/moksilgi/${planId}`}
-        size="sm"
-        variant="ghost"
-      >
-        <I18nText k="coach.moksilgi.detail.viewCurrentYear" fallback="올해로 보기" />
-      </ButtonLink>
-    </form>
+      <div className="flex flex-wrap items-center gap-2">
+        <form className="flex items-center gap-2" method="get">
+          <label className="flex items-center gap-2 text-sm text-ink-muted">
+            <I18nText k="coach.moksilgi.year" fallback="연도" />
+            <TextInput
+              className="w-24"
+              defaultValue={year}
+              max={2100}
+              min={2000}
+              name="year"
+              type="number"
+            />
+          </label>
+          <Button icon="search" size="sm" type="submit" variant="secondary">
+            <I18nText k="coach.moksilgi.search" fallback="조회" />
+          </Button>
+          <ButtonLink
+            href={`/coach/moksilgi/${planId}`}
+            size="sm"
+            variant="ghost"
+          >
+            <I18nText k="coach.moksilgi.detail.viewCurrentYear" fallback="올해로 보기" />
+          </ButtonLink>
+        </form>
+        <PrintPageButton fileName={fileName} label="인쇄/PDF" />
+      </div>
+    </div>
   );
 }
 
@@ -214,7 +250,7 @@ function ErrorShell({
   return (
     <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <div className="mx-auto max-w-6xl">
-        <PageNav planId={planId} year={year} />
+        <TopBar fileName="" planId={planId} year={year} />
         <div className="mt-8">{children}</div>
       </div>
     </main>
@@ -438,9 +474,9 @@ function SummaryTable({
             const isCumulative = row.month === "cumulative";
             const isCurrentMonth = row.month === currentMonth;
             const rowClass = isCumulative
-              ? "bg-navy-900 font-semibold text-white"
+              ? "border-b border-line-base font-semibold"
               : isCurrentMonth
-                ? "border-b border-line-base bg-surface-sunken font-medium"
+                ? "border-b border-line-base bg-brand-50 font-medium"
                 : "border-b border-line-soft";
 
             return (
@@ -448,8 +484,8 @@ function SummaryTable({
                 <th className="whitespace-nowrap px-3 py-2 text-left font-medium">
                   {row.monthLabel}
                   {isCurrentMonth ? (
-                    <Badge className="ml-2" tone="info">
-                      <I18nText k="moksilgi.currentMonth" fallback="현재 월" />
+                    <Badge className="ml-2 text-xs" tone="info">
+                      <I18nText k="moksilgi.currentMonth" fallback="현재" />
                     </Badge>
                   ) : null}
                 </th>
@@ -479,7 +515,10 @@ export default async function CoachMoksilgiDetailPage({
   const { planId } = await params;
   const query = searchParams ? await searchParams : {};
   const year = parseYear(query);
+  const savedMsg = firstParam(query.saved);
+  const errorMsg = firstParam(query.error);
   const result = await getCoachMoksilgiDetail(planId, year);
+  const reviewStatusResult = await getCoachMoksilgiPlanStatus(planId);
 
   if (result.error?.code === "UNAUTHORIZED") {
     redirect("/login?redirectTo=/coach/moksilgi");
@@ -538,8 +577,7 @@ export default async function CoachMoksilgiDetailPage({
   return (
     <main className="print-root min-h-screen bg-[var(--trust-bg)] px-4 py-8 text-ink-strong sm:px-6 lg:py-10">
       <div className="mx-auto max-w-6xl">
-        <PageNav planId={planId} year={year} />
-
+        {/* 인쇄용 헤더 */}
         <div className="print-report-title print-only">
           <h1>
             <I18nText k="coach.moksilgi.detail.reportTitle" fallback="코치이 목실기 상세 보고서" />
@@ -557,70 +595,205 @@ export default async function CoachMoksilgiDetailPage({
             <I18nText k="coach.moksilgi.timezone" fallback="기준 시간대" />: {DEFAULT_TIMEZONE}
           </p>
         </div>
-        <Card className="print-section mt-6">
-          <CardHeader className="flex flex-col gap-4 border-b-0 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0">
-              <Badge icon="report" tone="info">
-                <I18nText k="coach.moksilgi.detail.badge" fallback="코치용 목실기 상세 보기" />
-              </Badge>
-              <CardTitle className="mt-3 text-3xl">
-                <I18nText k="coach.moksilgi.detail.title" fallback="코치이 목실기 상세" />
-              </CardTitle>
-              <CardDescription className="text-base">
-                <I18nText k="coach.moksilgi.detail.subtitle" fallback="목표와 실행전략 기획안" />
-              </CardDescription>
-              <p className="mt-3 max-w-3xl break-words text-ink-muted">
-                <I18nText
-                  k="coach.moksilgi.detail.description"
-                  fallback="담당 코치이가 작성한 목실기와 연간 성취 요약을 확인합니다."
-                />
-              </p>
-              <YearSelector planId={planId} year={year} />
-            </div>
-            <PrintPageButton
-              fileName={`moksilgi-coachee-detail-${year}-${planId.slice(0, 8)}`}
-              label="코치이 목실기 상세 인쇄/PDF 저장"
-            />
-            <p className="print-hidden text-sm leading-6 text-ink-faint lg:max-w-xs lg:text-right">
-              <I18nText
-                k="coach.moksilgi.mobilePrintNotice"
-                fallback="모바일 브라우저에서는 PDF 저장 옵션이 기기와 브라우저에 따라 다르게 표시될 수 있습니다. 인쇄창이 열리지 않으면 Safari 또는 Chrome에서 다시 열어 주세요."
-              />
-            </p>
-          </CardHeader>
-        </Card>
 
-        <Card className="print-section mt-6">
-          <CardContent>
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
+        {/* 상단 네비게이션 바: 뒤로 가기 + 연도 선택 + 인쇄 */}
+        <TopBar
+          fileName={`moksilgi-coachee-detail-${year}-${planId.slice(0, 8)}`}
+          planId={planId}
+          year={year}
+        />
+
+        {/* 히어로 카드: 코치이 정보 + 성취율 통합 */}
+        <Card className="print-hidden mt-4">
+          <CardContent className="pt-5">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <Badge icon="report" tone="info">
+                  <I18nText k="coach.moksilgi.detail.badge" fallback="코치용 목실기 상세 보기" />
+                </Badge>
+                <p className="mt-3 text-xl font-semibold">{coacheeName(data)}</p>
+                <p className="mt-1 text-sm text-ink-muted">
+                  {data.coachee?.email ?? ""}
+                  {plan.role_label ? ` · ${plan.role_label}` : ""}
+                  {plan.generation_label ? ` · ${plan.generation_label}` : ""}
+                  {plan.coach_name ? ` · 코치: ${plan.coach_name}` : ""}
+                  {plan.regional_leader_name ? ` · 지역팀장: ${plan.regional_leader_name}` : ""}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2 text-sm">
+                  <Badge tone={statusTone(plan.status)}>
+                    {STATUS_LABEL[plan.status] ?? plan.status}
+                  </Badge>
+                  {reviewStatusResult.ok ? (
+                    <Badge
+                      tone={
+                        reviewStatusResult.data.plan_version_type === "approved"
+                          ? "success"
+                          : reviewStatusResult.data.plan_version_type === "review_requested"
+                            ? "warning"
+                            : reviewStatusResult.data.plan_version_type === "submitted"
+                              ? "info"
+                              : "neutral"
+                      }
+                    >
+                      {PLAN_VERSION_TYPE_LABELS[reviewStatusResult.data.plan_version_type] ??
+                        reviewStatusResult.data.plan_version_type}
+                    </Badge>
+                  ) : null}
+                  {plan.region_name ? (
+                    <span className="text-ink-faint">소속: {plan.region_name}</span>
+                  ) : null}
+                </div>
+              </div>
+              <div className="shrink-0 sm:text-right">
                 <p className="text-sm font-medium text-ink-faint">
                   {year}
                   <I18nText k="coach.moksilgi.totalAchievementSuffix" fallback="년 총 달성률" />
                 </p>
-                <p className="mt-2 text-4xl font-semibold">
+                <p className="mt-1 text-4xl font-semibold">
                   {formatPercent(data.totalAchievementRate)}
                 </p>
-              </div>
-              <ProgressBar
-                className="min-w-[220px] flex-1 sm:max-w-sm"
-                label="연간 성취율"
-                value={data.totalAchievementRate}
-              />
-            </div>
-            {!data.hasSummaryData ? (
-              <p className="mt-3 text-sm text-amber-700">
-                <I18nText
-                  k="coach.moksilgi.detail.noMonthlyRecords"
-                  fallback="아직 선택한 연도의 월별 체크리스트 기록이 없습니다."
+                <ProgressBar
+                  className="mt-2 min-w-[200px]"
+                  label="연간 성취율"
+                  value={data.totalAchievementRate}
                 />
-              </p>
-            ) : null}
+                {!data.hasSummaryData ? (
+                  <p className="mt-2 text-sm text-amber-700">
+                    <I18nText
+                      k="coach.moksilgi.detail.noMonthlyRecords"
+                      fallback="아직 선택한 연도의 월별 체크리스트 기록이 없습니다."
+                    />
+                  </p>
+                ) : null}
+              </div>
+            </div>
           </CardContent>
         </Card>
 
+        {/* 코치 검토 및 피드백 */}
+        <div className="print-hidden mt-6">
+          <Section title="코치 검토 및 피드백">
+            <div className="space-y-5">
+              {/* 1. 현재 상태 */}
+              {reviewStatusResult.ok ? (
+                <div className="flex flex-wrap items-center gap-3 border-b border-line-soft pb-4">
+                  <span className="text-sm font-medium text-ink-muted">현재 상태</span>
+                  <Badge
+                    tone={
+                      reviewStatusResult.data.plan_version_type === "approved"
+                        ? "success"
+                        : reviewStatusResult.data.plan_version_type === "review_requested"
+                          ? "warning"
+                          : reviewStatusResult.data.plan_version_type === "submitted"
+                            ? "info"
+                            : "neutral"
+                    }
+                  >
+                    {PLAN_VERSION_TYPE_LABELS[reviewStatusResult.data.plan_version_type] ??
+                      reviewStatusResult.data.plan_version_type}
+                  </Badge>
+                </div>
+              ) : null}
+
+              {/* 2. 저장/오류 메시지 */}
+              {savedMsg === "review" ? (
+                <div className="rounded-control border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+                  피드백이 저장되었습니다.
+                </div>
+              ) : null}
+              {errorMsg === "review" ? (
+                <div className="rounded-control border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  피드백 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.
+                </div>
+              ) : null}
+
+              {/* 3. 피드백 이력 */}
+              {reviewStatusResult.ok && reviewStatusResult.data.reviews.length > 0 ? (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-ink-muted">피드백 이력</h3>
+                  <ul className="divide-y divide-line-soft rounded-card border border-line-base">
+                    {reviewStatusResult.data.reviews.map((review: CoachPlanReview) => (
+                      <li className="p-4" key={review.id}>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge
+                            tone={
+                              review.review_status === "approved" || review.review_status === "confirmed"
+                                ? "success"
+                                : review.review_status === "changes_requested"
+                                  ? "warning"
+                                  : "info"
+                            }
+                          >
+                            {REVIEW_STATUS_LABELS[review.review_status] ?? review.review_status}
+                          </Badge>
+                          <span className="text-xs text-ink-faint">
+                            {new Date(review.created_at).toLocaleDateString("ko-KR")}
+                          </span>
+                        </div>
+                        {review.feedback_content ? (
+                          <p className="mt-2 whitespace-pre-wrap text-sm text-ink-base">
+                            {review.feedback_content}
+                          </p>
+                        ) : (
+                          <p className="mt-2 text-sm text-ink-faint">피드백 내용 없음</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {/* 4. 새 피드백 작성 — 상태 무관 단일 폼 */}
+              {reviewStatusResult.ok ? (
+                <>
+                  <h3 className="text-sm font-medium text-ink-muted">새 피드백 작성</h3>
+                  <form action={saveReviewAction} className="space-y-4">
+                    <input name="plan_id" type="hidden" value={planId} />
+                    <div>
+                      <label className="block text-sm font-medium text-ink-muted" htmlFor="coach-feedback">
+                        피드백 내용
+                      </label>
+                      <textarea
+                        className="mt-2 w-full rounded-control border border-line-base bg-surface-card px-3 py-2 text-ink-base outline-none focus:border-brand-600"
+                        id="coach-feedback"
+                        maxLength={4000}
+                        name="feedback_content"
+                        placeholder="피코치에게 전달할 피드백을 작성하세요."
+                        rows={5}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-ink-muted" htmlFor="review-status">
+                        검토 상태
+                      </label>
+                      <select
+                        className="mt-2 w-full rounded-control border border-line-base bg-surface-card px-3 py-2 text-ink-base outline-none focus:border-brand-600"
+                        id="review-status"
+                        name="review_status"
+                      >
+                        <option value="reviewing">검토 중</option>
+                        <option value="changes_requested">보완 요청</option>
+                      <option value="confirmed">확인 완료</option>
+                      <option value="approved">승인</option>
+                    </select>
+                  </div>
+                  <Button type="submit" variant="primary">
+                    피드백 저장
+                  </Button>
+                </form>
+                </>
+              ) : (
+                <p className="text-sm text-ink-faint">
+                  {reviewStatusResult.error}
+                </p>
+              )}
+            </div>
+          </Section>
+        </div>
+
         <div className="mt-6 grid gap-6">
-          <Section title={<I18nText k="coach.moksilgi.detail.coacheeInfo" fallback="코치이 정보" />}>
+          {/* 기본 정보: 코치이 정보 + 계획 정보 통합, 소속 중복 제거 */}
+          <Section title={<I18nText k="moksilgi.basicInfo" fallback="기본 정보" />}>
             <InfoGrid
               items={[
                 { label: <I18nText k="coach.moksilgi.detail.name" fallback="이름" />, value: coacheeName(data) },
@@ -630,13 +803,6 @@ export default async function CoachMoksilgiDetailPage({
                 { label: <I18nText k="coach.moksilgi.community" fallback="소속/공동체" />, value: plan.region_name },
                 { label: <I18nText k="coach.moksilgi.coach" fallback="코치" />, value: plan.coach_name },
                 { label: <I18nText k="coach.moksilgi.detail.regionalLeader" fallback="지역팀장" />, value: plan.regional_leader_name },
-              ]}
-            />
-          </Section>
-
-          <Section title={<I18nText k="moksilgi.basicInfo" fallback="기본 정보" />}>
-            <InfoGrid
-              items={[
                 { label: <I18nText k="coach.moksilgi.detail.planTitle" fallback="제목" />, value: plan.title },
                 { label: <I18nText k="coach.moksilgi.detail.planSubtitle" fallback="부제" />, value: plan.subtitle },
                 {
@@ -644,35 +810,88 @@ export default async function CoachMoksilgiDetailPage({
                   value: `${formatDate(plan.period_start)} ~ ${formatDate(plan.period_end)}`,
                 },
                 { label: <I18nText k="coach.moksilgi.detail.writtenAt" fallback="작성일" />, value: formatDate(plan.written_at) },
-                { label: <I18nText k="coach.moksilgi.detail.status" fallback="상태" />, value: STATUS_LABEL[plan.status] ?? plan.status },
                 { label: <I18nText k="coach.moksilgi.updatedAt" fallback="최근 수정일" />, value: formatDate(plan.updated_at) },
-                { label: <I18nText k="coach.moksilgi.author" fallback="작성자" />, value: plan.author_name },
-                { label: <I18nText k="coach.moksilgi.community" fallback="소속/공동체" />, value: plan.region_name },
                 { label: <I18nText k="moksilgi.team" fallback="팀/목장" />, value: plan.team_name },
               ]}
             />
           </Section>
 
           <Section title={<I18nText k="coach.moksilgi.detail.missionSection" fallback="Ⅰ. 사명선언서" />}>
-            <InfoGrid
-              items={[
-                { label: <I18nText k="coach.moksilgi.detail.missionStatement" fallback="사명선언 문장" />, value: plan.mission_statement },
-                { label: <I18nText k="coach.moksilgi.detail.bibleVerse" fallback="관련 성경구절" />, value: plan.mission_bible_verse },
-                { label: <I18nText k="coach.moksilgi.detail.missionDescription" fallback="사명 설명" />, value: plan.mission_description },
-              ]}
-            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="min-w-0">
+                <dt className="text-sm font-medium text-ink-faint">
+                  <I18nText k="coach.moksilgi.detail.missionStatement" fallback="사명선언 문장" />
+                </dt>
+                <dd className="mt-1 whitespace-pre-wrap break-words text-ink-strong">
+                  {displayValue(plan.mission_statement)}
+                </dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-sm font-medium text-ink-faint">
+                  <I18nText k="coach.moksilgi.detail.bibleVerse" fallback="관련 성경구절" />
+                </dt>
+                <dd className="mt-1 whitespace-pre-wrap break-words text-ink-strong">
+                  {displayValue(plan.mission_bible_verse)}
+                </dd>
+              </div>
+            </div>
+            <div className="mission-desc-row mt-4">
+              <dt className="text-sm font-medium text-ink-faint">
+                <I18nText k="coach.moksilgi.detail.missionDescription" fallback="사명 설명" />
+              </dt>
+              <dd className="mt-1 whitespace-pre-wrap break-words text-ink-strong">
+                {displayValue(plan.mission_description)}
+              </dd>
+            </div>
           </Section>
 
           <Section title={<I18nText k="coach.moksilgi.detail.visionSection" fallback="Ⅱ. 비전" />}>
-            <InfoGrid
-              items={[
-                { label: <I18nText k="coach.moksilgi.detail.visionYear" fallback="비전 목표 연도" />, value: plan.vision_year },
-                { label: <I18nText k="coach.moksilgi.detail.visionStatement" fallback="비전 문장" />, value: plan.vision_statement },
-                { label: <I18nText k="coach.moksilgi.detail.visionMetrics" fallback="핵심 수치" />, value: plan.vision_metrics },
-                { label: <I18nText k="coach.moksilgi.detail.visionTarget" fallback="대상" />, value: plan.vision_target },
-                { label: <I18nText k="coach.moksilgi.detail.visionDescription" fallback="비전 설명" />, value: plan.vision_description },
-              ]}
-            />
+            <Card className="print-card bg-surface-sunken">
+              <CardContent className="p-5">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="min-w-0">
+                    <dt className="text-sm font-medium text-ink-faint">
+                      <I18nText k="coach.moksilgi.detail.visionYear" fallback="비전 목표 연도" />
+                    </dt>
+                    <dd className="mt-1 whitespace-pre-wrap break-words text-ink-strong">
+                      {displayValue(plan.vision_year)}
+                    </dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-sm font-medium text-ink-faint">
+                      <I18nText k="coach.moksilgi.detail.visionStatement" fallback="비전 문장" />
+                    </dt>
+                    <dd className="mt-1 whitespace-pre-wrap break-words text-ink-strong">
+                      {displayValue(plan.vision_statement)}
+                    </dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-sm font-medium text-ink-faint">
+                      <I18nText k="coach.moksilgi.detail.visionMetrics" fallback="핵심 수치" />
+                    </dt>
+                    <dd className="mt-1 whitespace-pre-wrap break-words text-ink-strong">
+                      {displayValue(plan.vision_metrics)}
+                    </dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-sm font-medium text-ink-faint">
+                      <I18nText k="coach.moksilgi.detail.visionTarget" fallback="대상" />
+                    </dt>
+                    <dd className="mt-1 whitespace-pre-wrap break-words text-ink-strong">
+                      {displayValue(plan.vision_target)}
+                    </dd>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <dt className="text-sm font-medium text-ink-faint">
+                    <I18nText k="coach.moksilgi.detail.visionDescription" fallback="비전 설명" />
+                  </dt>
+                  <dd className="mt-1 whitespace-pre-wrap break-words text-ink-strong">
+                    {displayValue(plan.vision_description)}
+                  </dd>
+                </div>
+              </CardContent>
+            </Card>
           </Section>
 
           <Section title={<I18nText k="coach.moksilgi.detail.coreValuesSection" fallback="Ⅲ. 핵심가치" />}>
@@ -706,6 +925,7 @@ export default async function CoachMoksilgiDetailPage({
               year={year}
             />
           </Section>
+
         </div>
       </div>
     </main>

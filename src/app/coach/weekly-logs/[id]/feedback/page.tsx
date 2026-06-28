@@ -123,9 +123,6 @@ function renderTopLinks(id: string) {
         >
           주간 기록 목록으로 돌아가기
         </Link>
-        <Link href="/dashboard" className="font-medium text-blue-600 hover:underline">
-          대시보드
-        </Link>
       </div>
     </div>
   );

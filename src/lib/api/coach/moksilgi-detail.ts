@@ -205,20 +205,20 @@ export async function getCoachMoksilgiDetail(
   }
 
   const planRow = plan as PlanRow;
-  const { data: relationship, error: relationshipError } = await serviceClient
+  const { data: relationships, error: relationshipError } = await serviceClient
     .from("coaching_relationships")
     .select("id")
     .eq("coach_profile_id", profileId)
     .eq("coachee_profile_id", planRow.profile_id)
     .eq("status", "active")
     .is("deleted_at", null)
-    .maybeSingle();
+    .limit(1);
 
   if (relationshipError) {
     return { data: null, error: { code: "RELATIONSHIPS_QUERY_FAILED", message: "코칭 관계를 조회하는 중 오류가 발생했습니다." } };
   }
 
-  if (!relationship) {
+  if (!relationships || relationships.length === 0) {
     return { data: null, error: { code: "NOT_FOUND", message: "해당 목실기를 찾을 수 없습니다." } };
   }
 

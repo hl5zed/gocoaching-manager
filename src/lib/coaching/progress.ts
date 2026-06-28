@@ -6,7 +6,7 @@ type GoalAreaRow = Pick<
 >;
 type DetailGoalRow = Pick<
   Tables<"moksilgi_detail_goals">,
-  "id" | "area_id" | "title" | "sort_order"
+  "id" | "area_id" | "title" | "sort_order" | "measurement_type"
 >;
 type MonthlyRecordRow = Pick<
   Tables<"moksilgi_monthly_records">,

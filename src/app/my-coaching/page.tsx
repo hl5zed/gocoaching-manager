@@ -368,6 +368,9 @@ export default async function MyCoachingPage() {
     monthlyRecords = records;
   }
 
+  const dailyCheckTotal = todayTodos.length;
+  const dailyCheckCompleted = todayTodos.filter((t) => t.checkedToday).length;
+
   const userName =
     profile.display_name ??
     profile.full_name ??
@@ -402,10 +405,10 @@ export default async function MyCoachingPage() {
               <ProgressBar className="mt-2" showValue value={overallRate} />
             </div>
 
-            {totalGoals > 0 && totalCompletedGoals < totalGoals ? (
+            {dailyCheckTotal > 0 && dailyCheckCompleted < dailyCheckTotal ? (
               <div className="rounded-control border border-amber-200 bg-amber-50 p-3">
                 <p className="text-sm font-semibold text-amber-800">
-                  오늘 미완료 {totalGoals - totalCompletedGoals}개가 남아 있어요
+                  오늘 미완료 {dailyCheckTotal - dailyCheckCompleted}개가 남아 있어요
                 </p>
                 <p className="mt-1 text-xs text-amber-700">
                   남은 목표를 마무리하고 오늘 기록을 완성해 보세요.
@@ -413,7 +416,7 @@ export default async function MyCoachingPage() {
               </div>
             ) : null}
 
-            {totalGoals > 0 && totalCompletedGoals === totalGoals ? (
+            {dailyCheckTotal > 0 && dailyCheckCompleted === dailyCheckTotal ? (
               <div className="rounded-control border border-emerald-200 bg-emerald-50 p-3">
                 <p className="text-sm font-semibold text-emerald-800">
                   오늘 목표를 모두 완료했어요

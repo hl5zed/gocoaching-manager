@@ -194,6 +194,16 @@ export default async function DashboardPage() {
   }
 
   const roleValues = result.data.roles.map((role) => role.role);
+
+  const isCoachOnly =
+    roleValues.includes("coach") &&
+    !roleValues.some((r) =>
+      ["super_admin", "country_admin", "organization_admin", "church_admin", "coach_maker"].includes(r),
+    );
+  if (isCoachOnly) {
+    redirect("/coach");
+  }
+
   const quickLinks = getDashboardQuickLinksState(roleValues);
   const showAdminCenterCard = roleValues.includes("super_admin");
   const showMyMoksilgiCard =

@@ -193,28 +193,15 @@ export default async function CoachRelationshipsPage({
   return (
     <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <section className="mx-auto w-full max-w-6xl">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
-              코치
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold">코칭 관계</h1>
-            <p className="mt-3 max-w-3xl text-ink-muted">
-              내 코치 프로필에 연결된 코칭 관계를 읽기 전용으로 확인할 수
-              있습니다.
-            </p>
-          </div>
-          <div className="flex flex-col items-start gap-2 text-sm">
-            <Link className="font-medium text-brand-600 underline" href="/coach">
-              코치 홈으로 돌아가기
-            </Link>
-            <Link
-              className="font-medium text-brand-600 underline"
-              href="/dashboard"
-            >
-              대시보드로 돌아가기
-            </Link>
-          </div>
+        <div>
+          <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
+            코치
+          </p>
+          <h1 className="mt-3 text-3xl font-semibold">코칭 관계</h1>
+          <p className="mt-3 max-w-3xl text-ink-muted">
+            내 코치 프로필에 연결된 코칭 관계를 읽기 전용으로 확인할 수
+            있습니다.
+          </p>
         </div>
 
         {profile === null ? (

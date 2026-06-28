@@ -109,9 +109,6 @@ function TopLinks({ id }: { id: string }) {
         >
           피드백 작성
         </Link>
-        <Link href="/dashboard" className="font-medium text-blue-600 hover:underline">
-          대시보드
-        </Link>
       </div>
     </div>
   );
@@ -236,17 +233,12 @@ function renderNotFound() {
   return (
     <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <div className="mx-auto max-w-5xl">
-        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-          <Link
-            href="/coach/weekly-logs"
-            className="font-medium text-blue-600 hover:underline"
-          >
-            ← 주간 기록 목록
-          </Link>
-          <Link href="/dashboard" className="font-medium text-blue-600 hover:underline">
-            대시보드
-          </Link>
-        </div>
+        <Link
+          href="/coach/weekly-logs"
+          className="font-medium text-blue-600 hover:underline"
+        >
+          ← 주간 기록 목록
+        </Link>
         <p className="mt-6 rounded-md border border-line-base bg-surface-card px-4 py-6 text-ink-base">
           해당 주간 기록을 찾을 수 없습니다.
         </p>
@@ -259,17 +251,12 @@ function renderLoadError() {
   return (
     <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
       <div className="mx-auto max-w-5xl">
-        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-          <Link
-            href="/coach/weekly-logs"
-            className="font-medium text-blue-600 hover:underline"
-          >
-            ← 주간 기록 목록
-          </Link>
-          <Link href="/dashboard" className="font-medium text-blue-600 hover:underline">
-            대시보드
-          </Link>
-        </div>
+        <Link
+          href="/coach/weekly-logs"
+          className="font-medium text-blue-600 hover:underline"
+        >
+          ← 주간 기록 목록
+        </Link>
         <p className="mt-6 rounded-control border border-red-200 bg-red-50 px-4 py-6 text-red-700">
           지금 주간 기록을 불러올 수 없습니다.
         </p>
