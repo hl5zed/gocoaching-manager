@@ -37,7 +37,7 @@ type DetailGoalRow = Pick<
 >;
 type MonthlyRecordRow = Pick<
   Tables<"moksilgi_monthly_records">,
-  "detail_goal_id" | "daily_checks_json" | "year" | "month"
+  "detail_goal_id" | "daily_checks_json" | "achievement_rate" | "year" | "month"
 >;
 
 const FOUR_AREA_KEYS = ["spiritual", "intellectual", "physical", "social"] as const;
@@ -188,6 +188,40 @@ function buildTodayTodos({
   return todos;
 }
 
+function average(values: number[]) {
+  if (values.length === 0) {
+    return null;
+  }
+
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function calculateCurrentAchievementRate({
+  areas,
+  detailGoals,
+  records,
+}: {
+  areas: GoalAreaRow[];
+  detailGoals: DetailGoalRow[];
+  records: MonthlyRecordRow[];
+}) {
+  const recordByGoalId = new Map(records.map((record) => [record.detail_goal_id, record]));
+  const areaRates = areas
+    .filter((area) => area.area_key !== "other")
+    .map((area) => {
+      const areaGoals = detailGoals.filter((goal) => goal.area_id === area.id);
+      const goalRates = areaGoals.map((goal) => {
+        const value = recordByGoalId.get(goal.id)?.achievement_rate;
+        return typeof value === "number" && Number.isFinite(value) ? Math.max(0, value) : 0;
+      });
+
+      return average(goalRates);
+    })
+    .filter((value): value is number => value !== null);
+
+  return average(areaRates);
+}
+
 async function toggleTodayCheckAction(formData: FormData) {
   "use server";
 
@@ -302,6 +336,7 @@ export default async function MyCoachingPage() {
   let totalGoals = 0;
   let totalCompletedGoals = 0;
   let overallRate = 0;
+  let currentMonthAchievementRate: number | null = null;
   let todayTodos: TodayTodo[] = [];
   let monthlyRecords: MonthlyRecordRow[] = [];
 
@@ -309,7 +344,7 @@ export default async function MyCoachingPage() {
     const weekMonthKeys = getWeekMonthKeysFromDateKey(todayDateKey);
     const recordsQuery = serviceClient
       .from("moksilgi_monthly_records")
-      .select("detail_goal_id, daily_checks_json, year, month")
+      .select("detail_goal_id, daily_checks_json, achievement_rate, year, month")
       .eq("plan_id", resolvedPlan.id)
       .eq("profile_id", profileId)
       .is("deleted_at", null);
@@ -342,12 +377,14 @@ export default async function MyCoachingPage() {
     const currentMonthRecords = records.filter(
       (record) => record.year === currentYear && record.month === currentMonth,
     );
+    const areas = (areasResult.data ?? []) as GoalAreaRow[];
+    const detailGoals = (detailGoalsResult.data ?? []) as DetailGoalRow[];
 
     const progress = calculateTodayProgressSnapshot({
-      areas: ((areasResult.data ?? []) as GoalAreaRow[]).filter(
+      areas: areas.filter(
         (area) => area.area_key !== "other",
       ),
-      detailGoals: (detailGoalsResult.data ?? []) as DetailGoalRow[],
+      detailGoals,
       monthlyRecords: currentMonthRecords,
       todayDateKey,
       todayDayOfMonth: currentDay,
@@ -358,14 +395,19 @@ export default async function MyCoachingPage() {
     totalCompletedGoals = progress.totalCompletedGoals;
     overallRate = progress.overallRate;
     todayTodos = buildTodayTodos({
-      areas: (areasResult.data ?? []) as GoalAreaRow[],
-      detailGoals: (detailGoalsResult.data ?? []) as DetailGoalRow[],
+      areas,
+      detailGoals,
       records: currentMonthRecords,
       year: currentYear,
       month: currentMonth,
       todayDay: currentDay,
     });
     monthlyRecords = records;
+    currentMonthAchievementRate = calculateCurrentAchievementRate({
+      areas,
+      detailGoals,
+      records: currentMonthRecords,
+    });
   }
 
   const dailyCheckTotal = todayTodos.length;
@@ -404,6 +446,22 @@ export default async function MyCoachingPage() {
               </p>
               <ProgressBar className="mt-2" showValue value={overallRate} />
             </div>
+
+            {currentMonthAchievementRate !== null ? (
+              <div className="rounded-control border border-brand-100 bg-brand-50/60 p-3">
+                <p className="text-sm font-semibold text-ink-base">
+                  이번 달 현재 달성률
+                </p>
+                <p className="mt-1 text-xs text-ink-muted">
+                  월별 실행 기록과 달성률 자동 계산 기준
+                </p>
+                <ProgressBar
+                  className="mt-2"
+                  showValue
+                  value={currentMonthAchievementRate}
+                />
+              </div>
+            ) : null}
 
             {dailyCheckTotal > 0 && dailyCheckCompleted < dailyCheckTotal ? (
               <div className="rounded-control border border-amber-200 bg-amber-50 p-3">

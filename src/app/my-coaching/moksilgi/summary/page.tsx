@@ -160,7 +160,7 @@ function HeroCard({
       {current ? (
         <>
           <div className="mt-4 border-t border-white/10 pt-4">
-            <p className="text-xs text-white/60">이번 달({currentMonth}월) 종합 실행률</p>
+            <p className="text-xs text-white/60">이번 달({currentMonth}월) 현재 달성률</p>
             <div className="mt-1 flex items-baseline gap-3">
               <span className="text-2xl font-semibold">{formatPercent(current.average_rate)}</span>
               {delta !== null && (
@@ -177,7 +177,7 @@ function HeroCard({
             ) : null}
           </div>
           <div className="mt-4 border-t border-white/10 pt-4">
-            <p className="mb-2 text-xs text-white/60">목표별 이번 달 실행률</p>
+            <p className="mb-2 text-xs text-white/60">목표별 현재 달성률</p>
             <GoalBars dark row={current} />
           </div>
         </>
@@ -268,7 +268,7 @@ function AchievementTable({
               <th className="px-3 py-2 font-medium">사회</th>
               <th className="px-3 py-2 font-medium">기타</th>
               <th className="px-3 py-2 font-medium">종합</th>
-              <th className="px-3 py-2 font-medium">평균</th>
+              <th className="px-3 py-2 font-medium">현재 달성률</th>
             </tr>
           </thead>
           <tbody>

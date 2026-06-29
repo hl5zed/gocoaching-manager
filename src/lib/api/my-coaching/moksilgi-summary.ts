@@ -1,5 +1,6 @@
 import {
   buildMoksilgiCumulativeRow,
+  buildMoksilgiMonthlyRatesFromRecords,
   buildMoksilgiMonthRows,
   MOKSILGI_AREA_KEYS,
   resolveActiveAreaKeys,
@@ -36,6 +37,10 @@ type SummaryRow = Pick<
 type DetailGoalAreaRow = Pick<Tables<"moksilgi_goal_areas">, "id" | "area_key"> & {
   moksilgi_detail_goals: Array<Pick<Tables<"moksilgi_detail_goals">, "id">>;
 };
+type MonthlyRecordRateRow = Pick<
+  Tables<"moksilgi_monthly_records">,
+  "detail_goal_id" | "month" | "achievement_rate"
+>;
 
 export type MoksilgiPersonalSummaryRow = MoksilgiYearSummaryRow;
 
@@ -125,7 +130,7 @@ export async function getMyMoksilgiSummary(
     };
   }
 
-  const [summariesResult, areasResult] = await Promise.all([
+  const [summariesResult, areasResult, recordsResult] = await Promise.all([
     context.serviceClient
       .from("moksilgi_monthly_summaries")
       .select(SUMMARY_SELECT)
@@ -140,23 +145,48 @@ export async function getMyMoksilgiSummary(
       .eq("plan_id", ownedPlan.id)
       .is("deleted_at", null)
       .is("moksilgi_detail_goals.deleted_at", null),
+    context.serviceClient
+      .from("moksilgi_monthly_records")
+      .select("detail_goal_id, month, achievement_rate")
+      .eq("plan_id", ownedPlan.id)
+      .eq("profile_id", context.profileId)
+      .eq("year", year)
+      .is("deleted_at", null),
   ]);
 
-  if (summariesResult.error || areasResult.error) {
+  if (summariesResult.error || areasResult.error || recordsResult.error) {
     return {
       ok: false,
       error: { code: "MOKSILGI_QUERY_FAILED", message: "개인 성취표를 불러올 수 없습니다." },
     };
   }
 
-  const summaries = (summariesResult.data ?? []) as SummaryRow[];
+  const persistedSummaries = (summariesResult.data ?? []) as SummaryRow[];
   const areas = (areasResult.data ?? []) as DetailGoalAreaRow[];
+  const records = (recordsResult.data ?? []) as MonthlyRecordRateRow[];
   const activeAreaKeys = resolveActiveAreaKeys(
     areas.map((area) => ({ id: area.id, area_key: area.area_key })),
     areas.flatMap((area) =>
       area.moksilgi_detail_goals.map(() => ({ area_id: area.id })),
     ),
   );
+  const computedSummaries = buildMoksilgiMonthlyRatesFromRecords({
+    areas: areas.map((area) => ({ id: area.id, area_key: area.area_key })),
+    detailGoals: areas.flatMap((area) =>
+      area.moksilgi_detail_goals.map((goal) => ({
+        id: goal.id,
+        area_id: area.id,
+      })),
+    ),
+    records,
+  });
+  const summaryByMonth = new Map(
+    persistedSummaries.map((summary) => [summary.month, summary]),
+  );
+  for (const computedSummary of computedSummaries) {
+    summaryByMonth.set(computedSummary.month, computedSummary as SummaryRow);
+  }
+  const summaries = [...summaryByMonth.values()].sort((a, b) => a.month - b.month);
   const rows = buildMoksilgiMonthRows(summaries);
   const cumulativeRow = buildMoksilgiCumulativeRow(rows, activeAreaKeys);
 

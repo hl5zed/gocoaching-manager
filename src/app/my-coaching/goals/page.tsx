@@ -14,6 +14,7 @@ import {
   type MoksilgiCoreValue,
 } from "@/lib/api/my-coaching/moksilgi";
 import { getLastApprovedVersion } from "@/lib/api/my-coaching/moksilgi-versions";
+import { buildMoksilgiMonthlyRatesFromRecords } from "@/lib/coaching/moksilgi-year-summary";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import {
   getCurrentMonthInTimezone,
@@ -63,6 +64,10 @@ type SummaryRow = Pick<
   | "average_rate"
   | "updated_at"
 >;
+type MonthlyRecordRateRow = Pick<
+  Tables<"moksilgi_monthly_records">,
+  "detail_goal_id" | "month" | "achievement_rate"
+>;
 
 function displayValue(value: string | null | undefined) {
   const trimmed = value?.trim();
@@ -98,7 +103,7 @@ function parseCoreValues(value: Json): MoksilgiCoreValue[] {
 
 function rateValue(value: number | null | undefined) {
   const safe = typeof value === "number" && Number.isFinite(value) ? value : 0;
-  return Math.max(0, Math.min(100, Math.round(safe)));
+  return Math.max(0, Math.round(safe));
 }
 
 function monthLabel(year: number, month: number) {
@@ -168,7 +173,7 @@ export default async function MyCoachingGrowthPage() {
   const year = getCurrentYearInTimezone(timezone);
   const month = getCurrentMonthInTimezone(timezone);
 
-  const [summaryResult, lastApprovedResult] = await Promise.all([
+  const [summaryResult, lastApprovedResult, monthlyRecordsResult] = await Promise.all([
     plan
       ? serviceClient
           .from("moksilgi_monthly_summaries")
@@ -185,9 +190,25 @@ export default async function MyCoachingGrowthPage() {
     plan
       ? getLastApprovedVersion(plan.id)
       : Promise.resolve({ ok: true as const, data: null }),
+    plan
+      ? serviceClient
+          .from("moksilgi_monthly_records")
+          .select("detail_goal_id, month, achievement_rate")
+          .eq("plan_id", plan.id)
+          .eq("profile_id", profileId)
+          .eq("year", year)
+          .eq("month", month)
+          .is("deleted_at", null)
+      : Promise.resolve({ data: [] as MonthlyRecordRateRow[], error: null }),
   ]);
 
   const summary: SummaryRow | null = (summaryResult.data as SummaryRow | null) ?? null;
+  const monthlyRecords = monthlyRecordsResult.error
+    ? []
+    : ((monthlyRecordsResult.data ?? []) as MonthlyRecordRateRow[]);
+  if (monthlyRecordsResult.error) {
+    console.error("[GROWTH_PAGE_MONTHLY_RECORDS_QUERY_FAILED]", monthlyRecordsResult.error);
+  }
 
   const lastApproved = lastApprovedResult.ok ? lastApprovedResult.data : null;
 
@@ -208,6 +229,19 @@ export default async function MyCoachingGrowthPage() {
     current.push(goal.title);
     goalsByArea.set(goal.area_id, current);
   }
+  const computedCurrentSummary = plan
+    ? buildMoksilgiMonthlyRatesFromRecords({
+        areas: moksilgi.data.areas.map((area) => ({
+          id: area.id,
+          area_key: area.area_key,
+        })),
+        detailGoals: moksilgi.data.detailGoals.map((goal) => ({
+          id: goal.id,
+          area_id: goal.area_id,
+        })),
+        records: monthlyRecords,
+      }).find((row) => row.month === month) ?? null
+    : null;
 
   return (
     <main className="min-h-screen bg-surface-app px-4 py-5 text-ink-base">
@@ -320,9 +354,9 @@ export default async function MyCoachingGrowthPage() {
               ) : null}
             </GrowthSection>
 
-            <GrowthSection title="4영역 목표와 실행률">
+            <GrowthSection title="4영역 목표와 현재 달성률">
               <p className="mb-3 text-xs text-ink-muted">
-                방향(목표)과 이번 달 실천(실행률)을 함께 확인합니다.
+                방향(목표)과 이번 달 현재 달성률을 함께 확인합니다.
                 {summary?.updated_at
                   ? ` 집계 최신: ${new Date(summary.updated_at).toLocaleString("ko-KR")}`
                   : ""}
@@ -332,7 +366,11 @@ export default async function MyCoachingGrowthPage() {
                   <GrowthAreaGoalCard
                     areaSubtitle={area.area_subtitle}
                     areaTitle={area.area_title}
-                    completionRate={areaCompletionRate(area.area_key, summary)}
+                    completionRate={
+                      computedCurrentSummary
+                        ? rateValue(computedCurrentSummary[AREA_RATE_KEY[area.area_key]])
+                        : areaCompletionRate(area.area_key, summary)
+                    }
                     detailGoalTitles={goalsByArea.get(area.id) ?? []}
                     key={area.id}
                   />

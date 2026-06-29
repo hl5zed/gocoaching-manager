@@ -116,7 +116,7 @@ export function GrowthAreaGoalCard({
       </div>
 
       <div className="mt-3">
-        <ProgressBar label="이번 달 실행률" showValue value={completionRate} />
+        <ProgressBar label="현재 달성률" showValue value={completionRate} />
       </div>
 
       {detailGoalTitles.length > 0 ? (

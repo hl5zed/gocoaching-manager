@@ -1,4 +1,5 @@
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
+import { buildMoksilgiMonthlyRatesFromRecords } from "@/lib/coaching/moksilgi-year-summary";
 import { getMoksilgiContext, type ServiceClient } from "./context";
 import type {
   InsertDto,
@@ -223,7 +224,7 @@ function calculateAchievementRate(actual: number | null, target: number | null) 
 }
 
 function capForSummary(value: number) {
-  return Math.min(100, Math.max(0, value));
+  return Math.max(0, value);
 }
 
 type MonthlyPerfStage =
@@ -370,6 +371,7 @@ export async function getMyMoksilgiMonthly(
     { areasResult, detailsResult },
     recordsResult,
     yearlySummariesResult,
+    yearlyRecordsResult,
   ] = await Promise.all([
     getPlanData(context.serviceClient, ownedPlan.id),
     context.serviceClient
@@ -388,6 +390,13 @@ export async function getMyMoksilgiMonthly(
       .eq("year", year)
       .is("deleted_at", null)
       .order("month", { ascending: true }),
+    context.serviceClient
+      .from("moksilgi_monthly_records")
+      .select("detail_goal_id, month, achievement_rate")
+      .eq("plan_id", ownedPlan.id)
+      .eq("profile_id", context.profileId)
+      .eq("year", year)
+      .is("deleted_at", null),
   ]);
   markMonthlyPerf("monthly.page_data", performance.now() - pageDataStartedAt);
 
@@ -395,18 +404,58 @@ export async function getMyMoksilgiMonthly(
     return { ok: false, error: { code: "MOKSILGI_QUERY_FAILED", message: "목실기 목표를 불러올 수 없습니다." } };
   }
 
-  if (recordsResult.error || yearlySummariesResult.error) {
+  if (recordsResult.error || yearlySummariesResult.error || yearlyRecordsResult.error) {
     return { ok: false, error: { code: "MOKSILGI_QUERY_FAILED", message: "월별 기록을 불러올 수 없습니다." } };
   }
 
-  const yearlySummaries = (yearlySummariesResult.data ?? []) as MoksilgiMonthlySummary[];
+  const areas = (areasResult.data ?? []) as MoksilgiMonthlyArea[];
+  const detailGoals = (detailsResult.data ?? []) as MoksilgiMonthlyDetailGoal[];
+  const persistedYearlySummaries = (yearlySummariesResult.data ?? []) as MoksilgiMonthlySummary[];
+  const yearlySummaryByMonth = new Map(
+    persistedYearlySummaries.map((summary) => [summary.month, summary]),
+  );
+  const computedYearlySummaries = buildMoksilgiMonthlyRatesFromRecords({
+    areas: areas.map((area) => ({ id: area.id, area_key: area.area_key })),
+    detailGoals: detailGoals.map((detailGoal) => ({
+      id: detailGoal.id,
+      area_id: detailGoal.area_id,
+    })),
+    records: (yearlyRecordsResult.data ?? []) as Array<{
+      detail_goal_id: string;
+      month: number;
+      achievement_rate: number | null;
+    }>,
+  });
+
+  for (const computedSummary of computedYearlySummaries) {
+    const existing = yearlySummaryByMonth.get(computedSummary.month);
+    yearlySummaryByMonth.set(computedSummary.month, {
+      id: existing?.id ?? `computed-${computedSummary.month}`,
+      plan_id: ownedPlan.id,
+      profile_id: context.profileId,
+      year,
+      month: computedSummary.month,
+      spiritual_rate: computedSummary.spiritual_rate ?? 0,
+      intellectual_rate: computedSummary.intellectual_rate ?? 0,
+      physical_rate: computedSummary.physical_rate ?? 0,
+      social_rate: computedSummary.social_rate ?? 0,
+      other_rate: computedSummary.other_rate ?? 0,
+      total_rate: computedSummary.total_rate ?? 0,
+      average_rate: computedSummary.average_rate ?? 0,
+      created_at: existing?.created_at ?? "",
+      updated_at: existing?.updated_at ?? "",
+    });
+  }
+  const yearlySummaries = [...yearlySummaryByMonth.values()].sort(
+    (a, b) => a.month - b.month,
+  );
 
   return {
     ok: true,
     data: {
       plan: ownedPlan,
-      areas: (areasResult.data ?? []) as MoksilgiMonthlyArea[],
-      detailGoals: (detailsResult.data ?? []) as MoksilgiMonthlyDetailGoal[],
+      areas,
+      detailGoals,
       records: (recordsResult.data ?? []) as MoksilgiMonthlyRecord[],
       summary: yearlySummaries.find((summary) => summary.month === month) ?? null,
       yearlySummaries,

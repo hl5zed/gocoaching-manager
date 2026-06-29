@@ -272,7 +272,7 @@ function Summary({
                   <I18nText k="myCoaching.moksilgi.monthly.total" fallback="종합" />
                 </th>
                 <th className="px-3 py-2 font-medium">
-                  <I18nText k="myCoaching.moksilgi.monthly.average" fallback="평균" />
+                  <I18nText k="myCoaching.moksilgi.monthly.average" fallback="현재 달성률" />
                 </th>
               </tr>
             </thead>
@@ -419,17 +419,28 @@ export default async function MoksilgiMonthlyPage({
     ? result.data.areas.map((area) => {
         const areaGoals = result.data.detailGoals.filter((goal) => goal.area_id === area.id);
         const areaRecords = result.data.records.filter((record) => record.area_id === area.id);
+        const recordByGoalId = new Map(
+          areaRecords.map((record) => [record.detail_goal_id, record]),
+        );
+        const goalRates = areaGoals.map((goal) => {
+          const value = recordByGoalId.get(goal.id)?.achievement_rate;
+          return typeof value === "number" && Number.isFinite(value) ? value : 0;
+        });
         return {
           area,
           areaGoals,
-          areaAverage: areaRateFromSummary(area.area_key, monthSummary),
+          areaAverage:
+            goalRates.length > 0 ? average(goalRates) : areaRateFromSummary(area.area_key, monthSummary),
           hasRecords: areaRecords.length > 0,
         };
       })
     : [];
 
   const recordedAreas = areaStats.filter((stat) => stat.hasRecords).length;
-  const monthAverage = summaryValue(monthSummary, "average_rate");
+  const monthAverage =
+    areaStats.length > 0
+      ? average(areaStats.map((stat) => stat.areaAverage))
+      : summaryValue(monthSummary, "average_rate");
 
   return (
     <main className="print-root min-h-screen bg-surface-app px-4 py-5 pb-32 text-ink-base">
@@ -584,7 +595,7 @@ export default async function MoksilgiMonthlyPage({
                       {Math.round(monthAverage)}%
                     </span>
                     <span className="text-[10px] text-ink-muted">
-                      <I18nText k="myCoaching.moksilgi.monthly.average" fallback="평균" />
+                      <I18nText k="myCoaching.moksilgi.monthly.average" fallback="현재 달성률" />
                     </span>
                   </div>
                 </div>
@@ -595,8 +606,11 @@ export default async function MoksilgiMonthlyPage({
                     <MonthLabel month={month} />
                   </p>
                   <p className="mt-1 text-sm font-medium text-ink-base">
-                    {recordedAreas} / {areaStats.length}{" "}
-                    <I18nText k="myCoaching.moksilgi.monthly.areaAverage" fallback="영역 평균" />
+                    <I18nText k="myCoaching.moksilgi.monthly.areaAverage" fallback="현재 달성률" />{" "}
+                    {formatPercent(monthAverage)}
+                  </p>
+                  <p className="mt-0.5 text-xs text-ink-muted">
+                    기록 영역 {recordedAreas} / {areaStats.length}
                   </p>
                   <div className="mt-2">
                     <ProgressBar showValue={false} value={monthAverage} />
@@ -625,7 +639,7 @@ export default async function MoksilgiMonthlyPage({
                   key={area.id}
                   trailing={
                     <Badge tone={rateTone(areaAverage)}>
-                      <I18nText k="myCoaching.moksilgi.monthly.areaAverage" fallback="영역 평균" />{" "}
+                      <I18nText k="myCoaching.moksilgi.monthly.areaAverage" fallback="현재 달성률" />{" "}
                       {formatPercent(areaAverage)}
                     </Badge>
                   }

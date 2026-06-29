@@ -24,6 +24,22 @@ export type MoksilgiMonthlySummaryRates = {
   average_rate?: number | null;
 };
 
+export type MoksilgiSummaryAreaSource = {
+  id: string;
+  area_key: MoksilgiAreaKey;
+};
+
+export type MoksilgiSummaryDetailGoalSource = {
+  id: string;
+  area_id: string;
+};
+
+export type MoksilgiSummaryRecordSource = {
+  detail_goal_id: string;
+  month: number;
+  achievement_rate?: number | null;
+};
+
 export const MOKSILGI_AREA_KEYS: MoksilgiAreaKey[] = [
   "spiritual",
   "intellectual",
@@ -52,6 +68,79 @@ function average(values: number[]) {
 
 function summaryValue(summary: MoksilgiMonthlySummaryRates | undefined, key: SummaryRateKey) {
   return safeNumber(summary?.[key]);
+}
+
+function positiveNumber(value: number | null | undefined) {
+  return Math.max(0, safeNumber(value));
+}
+
+/** 월별 실행 기록의 현재 달성률을 기준으로 영역/월 요약을 재계산합니다. */
+export function buildMoksilgiMonthlyRatesFromRecords({
+  areas,
+  detailGoals,
+  records,
+}: {
+  areas: MoksilgiSummaryAreaSource[];
+  detailGoals: MoksilgiSummaryDetailGoalSource[];
+  records: MoksilgiSummaryRecordSource[];
+}): MoksilgiMonthlySummaryRates[] {
+  const detailsByAreaId = new Map<string, MoksilgiSummaryDetailGoalSource[]>();
+  for (const detailGoal of detailGoals) {
+    const existing = detailsByAreaId.get(detailGoal.area_id) ?? [];
+    existing.push(detailGoal);
+    detailsByAreaId.set(detailGoal.area_id, existing);
+  }
+
+  const recordsByMonth = new Map<number, Map<string, number>>();
+  for (const record of records) {
+    if (!Number.isInteger(record.month) || record.month < 1 || record.month > 12) {
+      continue;
+    }
+
+    const monthRecords = recordsByMonth.get(record.month) ?? new Map<string, number>();
+    monthRecords.set(record.detail_goal_id, positiveNumber(record.achievement_rate));
+    recordsByMonth.set(record.month, monthRecords);
+  }
+
+  return [...recordsByMonth.entries()]
+    .sort(([monthA], [monthB]) => monthA - monthB)
+    .map(([month, monthRecords]) => {
+      const areaRates: Record<MoksilgiAreaKey, number> = {
+        spiritual: 0,
+        intellectual: 0,
+        physical: 0,
+        social: 0,
+        other: 0,
+      };
+      const activeAreaRates: number[] = [];
+
+      for (const area of areas) {
+        const areaDetails = detailsByAreaId.get(area.id) ?? [];
+        if (areaDetails.length === 0) {
+          continue;
+        }
+
+        const rate =
+          areaDetails.reduce(
+            (sum, detail) => sum + (monthRecords.get(detail.id) ?? 0),
+            0,
+          ) / areaDetails.length;
+
+        areaRates[area.area_key] = rate;
+        activeAreaRates.push(rate);
+      }
+
+      return {
+        month,
+        spiritual_rate: areaRates.spiritual,
+        intellectual_rate: areaRates.intellectual,
+        physical_rate: areaRates.physical,
+        social_rate: areaRates.social,
+        other_rate: areaRates.other,
+        total_rate: MOKSILGI_AREA_KEYS.reduce((sum, key) => sum + areaRates[key], 0),
+        average_rate: activeAreaRates.length > 0 ? average(activeAreaRates) : 0,
+      };
+    });
 }
 
 /** 1~12월 그리드 — summary 없는 월은 0 */
