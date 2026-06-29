@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ResendInvitationButton } from "@/components/admin/ResendInvitationButton";
 import { RevokeInvitationButton } from "@/components/admin/RevokeInvitationButton";
-import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
+import { PageHeader } from "@/components/layout";
+import { requireAdminProfile } from "@/lib/auth/require-admin-profile";
 import {
   getAdminInvitations,
   normalizeAdminInvitationsPage,
@@ -38,7 +40,7 @@ function formatDateTime(value: string | null) {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-    timeZone: "Asia/Bangkok",
+    timeZone: "Asia/Seoul",
   }).formatToParts(date);
 
   const get = (type: string) =>
@@ -151,7 +153,14 @@ export default async function AdminInvitationsPage({
   const role = normalizeAdminInvitationRole(resolvedSearchParams.role);
   const status = normalizeAdminInvitationStatus(resolvedSearchParams.status);
   const page = normalizeAdminInvitationsPage(resolvedSearchParams.page);
+  const admin = await requireAdminProfile();
+
+  if (!admin.ok) {
+    redirect("/unauthorized");
+  }
+
   const { invitations, error, hasNext } = await getAdminInvitations({
+    authorizedAdmin: admin,
     q,
     role,
     status,
@@ -162,37 +171,24 @@ export default async function AdminInvitationsPage({
   const hasActiveFilter = q.length > 0 || role !== "all" || status !== "all";
 
   return (
-    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
-      <section className="mx-auto w-full max-w-7xl">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
-              관리자
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold">초대</h1>
-            <p className="mt-4 max-w-3xl leading-7 text-ink-muted">
-              초대와 현재 상태를 읽기 전용으로 확인할 수 있습니다.
-            </p>
-            <PageNavigationButtons
-              backHref="/admin"
-              backLabel="관리자 센터로"
-              className="mt-4 min-w-0 justify-start"
-              dashboardHref="/admin"
-            />
-          </div>
-
+    <>
+      <PageHeader
+        title="초대 관리"
+        description="초대와 현재 상태를 확인하고, 재발송·철회할 수 있습니다."
+        actions={
           <Link
             className="rounded-control bg-navy-900 px-4 py-2 font-medium text-white"
             href="/admin/invitations/new"
           >
             초대 생성
           </Link>
-        </div>
+        }
+      />
 
-        <form
-          className="mt-6 rounded-card border border-line-base bg-surface-card p-4"
-          method="get"
-        >
+      <form
+        className="rounded-card border border-line-base bg-surface-card p-4"
+        method="get"
+      >
           <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
             <label className="grid gap-2">
               <span className="text-sm font-medium text-ink-base">검색</span>
@@ -396,7 +392,6 @@ export default async function AdminInvitationsPage({
             </div>
           </>
         )}
-      </section>
-    </main>
+    </>
   );
 }

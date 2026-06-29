@@ -5,6 +5,7 @@ import { createApiPerformanceLogger } from "@/lib/performance";
 import {
   requireAdminProfile,
 } from "@/lib/auth/require-admin-profile";
+import { resolveAdminProfileScope } from "@/lib/auth/admin-scope";
 import {
   PROFILE_STATUSES,
   USER_ROLES,
@@ -114,13 +115,22 @@ export type AdminUsersResult = {
 
 export type AdminUserRoleSummaryCounts = {
   totalProfiles: number;
+  activeProfiles: number;
+  inactiveProfiles: number;
   coacheeCount: number;
   coachCount: number;
   coachMakerCount: number;
+  groupLeaderCount: number;
   churchAdminCount: number;
+  countryAdminCount: number;
   organizationAdminCount: number;
   superAdminCount: number;
 };
+
+type RoleSummaryCountKey = Exclude<
+  keyof AdminUserRoleSummaryCounts,
+  "totalProfiles" | "activeProfiles" | "inactiveProfiles"
+>;
 
 export type AdminOrganizationSummary = {
   id: string;
@@ -141,10 +151,14 @@ export type AdminLookupSummary = {
 function createEmptyRoleSummaryCounts(): AdminUserRoleSummaryCounts {
   return {
     totalProfiles: 0,
+    activeProfiles: 0,
+    inactiveProfiles: 0,
     coacheeCount: 0,
     coachCount: 0,
     coachMakerCount: 0,
+    groupLeaderCount: 0,
     churchAdminCount: 0,
+    countryAdminCount: 0,
     organizationAdminCount: 0,
     superAdminCount: 0,
   };
@@ -599,6 +613,29 @@ async function countActiveUserRole(
   };
 }
 
+async function countProfilesByStatus(
+  client: AdminSupabaseClient,
+  status: ProfileStatus,
+  scopeOrFilter?: string,
+): Promise<{ count: number; errorMessage: string | null }> {
+  let query = client
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .is("deleted_at", null)
+    .eq("status", status);
+
+  if (scopeOrFilter) {
+    query = query.or(scopeOrFilter);
+  }
+
+  const { count, error } = await query;
+
+  return {
+    count: count ?? 0,
+    errorMessage: error?.message ?? null,
+  };
+}
+
 async function fetchAdminUserRoleSummaryFromDb(): Promise<{
   summary: AdminUserRoleSummaryCounts;
   error: string | null;
@@ -613,30 +650,41 @@ async function fetchAdminUserRoleSummaryFromDb(): Promise<{
   }
 
   const client = serviceClient;
-  const roleTargets: Array<{
-    role: UserRole;
-    key: keyof Omit<AdminUserRoleSummaryCounts, "totalProfiles">;
-  }> = [
+  const roleTargets: Array<{ role: UserRole; key: RoleSummaryCountKey }> = [
     { role: "coachee", key: "coacheeCount" },
     { role: "coach", key: "coachCount" },
     { role: "coach_maker", key: "coachMakerCount" },
+    { role: "group_leader", key: "groupLeaderCount" },
     { role: "church_admin", key: "churchAdminCount" },
+    { role: "country_admin", key: "countryAdminCount" },
     { role: "organization_admin", key: "organizationAdminCount" },
     { role: "super_admin", key: "superAdminCount" },
   ];
 
-  const [profileCountResult, ...roleCountResults] = await Promise.all([
+  const [
+    profileCountResult,
+    activeProfileCountResult,
+    inactiveProfileCountResult,
+    ...roleCountResults
+  ] = await Promise.all([
     client
       .from("profiles")
       .select("id", { count: "exact", head: true })
       .is("deleted_at", null),
+    countProfilesByStatus(client, "active"),
+    countProfilesByStatus(client, "inactive"),
     ...roleTargets.map((target) => countActiveUserRole(client, target.role)),
   ]);
 
-  if (profileCountResult.error) {
+  const failedStatusCount = [
+    activeProfileCountResult,
+    inactiveProfileCountResult,
+  ].find((result) => result.errorMessage);
+
+  if (profileCountResult.error || failedStatusCount?.errorMessage) {
     return {
       summary: createEmptyRoleSummaryCounts(),
-      error: profileCountResult.error.message,
+      error: profileCountResult.error?.message ?? failedStatusCount?.errorMessage ?? null,
     };
   }
 
@@ -653,6 +701,8 @@ async function fetchAdminUserRoleSummaryFromDb(): Promise<{
 
   const summary = createEmptyRoleSummaryCounts();
   summary.totalProfiles = profileCountResult.count ?? 0;
+  summary.activeProfiles = activeProfileCountResult.count;
+  summary.inactiveProfiles = inactiveProfileCountResult.count;
 
   roleCountResults.forEach((result, index) => {
     summary[roleTargets[index].key] = result.count;
@@ -667,12 +717,142 @@ const getCachedAdminUserRoleSummary = unstable_cache(
   { tags: ["admin-user-role-summary"], revalidate: 60 },
 );
 
+async function countScopedUserRole(
+  client: AdminSupabaseClient,
+  role: UserRole,
+  scopeOrFilter: string,
+): Promise<{ count: number; errorMessage: string | null }> {
+  const { count, error } = await client
+    .from("profiles")
+    .select("id, user_roles!inner(id)", { count: "exact", head: true })
+    .is("deleted_at", null)
+    .eq("user_roles.role", role)
+    .eq("user_roles.status", "active")
+    .eq("user_roles.is_active", true)
+    .is("user_roles.deleted_at", null)
+    .or(scopeOrFilter);
+
+  return {
+    count: count ?? 0,
+    errorMessage: error?.message ?? null,
+  };
+}
+
+async function fetchScopedAdminUserRoleSummary(
+  scopeOrFilter: string,
+): Promise<{
+  summary: AdminUserRoleSummaryCounts;
+  error: string | null;
+}> {
+  const { client: serviceClient } = createSupabaseServiceClient();
+
+  if (!serviceClient) {
+    return {
+      summary: createEmptyRoleSummaryCounts(),
+      error: "Unable to load user summary right now.",
+    };
+  }
+
+  const client = serviceClient;
+  const roleTargets: Array<{ role: UserRole; key: RoleSummaryCountKey }> = [
+    { role: "coachee", key: "coacheeCount" },
+    { role: "coach", key: "coachCount" },
+    { role: "coach_maker", key: "coachMakerCount" },
+    { role: "group_leader", key: "groupLeaderCount" },
+    { role: "church_admin", key: "churchAdminCount" },
+    { role: "country_admin", key: "countryAdminCount" },
+    { role: "organization_admin", key: "organizationAdminCount" },
+    { role: "super_admin", key: "superAdminCount" },
+  ];
+
+  const [
+    profileCountResult,
+    activeProfileCountResult,
+    inactiveProfileCountResult,
+    ...roleCountResults
+  ] = await Promise.all([
+    client
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .is("deleted_at", null)
+      .or(scopeOrFilter),
+    countProfilesByStatus(client, "active", scopeOrFilter),
+    countProfilesByStatus(client, "inactive", scopeOrFilter),
+    ...roleTargets.map((target) =>
+      countScopedUserRole(client, target.role, scopeOrFilter),
+    ),
+  ]);
+
+  const failedStatusCount = [
+    activeProfileCountResult,
+    inactiveProfileCountResult,
+  ].find((result) => result.errorMessage);
+
+  if (profileCountResult.error || failedStatusCount?.errorMessage) {
+    return {
+      summary: createEmptyRoleSummaryCounts(),
+      error: profileCountResult.error?.message ?? failedStatusCount?.errorMessage ?? null,
+    };
+  }
+
+  const failedRoleCount = roleCountResults.find(
+    (result) => result.errorMessage,
+  );
+
+  if (failedRoleCount?.errorMessage) {
+    return {
+      summary: createEmptyRoleSummaryCounts(),
+      error: failedRoleCount.errorMessage,
+    };
+  }
+
+  const summary = createEmptyRoleSummaryCounts();
+  summary.totalProfiles = profileCountResult.count ?? 0;
+  summary.activeProfiles = activeProfileCountResult.count;
+  summary.inactiveProfiles = inactiveProfileCountResult.count;
+
+  roleCountResults.forEach((result, index) => {
+    summary[roleTargets[index].key] = result.count;
+  });
+
+  return { summary, error: null };
+}
+
 export async function getAdminUserRoleSummary(
   perf?: AdminUserPerformanceLogger,
 ): Promise<{
   summary: AdminUserRoleSummaryCounts;
   error: string | null;
 }> {
+  const admin = await requireAdminProfile();
+
+  if (!admin.ok) {
+    perf?.mark("summary.auth_denied", 0);
+    return {
+      summary: createEmptyRoleSummaryCounts(),
+      error: "Admin authorization is required to load the user summary.",
+    };
+  }
+
+  // 회원 목록과 동일한 범위로 요약 카운트를 제한해 숫자 불일치를 막는다.
+  const scope = await resolveAdminProfileScope(
+    admin.supabase,
+    admin.profile.id,
+    admin.roles,
+  );
+
+  if (scope.kind === "none") {
+    perf?.mark("summary.complete", 0);
+    return { summary: createEmptyRoleSummaryCounts(), error: null };
+  }
+
+  if (scope.kind === "scoped") {
+    const result = await fetchScopedAdminUserRoleSummary(scope.orFilter);
+    perf?.mark("summary.complete", result.summary.totalProfiles);
+    return result;
+  }
+
+  // global — super_admin / 글로벌 범위는 기존 전역 캐시 경로 유지.
   const result = await getCachedAdminUserRoleSummary();
   perf?.mark("summary.complete", result.summary.totalProfiles);
   return result;
@@ -916,6 +1096,25 @@ export async function getAdminUsers({
   }
 
   const client = serviceClient;
+
+  // 관리자 범위(scope) 밖 회원은 목록에서 제외 (super_admin/글로벌은 전체).
+  const scope = await resolveAdminProfileScope(
+    admin.supabase,
+    admin.profile.id,
+    admin.roles,
+  );
+
+  if (scope.kind === "none") {
+    perf.mark("scope_empty", 0);
+    return {
+      users: [],
+      error: null,
+      page: safePage,
+      limit: safeLimit,
+      hasNext: false,
+    };
+  }
+
   const from = (safePage - 1) * safeLimit;
   const to = from + safeLimit;
   const profileSelect =
@@ -942,6 +1141,10 @@ export async function getAdminUsers({
       .eq("user_roles.status", "active")
       .eq("user_roles.is_active", true)
       .is("user_roles.deleted_at", null);
+  }
+
+  if (scope.kind === "scoped") {
+    profilesQuery = profilesQuery.or(scope.orFilter);
   }
 
   const { data: profiles, error: profilesError } = await profilesQuery

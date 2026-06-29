@@ -2,8 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireSuperAdmin } from "@/lib/auth/requireSuperAdmin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
-import { Badge, ButtonLink, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
+import { PageHeader } from "@/components/layout";
+import { Badge, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { getAdminCountries } from "@/lib/api/admin/countries";
 import {
   getGlobalSystemSettings,
@@ -97,32 +97,13 @@ export default async function AdminSettingsPage() {
     }));
 
   return (
-    <main className="min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
-      <section className="mx-auto w-full max-w-7xl">
-        <Card>
-          <CardHeader className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0">
-            <Badge icon="settings" tone="info">관리자 전용</Badge>
-            <CardTitle className="mt-3 text-3xl">시스템 설정</CardTitle>
-            <CardDescription className="mt-4 max-w-3xl leading-7">
-              프로그램 전체 운영에 필요한 기본 언어, 국가, 이메일, 초대, 공지,
-              인쇄, 권한 기본값을 관리합니다.
-            </CardDescription>
-          </div>
+    <>
+      <PageHeader
+        title="소속·시스템 설정"
+        description="프로그램 전체 운영에 필요한 기본 언어, 국가, 이메일, 초대, 공지, 인쇄, 권한 기본값을 관리합니다."
+      />
 
-          <div className="flex flex-wrap items-center gap-2">
-            <PageNavigationButtons
-              className="justify-start sm:justify-end"
-              dashboardHref="/admin"
-            />
-            <ButtonLink href="/admin" icon="arrow-left" size="sm">
-              관리자 센터로 돌아가기
-            </ButtonLink>
-          </div>
-          </CardHeader>
-        </Card>
-
-        <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {settingCards.map((card) => (
             <Link
               className="rounded-card border border-line-base bg-surface-card p-5 transition hover:border-line-base hover:bg-surface-sunken"
@@ -198,7 +179,6 @@ export default async function AdminSettingsPage() {
             ))}
           </div>
         </section>
-      </section>
-    </main>
+    </>
   );
 }

@@ -2,6 +2,11 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { requireAdminProfile } from "@/lib/auth/require-admin-profile";
 import {
+  areProfileIdsWithinAdminScope,
+  resolveAdminProfileScope,
+  type AdminProfileScopeFilter,
+} from "@/lib/auth/admin-scope";
+import {
   createApiPerformanceLogger,
   logApiPerformance,
 } from "@/lib/performance";
@@ -126,6 +131,18 @@ type CreateUserStage =
 type AffiliationLookupResult = {
   exists: boolean;
   ok: boolean;
+};
+type ProfileAffiliation = {
+  country_id?: string | null;
+  region_id?: string | null;
+  organization_id?: string | null;
+  church_id?: string | null;
+  group_id?: string | null;
+  cohort_id?: string | null;
+};
+type ScopeCondition = {
+  column: keyof ProfileAffiliation;
+  value: string;
 };
 
 function normalizeText(value: FormDataEntryValue | null) {
@@ -403,15 +420,224 @@ function getRoleScopeValidationResponse(error: string) {
   );
 }
 
+function getScopeConditions(scope: AdminProfileScopeFilter) {
+  if (scope.kind !== "scoped") {
+    return [];
+  }
+
+  return scope.orFilter
+    .split(",")
+    .map((condition): ScopeCondition | null => {
+      const match = condition.match(
+        /^(country_id|region_id|organization_id|church_id|group_id|cohort_id)\.eq\.([0-9a-f-]+)$/i,
+      );
+
+      if (!match) {
+        return null;
+      }
+
+      return {
+        column: match[1] as keyof ProfileAffiliation,
+        value: match[2],
+      };
+    })
+    .filter((condition): condition is ScopeCondition => condition !== null);
+}
+
+function isAffiliationWithinAdminScope(
+  scope: AdminProfileScopeFilter,
+  affiliation: ProfileAffiliation,
+) {
+  if (scope.kind === "global") {
+    return true;
+  }
+
+  if (scope.kind === "none") {
+    return false;
+  }
+
+  return getScopeConditions(scope).some(
+    (condition) => affiliation[condition.column] === condition.value,
+  );
+}
+
+async function validateProfileWithinAdminScope({
+  adminClient,
+  adminScope,
+  profileId,
+}: {
+  adminClient: AdminClient;
+  adminScope: AdminProfileScopeFilter;
+  profileId: string;
+}) {
+  return areProfileIdsWithinAdminScope(adminClient, adminScope, [profileId]);
+}
+
+async function loadOrganizationAffiliation(
+  adminClient: AdminClient,
+  organizationId: string,
+): Promise<ProfileAffiliation | null> {
+  const { data } = await adminClient
+    .from("organizations")
+    .select("id, country_id")
+    .eq("id", organizationId)
+    .maybeSingle();
+  const row = data as { id: string; country_id?: string | null } | null;
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    country_id: row?.country_id ?? null,
+    organization_id: organizationId,
+  };
+}
+
+async function loadChurchAffiliation(
+  adminClient: AdminClient,
+  churchId: string,
+): Promise<ProfileAffiliation | null> {
+  const { data } = await adminClient
+    .from("churches")
+    .select("id, organization_id")
+    .eq("id", churchId)
+    .maybeSingle();
+  const row = data as { id: string; organization_id?: string | null } | null;
+
+  if (!row) {
+    return null;
+  }
+
+  const organizationAffiliation = row?.organization_id
+    ? await loadOrganizationAffiliation(adminClient, row.organization_id)
+    : null;
+
+  return {
+    ...(organizationAffiliation ?? {}),
+    church_id: churchId,
+    organization_id: row?.organization_id ?? null,
+  };
+}
+
+async function loadScopeAffiliation(
+  adminClient: AdminClient,
+  scopeType: ScopeType,
+  scopeId: string | null,
+): Promise<ProfileAffiliation | null> {
+  if (!scopeId) {
+    return null;
+  }
+
+  if (scopeType === "country") {
+    const { data } = await adminClient
+      .from("countries")
+      .select("id")
+      .eq("id", scopeId)
+      .maybeSingle();
+
+    if (!data) {
+      return null;
+    }
+
+    return { country_id: scopeId };
+  }
+
+  if (scopeType === "region") {
+    const { data } = await adminClient
+      .from("regions")
+      .select("id, country_id")
+      .eq("id", scopeId)
+      .maybeSingle();
+    const row = data as { id: string; country_id?: string | null } | null;
+
+    if (!row) {
+      return null;
+    }
+
+    return {
+      country_id: row?.country_id ?? null,
+      region_id: scopeId,
+    };
+  }
+
+  if (scopeType === "organization") {
+    return loadOrganizationAffiliation(adminClient, scopeId);
+  }
+
+  if (scopeType === "church") {
+    return loadChurchAffiliation(adminClient, scopeId);
+  }
+
+  if (scopeType === "group") {
+    const { data } = await adminClient
+      .from("groups")
+      .select("id, church_id")
+      .eq("id", scopeId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    const row = data as { id: string; church_id?: string | null } | null;
+
+    if (!row) {
+      return null;
+    }
+
+    const churchAffiliation = row?.church_id
+      ? await loadChurchAffiliation(adminClient, row.church_id)
+      : null;
+
+    return {
+      ...(churchAffiliation ?? {}),
+      group_id: scopeId,
+      church_id: row?.church_id ?? null,
+    };
+  }
+
+  if (scopeType === "coach") {
+    const { data } = await adminClient
+      .from("profiles")
+      .select("country_id, region_id, organization_id, church_id, group_id, cohort_id")
+      .eq("id", scopeId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    return (data as ProfileAffiliation | null) ?? null;
+  }
+
+  if (scopeType === "cohort") {
+    return { cohort_id: scopeId };
+  }
+
+  return null;
+}
+
+async function validateRoleScopeWithinAdminScope({
+  adminClient,
+  adminScope,
+  scopeType,
+  scopeId,
+}: {
+  adminClient: AdminClient;
+  adminScope: AdminProfileScopeFilter;
+  scopeType: ScopeType;
+  scopeId: string | null;
+}) {
+  const affiliation = await loadScopeAffiliation(adminClient, scopeType, scopeId);
+
+  return Boolean(affiliation && isAffiliationWithinAdminScope(adminScope, affiliation));
+}
+
 async function handleRoleAdd({
   request,
   adminClient,
+  adminScope,
   adminAuthUserId,
   adminProfileId,
   formData,
 }: {
   request: Request;
   adminClient: AdminClient;
+  adminScope: AdminProfileScopeFilter;
   adminAuthUserId: string;
   adminProfileId: string;
   formData: FormData;
@@ -508,6 +734,31 @@ async function handleRoleAdd({
     });
   }
 
+  const targetInScope = await validateProfileWithinAdminScope({
+    adminClient,
+    adminScope,
+    profileId,
+  });
+
+  if (!targetInScope) {
+    return getAdminUsersRedirectWithMessage(request, {
+      role_error: "permission_denied",
+    });
+  }
+
+  const roleScopeInScope = await validateRoleScopeWithinAdminScope({
+    adminClient,
+    adminScope,
+    scopeType: scopeType as ScopeType,
+    scopeId,
+  });
+
+  if (!roleScopeInScope) {
+    return getAdminUsersRedirectWithMessage(request, {
+      role_error: "permission_denied",
+    });
+  }
+
   const { data: existingRole, error: existingRoleError } = await adminClient
     .from("user_roles")
     .select("id")
@@ -558,12 +809,14 @@ async function handleRoleAdd({
 async function handleRoleUpdate({
   request,
   adminClient,
+  adminScope,
   adminAuthUserId,
   adminProfileId,
   formData,
 }: {
   request: Request;
   adminClient: AdminClient;
+  adminScope: AdminProfileScopeFilter;
   adminAuthUserId: string;
   adminProfileId: string;
   formData: FormData;
@@ -618,6 +871,18 @@ async function handleRoleUpdate({
     });
   }
 
+  const targetInScope = await validateProfileWithinAdminScope({
+    adminClient,
+    adminScope,
+    profileId,
+  });
+
+  if (!targetInScope) {
+    return getAdminUsersRedirectWithMessage(request, {
+      role_error: "permission_denied",
+    });
+  }
+
   const { data: activeRoles, error: activeRolesError } = await adminClient
     .from("user_roles")
     .select("id, role, scope_type, scope_id")
@@ -651,6 +916,30 @@ async function handleRoleUpdate({
 
   const existingScopeType = currentRole?.scope_type ?? "global";
   const existingScopeId = existingScopeType === "global" ? null : currentRole?.scope_id ?? null;
+  const allowedScopeTypes = ROLE_SCOPE_RULES[role as UserRole] ?? [];
+
+  if (
+    existingScopeType === "global" ||
+    !allowedScopeTypes.includes(existingScopeType as ScopeType)
+  ) {
+    return getAdminUsersRedirectWithMessage(request, {
+      role_error: "invalid_scope",
+    });
+  }
+
+  const roleScopeInScope = await validateRoleScopeWithinAdminScope({
+    adminClient,
+    adminScope,
+    scopeType: existingScopeType as ScopeType,
+    scopeId: existingScopeId,
+  });
+
+  if (!roleScopeInScope) {
+    return getAdminUsersRedirectWithMessage(request, {
+      role_error: "permission_denied",
+    });
+  }
+
   const profilesTable = adminClient.from("profiles") as unknown as ProfilesInsertTable;
   const userRolesUpdateTable = adminClient.from("user_roles") as unknown as UserRolesUpdateTable;
   const { error: profileUpdateError } = await profilesTable
@@ -690,12 +979,14 @@ async function handleRoleUpdate({
 async function handleRoleStatusUpdate({
   request,
   adminClient,
+  adminScope,
   adminAuthUserId,
   adminProfileId,
   formData,
 }: {
   request: Request;
   adminClient: AdminClient;
+  adminScope: AdminProfileScopeFilter;
   adminAuthUserId: string;
   adminProfileId: string;
   formData: FormData;
@@ -744,6 +1035,18 @@ async function handleRoleStatusUpdate({
     });
   }
 
+  const targetInScope = await validateProfileWithinAdminScope({
+    adminClient,
+    adminScope,
+    profileId,
+  });
+
+  if (!targetInScope) {
+    return getAdminUsersRedirectWithMessage(request, {
+      role_error: "permission_denied",
+    });
+  }
+
   const { data: roleRow, error: roleLookupError } = await adminClient
     .from("user_roles")
     .select("id, role, scope_type, scope_id, status, is_active")
@@ -773,6 +1076,19 @@ async function handleRoleStatusUpdate({
     });
   }
 
+  const roleScopeInScope = await validateRoleScopeWithinAdminScope({
+    adminClient,
+    adminScope,
+    scopeType: currentRole.scope_type,
+    scopeId: currentRole.scope_id,
+  });
+
+  if (!roleScopeInScope) {
+    return getAdminUsersRedirectWithMessage(request, {
+      role_error: "permission_denied",
+    });
+  }
+
   const userRolesUpdateTable = adminClient.from("user_roles") as unknown as UserRolesUpdateTable;
   const { error: updateError } = await userRolesUpdateTable
     .update({
@@ -799,12 +1115,14 @@ async function handleRoleStatusUpdate({
 async function handleStatusUpdate({
   request,
   adminClient,
+  adminScope,
   adminAuthUserId,
   adminProfileId,
   formData,
 }: {
   request: Request;
   adminClient: AdminClient;
+  adminScope: AdminProfileScopeFilter;
   adminAuthUserId: string;
   adminProfileId: string;
   formData: FormData;
@@ -852,6 +1170,18 @@ async function handleStatusUpdate({
   ) {
     return getAdminUsersRedirectWithMessage(request, {
       status_error: "self_disable",
+    });
+  }
+
+  const targetInScope = await validateProfileWithinAdminScope({
+    adminClient,
+    adminScope,
+    profileId,
+  });
+
+  if (!targetInScope) {
+    return getAdminUsersRedirectWithMessage(request, {
+      status_error: "permission_denied",
     });
   }
 
@@ -1264,6 +1594,11 @@ export async function POST(request: Request) {
   }
 
   const typedAdminClient = adminClient as AdminClient;
+  const adminScope = await resolveAdminProfileScope(
+    admin.supabase,
+    admin.profile.id,
+    admin.roles,
+  );
   const performanceIntent = intent || "create_profile";
   perf.mark(
     performanceIntentStages.has(performanceIntent)
@@ -1275,6 +1610,7 @@ export async function POST(request: Request) {
     return handleRoleUpdate({
       request,
       adminClient: typedAdminClient,
+      adminScope,
       adminAuthUserId: admin.authUserId,
       adminProfileId: admin.profile.id,
       formData,
@@ -1285,6 +1621,7 @@ export async function POST(request: Request) {
     return handleRoleStatusUpdate({
       request,
       adminClient: typedAdminClient,
+      adminScope,
       adminAuthUserId: admin.authUserId,
       adminProfileId: admin.profile.id,
       formData,
@@ -1295,6 +1632,7 @@ export async function POST(request: Request) {
     return handleRoleAdd({
       request,
       adminClient: typedAdminClient,
+      adminScope,
       adminAuthUserId: admin.authUserId,
       adminProfileId: admin.profile.id,
       formData,
@@ -1305,6 +1643,7 @@ export async function POST(request: Request) {
     return handleStatusUpdate({
       request,
       adminClient: typedAdminClient,
+      adminScope,
       adminAuthUserId: admin.authUserId,
       adminProfileId: admin.profile.id,
       formData,
@@ -1361,6 +1700,19 @@ export async function POST(request: Request) {
   if (scopeType !== "global" && !scopeId) {
     console.error("[ADMIN_USERS_CREATE_INVALID_SCOPE] missing scope_id", scopeType);
     return redirectWithError(request, "validation", "missing_scope_id");
+  }
+
+  const allowedScopeTypes = ROLE_SCOPE_RULES[role as UserRole] ?? [];
+
+  if (
+    scopeType === "global" ||
+    !allowedScopeTypes.includes(scopeType as ScopeType)
+  ) {
+    console.error("[ADMIN_USERS_CREATE_INVALID_SCOPE] role-scope mismatch", {
+      role,
+      scopeType,
+    });
+    return redirectWithError(request, "validation", "invalid_scope");
   }
 
   if (temporaryPassword.length < 8 || temporaryPassword.length > 72) {
@@ -1487,6 +1839,31 @@ export async function POST(request: Request) {
       console.error("[ADMIN_USERS_CREATE_INVALID_GROUP] group not found");
       return redirectWithError(request, "validation", "group_not_found");
     }
+  }
+
+  const draftAffiliation: ProfileAffiliation = {
+    country_id: countryId.value,
+    region_id: regionId.value,
+    organization_id: organizationId.value,
+    church_id: churchId.value,
+    group_id: groupId.value,
+  };
+
+  if (!isAffiliationWithinAdminScope(adminScope, draftAffiliation)) {
+    console.error("[ADMIN_USERS_CREATE_SCOPE_DENIED] profile affiliation outside admin scope");
+    return redirectWithError(request, "validation", "permission_denied");
+  }
+
+  const roleScopeInScope = await validateRoleScopeWithinAdminScope({
+    adminClient: typedAdminClient,
+    adminScope,
+    scopeType: scopeType as ScopeType,
+    scopeId,
+  });
+
+  if (!roleScopeInScope) {
+    console.error("[ADMIN_USERS_CREATE_SCOPE_DENIED] role scope outside admin scope");
+    return redirectWithError(request, "validation", "permission_denied");
   }
 
   const { data: existingProfile, error: existingProfileError } =

@@ -8,7 +8,7 @@ import {
   type CoachMakerMoksilgiDashboardAttentionRow,
   type CoachMakerMoksilgiDashboardSummaryData,
 } from "@/lib/api/coach-maker/coach-stats";
-import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
+import { PageHeader } from "@/components/layout";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import { ActionMemoDrafts, ActionMemoTaskSummary } from "./ActionMemoDrafts";
 
@@ -601,38 +601,29 @@ export default async function CoachMakerPage() {
     coachStatsResult.data?.roles.some((role) => role.role === "super_admin") ?? false;
 
   return (
-    <main className="min-h-screen bg-surface-app px-4 py-6 text-ink-strong sm:px-6 sm:py-10">
-      <section className="mx-auto w-full max-w-7xl">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-sm font-medium uppercase tracking-wide text-ink-faint">
-              <I18nText k="nav.coachMaker" fallback="코치메이커" />
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold">
-              <I18nText k="coachMaker.title" fallback="코치메이커 대시보드" />
-            </h1>
-            <p className="mt-3 max-w-3xl text-ink-muted">
-              <I18nText
-                k="coachMaker.subtitle"
-                fallback="담당 범위의 목실기 성취 현황과 코칭 진행 상태를 확인합니다."
-              />
+    <>
+      <PageHeader
+        title={<I18nText k="coachMaker.title" fallback="코치메이커 대시보드" />}
+        description={
+          <I18nText
+            k="coachMaker.subtitle"
+            fallback="담당 범위의 목실기 성취 현황과 코칭 진행 상태를 확인합니다."
+          />
+        }
+        actions={
+          <div className="w-full sm:w-auto">
+            <Link
+              className="inline-flex min-h-10 w-full justify-center rounded-md border border-line-base bg-surface-card px-4 py-2 text-sm font-semibold text-ink-base hover:bg-surface-sunken sm:w-auto"
+              href={`/coach-maker/report?year=${currentYear}`}
+            >
+              <I18nText k="common.print" fallback="인쇄용 보고서 보기" />
+            </Link>
+            <p className="mt-1 text-xs text-ink-faint">
+              현재 연도 기준 인쇄용 보고서로 이동합니다.
             </p>
           </div>
-          <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:justify-end">
-            <PageNavigationButtons className="justify-start sm:justify-end" />
-            <div className="w-full sm:w-auto">
-              <Link
-                className="inline-flex min-h-10 w-full justify-center rounded-md border border-line-base bg-surface-card px-4 py-2 text-sm font-semibold text-ink-base hover:bg-surface-sunken sm:w-auto"
-                href={`/coach-maker/report?year=${currentYear}`}
-              >
-                <I18nText k="common.print" fallback="인쇄용 보고서 보기" />
-              </Link>
-              <p className="mt-1 text-xs text-ink-faint">
-                현재 연도 기준 인쇄용 보고서로 이동합니다.
-              </p>
-            </div>
-          </div>
-        </div>
+        }
+      />
 
         {moksilgiSummaryResult.error?.code === "PROFILE_NOT_FOUND" ? (
           <ProfileMissing />
@@ -691,7 +682,6 @@ export default async function CoachMakerPage() {
             />
           </>
         )}
-      </section>
-    </main>
+    </>
   );
 }

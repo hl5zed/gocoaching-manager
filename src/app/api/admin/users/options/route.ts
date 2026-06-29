@@ -7,13 +7,9 @@ import {
 } from "@/lib/api/admin/users";
 import { getAdminCountries } from "@/lib/api/admin/countries";
 import { getActiveGlobalGenerationOptions } from "@/lib/api/admin/generations";
-import { getSession } from "@/lib/auth/getSession";
-import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
-import { ADMIN_WRITE_ROLES } from "@/lib/auth/require-admin-profile";
-import { hasRole } from "@/lib/auth/has-role";
+import { resolveAdminProfileScope, type AdminProfileScopeFilter } from "@/lib/auth/admin-scope";
+import { requireAdminProfile } from "@/lib/auth/require-admin-profile";
 import { createApiPerformanceLogger } from "@/lib/performance";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { UserRole } from "@/types/database";
 
 
 const NO_STORE_HEADERS = {
@@ -21,15 +17,6 @@ const NO_STORE_HEADERS = {
 };
 
 const OPTIONS_CACHE_TTL_MS = 3 * 60 * 1000;
-const OPTIONS_CACHE_KEY = "global";
-
-type AdminProfileLookupRow = {
-  id: string;
-};
-
-type AdminRoleLookupRow = {
-  role: UserRole;
-};
 
 type AdminUsersOptionsPayload = {
   options: {
@@ -59,74 +46,6 @@ type AdminUsersOptionsCacheEntry = {
 
 const optionsCache = new Map<string, AdminUsersOptionsCacheEntry>();
 
-async function requireAdminOptionsAccess() {
-  const session = await getSession();
-
-  if (!session.user) {
-    return {
-      ok: false as const,
-      status: 401 as const,
-      roleCount: 0,
-    };
-  }
-
-  const supabase = await createSupabaseServerClient();
-  const verifiedProfileId = await getVerifiedProfileId();
-
-  const profileQuery = supabase
-    .from("profiles")
-    .select("id")
-    .neq("status", "anonymized")
-    .is("deleted_at", null);
-
-  const { data: profile, error: profileError } = verifiedProfileId
-    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
-    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
-
-  if (profileError || !profile) {
-    return {
-      ok: false as const,
-      status: 403 as const,
-      roleCount: 0,
-    };
-  }
-
-  const adminProfile = profile as AdminProfileLookupRow;
-  const { data: roles, error: rolesError } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("profile_id", adminProfile.id)
-    .eq("status", "active")
-    .eq("is_active", true)
-    .is("deleted_at", null)
-    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
-
-  if (rolesError) {
-    return {
-      ok: false as const,
-      status: 403 as const,
-      roleCount: 0,
-    };
-  }
-
-  const roleValues = ((roles ?? []) as AdminRoleLookupRow[]).map(
-    (role) => role.role,
-  );
-
-  if (!hasRole(roleValues, ADMIN_WRITE_ROLES)) {
-    return {
-      ok: false as const,
-      status: 403 as const,
-      roleCount: roleValues.length,
-    };
-  }
-
-  return {
-    ok: true as const,
-    roleCount: roleValues.length,
-  };
-}
-
 function markOptionsResult<T>(
   promise: Promise<T>,
   mark: (result: T) => void,
@@ -152,9 +71,206 @@ function hasOptionErrors(payload: AdminUsersOptionsPayload) {
   return Object.values(payload.optionErrors).some(Boolean);
 }
 
+function getStringProp(item: unknown, key: string) {
+  if (!item || typeof item !== "object") {
+    return null;
+  }
+
+  const value = (item as Record<string, unknown>)[key];
+
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function getScopedConditions(scope: AdminProfileScopeFilter) {
+  if (scope.kind !== "scoped") {
+    return [];
+  }
+
+  return scope.orFilter
+    .split(",")
+    .map((condition) => {
+      const match = condition.match(
+        /^(country_id|region_id|organization_id|church_id|group_id|cohort_id)\.eq\.([0-9a-f-]+)$/i,
+      );
+
+      return match
+        ? {
+            column: match[1],
+            value: match[2],
+          }
+        : null;
+    })
+    .filter(
+      (condition): condition is { column: string; value: string } =>
+        condition !== null,
+    );
+}
+
+function filterOptionsByScope(
+  payload: AdminUsersOptionsPayload,
+  scope: AdminProfileScopeFilter,
+): AdminUsersOptionsPayload {
+  if (scope.kind === "global") {
+    return payload;
+  }
+
+  if (scope.kind === "none") {
+    return {
+      ...payload,
+      options: {
+        ...payload.options,
+        countries: [],
+        regions: [],
+        organizations: [],
+        churches: [],
+        groups: [],
+      },
+    };
+  }
+
+  const organizations = payload.options.organizations;
+  const churches = payload.options.churches;
+  const groups = payload.options.groups;
+  const regions = payload.options.regions;
+  const countries = payload.options.countries;
+  const orgById = new Map(
+    organizations
+      .map((organization) => [getStringProp(organization, "id"), organization] as const)
+      .filter((entry): entry is readonly [string, unknown] => entry[0] !== null),
+  );
+  const churchById = new Map(
+    churches
+      .map((church) => [getStringProp(church, "id"), church] as const)
+      .filter((entry): entry is readonly [string, unknown] => entry[0] !== null),
+  );
+  const groupById = new Map(
+    groups
+      .map((group) => [getStringProp(group, "id"), group] as const)
+      .filter((entry): entry is readonly [string, unknown] => entry[0] !== null),
+  );
+  const visibleCountryIds = new Set<string>();
+  const visibleRegionIds = new Set<string>();
+  const visibleOrganizationIds = new Set<string>();
+  const visibleChurchIds = new Set<string>();
+  const visibleGroupIds = new Set<string>();
+
+  function addOrganization(organizationId: string | null) {
+    if (!organizationId) {
+      return;
+    }
+
+    visibleOrganizationIds.add(organizationId);
+    const countryId = getStringProp(orgById.get(organizationId), "country_id");
+
+    if (countryId) {
+      visibleCountryIds.add(countryId);
+    }
+  }
+
+  function addChurch(churchId: string | null) {
+    if (!churchId) {
+      return;
+    }
+
+    visibleChurchIds.add(churchId);
+    addOrganization(getStringProp(churchById.get(churchId), "organization_id"));
+  }
+
+  function addGroup(groupId: string | null) {
+    if (!groupId) {
+      return;
+    }
+
+    visibleGroupIds.add(groupId);
+    addChurch(getStringProp(groupById.get(groupId), "church_id"));
+  }
+
+  for (const condition of getScopedConditions(scope)) {
+    if (condition.column === "country_id") {
+      visibleCountryIds.add(condition.value);
+
+      for (const organization of organizations) {
+        if (getStringProp(organization, "country_id") === condition.value) {
+          addOrganization(getStringProp(organization, "id"));
+        }
+      }
+
+      for (const region of regions) {
+        if (getStringProp(region, "country_id") === condition.value) {
+          visibleRegionIds.add(getStringProp(region, "id") ?? "");
+        }
+      }
+    }
+
+    if (condition.column === "region_id") {
+      visibleRegionIds.add(condition.value);
+      const region = regions.find(
+        (item) => getStringProp(item, "id") === condition.value,
+      );
+      const countryId = getStringProp(region, "country_id");
+
+      if (countryId) {
+        visibleCountryIds.add(countryId);
+      }
+    }
+
+    if (condition.column === "organization_id") {
+      addOrganization(condition.value);
+    }
+
+    if (condition.column === "church_id") {
+      addChurch(condition.value);
+    }
+
+    if (condition.column === "group_id") {
+      addGroup(condition.value);
+    }
+  }
+
+  for (const church of churches) {
+    const churchId = getStringProp(church, "id");
+    const organizationId = getStringProp(church, "organization_id");
+
+    if (organizationId && visibleOrganizationIds.has(organizationId)) {
+      addChurch(churchId);
+    }
+  }
+
+  for (const group of groups) {
+    const groupId = getStringProp(group, "id");
+    const churchId = getStringProp(group, "church_id");
+
+    if (churchId && visibleChurchIds.has(churchId)) {
+      addGroup(groupId);
+    }
+  }
+
+  return {
+    ...payload,
+    options: {
+      ...payload.options,
+      countries: countries.filter((country) =>
+        visibleCountryIds.has(getStringProp(country, "id") ?? ""),
+      ),
+      regions: regions.filter((region) =>
+        visibleRegionIds.has(getStringProp(region, "id") ?? ""),
+      ),
+      organizations: organizations.filter((organization) =>
+        visibleOrganizationIds.has(getStringProp(organization, "id") ?? ""),
+      ),
+      churches: churches.filter((church) =>
+        visibleChurchIds.has(getStringProp(church, "id") ?? ""),
+      ),
+      groups: groups.filter((group) =>
+        visibleGroupIds.has(getStringProp(group, "id") ?? ""),
+      ),
+    },
+  };
+}
+
 export async function GET() {
   const perf = createApiPerformanceLogger("/api/admin/users/options");
-  const admin = await requireAdminOptionsAccess();
+  const admin = await requireAdminProfile();
 
   if (!admin.ok) {
     perf.mark("auth.permissions_query");
@@ -163,9 +279,17 @@ export async function GET() {
       { status: admin.status, headers: NO_STORE_HEADERS },
     );
   }
-  perf.mark("auth.permissions_query", admin.roleCount);
+  perf.mark("auth.permissions_query", admin.roles.length);
 
-  const cachedOptions = optionsCache.get(OPTIONS_CACHE_KEY);
+  const scope = await resolveAdminProfileScope(
+    admin.supabase,
+    admin.profile.id,
+    admin.roles,
+  );
+  const cacheKey =
+    scope.kind === "scoped" ? `scoped:${scope.orFilter}` : scope.kind;
+
+  const cachedOptions = optionsCache.get(cacheKey);
 
   if (cachedOptions && cachedOptions.expiresAt > Date.now()) {
     const resultCount = countOptionsPayload(cachedOptions.value);
@@ -205,7 +329,7 @@ export async function GET() {
     }),
   ]);
 
-  const payload: AdminUsersOptionsPayload = {
+  const rawPayload: AdminUsersOptionsPayload = {
     options: {
       countries: countriesResult.countries.filter((country) => country.is_active),
       regions: regionsResult.regions,
@@ -228,13 +352,14 @@ export async function GET() {
       groups: groupsResult.error,
     },
   };
+  const payload = filterOptionsByScope(rawPayload, scope);
 
   const resultCount = countOptionsPayload(payload);
   perf.mark("options.complete", resultCount);
 
   if (!hasOptionErrors(payload)) {
     // 국가/지역/기관/교회/그룹/세대 변경 직후 최대 3분 반영 지연 가능.
-    optionsCache.set(OPTIONS_CACHE_KEY, {
+    optionsCache.set(cacheKey, {
       expiresAt: Date.now() + OPTIONS_CACHE_TTL_MS,
       value: payload,
     });

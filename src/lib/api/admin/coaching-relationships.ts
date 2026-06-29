@@ -1,6 +1,10 @@
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { requireAdminProfile } from "@/lib/auth/require-admin-profile";
 import {
+  areProfileIdsWithinAdminScope,
+  resolveAdminProfileScope,
+} from "@/lib/auth/admin-scope";
+import {
   RELATIONSHIP_TYPES,
   SCOPE_TYPES,
   type CoachingRelationshipStatus,
@@ -205,6 +209,7 @@ async function getEligibleProfileIdsForRoles(
 async function getActiveProfilesByIds(
   serviceClient: NonNullable<ReturnType<typeof createSupabaseServiceClient>["client"]>,
   profileIds: string[],
+  scopeOrFilter: string | null,
 ) {
   if (profileIds.length === 0) {
     return {
@@ -213,12 +218,19 @@ async function getActiveProfilesByIds(
     };
   }
 
-  const { data, error } = await serviceClient
+  let query = serviceClient
     .from("profiles")
     .select("id, display_name, full_name, email")
     .in("id", profileIds)
     .eq("status", "active")
     .is("deleted_at", null);
+
+  // 관리자 범위(scope) 밖 회원은 코칭 관계 선택 목록에서 제외.
+  if (scopeOrFilter) {
+    query = query.or(scopeOrFilter);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return {
@@ -311,6 +323,24 @@ export async function getAdminCoachingRelationshipOptions(): Promise<AdminCoachi
     };
   }
 
+  const scope = await resolveAdminProfileScope(
+    admin.supabase,
+    admin.profile.id,
+    admin.roles,
+  );
+
+  if (scope.kind === "none") {
+    return {
+      ok: true,
+      data: {
+        coaches: [],
+        coachees: [],
+      },
+    };
+  }
+
+  const scopeOrFilter = scope.kind === "scoped" ? scope.orFilter : null;
+
   const coachIdsResult = await getEligibleProfileIdsForRoles(
     serviceClient,
     COACH_SELECTOR_ROLES,
@@ -354,8 +384,8 @@ export async function getAdminCoachingRelationshipOptions(): Promise<AdminCoachi
   }
 
   const [coachesResult, coacheesResult] = await Promise.all([
-    getActiveProfilesByIds(serviceClient, coachIdsResult.ids),
-    getActiveProfilesByIds(serviceClient, coacheeIdsResult.ids),
+    getActiveProfilesByIds(serviceClient, coachIdsResult.ids, scopeOrFilter),
+    getActiveProfilesByIds(serviceClient, coacheeIdsResult.ids, scopeOrFilter),
   ]);
 
   if (coachesResult.error || coacheesResult.error) {
@@ -550,6 +580,29 @@ export async function createAdminCoachingRelationship(input: {
         status: 400,
         code: "INVALID_COACHEE_PROFILE",
         message: "올바른 코치이 프로필을 선택해 주세요.",
+      },
+    };
+  }
+
+  // 범위 밖 회원의 profile id를 직접 지정해 관계를 만드는 것을 차단.
+  const scope = await resolveAdminProfileScope(
+    admin.supabase,
+    admin.profile.id,
+    admin.roles,
+  );
+  const participantsInScope = await areProfileIdsWithinAdminScope(
+    serviceClient,
+    scope,
+    [coachProfileId, coacheeProfileId],
+  );
+
+  if (!participantsInScope) {
+    return {
+      ok: false,
+      error: {
+        status: 403,
+        code: "RELATIONSHIP_SCOPE_FORBIDDEN",
+        message: "관리 범위 밖의 코치 또는 코치이로는 코칭 관계를 만들 수 없습니다.",
       },
     };
   }

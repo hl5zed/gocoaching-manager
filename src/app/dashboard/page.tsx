@@ -204,12 +204,28 @@ export default async function DashboardPage() {
     redirect("/coach");
   }
 
+  const isAdmin = roleValues.some((role) =>
+    ["super_admin", "country_admin", "organization_admin", "church_admin"].includes(
+      role,
+    ),
+  );
+  if (isAdmin) {
+    redirect("/admin");
+  }
+
+  const isCoacheeOnly =
+    roleValues.includes("coachee") &&
+    !roleValues.some((r) =>
+      ["coach", "coach_maker", "super_admin", "country_admin", "organization_admin", "church_admin"].includes(r),
+    );
+  if (isCoacheeOnly) {
+    redirect("/coachee");
+  }
+
   const quickLinks = getDashboardQuickLinksState(roleValues);
-  const showAdminCenterCard = roleValues.includes("super_admin");
   const showMyMoksilgiCard =
     roleValues.includes("coach") || roleValues.includes("coachee");
-  const showCoachMakerFeatureCards =
-    roleValues.includes("super_admin") || roleValues.includes("coach_maker");
+  const showCoachMakerFeatureCards = roleValues.includes("coach_maker");
   const welcomeName =
     profile?.display_name ||
     profile?.full_name ||
@@ -281,6 +297,26 @@ export default async function DashboardPage() {
               <Icon className="h-5 w-5 shrink-0 text-brand-600" name="arrow-right" />
             </div>
           </Link>
+        ) : null}
+
+        {showCoachMakerFeatureCards ? (
+          <DashboardSectionCard
+            title={
+              <I18nText k="dashboard.coachMakerFeatures" fallback="코치메이커 기능" />
+            }
+          >
+            <p className="mb-4 text-sm leading-6 text-ink-muted">
+              <I18nText
+                k="dashboard.coachMakerFeaturesDescription"
+                fallback="코치메이커 센터, 전체 목실기 성취 현황, 나의 목실기와 나의 기록으로 바로 이동합니다."
+              />
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {coachMakerFeatureCards.map((card) => (
+                <FeatureLinkCard key={card.href} {...card} />
+              ))}
+            </div>
+          </DashboardSectionCard>
         ) : null}
 
         <DashboardSectionCard
@@ -446,47 +482,6 @@ export default async function DashboardPage() {
             </div>
           ) : null}
         </DashboardSectionCard>
-
-        {showCoachMakerFeatureCards ? (
-          <DashboardSectionCard
-            title={
-              <I18nText k="dashboard.coachMakerFeatures" fallback="코치메이커 기능" />
-            }
-          >
-            <p className="mb-4 text-sm leading-6 text-ink-muted">
-              <I18nText
-                k="dashboard.coachMakerFeaturesDescription"
-                fallback="코치메이커 센터, 전체 목실기 성취 현황, 나의 목실기와 나의 기록으로 바로 이동합니다."
-              />
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {coachMakerFeatureCards.map((card) => (
-                <FeatureLinkCard key={card.href} {...card} />
-              ))}
-            </div>
-          </DashboardSectionCard>
-        ) : null}
-
-        {showAdminCenterCard ? (
-          <DashboardSectionCard
-            title={<I18nText k="dashboard.adminCenter" fallback="관리자 센터" />}
-          >
-            <p className="mb-4 text-sm leading-6 text-ink-muted">
-              <I18nText
-                k="dashboard.adminCenterDescription"
-                fallback="회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간으로 이동합니다."
-              />
-            </p>
-            <FeatureLinkCard
-              description="회원, 초대, 역할, 소속, 시스템 설정을 관리하는 관리자 전용 공간으로 이동합니다."
-              descriptionKey="dashboard.adminCenterDescription"
-              href="/admin"
-              icon="settings"
-              title="관리자 센터"
-              titleKey="dashboard.adminCenter"
-            />
-          </DashboardSectionCard>
-        ) : null}
       </section>
     </main>
   );

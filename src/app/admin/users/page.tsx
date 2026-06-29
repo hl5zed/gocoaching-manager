@@ -9,7 +9,7 @@ import {
 } from "@/lib/api/admin/users";
 import { PROFILE_STATUSES, USER_ROLES } from "@/types/database";
 import { formatScope, getRoleLabel, getStatusLabel } from "@/lib/ui/labels";
-import { PageNavigationButtons } from "@/components/navigation/PageNavigationButtons";
+import { PageHeader } from "@/components/layout";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { requireAdminProfile } from "@/lib/auth/require-admin-profile";
 import { I18nText } from "@/lib/i18n/I18nProvider";
@@ -48,7 +48,7 @@ function formatDateTime(value: string | null) {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-    timeZone: "Asia/Bangkok",
+    timeZone: "Asia/Seoul",
   }).formatToParts(date);
 
   const get = (type: string) =>
@@ -732,50 +732,41 @@ export default async function AdminUsersPage({
 
   const getUserCountryLabel = (user: AdminUserSummary) => formatCountryValue(user);
   return (
-    <main className="min-h-screen bg-[var(--trust-bg)] px-4 py-6 text-ink-strong sm:px-6 sm:py-10">
-      <section className="mx-auto w-full max-w-7xl">
-        <Card>
-          <CardHeader className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0">
-              <Badge icon="users" tone="info">
-                <I18nText k="members.admin" fallback="관리자" />
-              </Badge>
-              <CardTitle className="mt-3 text-2xl sm:text-3xl">
-                <I18nText k="members.usersAndRoles" fallback="사용자 및 역할" />
-              </CardTitle>
-              <CardDescription className="mt-4 max-w-3xl leading-7">
-                <I18nText
-                  k="members.pageDescription"
-                  fallback="프로필과 활성 역할을 조회하고, 필요한 경우 관리자가 직접 회원을 등록할 수 있습니다."
-                />
-              </CardDescription>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-ink-faint">
-                <I18nText
-                  k="members.invitationNotice"
-                  fallback="기존 이메일 초대 방식은 그대로 유지됩니다. 직접 등록 시 임시 비밀번호는 별도로 전달해야 합니다."
-                />
-              </p>
-            </div>
+    <>
+      <PageHeader
+        title={<I18nText k="members.usersAndRoles" fallback="사용자 및 역할" />}
+        description={
+          <I18nText
+            k="members.pageDescription"
+            fallback="프로필과 활성 역할을 조회하고, 필요한 경우 관리자가 직접 회원을 등록할 수 있습니다."
+          />
+        }
+        actions={
+          <>
+            <ButtonLink
+              href="/admin/coaching-relationships/new"
+              icon="users"
+              variant="secondary"
+            >
+              <I18nText k="members.createRelationship" fallback="코칭 관계 생성" />
+            </ButtonLink>
+            <ButtonLink href="/admin/invitations/new" icon="users">
+              <I18nText k="members.addMember" fallback="회원 추가" />
+            </ButtonLink>
+          </>
+        }
+      />
 
-            <div className="flex min-w-0 flex-wrap items-center gap-3 lg:justify-end">
-              <PageNavigationButtons className="justify-start sm:justify-end" />
-              <ButtonLink
-                href="/admin/coaching-relationships/new"
-                icon="users"
-                variant="secondary"
-              >
-                <I18nText k="members.createRelationship" fallback="코칭 관계 생성" />
-              </ButtonLink>
-              <ButtonLink href="/admin/invitations/new" icon="users">
-                <I18nText k="members.addMember" fallback="회원 추가" />
-              </ButtonLink>
-            </div>
-          </CardHeader>
-        </Card>
+      <p className="-mt-2 mb-6 max-w-3xl text-sm leading-6 text-ink-faint">
+        <I18nText
+          k="members.invitationNotice"
+          fallback="기존 이메일 초대 방식은 그대로 유지됩니다. 직접 등록 시 임시 비밀번호는 별도로 전달해야 합니다."
+        />
+      </p>
 
-        <div className="mt-6">
-          <AdminUserDirectCreatePanel />
-        </div>
+      <div>
+        <AdminUserDirectCreatePanel />
+      </div>
 
         {!error ? (
           <section className="mt-6">
@@ -1046,7 +1037,6 @@ export default async function AdminUsersPage({
             </Card>
           </AdminUsersClientFilters>
         )}
-      </section>
-    </main>
+    </>
   );
 }

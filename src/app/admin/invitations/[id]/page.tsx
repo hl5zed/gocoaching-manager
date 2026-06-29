@@ -34,7 +34,7 @@ function formatDateTime(value: string | null) {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-    timeZone: "Asia/Bangkok",
+    timeZone: "Asia/Seoul",
   }).formatToParts(date);
 
   const get = (type: string) =>

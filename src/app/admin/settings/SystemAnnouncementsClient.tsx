@@ -59,7 +59,7 @@ const audienceLabels: Record<SystemAnnouncementAudience, string> = {
 const placementLabels: Record<SystemAnnouncementPlacement, string> = {
   admin: "관리자 센터",
   dashboard: "대시보드",
-  login_after: "로그인 후",
+  login_after: "로그인 후 (미구현)",
 };
 
 function formatDateTime(value: string | null) {
@@ -413,7 +413,6 @@ export function SystemAnnouncementsClient({
                 value={form.placement}
               >
                 <option value="dashboard">대시보드</option>
-                <option value="login_after">로그인 후</option>
                 <option value="admin">관리자 센터</option>
               </SelectInput>
             </FieldLabel>

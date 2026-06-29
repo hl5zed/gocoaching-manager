@@ -475,6 +475,21 @@ export function ActionMemoDrafts({
     useState<DrilldownFilter | null>(null);
   const [isFullViewOpen, setIsFullViewOpen] = useState(false);
   const [shouldScrollToCreate, setShouldScrollToCreate] = useState(false);
+  const uniqueAttentionTargets = useMemo(() => {
+    const targetMap = new Map<string, ActionMemoAttentionTarget>();
+
+    for (const target of attentionTargets) {
+      const key =
+        target.targetUserId ??
+        [target.targetName, target.teamName ?? "", target.region ?? ""].join("|");
+
+      if (!targetMap.has(key)) {
+        targetMap.set(key, target);
+      }
+    }
+
+    return Array.from(targetMap.values());
+  }, [attentionTargets]);
 
   const summary = useMemo(() => {
     let archivedCount = 0;
@@ -1226,16 +1241,19 @@ export function ActionMemoDrafts({
               목록으로 이동
             </a>
           </div>
-      {attentionTargets.length > 0 ? (
+      {uniqueAttentionTargets.length > 0 ? (
         <div className="mt-5 rounded-control border border-amber-200 bg-amber-50 p-4">
           <p className="text-sm font-semibold text-amber-900">
             관심 필요 대상자 내부 메모 작성
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {attentionTargets.map((target) => (
+            {uniqueAttentionTargets.map((target) => (
               <button
                 className="rounded-md border border-amber-300 bg-surface-card px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-100"
-                key={`${target.targetUserId ?? target.targetName}-${target.targetName}`}
+                key={
+                  target.targetUserId ??
+                  `${target.targetName}-${target.teamName ?? ""}-${target.region ?? ""}`
+                }
                 onClick={() => fillAttentionTarget(target)}
                 type="button"
               >

@@ -37,11 +37,27 @@ function StatCard({
   value: number | string;
 }) {
   return (
-    <div className="rounded-card border border-line-base bg-surface-card p-4">
+    <div className="rounded-md bg-surface-app p-3">
       <p className="text-xs font-medium text-ink-faint">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-ink-strong">{value}</p>
+      <p className="mt-1 text-xl font-semibold text-ink-strong">{value}</p>
     </div>
   );
+}
+
+// 세대별 막대 색상은 계보 트리(GenealogyTreeView)의 세대 팔레트와 동일하게 맞춘다.
+const GENERATION_BAR_COLORS: Record<number, string> = {
+  1: "#534AB7",
+  2: "#0F6E56",
+  3: "#BA7517",
+  4: "#993C1D",
+};
+
+function generationBarColor(generationNumber: number | null) {
+  if (generationNumber !== null && GENERATION_BAR_COLORS[generationNumber]) {
+    return GENERATION_BAR_COLORS[generationNumber];
+  }
+
+  return "#888780";
 }
 
 function DetailRow({ label, value }: { label: string; value: string | number }) {
@@ -72,8 +88,11 @@ function GenerationBar({
       </div>
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-sunken">
         <div
-          className="h-full rounded-full bg-navy-800"
-          style={{ width: `${width}%` }}
+          className="h-full rounded-full"
+          style={{
+            backgroundColor: generationBarColor(stat.generationNumber),
+            width: `${width}%`,
+          }}
         />
       </div>
     </div>
@@ -138,7 +157,7 @@ export function GenealogyStatsPanel({
   return (
     <aside className="space-y-5">
       <section className="rounded-card border border-line-base bg-surface-card p-5">
-        <h2 className="text-lg font-semibold">선택 노드 정보</h2>
+        <h2 className="text-base font-semibold">선택 노드 정보</h2>
         {selectedNode ? (
           <div className="mt-4">
             <DetailRow label="이름" value={selectedNode.label} />
@@ -178,7 +197,7 @@ export function GenealogyStatsPanel({
       </section>
 
       <section className="rounded-card border border-line-base bg-surface-card p-5">
-        <h2 className="text-lg font-semibold">전체 현황</h2>
+        <h2 className="text-base font-semibold">전체 현황</h2>
         <div className="mt-4 grid grid-cols-2 gap-3">
           <StatCard label="전체 코치 수" value={data.summaryStats.totalCoaches} />
           <StatCard
@@ -202,7 +221,7 @@ export function GenealogyStatsPanel({
       </section>
 
       <section className="rounded-card border border-line-base bg-surface-card p-5">
-        <h2 className="text-lg font-semibold">세대별 인원 분포</h2>
+        <h2 className="text-base font-semibold">세대별 인원 분포</h2>
         {data.generationStats.length > 0 ? (
           <div className="mt-4 space-y-4">
             {data.generationStats.map((stat) => (
@@ -219,7 +238,7 @@ export function GenealogyStatsPanel({
       </section>
 
       <section className="rounded-card border border-line-base bg-surface-card p-5">
-        <h2 className="text-lg font-semibold">국가별 현황</h2>
+        <h2 className="text-base font-semibold">국가별 현황</h2>
         {data.countryStats.length > 0 ? (
           <div className="mt-4 space-y-3">
             {data.countryStats.map((country) => (
@@ -235,7 +254,7 @@ export function GenealogyStatsPanel({
       </section>
 
       <section className="rounded-card border border-line-base bg-surface-card p-5">
-        <h2 className="text-lg font-semibold">교회별 현황</h2>
+        <h2 className="text-base font-semibold">교회별 현황</h2>
         {topChurches.length > 0 ? (
           <div className="mt-4 space-y-3">
             {topChurches.map((church) => (

@@ -351,6 +351,32 @@ export function CoachingGenealogyClient({
     generationOptions.length > 0;
   const printTarget = view === "tree" || view === "map" ? view : null;
   const filterSummary = getFilterSummary(data, t);
+  const selectedCountryOption = countryOptions.find(
+    (country) => country.countryId === data.filters.countryId,
+  );
+  const selectedChurchOption = churchOptions.find(
+    (church) => church.churchId === data.filters.churchId,
+  );
+  const selectedGenerationOption = generationOptions.find(
+    (generation) =>
+      generation.generationNumber === data.filters.generationNumber,
+  );
+  const activeFilterChips = [
+    selectedCountryOption
+      ? {
+          key: "countryId",
+          label: selectedCountryOption.countryCode
+            ? `${selectedCountryOption.countryName} (${selectedCountryOption.countryCode})`
+            : selectedCountryOption.countryName,
+        }
+      : null,
+    selectedChurchOption
+      ? { key: "churchId", label: selectedChurchOption.churchName }
+      : null,
+    selectedGenerationOption
+      ? { key: "generationNumber", label: selectedGenerationOption.label }
+      : null,
+  ].filter((chip): chip is { key: string; label: string } => chip !== null);
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -982,16 +1008,20 @@ export function CoachingGenealogyClient({
       `}</style>
 
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
-        <nav className="flex flex-wrap gap-2" aria-label={t("genealogy.title", "계보도 보기 탭")}>
+        <nav
+          className="inline-flex flex-wrap gap-1 rounded-xl border border-line-base bg-surface-sunken p-1"
+          aria-label={t("genealogy.title", "계보도 보기 탭")}
+        >
           {TABS.map((tab) => {
             const isActive = view === tab.value;
 
             return (
               <Link
-                className={`rounded-md border px-4 py-2 text-sm font-medium ${
+                aria-current={isActive ? "page" : undefined}
+                className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors ${
                   isActive
-                    ? "border-navy-900 bg-navy-900 text-white"
-                    : "border-line-base bg-surface-card text-ink-base hover:border-line-base"
+                    ? "bg-surface-card text-ink-strong shadow-sm"
+                    : "text-ink-muted hover:text-ink-base"
                 }`}
                 href={buildHref(searchParams, tab.value)}
                 key={tab.value}
@@ -1098,6 +1128,25 @@ export function CoachingGenealogyClient({
             {t("genealogy.resetFilters", "필터 초기화")}
           </button>
         </div>
+        {activeFilterChips.length > 0 ? (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-ink-faint">
+              {t("genealogy.activeFilters", "적용된 필터")}
+            </span>
+            {activeFilterChips.map((chip) => (
+              <button
+                aria-label={`${chip.label} ${t("genealogy.removeFilter", "필터 제거")}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700"
+                key={chip.key}
+                onClick={() => updateFilter(chip.key, "")}
+                type="button"
+              >
+                {chip.label}
+                <span aria-hidden>×</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
         {!hasFilterOptions ? (
           <div className="mt-4 rounded-control border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
             <p>
