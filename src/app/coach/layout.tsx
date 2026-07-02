@@ -11,6 +11,7 @@ const COACH_NAV: SidebarNavSection[] = [
       { href: "/coach/relationships", label: "코칭 관계", icon: "users" },
       { href: "/coach/weekly-logs", label: "기록 현황", icon: "report" },
       { href: "/coach/moksilgi", label: "목실기", icon: "report" },
+      { href: "/my-coaching/moksilgi", label: "나의 목실기", icon: "report" },
     ],
   },
   {

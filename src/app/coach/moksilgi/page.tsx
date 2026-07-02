@@ -284,10 +284,15 @@ export default async function CoachMoksilgiPage({
               </p>
               <YearSelector year={year} />
             </div>
-            <PrintPageButton
-              fileName={`moksilgi-coach-list-${year}`}
-              label="코치이 목실기 목록 인쇄/PDF 저장"
-            />
+            <div className="print-hidden flex flex-col items-stretch gap-2 sm:items-end">
+              <ButtonLink href="/my-coaching/moksilgi" icon="report">
+                <I18nText k="coach.moksilgi.writeMine" fallback="나의 목실기 작성" />
+              </ButtonLink>
+              <PrintPageButton
+                fileName={`moksilgi-coach-list-${year}`}
+                label="코치이 목실기 목록 인쇄/PDF 저장"
+              />
+            </div>
           </CardHeader>
         </Card>
 
