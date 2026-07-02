@@ -319,6 +319,12 @@ export function PrintPageButton({
             margin-bottom: 0 !important;
           }
 
+          /* ── 강조 지표 숫자 (요약 카드의 핵심 수치) ── */
+          .print-root p.print-stat-value {
+            font-size: 15px !important;
+            line-height: 1.3 !important;
+          }
+
           .print-root ul {
             margin-bottom: 0 !important;
             padding-left: 12px !important;

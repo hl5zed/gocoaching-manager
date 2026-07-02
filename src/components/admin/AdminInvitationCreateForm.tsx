@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   SCOPE_TYPES,
   USER_ROLES,
@@ -19,6 +19,10 @@ import {
 } from "@/lib/validation/common";
 import { useI18n } from "@/lib/i18n/useI18n";
 import type { InvitationOrganizationDefaultRoleOption } from "@/lib/api/admin/system-settings";
+import {
+  loadAdminUsersOptions,
+  type AdminUsersOptionsPayload,
+} from "@/app/admin/users/AdminUsersOptionsCache";
 
 type CreateInvitationSuccess = {
   invitation_id: string;
@@ -54,6 +58,11 @@ type CreateInvitationResponse =
       ok: false;
       error: CreateInvitationError;
     };
+
+type ScopeLookupOption = {
+  id: string;
+  label: string;
+};
 
 function normalizeDefaultExpiresInDays(value?: number) {
   return typeof value === "number" &&
@@ -102,6 +111,9 @@ export function AdminInvitationCreateForm({
   const [success, setSuccess] = useState<CreateInvitationSuccess | null>(null);
   const [error, setError] = useState<CreateInvitationError | null>(null);
   const [copyMessage, setCopyMessage] = useState("");
+  const [scopeLookups, setScopeLookups] =
+    useState<AdminUsersOptionsPayload | null>(null);
+  const [scopeLookupError, setScopeLookupError] = useState<string | null>(null);
   const invitationExpireOptions = getInvitationExpireOptions(expiresInDays);
 
   const normalizedScopeId = useMemo(() => {
@@ -129,6 +141,98 @@ export function AdminInvitationCreateForm({
   }, [organizations]);
   const isOrganizationPolicyActive =
     selectedOrganization?.policy.enabled === true;
+  const scopeOptions = useMemo<ScopeLookupOption[]>(() => {
+    if (scopeType === "country") {
+      return (
+        scopeLookups?.options.countries.map((country) => ({
+          id: country.id,
+          label: country.code ? `${country.name} (${country.code})` : country.name,
+        })) ?? []
+      );
+    }
+
+    if (scopeType === "region") {
+      return (
+        scopeLookups?.options.regions.map((region) => ({
+          id: region.id,
+          label: region.name,
+        })) ?? []
+      );
+    }
+
+    if (scopeType === "organization") {
+      const lookupOrganizations =
+        scopeLookups?.options.organizations.map((organization) => ({
+          id: organization.id,
+          label: organization.name,
+        })) ?? [];
+
+      if (lookupOrganizations.length > 0) {
+        return lookupOrganizations;
+      }
+
+      return uniqueOrganizations.map((organization) => ({
+        id: organization.organization_id,
+        label: `${organization.organization_name} · ${organization.country_name}`,
+      }));
+    }
+
+    if (scopeType === "church") {
+      return (
+        scopeLookups?.options.churches.map((church) => ({
+          id: church.id,
+          label: church.name,
+        })) ?? []
+      );
+    }
+
+    if (scopeType === "group") {
+      return (
+        scopeLookups?.options.groups.map((group) => ({
+          id: group.id,
+          label: group.name,
+        })) ?? []
+      );
+    }
+
+    return [];
+  }, [scopeLookups, scopeType, uniqueOrganizations]);
+  const usesScopePicker =
+    scopeType !== "global" &&
+    ["country", "region", "organization", "church", "group"].includes(
+      scopeType,
+    ) &&
+    scopeOptions.length > 0;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    loadAdminUsersOptions()
+      .then((payload) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setScopeLookups(payload);
+        setScopeLookupError(null);
+      })
+      .catch(() => {
+        if (!isMounted) {
+          return;
+        }
+
+        setScopeLookupError(
+          t(
+            "admin.invitations.new.form.scopeOptionsFailed",
+            "범위 선택 목록을 불러오지 못했습니다. UUID를 직접 입력해 주세요.",
+          ),
+        );
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [t]);
 
   function handleSelectOrganization(organizationId: string) {
     setSelectedOrganizationId(organizationId);
@@ -160,6 +264,18 @@ export function AdminInvitationCreateForm({
               "admin.invitations.new.form.emailRequired",
               "이메일을 입력해 주세요.",
             ),
+      });
+      return;
+    }
+
+    if (scopeType !== "global" && !isNonEmptyString(scopeId)) {
+      setSuccess(null);
+      setError({
+        code: "MISSING_SCOPE_ID",
+        message: t(
+          "admin.invitations.new.form.missingScopeId",
+          "범위를 선택하거나 범위 UUID를 입력해 주세요.",
+        ),
       });
       return;
     }
@@ -378,10 +494,7 @@ export function AdminInvitationCreateForm({
             onChange={(event) => {
               const nextScopeType = event.target.value as ScopeType;
               setScopeType(nextScopeType);
-
-              if (nextScopeType === "global") {
-                setScopeId("");
-              }
+              setScopeId("");
             }}
             value={scopeType}
           >
@@ -397,24 +510,50 @@ export function AdminInvitationCreateForm({
           <span className="text-sm font-medium text-ink-base">
             {t("admin.invitations.new.form.scopeId", "범위 ID")}
           </span>
-          <input
-            className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal disabled:bg-surface-sunken disabled:text-ink-faint"
-            disabled={scopeType === "global" || isOrganizationPolicyActive}
-            onChange={(event) => setScopeId(event.target.value)}
-            placeholder={
-              scopeType === "global"
-                ? t(
-                    "admin.invitations.new.form.globalScopePlaceholder",
-                    "전체 범위에서는 사용하지 않습니다",
-                  )
-                : t(
-                    "admin.invitations.new.form.scopeUuidPlaceholder",
-                    "범위 UUID",
-                  )
-            }
-            type="text"
-            value={scopeType === "global" ? "" : scopeId}
-          />
+          {usesScopePicker ? (
+            <select
+              className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal disabled:bg-surface-sunken disabled:text-ink-faint"
+              disabled={isOrganizationPolicyActive}
+              onChange={(event) => setScopeId(event.target.value)}
+              value={scopeId}
+            >
+              <option value="">
+                {t(
+                  "admin.invitations.new.form.scopeSelectPlaceholder",
+                  "범위를 선택해 주세요",
+                )}
+              </option>
+              {scopeOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              className="rounded-control border border-line-base px-3 py-2 font-sans tracking-normal disabled:bg-surface-sunken disabled:text-ink-faint"
+              disabled={scopeType === "global" || isOrganizationPolicyActive}
+              onChange={(event) => setScopeId(event.target.value)}
+              placeholder={
+                scopeType === "global"
+                  ? t(
+                      "admin.invitations.new.form.globalScopePlaceholder",
+                      "전체 범위에서는 사용하지 않습니다",
+                    )
+                  : t(
+                      "admin.invitations.new.form.scopeUuidPlaceholder",
+                      "범위 UUID",
+                    )
+              }
+              type="text"
+              value={scopeType === "global" ? "" : scopeId}
+            />
+          )}
+          {scopeLookupError && scopeType !== "global" && !usesScopePicker ? (
+            <span className="text-xs leading-5 text-amber-700">
+              {scopeLookupError}
+            </span>
+          ) : null}
         </label>
 
         <label className="grid gap-2">

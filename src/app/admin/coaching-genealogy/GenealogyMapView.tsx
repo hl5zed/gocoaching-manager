@@ -253,8 +253,6 @@ export function GenealogyMapView({ data }: GenealogyMapViewProps) {
         marker.markerType === selectedMarkerType,
     ) ?? null;
   const center = getCenter(visibleMarkers);
-  const markerTypeLabel =
-    markerType === "all" ? "전체" : getMarkerTypeLabel(markerType);
   const coordinateMissingCount = markerTypeFilteredMarkers.filter(
     (marker) => !resolveCoordinates(marker),
   ).length;
@@ -386,93 +384,6 @@ export function GenealogyMapView({ data }: GenealogyMapViewProps) {
           </div>
         </section>
       </aside>
-
-      <section className="map-print-summary print-only">
-        <div>
-          <h2>지역 지도 요약</h2>
-          <dl>
-            <div>
-              <dt>마커 표시 기준</dt>
-              <dd>{markerTypeLabel}</dd>
-            </div>
-            <div>
-              <dt>표시 마커</dt>
-              <dd>{visibleMarkers.length}개</dd>
-            </div>
-            <div>
-              <dt>전체 노드</dt>
-              <dd>{data.nodes.length}명</dd>
-            </div>
-            <div>
-              <dt>국가</dt>
-              <dd>{data.summaryStats.totalCountries}개</dd>
-            </div>
-            <div>
-              <dt>교회</dt>
-              <dd>{data.summaryStats.totalChurches}개</dd>
-            </div>
-            <div>
-              <dt>세대</dt>
-              <dd>
-                {
-                  data.generationStats.filter(
-                    (generation) => generation.generationNumber !== null,
-                  ).length
-                }
-                개
-              </dd>
-            </div>
-          </dl>
-        </div>
-
-        <div>
-          <h2>선택 지역</h2>
-          {selectedMarker ? (
-            <dl>
-              <div>
-                <dt>이름</dt>
-                <dd>{selectedMarker.name}</dd>
-              </div>
-              <div>
-                <dt>구분</dt>
-                <dd>{getMarkerTypeLabel(selectedMarker.markerType)}</dd>
-              </div>
-              <div>
-                <dt>프로필</dt>
-                <dd>{selectedMarker.profileCount}명</dd>
-              </div>
-              <div>
-                <dt>코치/코치이</dt>
-                <dd>
-                  {selectedMarker.coachCount}명 / {selectedMarker.coacheeCount}명
-                </dd>
-              </div>
-              <div>
-                <dt>관계</dt>
-                <dd>{selectedMarker.relationshipCount}개</dd>
-              </div>
-            </dl>
-          ) : (
-            <p>선택된 지역이 없습니다.</p>
-          )}
-        </div>
-
-        <div>
-          <h2>세대 분포</h2>
-          {data.generationStats.length > 0 ? (
-            <ul>
-              {data.generationStats.slice(0, 6).map((generation) => (
-                <li key={generation.generationNumber ?? "missing"}>
-                  <span>{generation.label}</span>
-                  <strong>{generation.profileCount}명</strong>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>세대 통계가 없습니다.</p>
-          )}
-        </div>
-      </section>
     </div>
   );
 }

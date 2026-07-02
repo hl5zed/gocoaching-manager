@@ -16,6 +16,7 @@ export const ADMIN_NAV: SidebarNavSection[] = [
       { href: "/admin", label: "개요", icon: "dashboard", exact: true },
       { href: "/admin/users", label: "회원·역할", icon: "users" },
       { href: "/admin/invitations", label: "초대 관리", icon: "report" },
+      { href: "/admin/signup-requests", label: "가입 신청 승인", icon: "users" },
       { href: "/admin/coaching-genealogy", label: "코칭 관계", icon: "users" },
       { href: "/coach-maker", label: "코치메이커 현황", icon: "report" },
     ],

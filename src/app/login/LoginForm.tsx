@@ -181,6 +181,13 @@ export function LoginForm({ translations }: LoginFormProps) {
         >
           {isSubmitting ? `${loadingText}...` : loginText}
         </button>
+
+        <p className="text-center text-sm text-ink-muted">
+          계정이 없으신가요?{" "}
+          <a className="font-medium text-brand-600 underline" href="/signup">
+            가입 신청
+          </a>
+        </p>
       </form>
     </>
   );

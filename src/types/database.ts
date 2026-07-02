@@ -127,6 +127,13 @@ export const INVITATION_STATUSES = [
 ] as const;
 export type InvitationStatus = (typeof INVITATION_STATUSES)[number];
 
+export const SIGNUP_REQUEST_STATUSES = [
+  "pending",
+  "approved",
+  "rejected",
+] as const;
+export type SignupRequestStatus = (typeof SIGNUP_REQUEST_STATUSES)[number];
+
 export const WEEKLY_LOG_STATUSES = ["draft", "submitted", "archived"] as const;
 export type WeeklyLogStatus = (typeof WEEKLY_LOG_STATUSES)[number];
 
@@ -1209,6 +1216,74 @@ type TablesMap = {
       deleted_at?: string | null;
     }
   >;
+  signup_requests: TableDefinition<
+    {
+      id: string;
+      email: string;
+      name: string;
+      requested_role: UserRole;
+      scope_type: ScopeType;
+      scope_id: string | null;
+      requested_locale: string | null;
+      affiliation_text: string | null;
+      region_text: string | null;
+      generation_text: string | null;
+      ministry_position: string | null;
+      self_introduction: string | null;
+      status: SignupRequestStatus;
+      rejected_reason: string | null;
+      reviewed_by: string | null;
+      reviewed_at: string | null;
+      created_profile_id: string | null;
+      created_at: string;
+      updated_at: string;
+      deleted_at: string | null;
+    },
+    {
+      id?: string;
+      email: string;
+      name: string;
+      requested_role: UserRole;
+      scope_type?: ScopeType;
+      scope_id?: string | null;
+      requested_locale?: string | null;
+      affiliation_text?: string | null;
+      region_text?: string | null;
+      generation_text?: string | null;
+      ministry_position?: string | null;
+      self_introduction?: string | null;
+      status?: SignupRequestStatus;
+      rejected_reason?: string | null;
+      reviewed_by?: string | null;
+      reviewed_at?: string | null;
+      created_profile_id?: string | null;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    },
+    {
+      id?: string;
+      email?: string;
+      name?: string;
+      requested_role?: UserRole;
+      scope_type?: ScopeType;
+      scope_id?: string | null;
+      requested_locale?: string | null;
+      affiliation_text?: string | null;
+      region_text?: string | null;
+      generation_text?: string | null;
+      ministry_position?: string | null;
+      self_introduction?: string | null;
+      status?: SignupRequestStatus;
+      rejected_reason?: string | null;
+      reviewed_by?: string | null;
+      reviewed_at?: string | null;
+      created_profile_id?: string | null;
+      created_at?: string;
+      updated_at?: string;
+      deleted_at?: string | null;
+    }
+  >;
   user_roles: TableDefinition<
     {
       id: string;
@@ -2011,6 +2086,8 @@ export type ProfileGenerationHistoryRow =
   Tables<"profile_generation_history">;
 export type UserRoleRow = Tables<"user_roles">;
 export type InvitationRow = Tables<"invitations">;
+export type SignupRequestRow = Tables<"signup_requests">;
+export type SignupRequestInsert = InsertDto<"signup_requests">;
 export type WeeklyLogRow = Tables<"weekly_logs">;
 export type DailyRecordRow = Tables<"daily_records">;
 export type MonthlyReflectionRow = Tables<"monthly_reflections">;

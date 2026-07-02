@@ -90,30 +90,57 @@ function getGoalValues(row: GoalRates): [number, number, number, number, number]
   ];
 }
 
-function GoalBars({ dark, row }: { dark?: boolean; row: GoalRates }) {
+function GoalBars({ row }: { row: GoalRates }) {
   const values = getGoalValues(row);
   return (
     <div className="flex flex-col gap-2">
       {GOAL_LABELS.map((label, i) => (
         <div className="flex items-center gap-2" key={label}>
-          <span className={`w-20 shrink-0 text-xs ${dark ? "text-white/60" : "text-ink-muted"}`}>
-            {label}
+          <span className="w-14 shrink-0 text-xs text-ink-muted">
+            {label.replace(/^목표\d: /, "")}
           </span>
-          <div
-            className={`h-1.5 flex-1 overflow-hidden rounded-full ${
-              dark ? "bg-white/10" : "border border-line-soft bg-surface-sunken"
-            }`}
-          >
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-sunken">
             <div
-              className={`h-full rounded-full ${GOAL_COLORS[i]} ${dark ? "opacity-90" : ""}`}
+              className={`h-full rounded-full ${GOAL_COLORS[i]}`}
               style={{ width: `${Math.min(values[i], 100)}%` }}
             />
           </div>
-          <span className={`w-9 text-right text-xs font-medium ${dark ? "text-white/90" : "text-ink-strong"}`}>
+          <span className="w-11 text-right text-xs font-medium tabular-nums text-ink-strong">
             {formatPercent(values[i])}
           </span>
         </div>
       ))}
+    </div>
+  );
+}
+
+function StatCard({
+  emphasis,
+  label,
+  sub,
+  value,
+}: {
+  emphasis?: "up" | "down";
+  label: string;
+  sub?: string;
+  value: string;
+}) {
+  const valueColor =
+    emphasis === "up"
+      ? "text-emerald-600"
+      : emphasis === "down"
+        ? "text-red-600"
+        : "text-ink-strong";
+
+  return (
+    <div className="min-w-0 rounded-control bg-surface-sunken px-4 py-3">
+      <p className="text-xs text-ink-muted">{label}</p>
+      <p
+        className={`print-stat-value mt-1 break-words text-2xl font-semibold tabular-nums ${valueColor}`}
+      >
+        {value}
+      </p>
+      {sub ? <p className="mt-0.5 break-words text-xs text-ink-faint">{sub}</p> : null}
     </div>
   );
 }
@@ -143,44 +170,35 @@ function HeroCard({
   const deltaSign = delta !== null && delta > 0 ? "+" : "";
   const deltaArrow =
     delta !== null ? (delta > 0 ? "▲" : delta < 0 ? "▼" : "–") : null;
-  const deltaColor =
-    delta === null
-      ? ""
-      : delta > 0
-        ? "text-emerald-300"
-        : delta < 0
-          ? "text-red-300"
-          : "text-white/60";
 
   return (
-    <section className="overflow-hidden rounded-card bg-navy-900 p-5 text-white">
-      <p className="text-xs font-medium text-white/60">{year}년 총 달성률</p>
-      <p className="mt-1 text-4xl font-semibold">{formatPercent(totalRate)}</p>
+    <section className="rounded-card border border-line-base bg-surface-card p-5">
+      <div className={`grid grid-cols-1 gap-3 ${current ? "sm:grid-cols-3" : ""}`}>
+        <StatCard label={`${year}년 총 달성률`} value={formatPercent(totalRate)} />
+        {current ? (
+          <>
+            <StatCard label={`${currentMonth}월 현재 달성률`} value={formatPercent(current.average_rate)} />
+            {delta !== null ? (
+              <StatCard
+                emphasis={delta > 0 ? "up" : delta < 0 ? "down" : undefined}
+                label="전월 대비"
+                sub={
+                  previous
+                    ? `${formatPercent(previous.average_rate)} → ${formatPercent(current.average_rate)}`
+                    : undefined
+                }
+                value={`${deltaArrow} ${deltaSign}${delta.toFixed(1)}%p`}
+              />
+            ) : null}
+          </>
+        ) : null}
+      </div>
 
       {current ? (
-        <>
-          <div className="mt-4 border-t border-white/10 pt-4">
-            <p className="text-xs text-white/60">이번 달({currentMonth}월) 현재 달성률</p>
-            <div className="mt-1 flex items-baseline gap-3">
-              <span className="text-2xl font-semibold">{formatPercent(current.average_rate)}</span>
-              {delta !== null && (
-                <span className={`text-sm font-medium ${deltaColor}`}>
-                  {deltaArrow} {deltaSign}{delta.toFixed(1)}%p
-                </span>
-              )}
-            </div>
-            {previous ? (
-              <p className="mt-0.5 text-xs text-white/50">
-                지난달 {formatPercent(previous.average_rate)} → 이번 달{" "}
-                {formatPercent(current.average_rate)}
-              </p>
-            ) : null}
-          </div>
-          <div className="mt-4 border-t border-white/10 pt-4">
-            <p className="mb-2 text-xs text-white/60">목표별 현재 달성률</p>
-            <GoalBars dark row={current} />
-          </div>
-        </>
+        <div className="mt-4 border-t border-line-soft pt-4">
+          <p className="mb-2 text-xs font-medium text-ink-muted">목표별 현재 달성률</p>
+          <GoalBars row={current} />
+        </div>
       ) : null}
     </section>
   );
@@ -197,17 +215,17 @@ function SummaryRow({
 
   if (isCumulative) {
     return (
-      <tr className="bg-surface-sunken font-medium">
+      <tr className="border-t border-line-base font-medium">
         <th className="whitespace-nowrap px-3 py-2 text-left font-medium text-ink-strong">
           {row.monthLabel}
         </th>
-        <td className="px-3 py-2 text-ink-strong">{formatPercent(row.spiritual_rate)}</td>
-        <td className="px-3 py-2 text-ink-strong">{formatPercent(row.intellectual_rate)}</td>
-        <td className="px-3 py-2 text-ink-strong">{formatPercent(row.physical_rate)}</td>
-        <td className="px-3 py-2 text-ink-strong">{formatPercent(row.social_rate)}</td>
-        <td className="px-3 py-2 text-ink-strong">{formatPercent(row.other_rate)}</td>
-        <td className="px-3 py-2 font-semibold text-brand-600">{formatPercent(row.total_rate)}</td>
-        <td className="px-3 py-2 text-ink-strong">{formatPercent(row.average_rate)}</td>
+        <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(row.spiritual_rate)}</td>
+        <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(row.intellectual_rate)}</td>
+        <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(row.physical_rate)}</td>
+        <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(row.social_rate)}</td>
+        <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(row.other_rate)}</td>
+        <td className="px-3 py-2 text-right font-semibold tabular-nums text-brand-600">{formatPercent(row.total_rate)}</td>
+        <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(row.average_rate)}</td>
       </tr>
     );
   }
@@ -216,25 +234,25 @@ function SummaryRow({
     <tr
       className={
         isCurrentMonth
-          ? "border-b border-line-base bg-blue-50"
+          ? "border-b border-line-soft border-l-2 border-l-brand-600 bg-brand-50/40"
           : "border-b border-line-soft"
       }
     >
       <th className="whitespace-nowrap px-3 py-2 text-left font-medium text-ink-strong">
         {row.monthLabel}
         {isCurrentMonth ? (
-          <span className="ml-1.5 rounded-full bg-navy-900 px-1.5 py-0.5 text-[10px] font-medium text-white">
+          <span className="ml-1.5 rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-medium text-brand-700">
             현재
           </span>
         ) : null}
       </th>
-      <td className="px-3 py-2 text-ink-base">{formatPercent(row.spiritual_rate)}</td>
-      <td className="px-3 py-2 text-ink-base">{formatPercent(row.intellectual_rate)}</td>
-      <td className="px-3 py-2 text-ink-base">{formatPercent(row.physical_rate)}</td>
-      <td className="px-3 py-2 text-ink-base">{formatPercent(row.social_rate)}</td>
-      <td className="px-3 py-2 text-ink-base">{formatPercent(row.other_rate)}</td>
-      <td className="px-3 py-2 font-medium text-ink-strong">{formatPercent(row.total_rate)}</td>
-      <td className="px-3 py-2 text-ink-base">{formatPercent(row.average_rate)}</td>
+      <td className="px-3 py-2 text-right tabular-nums text-ink-base">{formatPercent(row.spiritual_rate)}</td>
+      <td className="px-3 py-2 text-right tabular-nums text-ink-base">{formatPercent(row.intellectual_rate)}</td>
+      <td className="px-3 py-2 text-right tabular-nums text-ink-base">{formatPercent(row.physical_rate)}</td>
+      <td className="px-3 py-2 text-right tabular-nums text-ink-base">{formatPercent(row.social_rate)}</td>
+      <td className="px-3 py-2 text-right tabular-nums text-ink-base">{formatPercent(row.other_rate)}</td>
+      <td className="px-3 py-2 text-right font-medium tabular-nums text-ink-strong">{formatPercent(row.total_rate)}</td>
+      <td className="px-3 py-2 text-right tabular-nums text-ink-base">{formatPercent(row.average_rate)}</td>
     </tr>
   );
 }
@@ -260,15 +278,15 @@ function AchievementTable({
       <div className="overflow-x-auto">
         <table className="min-w-[720px] w-full border-collapse text-sm">
           <thead>
-            <tr className="bg-surface-sunken text-left text-xs text-ink-muted">
-              <th className="px-3 py-2 font-medium">월</th>
-              <th className="px-3 py-2 font-medium">영적</th>
-              <th className="px-3 py-2 font-medium">지적</th>
-              <th className="px-3 py-2 font-medium">육체</th>
-              <th className="px-3 py-2 font-medium">사회</th>
-              <th className="px-3 py-2 font-medium">기타</th>
-              <th className="px-3 py-2 font-medium">종합</th>
-              <th className="px-3 py-2 font-medium">현재 달성률</th>
+            <tr className="bg-surface-sunken text-xs text-ink-muted">
+              <th className="px-3 py-2 text-left font-medium">월</th>
+              <th className="px-3 py-2 text-right font-medium">영적</th>
+              <th className="px-3 py-2 text-right font-medium">지적</th>
+              <th className="px-3 py-2 text-right font-medium">육체</th>
+              <th className="px-3 py-2 text-right font-medium">사회</th>
+              <th className="px-3 py-2 text-right font-medium">기타</th>
+              <th className="px-3 py-2 text-right font-medium">종합</th>
+              <th className="px-3 py-2 text-right font-medium">현재 달성률</th>
             </tr>
           </thead>
           <tbody>
@@ -378,7 +396,7 @@ export default async function MoksilgiSummaryPage({
 
   return (
     <main className="print-root min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
-      <section className="mx-auto w-full max-w-4xl">
+      <div className="mx-auto w-full max-w-4xl">
         <div className="print-report-title print-only">
           <h1>내 목실기 연간 성취 보고서</h1>
           <p>출력 연도: {year}년</p>
@@ -457,7 +475,7 @@ export default async function MoksilgiSummaryPage({
             />
           </div>
         )}
-      </section>
+      </div>
     </main>
   );
 }

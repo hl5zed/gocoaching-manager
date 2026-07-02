@@ -64,14 +64,14 @@ export function ShellLayout({
       {/* 데스크톱 사이드바 */}
       <aside
         aria-label="사이드바"
-        className="fixed inset-y-0 left-0 z-30 hidden w-sidebar border-r border-line-soft bg-surface-sidebar lg:block"
+        className="fixed inset-y-0 left-0 z-30 hidden w-sidebar border-r border-line-soft bg-surface-sidebar lg:block print:hidden"
       >
         {sidebarContent}
       </aside>
 
       {/* 모바일 드로어 */}
       {mobileOpen ? (
-        <div className="lg:hidden">
+        <div className="lg:hidden print:hidden">
           <div
             aria-hidden
             className="fixed inset-0 z-40 bg-black/40"
@@ -88,7 +88,7 @@ export function ShellLayout({
 
       {/* 본문 영역 */}
       <div className="flex min-h-screen flex-col lg:pl-sidebar">
-        <header className="print-hidden sticky top-0 z-20 flex h-topbar shrink-0 items-center gap-3 border-b border-line-soft bg-surface-card/95 px-4 backdrop-blur sm:px-6">
+        <header className="print:hidden sticky top-0 z-20 flex h-topbar shrink-0 items-center gap-3 border-b border-line-soft bg-surface-card/95 px-4 backdrop-blur sm:px-6">
           <button
             aria-expanded={mobileOpen}
             aria-label={mobileOpen ? "메뉴 닫기" : "메뉴 열기"}

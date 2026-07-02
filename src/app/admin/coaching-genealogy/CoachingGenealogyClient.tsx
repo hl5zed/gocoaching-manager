@@ -152,24 +152,11 @@ function PrintReportHeader({
   );
 }
 
-function CompactPrintStatsPanel({
-  data,
+function SelectedNodePrintPanel({
   selectedNode,
 }: {
-  data: CoachingGenealogyData;
   selectedNode: GenealogyNode | null;
 }) {
-  const topGenerations = data.generationStats.slice(0, 6);
-  const remainingGenerationCount = Math.max(0, data.generationStats.length - 6);
-  const topCountries = [...data.countryStats]
-    .sort((left, right) => right.profileCount - left.profileCount)
-    .slice(0, 4);
-  const remainingCountryCount = Math.max(0, data.countryStats.length - 4);
-  const topChurches = [...data.churchStats]
-    .sort((left, right) => right.profileCount - left.profileCount)
-    .slice(0, 4);
-  const remainingChurchCount = Math.max(0, data.churchStats.length - 4);
-
   return (
     <aside className="genealogy-print-side print-only">
       <section className="print-card">
@@ -203,109 +190,6 @@ function CompactPrintStatsPanel({
           </dl>
         ) : (
           <p>선택된 노드 없음</p>
-        )}
-      </section>
-
-      <section className="print-card">
-        <h2>전체 현황</h2>
-        <dl className="print-compact-list print-summary-grid">
-          <div>
-            <dt>코치</dt>
-            <dd>{data.summaryStats.totalCoaches}명</dd>
-          </div>
-          <div>
-            <dt>코치이</dt>
-            <dd>{data.summaryStats.totalCoachees}명</dd>
-          </div>
-          <div>
-            <dt>관계</dt>
-            <dd>{data.summaryStats.totalActiveRelationships}개</dd>
-          </div>
-          <div>
-            <dt>최대 세대</dt>
-            <dd>{data.summaryStats.maxGeneration}</dd>
-          </div>
-          <div>
-            <dt>국가</dt>
-            <dd>{data.summaryStats.totalCountries}개</dd>
-          </div>
-          <div>
-            <dt>교회</dt>
-            <dd>{data.summaryStats.totalChurches}개</dd>
-          </div>
-        </dl>
-      </section>
-
-      <section className="print-card">
-        <h2>세대별 인원 분포</h2>
-        {topGenerations.length > 0 ? (
-          <>
-            <ul className="print-compact-list">
-              {topGenerations.map((stat) => (
-                <li key={stat.generationNumber ?? "missing"}>
-                  <span>
-                    {stat.generationNumber ? `G${stat.generationNumber}` : "미지정"}
-                  </span>
-                  <strong>{stat.profileCount}명</strong>
-                </li>
-              ))}
-            </ul>
-            {remainingGenerationCount > 0 ? (
-              <p className="print-more">외 {remainingGenerationCount}개 세대</p>
-            ) : null}
-          </>
-        ) : (
-          <p>세대 통계가 없습니다.</p>
-        )}
-      </section>
-
-      <section className="print-card">
-        <h2>국가별 현황</h2>
-        {topCountries.length > 0 ? (
-          <>
-            <ul className="print-compact-list">
-              {topCountries.map((country) => (
-                <li key={country.countryId ?? "missing"}>
-                  <span>
-                    {country.countryCode
-                      ? `${country.countryName} (${country.countryCode})`
-                      : country.countryName}
-                  </span>
-                  <strong>
-                    {country.profileCount}명 / 관계 {country.relationshipCount}
-                  </strong>
-                </li>
-              ))}
-            </ul>
-            {remainingCountryCount > 0 ? (
-              <p className="print-more">외 {remainingCountryCount}개 국가</p>
-            ) : null}
-          </>
-        ) : (
-          <p>국가 통계가 없습니다.</p>
-        )}
-      </section>
-
-      <section className="print-card">
-        <h2>교회별 현황</h2>
-        {topChurches.length > 0 ? (
-          <>
-            <ul className="print-compact-list">
-              {topChurches.map((church) => (
-                <li key={church.churchId ?? "missing"}>
-                  <span>{church.churchName}</span>
-                  <strong>
-                    {church.profileCount}명 / 관계 {church.relationshipCount}
-                  </strong>
-                </li>
-              ))}
-            </ul>
-            {remainingChurchCount > 0 ? (
-              <p className="print-more">외 {remainingChurchCount}개 교회</p>
-            ) : null}
-          </>
-        ) : (
-          <p>교회 통계가 없습니다.</p>
         )}
       </section>
     </aside>
@@ -454,8 +338,14 @@ export function CoachingGenealogyClient({
             background: white !important;
           }
 
+          body.printing-genealogy-tree .lg\\:pl-sidebar {
+            padding-left: 0 !important;
+          }
+
           body.printing-genealogy-tree main {
             min-height: 0 !important;
+            max-width: none !important;
+            width: 100% !important;
             padding: 0 !important;
             margin: 0 !important;
             background: white !important;
@@ -524,8 +414,8 @@ export function CoachingGenealogyClient({
           }
 
           body.printing-genealogy-tree .genealogy-print-content {
-            grid-template-columns: minmax(0, 70%) minmax(0, 30%) !important;
-            gap: 3mm !important;
+            grid-template-columns: minmax(0, 78%) minmax(0, 22%) !important;
+            gap: 4mm !important;
             margin: 0 !important;
             padding: 0 !important;
           }
@@ -595,22 +485,13 @@ export function CoachingGenealogyClient({
             display: none !important;
           }
 
-          body.printing-genealogy-map #genealogy-map-print-area .map-screen-aside {
-            display: none !important;
-          }
-
-          body.printing-genealogy-map #genealogy-map-print-area .map-print-summary {
+          body.printing-genealogy-map #genealogy-map-print-area > .grid > aside.map-screen-aside {
             display: grid !important;
-            grid-template-columns: 1fr !important;
             gap: 2mm !important;
             align-content: start !important;
-            height: 115mm !important;
-            max-height: 115mm !important;
-            margin-top: 0 !important;
+            margin: 0 !important;
             padding: 0 !important;
-            position: static !important;
-            z-index: auto !important;
-            overflow: hidden !important;
+            overflow: visible !important;
             break-before: auto !important;
             page-break-before: auto !important;
             break-after: auto !important;
@@ -619,7 +500,7 @@ export function CoachingGenealogyClient({
             page-break-inside: auto !important;
           }
 
-          body.printing-genealogy-map #genealogy-map-print-area .map-print-summary > div {
+          body.printing-genealogy-map #genealogy-map-print-area .map-screen-aside > div {
             border: 1px solid #e5e7eb !important;
             border-radius: 4px !important;
             background: white !important;
@@ -630,22 +511,27 @@ export function CoachingGenealogyClient({
             overflow: hidden !important;
           }
 
-          body.printing-genealogy-map #genealogy-map-print-area .map-print-summary dl,
-          body.printing-genealogy-map #genealogy-map-print-area .map-print-summary ul {
+          body.printing-genealogy-map #genealogy-map-print-area .map-screen-aside dl,
+          body.printing-genealogy-map #genealogy-map-print-area .map-screen-aside .space-y-2 {
             display: grid !important;
             gap: 1mm !important;
             margin: 0 !important;
             padding: 0 !important;
-            list-style: none !important;
           }
 
-          body.printing-genealogy-map #genealogy-map-print-area .map-print-summary dl > div,
-          body.printing-genealogy-map #genealogy-map-print-area .map-print-summary li {
+          body.printing-genealogy-map #genealogy-map-print-area .map-screen-aside dl > div,
+          body.printing-genealogy-map #genealogy-map-print-area .map-screen-aside .space-y-2 > div {
             display: flex !important;
             justify-content: space-between !important;
             gap: 2mm !important;
             border-bottom: 1px solid #f1f5f9 !important;
             padding-bottom: 0.7mm !important;
+          }
+
+          body.printing-genealogy-map #genealogy-map-print-area .map-screen-aside .grid.grid-cols-2 {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 1.5mm !important;
           }
 
           body.printing-genealogy-tree .genealogy-print-main {
@@ -912,19 +798,17 @@ export function CoachingGenealogyClient({
           body.printing-genealogy-tree .genealogy-print-side {
             min-width: 0 !important;
             max-width: 100% !important;
-            max-height: 142mm !important;
-            overflow: hidden !important;
             display: grid !important;
             gap: 1.5mm !important;
             align-content: start !important;
-            font-size: 7.5px !important;
-            line-height: 1.15 !important;
+            font-size: 9px !important;
+            line-height: 1.3 !important;
           }
 
           body.printing-genealogy-tree .genealogy-print-side .print-card {
             border: 1px solid #e5e7eb !important;
             border-radius: 4px !important;
-            padding: 1.6mm !important;
+            padding: 3mm !important;
             break-inside: avoid !important;
             page-break-inside: avoid !important;
             background: white !important;
@@ -932,9 +816,9 @@ export function CoachingGenealogyClient({
 
           body.printing-genealogy-tree .genealogy-print-side h2,
           body.printing-genealogy-tree .genealogy-print-side h3 {
-            font-size: 8.5px !important;
-            margin: 0 0 1mm 0 !important;
-            line-height: 1.2 !important;
+            font-size: 10px !important;
+            margin: 0 0 2mm 0 !important;
+            line-height: 1.25 !important;
           }
 
           body.printing-genealogy-tree .genealogy-print-side p,
@@ -943,8 +827,8 @@ export function CoachingGenealogyClient({
           body.printing-genealogy-tree .genealogy-print-side dt,
           body.printing-genealogy-tree .genealogy-print-side dd,
           body.printing-genealogy-tree .genealogy-print-side strong {
-            font-size: 7.5px !important;
-            line-height: 1.15 !important;
+            font-size: 9px !important;
+            line-height: 1.3 !important;
           }
 
           body.printing-genealogy-tree .print-compact-list {
@@ -964,10 +848,6 @@ export function CoachingGenealogyClient({
             padding-bottom: 0.5mm !important;
           }
 
-          body.printing-genealogy-tree .print-summary-grid {
-            grid-template-columns: 1fr 1fr !important;
-          }
-
           body.printing-genealogy-tree .print-compact-list dt,
           body.printing-genealogy-tree .print-compact-list span {
             color: #64748b !important;
@@ -980,11 +860,6 @@ export function CoachingGenealogyClient({
             font-weight: 600 !important;
             margin: 0 !important;
             text-align: right !important;
-          }
-
-          body.printing-genealogy-tree .print-more {
-            margin: 2mm 0 0 0 !important;
-            color: #64748b !important;
           }
 
           body.printing-genealogy-tree section,
@@ -1220,7 +1095,7 @@ export function CoachingGenealogyClient({
               <div className="no-print">
                 <GenealogyStatsPanel data={data} selectedNode={selectedNode} />
               </div>
-              <CompactPrintStatsPanel data={data} selectedNode={selectedNode} />
+              <SelectedNodePrintPanel selectedNode={selectedNode} />
             </div>
           </div>
         )
