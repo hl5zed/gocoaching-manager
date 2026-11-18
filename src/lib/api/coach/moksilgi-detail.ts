@@ -10,6 +10,12 @@ import {
   resolveActiveAreaKeys,
   type MoksilgiYearSummaryRow,
 } from "@/lib/coaching/moksilgi-year-summary";
+import {
+  buildMoksilgiPeriodMonths,
+  buildMoksilgiPeriodSummary,
+  type MoksilgiPeriodMonth,
+  type MoksilgiPeriodSummary,
+} from "@/lib/coaching/moksilgi-period";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import type { Tables } from "@/types/database";
@@ -118,7 +124,18 @@ export type CoachMoksilgiDetail = {
   durationMonths: number;
   hasSummaryData: boolean;
   year: number;
+  /** 기획안 기간 기준 집계 — 기간이 없거나 잘못된 경우 null */
+  periodSummary: CoachMoksilgiPeriodSummary | null;
 };
+
+export type CoachMoksilgiPeriodSummary = MoksilgiPeriodSummary & {
+  periodMonths: MoksilgiPeriodMonth[];
+};
+
+type PeriodRecordRow = Pick<
+  Tables<"moksilgi_monthly_records">,
+  "detail_goal_id" | "year" | "month" | "actual_value"
+>;
 
 /** 코칭 기간 미설정 시 사용하는 기본 개월 수 */
 const DEFAULT_DURATION_MONTHS = 12;
@@ -239,7 +256,16 @@ export async function getCoachMoksilgiDetail(
     return { data: null, error: { code: "NOT_FOUND", message: "해당 목실기를 찾을 수 없습니다." } };
   }
 
-  const [coacheeResult, areasResult, detailGoalsResult, summariesResult, recordsResult] =
+  const periodMonths = buildMoksilgiPeriodMonths(planRow.period_start, planRow.period_end);
+
+  const [
+    coacheeResult,
+    areasResult,
+    detailGoalsResult,
+    summariesResult,
+    recordsResult,
+    periodRecordsResult,
+  ] =
     await Promise.all([
       serviceClient
         .from("profiles")
@@ -274,6 +300,17 @@ export async function getCoachMoksilgiDetail(
         .eq("profile_id", planRow.profile_id)
         .eq("year", selectedYear)
         .is("deleted_at", null),
+      // 기간 기준 진도 계산용: 기간이 걸친 연도 전체의 실적
+      periodMonths.length > 0
+        ? serviceClient
+            .from("moksilgi_monthly_records")
+            .select("detail_goal_id, year, month, actual_value")
+            .eq("plan_id", planRow.id)
+            .eq("profile_id", planRow.profile_id)
+            .gte("year", periodMonths[0].year)
+            .lte("year", periodMonths[periodMonths.length - 1].year)
+            .is("deleted_at", null)
+        : Promise.resolve({ data: [] as PeriodRecordRow[], error: null }),
     ]);
 
   if (coacheeResult.error) {
@@ -284,7 +321,7 @@ export async function getCoachMoksilgiDetail(
     return { data: null, error: { code: "GOALS_QUERY_FAILED", message: "목실기 목표를 조회하는 중 오류가 발생했습니다." } };
   }
 
-  if (summariesResult.error || recordsResult.error) {
+  if (summariesResult.error || recordsResult.error || periodRecordsResult.error) {
     return { data: null, error: { code: "SUMMARY_QUERY_FAILED", message: "목실기 요약을 조회하는 중 오류가 발생했습니다." } };
   }
 
@@ -319,6 +356,18 @@ export async function getCoachMoksilgiDetail(
       durationMonths,
       hasSummaryData: summaries.length > 0,
       year: selectedYear,
+      periodSummary:
+        periodMonths.length > 0
+          ? {
+              periodMonths,
+              ...buildMoksilgiPeriodSummary({
+                periodMonths,
+                areas,
+                goals: detailGoals,
+                records: (periodRecordsResult.data ?? []) as PeriodRecordRow[],
+              }),
+            }
+          : null,
     },
     error: null,
   };

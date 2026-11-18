@@ -12,8 +12,11 @@ import {
 } from "@/lib/coaching/moksilgi-year-summary";
 import {
   buildMoksilgiPeriodMonths,
-  formatMoksilgiPeriodKey,
+  buildMoksilgiPeriodSummary,
+  EMPTY_MOKSILGI_PERIOD_AREA_RATES,
+  type MoksilgiPeriodAreaRates,
   type MoksilgiPeriodMonth,
+  type MoksilgiPeriodSummaryRow,
 } from "@/lib/coaching/moksilgi-period";
 import { getMoksilgiContext, type ServiceClient } from "./context";
 import type { Tables } from "@/types/database";
@@ -340,23 +343,12 @@ export async function getMyMoksilgiSummary(
 // 기존 getMyMoksilgiSummary(달력 연도 기준)는 그대로 유지한다.
 // ─────────────────────────────────────────────────────────────
 
-type PeriodRecordRow = MonthlyRecordRateRow & Pick<Tables<"moksilgi_monthly_records">, "year">;
+type PeriodRecordRow = Pick<
+  Tables<"moksilgi_monthly_records">,
+  "detail_goal_id" | "year" | "month" | "actual_value"
+>;
 
-export type MoksilgiPeriodAreaRates = {
-  spiritual_rate: number;
-  intellectual_rate: number;
-  physical_rate: number;
-  social_rate: number;
-};
-
-export type MoksilgiPeriodSummaryRow = MoksilgiPeriodMonth &
-  MoksilgiPeriodAreaRates & {
-    /** 그 달 종합: 측정 목표별 (실적 ÷ 기간 목표) 합 ÷ 측정 목표 수 */
-    overallRate: number;
-    /** 기간 시작월부터 이 달까지의 종합 합계 */
-    cumulativeRate: number;
-    hasRecords: boolean;
-  };
+export type { MoksilgiPeriodAreaRates, MoksilgiPeriodSummaryRow };
 
 export type MoksilgiPeriodSummaryResult =
   | {
@@ -374,13 +366,6 @@ export type MoksilgiPeriodSummaryResult =
       };
     }
   | { ok: false; error: SafeError };
-
-const EMPTY_PERIOD_AREA_RATES: MoksilgiPeriodAreaRates = {
-  spiritual_rate: 0,
-  intellectual_rate: 0,
-  physical_rate: 0,
-  social_rate: 0,
-};
 
 export async function getMyMoksilgiPeriodSummary(options?: {
   profileId?: string;
@@ -416,7 +401,7 @@ export async function getMyMoksilgiPeriodSummary(options?: {
         plan: ownedPlan,
         periodMonths: [],
         rows: [],
-        cumulativeAreaRates: EMPTY_PERIOD_AREA_RATES,
+        cumulativeAreaRates: EMPTY_MOKSILGI_PERIOD_AREA_RATES,
         cumulativeOverall: 0,
         hasSummaryData: false,
         outOfPeriodRecordCount: 0,
@@ -438,7 +423,7 @@ export async function getMyMoksilgiPeriodSummary(options?: {
       .is("moksilgi_detail_goals.deleted_at", null),
     context.serviceClient
       .from("moksilgi_monthly_records")
-      .select("detail_goal_id, year, month, achievement_rate, actual_value")
+      .select("detail_goal_id, year, month, actual_value")
       .eq("plan_id", ownedPlan.id)
       .eq("profile_id", context.profileId)
       .gte("year", startYear)
@@ -454,107 +439,31 @@ export async function getMyMoksilgiPeriodSummary(options?: {
   }
 
   const areas = (areasResult.data ?? []) as DetailGoalAreaRow[];
-  const allRecords = (recordsResult.data ?? []) as PeriodRecordRow[];
-  const periodKeys = new Set(periodMonths.map((month) => month.key));
-  const records = allRecords.filter((record) =>
-    periodKeys.has(formatMoksilgiPeriodKey(record)),
-  );
-
-  const goals = areas.flatMap((area) => area.moksilgi_detail_goals);
-  const areaSources = areas.map((area) => ({ id: area.id, area_key: area.area_key }));
-  const detailGoalSources = areas.flatMap((area) =>
-    area.moksilgi_detail_goals.map((goal) => ({ id: goal.id, area_id: area.id })),
-  );
-
-  // 기간 목표(annual_target) 기준 달성률 — 기존 연간 기준(B안)과 같은 공식
-  const periodTargetByGoalId = new Map<string, number>();
-  for (const goal of goals) {
-    if (
-      isCountableMeasurementType(goal.measurement_type) &&
-      typeof goal.annual_target === "number" &&
-      goal.annual_target > 0
-    ) {
-      periodTargetByGoalId.set(goal.id, goal.annual_target);
-    }
-  }
-
-  // 기존 헬퍼는 1~12월 단위로 집계하므로, 연도별로 나눠 계산한 뒤 연·월 키로 합친다.
-  const areaRatesByKey = new Map<string, MoksilgiPeriodAreaRates>();
-  const overallByKey = new Map<string, number>();
-  const recordKeys = new Set<string>();
-
-  for (let year = startYear; year <= endYear; year += 1) {
-    const yearRecords = records.filter((record) => record.year === year);
-    if (yearRecords.length === 0) continue;
-
-    for (const record of yearRecords) {
-      recordKeys.add(formatMoksilgiPeriodKey(record));
-    }
-
-    const periodRateRecords = yearRecords.map((record) => {
-      const periodTarget = periodTargetByGoalId.get(record.detail_goal_id);
-      const actual =
-        typeof record.actual_value === "number" && Number.isFinite(record.actual_value)
-          ? Math.max(0, record.actual_value)
-          : 0;
-      return {
-        detail_goal_id: record.detail_goal_id,
-        month: record.month,
-        achievement_rate: periodTarget ? (actual / periodTarget) * 100 : 0,
-      };
-    });
-
-    const monthlyAreaRates = buildMoksilgiMonthlyRatesFromRecords({
-      areas: areaSources,
-      detailGoals: detailGoalSources,
-      records: periodRateRecords,
-    });
-    for (const rates of monthlyAreaRates) {
-      areaRatesByKey.set(formatMoksilgiPeriodKey({ year, month: rates.month }), {
-        spiritual_rate: rates.spiritual_rate ?? 0,
-        intellectual_rate: rates.intellectual_rate ?? 0,
-        physical_rate: rates.physical_rate ?? 0,
-        social_rate: rates.social_rate ?? 0,
-      });
-    }
-
-    const goalFlat = computeMoksilgiGoalFlatOverallAnnual(goals, yearRecords);
-    for (const [month, overall] of goalFlat.overallByMonth) {
-      overallByKey.set(formatMoksilgiPeriodKey({ year, month }), overall);
-    }
-  }
-
-  let runningOverall = 0;
-  const rows: MoksilgiPeriodSummaryRow[] = periodMonths.map((periodMonth) => {
-    const areaRates = areaRatesByKey.get(periodMonth.key) ?? EMPTY_PERIOD_AREA_RATES;
-    const overallRate = overallByKey.get(periodMonth.key) ?? 0;
-    runningOverall += overallRate;
-    return {
-      ...periodMonth,
-      ...areaRates,
-      overallRate,
-      cumulativeRate: runningOverall,
-      hasRecords: recordKeys.has(periodMonth.key),
-    };
+  const records = (recordsResult.data ?? []) as PeriodRecordRow[];
+  const periodSummary = buildMoksilgiPeriodSummary({
+    periodMonths,
+    areas: areas.map((area) => ({ id: area.id, area_key: area.area_key })),
+    goals: areas.flatMap((area) =>
+      area.moksilgi_detail_goals.map((goal) => ({
+        id: goal.id,
+        area_id: area.id,
+        measurement_type: goal.measurement_type,
+        annual_target: goal.annual_target,
+      })),
+    ),
+    records,
   });
-
-  const cumulativeAreaRates: MoksilgiPeriodAreaRates = {
-    spiritual_rate: sumValues(rows.map((row) => row.spiritual_rate)),
-    intellectual_rate: sumValues(rows.map((row) => row.intellectual_rate)),
-    physical_rate: sumValues(rows.map((row) => row.physical_rate)),
-    social_rate: sumValues(rows.map((row) => row.social_rate)),
-  };
 
   return {
     ok: true,
     data: {
       plan: ownedPlan,
       periodMonths,
-      rows,
-      cumulativeAreaRates,
-      cumulativeOverall: runningOverall,
-      hasSummaryData: records.length > 0,
-      outOfPeriodRecordCount: allRecords.length - records.length,
+      rows: periodSummary.rows,
+      cumulativeAreaRates: periodSummary.cumulativeAreaRates,
+      cumulativeOverall: periodSummary.cumulativeOverall,
+      hasSummaryData: periodSummary.recordCount > 0,
+      outOfPeriodRecordCount: periodSummary.outOfPeriodRecordCount,
     },
   };
 }

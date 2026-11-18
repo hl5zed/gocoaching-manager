@@ -20,8 +20,15 @@ import {
   type CoachMoksilgiDetail,
   type CoachMoksilgiDetailGoal,
   type CoachMoksilgiGoalArea,
+  type CoachMoksilgiPeriodSummary,
   type CoachMoksilgiSummaryRow,
 } from "@/lib/api/coach/moksilgi-detail";
+import {
+  calculateMoksilgiPeriodProgress,
+  formatMoksilgiPeriodKey,
+  type MoksilgiPeriodProgress,
+  type MoksilgiPeriodStatus,
+} from "@/lib/coaching/moksilgi-period";
 import {
   getCoachMoksilgiPlanStatus,
   createCoachReview,
@@ -424,12 +431,83 @@ function GoalAreasSection({
   );
 }
 
+const PERIOD_STATUS_LABEL: Record<MoksilgiPeriodStatus, string> = {
+  before: "기간 시작 전",
+  in_progress: "진행 중",
+  ended: "기간 종료",
+};
+
+function formatOptionalPercent(value: number | null | undefined) {
+  return typeof value === "number" ? formatPercent(value) : "–";
+}
+
+/** 기획안 기간 기준 진도 — 코치이 개인 성취표(/my-coaching/moksilgi/summary)와 같은 계산 */
+function PeriodProgressCard({
+  periodSummary,
+  progress,
+}: {
+  periodSummary: CoachMoksilgiPeriodSummary;
+  progress: MoksilgiPeriodProgress;
+}) {
+  const { periodMonths } = periodSummary;
+  const totalMonths = periodMonths.length;
+  const paceTone =
+    progress.paceRate === null
+      ? "text-ink-strong"
+      : progress.paceRate >= 100
+        ? "text-emerald-600"
+        : "text-red-600";
+  const items = [
+    {
+      label: "목표 기간",
+      value: `${periodMonths[0].label} ~ ${periodMonths[totalMonths - 1].label}`,
+      sub: `총 ${totalMonths}개월`,
+      tone: "text-ink-strong",
+    },
+    {
+      label: "경과율",
+      value: formatPercent(progress.elapsedRate),
+      sub: `${PERIOD_STATUS_LABEL[progress.status]} · ${progress.elapsedMonths}/${totalMonths}개월`,
+      tone: "text-ink-strong",
+    },
+    {
+      label: "기간 누적 달성률",
+      value: formatPercent(periodSummary.cumulativeOverall),
+      sub: "기간 목표 대비",
+      tone: "text-ink-strong",
+    },
+    {
+      label: "진도 대비 달성률",
+      value: formatOptionalPercent(progress.paceRate),
+      sub: progress.paceRate === null ? "기간 시작 후 계산됩니다" : "100% = 계획한 속도",
+      tone: paceTone,
+    },
+  ];
+
+  return (
+    <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {items.map((item) => (
+        <div className="min-w-0 rounded-control bg-surface-sunken px-4 py-3" key={item.label}>
+          <p className="text-xs text-ink-muted">{item.label}</p>
+          <p className={`mt-1 break-words text-xl font-semibold tabular-nums ${item.tone}`}>
+            {item.value}
+          </p>
+          <p className="mt-0.5 break-words text-xs text-ink-faint">{item.sub}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function SummaryTable({
   cumulativeRow,
+  periodProgress,
   rows,
   year,
 }: {
   cumulativeRow: CoachMoksilgiSummaryRow;
+  /** 기간이 있으면 마지막 열을 "진도 대비"로 표시한다 */
+  periodProgress?: MoksilgiPeriodProgress | null;
   rows: CoachMoksilgiSummaryRow[];
   year: number;
 }) {
@@ -463,7 +541,11 @@ function SummaryTable({
               <I18nText k="coach.moksilgi.total" fallback="종합" />
             </th>
             <th className="px-3 py-2 font-semibold">
-              <I18nText k="coach.moksilgi.average" fallback="평균" />
+              {periodProgress ? (
+                "진도 대비"
+              ) : (
+                <I18nText k="coach.moksilgi.average" fallback="평균" />
+              )}
             </th>
           </tr>
         </thead>
@@ -492,7 +574,17 @@ function SummaryTable({
                 <td className="px-3 py-2">{formatPercent(row.physical_rate)}</td>
                 <td className="px-3 py-2">{formatPercent(row.social_rate)}</td>
                 <td className="px-3 py-2">{formatPercent(row.overallRate)}</td>
-                <td className="px-3 py-2">{formatPercent(row.currentRate)}</td>
+                <td className="px-3 py-2">
+                  {!periodProgress
+                    ? formatPercent(row.currentRate)
+                    : isCumulative
+                      ? formatOptionalPercent(periodProgress.paceRate)
+                      : formatOptionalPercent(
+                          periodProgress.paceByKey.get(
+                            formatMoksilgiPeriodKey({ year, month: Number(row.month) }),
+                          ),
+                        )}
+                </td>
               </tr>
             );
           })}
@@ -570,6 +662,12 @@ export default async function CoachMoksilgiDetailPage({
   const { data } = result;
   const plan = data.plan;
   const coreValues = coreValuesFromJson(plan.core_values_json);
+  const periodProgress = data.periodSummary
+    ? calculateMoksilgiPeriodProgress(data.periodSummary.rows, {
+        year: getCurrentYearInTimezone(DEFAULT_TIMEZONE),
+        month: getCurrentMonthInTimezone(DEFAULT_TIMEZONE),
+      })
+    : null;
 
   return (
     <main className="print-root min-h-screen bg-[var(--trust-bg)] px-4 py-8 text-ink-strong sm:px-6 lg:py-10">
@@ -916,11 +1014,21 @@ export default async function CoachMoksilgiDetailPage({
                 fallback="년 연간 대비, 월별누적 성취율입니다. (단위%)"
               />
             </p>
+            {data.periodSummary && periodProgress ? (
+              <PeriodProgressCard periodSummary={data.periodSummary} progress={periodProgress} />
+            ) : null}
             <SummaryTable
               cumulativeRow={data.cumulativeRow}
+              periodProgress={periodProgress}
               rows={data.summaryRows}
               year={year}
             />
+            {periodProgress ? (
+              <p className="mt-2 text-xs leading-5 text-ink-faint">
+                * 진도 대비: 기간 시작월부터 그 달까지 누적 달성률 ÷ 경과율 — 100%면 계획한
+                속도입니다. 기간 밖의 달은 &quot;–&quot;로 표시합니다.
+              </p>
+            ) : null}
           </Section>
 
         </div>
