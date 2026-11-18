@@ -255,7 +255,7 @@ function DetailGoalCard({ goal }: { goal: CoachMakerMoksilgiProgressDetailGoal }
       </p>
       <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <dt className="text-xs font-medium text-ink-faint">연간 목표량</dt>
+          <dt className="text-xs font-medium text-ink-faint">기간 목표량</dt>
           <dd className="mt-1 text-sm text-ink-strong">
             {displayValue(goal.annual_target)}
           </dd>

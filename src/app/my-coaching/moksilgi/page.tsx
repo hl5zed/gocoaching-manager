@@ -33,6 +33,61 @@ import { getMoksilgiVersions } from "@/lib/api/my-coaching/moksilgi-versions";
 import { submitMoksilgiToCoach } from "@/lib/api/my-coaching/moksilgi-submit";
 import { getMyMoksilgiCoachReviews, type CoacheeReviewItem } from "@/lib/api/my-coaching/moksilgi-feedback";
 import type { Json, MoksilgiMeasurementType, MoksilgiReviewStatus, MoksilgiVersionType } from "@/types/database";
+import {
+  buildMoksilgiPeriodMonths,
+  calculateMoksilgiElapsedMonths,
+  calculateMoksilgiElapsedRate,
+  getMoksilgiPeriodStatus,
+} from "@/lib/coaching/moksilgi-period";
+import {
+  DEFAULT_TIMEZONE,
+  getCurrentMonthInTimezone,
+  getCurrentYearInTimezone,
+} from "@/lib/timezone";
+
+/** 저장된 기간 기준으로 총 개월 수·경과 상태를 안내한다(성취표·나의 성장과 같은 기간 계산) */
+function PeriodStatusNote({ plan }: { plan: MoksilgiPlan | null }) {
+  if (!plan || (!plan.period_start && !plan.period_end)) {
+    return (
+      <p className="rounded-control bg-surface-sunken px-3 py-2 text-xs text-ink-muted sm:col-span-2">
+        기간 시작일·종료일을 입력하면 달성률과 성취표가 이 기간 기준으로 계산됩니다.
+      </p>
+    );
+  }
+
+  const periodMonths = buildMoksilgiPeriodMonths(plan.period_start, plan.period_end);
+
+  if (periodMonths.length === 0) {
+    return (
+      <p className="rounded-control border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 sm:col-span-2">
+        저장된 기간이 비어 있거나 종료일이 시작일보다 빠릅니다. 기간을 바로잡기 전까지는 달력 연도
+        기준으로 계산됩니다.
+      </p>
+    );
+  }
+
+  const today = {
+    year: getCurrentYearInTimezone(DEFAULT_TIMEZONE),
+    month: getCurrentMonthInTimezone(DEFAULT_TIMEZONE),
+  };
+  const totalMonths = periodMonths.length;
+  const elapsedMonths = calculateMoksilgiElapsedMonths(periodMonths, today);
+  const status = getMoksilgiPeriodStatus(periodMonths, today);
+  const statusText =
+    status === "before"
+      ? "기간 시작 전"
+      : status === "ended"
+        ? "기간 종료"
+        : `현재 ${elapsedMonths}개월째`;
+
+  return (
+    <p className="rounded-control bg-surface-sunken px-3 py-2 text-xs text-ink-muted sm:col-span-2">
+      저장된 기간: 총 {totalMonths}개월 · {statusText} (경과율{" "}
+      {calculateMoksilgiElapsedRate(elapsedMonths, totalMonths).toFixed(0)}%) — 세부목표의 기간
+      목표량은 이 기간 전체의 목표입니다.
+    </p>
+  );
+}
 
 
 const INPUT_CLASS =
@@ -417,6 +472,7 @@ function PlanForm({
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.subtitle" fallback="부제" />} maxLength={160} name="subtitle" value={plan?.subtitle ?? "목실기와 체크리스트"} />
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.periodStartDate" fallback="기간 시작일" />} name="period_start" type="date" value={plan?.period_start} />
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.periodEndDate" fallback="기간 종료일" />} name="period_end" type="date" value={plan?.period_end} />
+          <PeriodStatusNote plan={plan} />
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.writtenDate" fallback="작성일" />} name="written_at" type="date" value={plan?.written_at} />
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.author" fallback="작성자" />} maxLength={120} name="author_name" value={plan?.author_name} />
           <TextInput
@@ -537,7 +593,7 @@ function DetailGoalForm({
       <TextInput label={<I18nText k="myCoaching.moksilgi.detailGoal.title" fallback="세부 목표 제목" />} maxLength={300} name="detail_title" value={detailGoal?.title} />
       <TextArea label={<I18nText k="myCoaching.moksilgi.detailGoal.description" fallback="세부 목표 설명" />} maxLength={3000} name="detail_description" rows={3} value={detailGoal?.description} />
       <div className="grid gap-4 sm:grid-cols-3">
-        <TextInput label={<I18nText k="myCoaching.moksilgi.detailGoal.yearlyTarget" fallback="연간 목표량" />} name="annual_target" type="number" value={detailGoal?.annual_target} />
+        <TextInput label={<I18nText k="myCoaching.moksilgi.detailGoal.yearlyTarget" fallback="기간 목표량" />} name="annual_target" type="number" value={detailGoal?.annual_target} />
         <TextInput label={<I18nText k="myCoaching.moksilgi.detailGoal.monthlyTarget" fallback="월 목표량" />} name="monthly_target" placeholder="0.0" step="0.1" type="number" value={detailGoal?.monthly_target} />
         <TextInput label={<I18nText k="myCoaching.moksilgi.detailGoal.unit" fallback="단위" />} maxLength={40} name="unit" value={detailGoal?.unit} />
       </div>
@@ -896,7 +952,7 @@ export default async function MyMoksilgiPage({
                                 <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
                                   <div>
                                     <dt className="font-medium text-ink-muted">
-                                      <I18nText k="myCoaching.moksilgi.detailGoal.yearlyTarget" fallback="연간 목표량" />
+                                      <I18nText k="myCoaching.moksilgi.detailGoal.yearlyTarget" fallback="기간 목표량" />
                                     </dt>
                                     <dd>{displayValue(goal.annual_target)}</dd>
                                   </div>
