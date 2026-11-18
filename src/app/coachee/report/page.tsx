@@ -395,11 +395,13 @@ function MoksilgiSection({
 
 function SummaryTable({
   cumulativeRow,
+  durationMonths,
   hasSummaryData,
   rows,
   year,
 }: {
   cumulativeRow: MoksilgiPersonalSummaryRow;
+  durationMonths: number;
   hasSummaryData: boolean;
   rows: MoksilgiPersonalSummaryRow[];
   year: number;
@@ -423,8 +425,7 @@ function SummaryTable({
                 <th className="px-3 py-2">지적 성장</th>
                 <th className="px-3 py-2">육체적 성장</th>
                 <th className="px-3 py-2">사회적 성장</th>
-                <th className="px-3 py-2">기타</th>
-                <th className="px-3 py-2">평균</th>
+                <th className="px-3 py-2">현재 달성률</th>
               </tr>
             </thead>
             <tbody>
@@ -435,8 +436,7 @@ function SummaryTable({
                   <td className="px-3 py-2">{formatPercent(row.intellectual_rate)}</td>
                   <td className="px-3 py-2">{formatPercent(row.physical_rate)}</td>
                   <td className="px-3 py-2">{formatPercent(row.social_rate)}</td>
-                  <td className="px-3 py-2">{formatPercent(row.other_rate)}</td>
-                  <td className="px-3 py-2">{formatPercent(row.average_rate)}</td>
+                  <td className="px-3 py-2">{formatPercent(row.currentRate)}</td>
                 </tr>
               ))}
               <tr className="border-b border-line-base bg-surface-sunken font-semibold">
@@ -445,13 +445,18 @@ function SummaryTable({
                 <td className="px-3 py-2">{formatPercent(cumulativeRow.intellectual_rate)}</td>
                 <td className="px-3 py-2">{formatPercent(cumulativeRow.physical_rate)}</td>
                 <td className="px-3 py-2">{formatPercent(cumulativeRow.social_rate)}</td>
-                <td className="px-3 py-2">{formatPercent(cumulativeRow.other_rate)}</td>
-                <td className="px-3 py-2">{formatPercent(cumulativeRow.average_rate)}</td>
+                <td className="px-3 py-2">{formatPercent(cumulativeRow.currentRate)}</td>
               </tr>
             </tbody>
           </table>
           <p className="mt-3 text-sm text-ink-muted">
-            {year}년 총 달성률: {formatPercent(cumulativeRow.average_rate)}
+            {year}년 현재 달성률: {formatPercent(cumulativeRow.currentRate)}
+          </p>
+          {/* "현재 달성률"의 산식을 명시한다(계산은 변경하지 않음, 목실기 연간 성취표와 동일한 값) */}
+          <p className="mt-1 text-xs leading-5 text-ink-faint">
+            * 현재 달성률: 측정 목표별 (실적 ÷ 연간 목표) 합 ÷ 측정 목표 수 ÷
+            코칭기간 개월수(총 {durationMonths}개월) — 코칭 전체 기간 대비 지금까지의
+            진행 페이스입니다.
           </p>
         </div>
       )}
@@ -550,6 +555,7 @@ export default async function CoacheeReportPage() {
   const summaryRows = summaryResult.ok ? summaryResult.data.rows : [];
   const cumulativeRow = summaryResult.ok ? summaryResult.data.cumulativeRow : null;
   const hasSummaryData = summaryResult.ok ? summaryResult.data.hasSummaryData : false;
+  const summaryDurationMonths = summaryResult.ok ? summaryResult.data.durationMonths : 12;
   const feedback = feedbackResult.error ? [] : feedbackResult.data;
   const hasAnyData = goalsExist({
     detailGoals,
@@ -682,6 +688,7 @@ export default async function CoacheeReportPage() {
         {cumulativeRow ? (
           <SummaryTable
             cumulativeRow={cumulativeRow}
+            durationMonths={summaryDurationMonths}
             hasSummaryData={hasSummaryData}
             rows={summaryRows}
             year={year}

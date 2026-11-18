@@ -294,7 +294,8 @@ function GoalAreasSection({
 
   return (
     <div className="grid gap-5">
-      {areas.map((area, index) => {
+      {/* "기타"(other) 영역은 표시하지 않는다. DB 값은 그대로 유지한다. */}
+      {areas.filter((area) => area.area_key !== "other").map((area, index) => {
         const goals = detailGoals.filter((goal) => goal.area_id === area.id);
 
         return (
@@ -347,7 +348,6 @@ function SummaryTable({
             <th className="px-3 py-2 font-semibold">목표2: 지적 성장</th>
             <th className="px-3 py-2 font-semibold">목표3: 육체적 성장</th>
             <th className="px-3 py-2 font-semibold">목표4: 사회적 성장</th>
-            <th className="px-3 py-2 font-semibold">목표5: 기타</th>
             <th className="px-3 py-2 font-semibold">종합</th>
             <th className="px-3 py-2 font-semibold">평균</th>
           </tr>
@@ -376,9 +376,8 @@ function SummaryTable({
                 <td className="px-3 py-2">{formatPercent(row.intellectual_rate)}</td>
                 <td className="px-3 py-2">{formatPercent(row.physical_rate)}</td>
                 <td className="px-3 py-2">{formatPercent(row.social_rate)}</td>
-                <td className="px-3 py-2">{formatPercent(row.other_rate)}</td>
-                <td className="px-3 py-2">{formatPercent(row.total_rate)}</td>
-                <td className="px-3 py-2">{formatPercent(row.average_rate)}</td>
+                <td className="px-3 py-2">{formatPercent(row.overallRate)}</td>
+                <td className="px-3 py-2">{formatPercent(row.currentRate)}</td>
               </tr>
             );
           })}

@@ -64,13 +64,10 @@ const DEFAULT_AREAS: Array<{
     area_subtitle: "예수님은 사람 앞에서 사랑스러워 가시더라",
     sort_order: 4,
   },
-  {
-    area_key: "other",
-    area_title: "기타",
-    area_subtitle: "그 외 삶과 사역의 필요 영역",
-    sort_order: 5,
-  },
 ];
+
+// "기타"(other) 영역은 더 이상 생성·표시하지 않는다. DB 값은 그대로 유지한다.
+const HIDDEN_AREA_KEYS = new Set<MoksilgiAreaKey>(["other"]);
 
 type ServiceSupabaseClient = ServiceClient;
 
@@ -265,7 +262,10 @@ type DetailGoalTable = {
     eq: (column: "id" | "plan_id" | "area_id", value: string) => {
       eq: (column: "id" | "plan_id" | "area_id", value: string) => {
         eq: (column: "id" | "plan_id" | "area_id", value: string) => {
-          is: (column: "deleted_at", value: null) => {
+          is: (
+            column: "deleted_at",
+            value: null,
+          ) => Promise<{ data: null; error: PostgrestErrorLike | null }> & {
             select: (columns: "id") => {
               maybeSingle: () => Promise<{
                 data: IdRow | null;
@@ -679,12 +679,19 @@ export async function getMyMoksilgi(knownProfileId?: string): Promise<GetMyMoksi
     };
   }
 
+  const visibleAreas = areasResult.areas.filter(
+    (area) => !HIDDEN_AREA_KEYS.has(area.area_key),
+  );
+  const visibleAreaIds = new Set(visibleAreas.map((area) => area.id));
+
   return {
     ok: true,
     data: {
       plan,
-      areas: areasResult.areas,
-      detailGoals: detailGoalsResult.data ?? [],
+      areas: visibleAreas,
+      detailGoals: (detailGoalsResult.data ?? []).filter((goal) =>
+        visibleAreaIds.has(goal.area_id),
+      ),
       defaultCoreValues: DEFAULT_CORE_VALUES,
     },
   };
@@ -945,7 +952,12 @@ export async function saveMyMoksilgiDetailGoal(
     .is("deleted_at", null)
     .order("sort_order", { ascending: true });
 
-  if (areasError || !(areas ?? []).some((area) => area.id === areaId)) {
+  if (
+    areasError ||
+    !(areas ?? []).some(
+      (area) => area.id === areaId && !HIDDEN_AREA_KEYS.has(area.area_key),
+    )
+  ) {
     return {
       ok: false,
       error: { code: "NOT_FOUND", message: "목표 영역을 찾을 수 없습니다." },
@@ -1013,6 +1025,92 @@ export async function saveMyMoksilgiDetailGoal(
 
   await markPlanSelfUpdated({
     changeReason: "세부 목표 추가",
+    plan,
+    profileId: context.profileId,
+    serviceClient: context.serviceClient,
+  });
+  return { ok: true, planId: plan.id };
+}
+
+export async function deleteMyMoksilgiDetailGoal(
+  formData: FormData,
+): Promise<SaveMoksilgiResult> {
+  const context = await getCurrentProfileContext();
+
+  if (!context.ok) {
+    return { ok: false, error: context.error };
+  }
+
+  const planId = normalizeString(formData.get("plan_id"));
+  const areaId = normalizeString(formData.get("area_id"));
+  const detailGoalId = normalizeString(formData.get("detail_goal_id"));
+
+  if (detailGoalId.length === 0 || areaId.length === 0) {
+    return {
+      ok: false,
+      error: { code: "NOT_FOUND", message: "세부 목표 정보를 찾을 수 없습니다." },
+    };
+  }
+
+  const { data: plan, error: planError } = await getOwnedPlan(
+    context.serviceClient,
+    context.profileId,
+  );
+
+  if (planError || !plan || plan.id !== planId) {
+    return {
+      ok: false,
+      error: { code: "NOT_FOUND", message: "목실기 정보를 찾을 수 없습니다." },
+    };
+  }
+
+  const { data: existingGoals, error: existingGoalsError } = await detailGoalTable(
+    context.serviceClient,
+  )
+    .select(DETAIL_GOAL_SELECT)
+    .eq("plan_id", plan.id)
+    .is("deleted_at", null)
+    .order("sort_order", { ascending: true });
+
+  const targetGoal = existingGoalsError
+    ? undefined
+    : existingGoals?.find(
+        (goal) => goal.id === detailGoalId && goal.area_id === areaId,
+      );
+
+  if (!targetGoal) {
+    return {
+      ok: false,
+      error: { code: "NOT_FOUND", message: "세부 목표를 찾을 수 없습니다." },
+    };
+  }
+
+  const now = new Date().toISOString();
+  // RETURNING(.select())을 요청하면 업데이트된 새 행이 SELECT 정책(deleted_at IS NULL)을
+  // 더 이상 만족하지 않아 Postgres가 "new row violates row-level security policy" 에러로
+  // UPDATE 전체를 롤백한다. RETURNING 없이 실행해야 소프트 삭제가 실제로 반영된다.
+  const { error } = await detailGoalTable(context.serviceClient)
+    .update({ deleted_at: now, updated_at: now })
+    .eq("id", detailGoalId)
+    .eq("plan_id", plan.id)
+    .eq("area_id", areaId)
+    .is("deleted_at", null);
+
+  if (error) {
+    console.error("[MOKSILGI_DETAIL_GOAL_DELETE_FAILED]", {
+      detailGoalId,
+      planId: plan.id,
+      areaId,
+      error,
+    });
+    return {
+      ok: false,
+      error: { code: "SAVE_FAILED", message: "세부 목표를 삭제할 수 없습니다." },
+    };
+  }
+
+  await markPlanSelfUpdated({
+    changeReason: "세부 목표 삭제",
     plan,
     profileId: context.profileId,
     serviceClient: context.serviceClient,

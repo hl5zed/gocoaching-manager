@@ -1,5 +1,9 @@
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
-import { buildMoksilgiMonthlyRatesFromRecords } from "@/lib/coaching/moksilgi-year-summary";
+import {
+  buildMoksilgiMonthlyRatesFromRecords,
+  computeMoksilgiGoalFlatOverallAnnual,
+  isCountableMeasurementType,
+} from "@/lib/coaching/moksilgi-year-summary";
 import { getMoksilgiContext, type ServiceClient } from "./context";
 import type {
   InsertDto,
@@ -22,7 +26,10 @@ type SafeError = { code: ErrorCode; message: string };
 
 type PostgrestErrorLike = { code?: string; message?: string; details?: string };
 type IdRow = { id: string };
-type PlanRow = Pick<Tables<"moksilgi_plans">, "id" | "profile_id" | "title">;
+type PlanRow = Pick<
+  Tables<"moksilgi_plans">,
+  "id" | "profile_id" | "title" | "period_start" | "period_end" | "author_name"
+>;
 
 export type MoksilgiMonthlyRecord = Pick<
   Tables<"moksilgi_monthly_records">,
@@ -109,6 +116,9 @@ const AREA_KEYS: MoksilgiAreaKey[] = [
   "other",
 ];
 
+// "기타"(other) 영역은 기록·집계 대상에서 제외한다. DB 값은 그대로 유지한다.
+const HIDDEN_AREA_KEY: MoksilgiAreaKey = "other";
+
 const RECORD_SELECT =
   "id, plan_id, area_id, detail_goal_id, profile_id, year, month, target_value, actual_value, achievement_rate, daily_checks_json, weekly_counts_json, comment, created_at, updated_at";
 const SUMMARY_SELECT =
@@ -156,6 +166,23 @@ function recordTable(client: ServiceClient) {
 
 function summaryTable(client: ServiceClient) {
   return client.from("moksilgi_monthly_summaries") as unknown as SummaryTable;
+}
+
+type DetailGoalTable = {
+  update: (values: UpdateDto<"moksilgi_detail_goals">) => {
+    eq: (column: "id", value: string) => {
+      eq: (column: "plan_id", value: string) => {
+        is: (
+          column: "deleted_at",
+          value: null,
+        ) => Promise<{ error: PostgrestErrorLike | null }>;
+      };
+    };
+  };
+};
+
+function detailGoalTable(client: ServiceClient) {
+  return client.from("moksilgi_detail_goals") as unknown as DetailGoalTable;
 }
 
 function safeInt(value: unknown, fallback: number) {
@@ -252,7 +279,7 @@ function markMonthlyPerf(stage: MonthlyPerfStage, durationMs: number) {
 async function getOwnedPlan(client: ServiceClient, profileId: string) {
   return client
     .from("moksilgi_plans")
-    .select("id, profile_id, title")
+    .select("id, profile_id, title, period_start, period_end, author_name")
     .eq("profile_id", profileId)
     .eq("status", "active")
     .is("deleted_at", null)
@@ -271,6 +298,7 @@ async function getPlanData(client: ServiceClient, planId: string) {
       .from("moksilgi_goal_areas")
       .select("id, plan_id, area_key, area_title, area_subtitle, sort_order")
       .eq("plan_id", planId)
+      .neq("area_key", HIDDEN_AREA_KEY)
       .is("deleted_at", null)
       .order("sort_order", { ascending: true }),
     client
@@ -293,6 +321,7 @@ async function getSummaryStructure(client: ServiceClient, planId: string) {
       .from("moksilgi_goal_areas")
       .select("id, area_key")
       .eq("plan_id", planId)
+      .neq("area_key", HIDDEN_AREA_KEY)
       .is("deleted_at", null),
     client
       .from("moksilgi_detail_goals")
@@ -313,7 +342,14 @@ export async function getMyMoksilgiMonthly(
      * 호출부에서 미리 조회한 moksilgi plan — 제공 시 plan DB 조회를 생략합니다.
      * undefined(미전달) vs null(조회했으나 없음)을 구별합니다.
      */
-    preloadedPlan?: { id: string; profile_id: string; title: string | null } | null;
+    preloadedPlan?: {
+      id: string;
+      profile_id: string;
+      title: string | null;
+      period_start: string | null;
+      period_end: string | null;
+      author_name: string | null;
+    } | null;
   },
 ): Promise<GetMyMoksilgiMonthlyResult> {
   const validation = validateYearMonth(year, month);
@@ -392,7 +428,7 @@ export async function getMyMoksilgiMonthly(
       .order("month", { ascending: true }),
     context.serviceClient
       .from("moksilgi_monthly_records")
-      .select("detail_goal_id, month, achievement_rate")
+      .select("detail_goal_id, month, achievement_rate, actual_value")
       .eq("plan_id", ownedPlan.id)
       .eq("profile_id", context.profileId)
       .eq("year", year)
@@ -409,46 +445,81 @@ export async function getMyMoksilgiMonthly(
   }
 
   const areas = (areasResult.data ?? []) as MoksilgiMonthlyArea[];
-  const detailGoals = (detailsResult.data ?? []) as MoksilgiMonthlyDetailGoal[];
-  const persistedYearlySummaries = (yearlySummariesResult.data ?? []) as MoksilgiMonthlySummary[];
-  const yearlySummaryByMonth = new Map(
-    persistedYearlySummaries.map((summary) => [summary.month, summary]),
+  const visibleAreaIds = new Set(areas.map((area) => area.id));
+  const detailGoals = ((detailsResult.data ?? []) as MoksilgiMonthlyDetailGoal[]).filter(
+    (goal) => visibleAreaIds.has(goal.area_id),
   );
+  const yearlyRecords = (yearlyRecordsResult.data ?? []) as Array<{
+    detail_goal_id: string;
+    month: number;
+    achievement_rate: number | null;
+    actual_value: number | null;
+  }>;
+
+  // 연간 기준(B안): 각 목표의 그 달 달성률을 실적 ÷ 연간목표로 재계산.
+  const annualByGoal = new Map<string, number>();
+  for (const goal of detailGoals) {
+    if (
+      isCountableMeasurementType(goal.measurement_type) &&
+      typeof goal.annual_target === "number" &&
+      goal.annual_target > 0
+    ) {
+      annualByGoal.set(goal.id, goal.annual_target);
+    }
+  }
+  const annualRecords = yearlyRecords.map((record) => {
+    const annualTarget = annualByGoal.get(record.detail_goal_id);
+    const actual =
+      typeof record.actual_value === "number" && Number.isFinite(record.actual_value)
+        ? Math.max(0, record.actual_value)
+        : 0;
+    return {
+      detail_goal_id: record.detail_goal_id,
+      month: record.month,
+      achievement_rate: annualTarget ? (actual / annualTarget) * 100 : 0,
+    };
+  });
+  // 영역별 월 달성률(연간 기준)
   const computedYearlySummaries = buildMoksilgiMonthlyRatesFromRecords({
     areas: areas.map((area) => ({ id: area.id, area_key: area.area_key })),
     detailGoals: detailGoals.map((detailGoal) => ({
       id: detailGoal.id,
       area_id: detailGoal.area_id,
     })),
-    records: (yearlyRecordsResult.data ?? []) as Array<{
-      detail_goal_id: string;
-      month: number;
-      achievement_rate: number | null;
-    }>,
+    records: annualRecords,
   });
-
-  for (const computedSummary of computedYearlySummaries) {
-    const existing = yearlySummaryByMonth.get(computedSummary.month);
-    yearlySummaryByMonth.set(computedSummary.month, {
-      id: existing?.id ?? `computed-${computedSummary.month}`,
-      plan_id: ownedPlan.id,
-      profile_id: context.profileId,
-      year,
-      month: computedSummary.month,
-      spiritual_rate: computedSummary.spiritual_rate ?? 0,
-      intellectual_rate: computedSummary.intellectual_rate ?? 0,
-      physical_rate: computedSummary.physical_rate ?? 0,
-      social_rate: computedSummary.social_rate ?? 0,
-      other_rate: computedSummary.other_rate ?? 0,
-      total_rate: computedSummary.total_rate ?? 0,
-      average_rate: computedSummary.average_rate ?? 0,
-      created_at: existing?.created_at ?? "",
-      updated_at: existing?.updated_at ?? "",
-    });
-  }
-  const yearlySummaries = [...yearlySummaryByMonth.values()].sort(
-    (a, b) => a.month - b.month,
+  // 종합/현재 달성률(목표 평균, 연간 기준)
+  const goalFlat = computeMoksilgiGoalFlatOverallAnnual(
+    detailGoals.map((goal) => ({
+      id: goal.id,
+      annual_target: goal.annual_target,
+      measurement_type: goal.measurement_type,
+    })),
+    yearlyRecords,
   );
+  // 현재 달성률: 그 달 자체의 종합(연간 목표 대비 그 달 실적).
+  // 누적 합산은 화면의 "누적" 행에서 월별 값을 다시 더해 별도로 계산하므로 여기서는 하지 않는다.
+  const yearlySummaries: MoksilgiMonthlySummary[] = computedYearlySummaries
+    .map((computedSummary) => {
+      const overall = goalFlat.overallByMonth.get(computedSummary.month) ?? 0;
+      return {
+        id: `computed-${computedSummary.month}`,
+        plan_id: ownedPlan.id,
+        profile_id: context.profileId,
+        year,
+        month: computedSummary.month,
+        spiritual_rate: computedSummary.spiritual_rate ?? 0,
+        intellectual_rate: computedSummary.intellectual_rate ?? 0,
+        physical_rate: computedSummary.physical_rate ?? 0,
+        social_rate: computedSummary.social_rate ?? 0,
+        other_rate: computedSummary.other_rate ?? 0,
+        total_rate: overall,
+        average_rate: overall,
+        created_at: "",
+        updated_at: "",
+      };
+    })
+    .sort((a, b) => a.month - b.month);
 
   return {
     ok: true,
@@ -744,6 +815,17 @@ export async function saveMyMoksilgiMonthlyRecord(
   }
   if (areasResult.error || detailsResult.error) {
     return { ok: false, error: { code: "MOKSILGI_QUERY_FAILED", message: "목실기 목표를 불러올 수 없습니다." } };
+  }
+
+  // 년 목표량(annual_target) 수정 — 폼에서 유효한 값이 오면 목표에 반영(연간 기준 달성률의 분모).
+  // detail은 위에서 사용자 plan 소속임을 검증했으므로 안전하게 업데이트한다.
+  const annualTargetInput = numberOrNull(formData.get("annual_target"));
+  if (annualTargetInput !== null && annualTargetInput >= 0) {
+    await detailGoalTable(context.serviceClient)
+      .update({ annual_target: annualTargetInput, updated_at: now })
+      .eq("id", detail.id)
+      .eq("plan_id", ownedPlan.id)
+      .is("deleted_at", null);
   }
 
   const areas = (areasResult.data ?? []) as SummaryStructureArea[];

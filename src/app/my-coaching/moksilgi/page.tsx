@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MoksilgiAreaCard } from "@/components/coachee/MoksilgiAreaCard";
 import { MoksilgiPastePanel } from "@/components/coachee/MoksilgiPastePanel";
@@ -11,12 +12,14 @@ import {
   MoksilgiSection,
   MoksilgiSectionNav,
 } from "@/components/coachee/MoksilgiSection";
+import { CoacheePrintStyles } from "@/components/print/CoacheePrintStyles";
 import { PrintPageButton } from "@/components/print/PrintPageButton";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import {
+  deleteMyMoksilgiDetailGoal,
   getMyMoksilgi,
   saveMyMoksilgiDetailGoal,
   saveMyMoksilgiPlan,
@@ -285,6 +288,18 @@ async function saveDetailGoalAction(formData: FormData) {
   redirect("/my-coaching/moksilgi?saved=detail");
 }
 
+async function deleteDetailGoalAction(formData: FormData) {
+  "use server";
+
+  const result = await deleteMyMoksilgiDetailGoal(formData);
+
+  if (!result.ok) {
+    redirect("/my-coaching/moksilgi?error=detail-delete");
+  }
+
+  redirect("/my-coaching/moksilgi?saved=detail-delete");
+}
+
 async function submitToCoachAction(formData: FormData) {
   "use server";
 
@@ -306,6 +321,7 @@ function TextInput({
   helpText,
   placeholder,
   type = "text",
+  step,
 }: {
   label: ReactNode;
   name: string;
@@ -314,6 +330,7 @@ function TextInput({
   helpText?: ReactNode;
   placeholder?: string;
   type?: string;
+  step?: string;
 }) {
   return (
     <label className="block">
@@ -324,6 +341,7 @@ function TextInput({
         maxLength={maxLength}
         name={name}
         placeholder={placeholder}
+        step={step}
         type={type}
       />
       {helpText ? (
@@ -520,7 +538,7 @@ function DetailGoalForm({
       <TextArea label={<I18nText k="myCoaching.moksilgi.detailGoal.description" fallback="세부 목표 설명" />} maxLength={3000} name="detail_description" rows={3} value={detailGoal?.description} />
       <div className="grid gap-4 sm:grid-cols-3">
         <TextInput label={<I18nText k="myCoaching.moksilgi.detailGoal.yearlyTarget" fallback="연간 목표량" />} name="annual_target" type="number" value={detailGoal?.annual_target} />
-        <TextInput label={<I18nText k="myCoaching.moksilgi.detailGoal.monthlyTarget" fallback="월 목표량" />} name="monthly_target" type="number" value={detailGoal?.monthly_target} />
+        <TextInput label={<I18nText k="myCoaching.moksilgi.detailGoal.monthlyTarget" fallback="월 목표량" />} name="monthly_target" placeholder="0.0" step="0.1" type="number" value={detailGoal?.monthly_target} />
         <TextInput label={<I18nText k="myCoaching.moksilgi.detailGoal.unit" fallback="단위" />} maxLength={40} name="unit" value={detailGoal?.unit} />
       </div>
       <label className="block">
@@ -628,7 +646,8 @@ export default async function MyMoksilgiPage({
     : 0;
 
   return (
-    <main className="print-root min-h-screen bg-surface-app px-4 py-5 pb-32 text-ink-base print:px-2 print:py-2 print:pb-0 print:bg-white">
+    <main className="print-root print-coachee min-h-screen bg-surface-app px-4 py-5 pb-32 text-ink-base print:px-2 print:py-2 print:pb-0 print:bg-white">
+      <CoacheePrintStyles />
       <MoksilgiAppBar
         actions={
           <>
@@ -637,6 +656,7 @@ export default async function MyMoksilgiPage({
             </div>
             <PrintPageButton
               fileName={`moksilgi-my-record-${printYear}`}
+              pageMargin="12mm 14mm"
               label={
                 (
                   <I18nText
@@ -697,7 +717,7 @@ export default async function MyMoksilgiPage({
               <h1>
                 <I18nText
                   k="myCoaching.moksilgi.reportTitle"
-                  fallback="내 목실기 보고서"
+                  fallback="목표와 실행전략 기획안"
                 />
               </h1>
               {result.data.plan && hasText(result.data.plan.author_name) ? (
@@ -854,9 +874,24 @@ export default async function MyMoksilgiPage({
                                       {displayValue(goal.description)}
                                     </p>
                                   </div>
-                                  <Badge tone="neutral">
-                                    {measurementLabel(goal.measurement_type)}
-                                  </Badge>
+                                  <div className="flex items-center gap-2">
+                                    <Badge tone="neutral">
+                                      {measurementLabel(goal.measurement_type)}
+                                    </Badge>
+                                    <form action={deleteDetailGoalAction}>
+                                      <input name="plan_id" type="hidden" value={plan.id} />
+                                      <input name="area_id" type="hidden" value={area.id} />
+                                      <input name="detail_goal_id" type="hidden" value={goal.id} />
+                                      <ConfirmSubmitButton
+                                        className="rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 hover:border-red-300 hover:bg-red-100"
+                                        confirmDescription={`"${goal.title}" 세부 목표를 삭제합니다. 이 작업은 되돌릴 수 없습니다.`}
+                                        confirmTitle="세부 목표를 삭제하시겠습니까?"
+                                        icon="delete"
+                                      >
+                                        삭제
+                                      </ConfirmSubmitButton>
+                                    </form>
+                                  </div>
                                 </div>
                                 <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
                                   <div>
@@ -1186,6 +1221,7 @@ export default async function MyMoksilgiPage({
                   </Button>
                   <PrintPageButton
                     fileName={`moksilgi-my-record-${printYear}`}
+                    pageMargin="12mm 14mm"
                     label={
                       (
                         <I18nText

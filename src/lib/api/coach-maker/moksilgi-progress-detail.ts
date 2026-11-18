@@ -1,5 +1,10 @@
 import { getSession } from "@/lib/auth/getSession";
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
+import {
+  calculateCoachingDurationMonths,
+  computeMoksilgiGoalFlatOverallAnnual,
+  decorateRowsWithGoalFlatRates,
+} from "@/lib/coaching/moksilgi-year-summary";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import type { MoksilgiAreaKey, Tables, UserRole } from "@/types/database";
@@ -107,6 +112,10 @@ export type CoachMakerMoksilgiProgressSummaryRow = {
   other_rate: number;
   total_rate: number;
   average_rate: number;
+  /** 종합(목표 평균): 측정 목표별 달성률 합 ÷ 측정 목표 수 */
+  overallRate: number;
+  /** 현재 달성률: 종합 ÷ 코칭 기간 개월 수 */
+  currentRate: number;
 };
 
 export type CoachMakerMoksilgiProgressDetail = {
@@ -117,10 +126,25 @@ export type CoachMakerMoksilgiProgressDetail = {
   summaryRows: CoachMakerMoksilgiProgressSummaryRow[];
   cumulativeRow: CoachMakerMoksilgiProgressSummaryRow;
   totalAchievementRate: number;
+  durationMonths: number;
   hasSummaryData: boolean;
   year: number;
   scopeMode: "all" | "direct_coaching_relationships";
 };
+
+/** 코칭 기간 미설정 시 사용하는 기본 개월 수 */
+const DEFAULT_DURATION_MONTHS = 12;
+
+type MonthlyRecordRateRow = Pick<
+  Tables<"moksilgi_monthly_records">,
+  "detail_goal_id" | "month" | "actual_value"
+>;
+
+/** 영역 기준 성취표 row(목표 평균 종합/현재 달성률 덧붙이기 전) */
+type BaseProgressRow = Omit<
+  CoachMakerMoksilgiProgressSummaryRow,
+  "overallRate" | "currentRate"
+>;
 
 type SafeError = {
   code:
@@ -205,12 +229,12 @@ function buildSummaryRows(summaries: SummaryRow[]) {
       other_rate: summaryValue(summary, "other_rate"),
       total_rate: summaryValue(summary, "total_rate"),
       average_rate: summaryValue(summary, "average_rate"),
-    } satisfies CoachMakerMoksilgiProgressSummaryRow;
+    } satisfies BaseProgressRow;
   });
 }
 
 function buildCumulativeRow(
-  rows: CoachMakerMoksilgiProgressSummaryRow[],
+  rows: BaseProgressRow[],
   activeAreaKeys: MoksilgiAreaKey[],
 ) {
   const areaRates: Record<MoksilgiAreaKey, number> = {
@@ -232,7 +256,7 @@ function buildCumulativeRow(
     other_rate: areaRates.other,
     total_rate: AREA_KEYS.reduce((sum, key) => sum + areaRates[key], 0),
     average_rate: activeRates.length > 0 ? average(activeRates) : 0,
-  } satisfies CoachMakerMoksilgiProgressSummaryRow;
+  } satisfies BaseProgressRow;
 }
 
 async function getAccessibleProfileIds(
@@ -374,7 +398,7 @@ export async function getCoachMakerMoksilgiProgressDetail(
     return { data: null, error: { code: "NOT_FOUND", message: "해당 목실기를 찾을 수 없습니다." } };
   }
 
-  const [personResult, areasResult, detailGoalsResult, summariesResult] =
+  const [personResult, areasResult, detailGoalsResult, summariesResult, recordsResult] =
     await Promise.all([
       serviceClient
         .from("profiles")
@@ -402,6 +426,13 @@ export async function getCoachMakerMoksilgiProgressDetail(
         .eq("year", selectedYear)
         .is("deleted_at", null)
         .order("month", { ascending: true }),
+      serviceClient
+        .from("moksilgi_monthly_records")
+        .select("detail_goal_id, month, actual_value")
+        .eq("plan_id", planRow.id)
+        .eq("profile_id", planRow.profile_id)
+        .eq("year", selectedYear)
+        .is("deleted_at", null),
     ]);
 
   if (personResult.error) {
@@ -412,13 +443,14 @@ export async function getCoachMakerMoksilgiProgressDetail(
     return { data: null, error: { code: "GOALS_QUERY_FAILED", message: "목실기 목표를 조회하는 중 오류가 발생했습니다." } };
   }
 
-  if (summariesResult.error) {
+  if (summariesResult.error || recordsResult.error) {
     return { data: null, error: { code: "SUMMARY_QUERY_FAILED", message: "목실기 요약을 조회하는 중 오류가 발생했습니다." } };
   }
 
   const areas = (areasResult.data ?? []) as CoachMakerMoksilgiProgressGoalArea[];
   const detailGoals = (detailGoalsResult.data ?? []) as CoachMakerMoksilgiProgressDetailGoal[];
   const summaries = (summariesResult.data ?? []) as SummaryRow[];
+  const records = (recordsResult.data ?? []) as MonthlyRecordRateRow[];
   const activeAreaKeys = [
     ...new Set(
       areas
@@ -426,10 +458,21 @@ export async function getCoachMakerMoksilgiProgressDetail(
         .map((area) => area.area_key),
     ),
   ];
-  const summaryRows = buildSummaryRows(summaries);
-  const cumulativeRow = buildCumulativeRow(
-    summaryRows,
+  const baseRows: BaseProgressRow[] = buildSummaryRows(summaries);
+  const baseCumulativeRow: BaseProgressRow = buildCumulativeRow(
+    baseRows,
     activeAreaKeys.length > 0 ? activeAreaKeys : AREA_KEYS,
+  );
+
+  const goalFlat = computeMoksilgiGoalFlatOverallAnnual(detailGoals, records);
+  const durationMonths =
+    calculateCoachingDurationMonths(planRow.period_start, planRow.period_end) ||
+    DEFAULT_DURATION_MONTHS;
+  const { rows: summaryRows, cumulativeRow } = decorateRowsWithGoalFlatRates(
+    baseRows,
+    baseCumulativeRow,
+    goalFlat,
+    durationMonths,
   );
 
   return {
@@ -441,6 +484,7 @@ export async function getCoachMakerMoksilgiProgressDetail(
       summaryRows,
       cumulativeRow,
       totalAchievementRate: cumulativeRow.average_rate,
+      durationMonths,
       hasSummaryData: summaries.length > 0,
       year: selectedYear,
       scopeMode: accessibleResult.scopeMode,

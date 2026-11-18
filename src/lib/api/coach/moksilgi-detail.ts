@@ -4,6 +4,9 @@ import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import {
   buildMoksilgiCumulativeRow,
   buildMoksilgiMonthRows,
+  calculateCoachingDurationMonths,
+  computeMoksilgiGoalFlatOverallAnnual,
+  decorateRowsWithGoalFlatRates,
   resolveActiveAreaKeys,
   type MoksilgiYearSummaryRow,
 } from "@/lib/coaching/moksilgi-year-summary";
@@ -97,7 +100,12 @@ type SummaryRow = Pick<
   | "average_rate"
 >;
 
-export type CoachMoksilgiSummaryRow = MoksilgiYearSummaryRow;
+export type CoachMoksilgiSummaryRow = MoksilgiYearSummaryRow & {
+  /** 종합(목표 평균): 측정 목표별 달성률 합 ÷ 측정 목표 수 */
+  overallRate: number;
+  /** 현재 달성률: 종합 ÷ 코칭 기간 개월 수 */
+  currentRate: number;
+};
 
 export type CoachMoksilgiDetail = {
   plan: PlanRow;
@@ -107,9 +115,18 @@ export type CoachMoksilgiDetail = {
   summaryRows: CoachMoksilgiSummaryRow[];
   cumulativeRow: CoachMoksilgiSummaryRow;
   totalAchievementRate: number;
+  durationMonths: number;
   hasSummaryData: boolean;
   year: number;
 };
+
+/** 코칭 기간 미설정 시 사용하는 기본 개월 수 */
+const DEFAULT_DURATION_MONTHS = 12;
+
+type MonthlyRecordRateRow = Pick<
+  Tables<"moksilgi_monthly_records">,
+  "detail_goal_id" | "month" | "actual_value"
+>;
 
 export type CoachMoksilgiDetailResult =
   | { data: CoachMoksilgiDetail; error: null }
@@ -222,7 +239,7 @@ export async function getCoachMoksilgiDetail(
     return { data: null, error: { code: "NOT_FOUND", message: "해당 목실기를 찾을 수 없습니다." } };
   }
 
-  const [coacheeResult, areasResult, detailGoalsResult, summariesResult] =
+  const [coacheeResult, areasResult, detailGoalsResult, summariesResult, recordsResult] =
     await Promise.all([
       serviceClient
         .from("profiles")
@@ -250,6 +267,13 @@ export async function getCoachMoksilgiDetail(
         .eq("year", selectedYear)
         .is("deleted_at", null)
         .order("month", { ascending: true }),
+      serviceClient
+        .from("moksilgi_monthly_records")
+        .select("detail_goal_id, month, actual_value")
+        .eq("plan_id", planRow.id)
+        .eq("profile_id", planRow.profile_id)
+        .eq("year", selectedYear)
+        .is("deleted_at", null),
     ]);
 
   if (coacheeResult.error) {
@@ -260,16 +284,28 @@ export async function getCoachMoksilgiDetail(
     return { data: null, error: { code: "GOALS_QUERY_FAILED", message: "목실기 목표를 조회하는 중 오류가 발생했습니다." } };
   }
 
-  if (summariesResult.error) {
+  if (summariesResult.error || recordsResult.error) {
     return { data: null, error: { code: "SUMMARY_QUERY_FAILED", message: "목실기 요약을 조회하는 중 오류가 발생했습니다." } };
   }
 
   const areas = (areasResult.data ?? []) as CoachMoksilgiGoalArea[];
   const detailGoals = (detailGoalsResult.data ?? []) as CoachMoksilgiDetailGoal[];
   const summaries = (summariesResult.data ?? []) as SummaryRow[];
+  const records = (recordsResult.data ?? []) as MonthlyRecordRateRow[];
   const activeAreaKeys = resolveActiveAreaKeys(areas, detailGoals);
-  const summaryRows = buildMoksilgiMonthRows(summaries);
-  const cumulativeRow = buildMoksilgiCumulativeRow(summaryRows, activeAreaKeys);
+  const baseRows = buildMoksilgiMonthRows(summaries);
+  const baseCumulativeRow = buildMoksilgiCumulativeRow(baseRows, activeAreaKeys);
+
+  const goalFlat = computeMoksilgiGoalFlatOverallAnnual(detailGoals, records);
+  const durationMonths =
+    calculateCoachingDurationMonths(planRow.period_start, planRow.period_end) ||
+    DEFAULT_DURATION_MONTHS;
+  const { rows: summaryRows, cumulativeRow } = decorateRowsWithGoalFlatRates(
+    baseRows,
+    baseCumulativeRow,
+    goalFlat,
+    durationMonths,
+  );
 
   return {
     data: {
@@ -280,6 +316,7 @@ export async function getCoachMoksilgiDetail(
       summaryRows,
       cumulativeRow,
       totalAchievementRate: cumulativeRow.average_rate,
+      durationMonths,
       hasSummaryData: summaries.length > 0,
       year: selectedYear,
     },

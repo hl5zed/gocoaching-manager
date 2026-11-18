@@ -5,8 +5,11 @@ import { requireCoacheePageProfile } from "@/lib/api/my-coaching/coachee-page-au
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MoksilgiMonthlyRecordForm } from "@/components/coachee/MoksilgiMonthlyRecordForm";
+import { MoksilgiMonthlyPrintRecords } from "@/components/coachee/MoksilgiMonthlyPrintRecords";
 import { MoksilgiAreaCard } from "@/components/coachee/MoksilgiAreaCard";
 import { MoksilgiAppBar } from "@/components/coachee/MoksilgiSection";
+import { CoacheePrintStyles } from "@/components/print/CoacheePrintStyles";
+import { MoksilgiMonthlyPrintStyles } from "@/components/print/MoksilgiMonthlyPrintStyles";
 import { PrintPageButton } from "@/components/print/PrintPageButton";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -226,22 +229,24 @@ function Summary({
 }) {
   const summaryByMonth = new Map(summaries.map((summary) => [summary.month, summary]));
   const months = Array.from({ length: 12 }, (_, index) => index + 1);
+  // 연간 기준(B안): 누적 = 월별 값의 합(각 월이 연간 목표 대비 기여도이므로).
+  const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
   const cumulative = {
-    spiritual_rate: average(months.map((month) => summaryValue(summaryByMonth.get(month), "spiritual_rate"))),
-    intellectual_rate: average(months.map((month) => summaryValue(summaryByMonth.get(month), "intellectual_rate"))),
-    physical_rate: average(months.map((month) => summaryValue(summaryByMonth.get(month), "physical_rate"))),
-    social_rate: average(months.map((month) => summaryValue(summaryByMonth.get(month), "social_rate"))),
-    other_rate: average(months.map((month) => summaryValue(summaryByMonth.get(month), "other_rate"))),
-    total_rate: average(months.map((month) => summaryValue(summaryByMonth.get(month), "total_rate"))),
-    average_rate: average(months.map((month) => summaryValue(summaryByMonth.get(month), "average_rate"))),
+    spiritual_rate: sum(months.map((month) => summaryValue(summaryByMonth.get(month), "spiritual_rate"))),
+    intellectual_rate: sum(months.map((month) => summaryValue(summaryByMonth.get(month), "intellectual_rate"))),
+    physical_rate: sum(months.map((month) => summaryValue(summaryByMonth.get(month), "physical_rate"))),
+    social_rate: sum(months.map((month) => summaryValue(summaryByMonth.get(month), "social_rate"))),
+    other_rate: sum(months.map((month) => summaryValue(summaryByMonth.get(month), "other_rate"))),
+    total_rate: sum(months.map((month) => summaryValue(summaryByMonth.get(month), "total_rate"))),
   };
+  // 현재 달성률(옵션 A)은 이미 월별로 누적된 값이므로, 누적 행은 그 누적 종합과 동일하다.
+  const cumulativeAverageRate = cumulative.total_rate;
 
   const headerCols: Array<{ key: MoksilgiAreaKey; labelKey: string; fallback: string }> = [
     { key: "spiritual", labelKey: "myCoaching.moksilgi.goal.spiritual.title", fallback: "목표 1: 영적 성장" },
     { key: "intellectual", labelKey: "myCoaching.moksilgi.goal.intellectual.title", fallback: "목표 2: 지적 성장" },
     { key: "physical", labelKey: "myCoaching.moksilgi.goal.physical.title", fallback: "목표 3: 육체적 성장" },
     { key: "social", labelKey: "myCoaching.moksilgi.goal.social.title", fallback: "목표 4: 사회적 성장" },
-    { key: "other", labelKey: "myCoaching.moksilgi.goal.other.title", fallback: "목표 5: 기타" },
   ];
 
   return (
@@ -253,7 +258,7 @@ function Summary({
         <div className="mt-3 overflow-x-auto">
           <table className="min-w-[680px] w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-line-base text-left text-ink-muted">
+              <tr className="border-b border-line-base text-center text-ink-muted">
                 <th className="px-3 py-2 font-medium">
                   <I18nText k="myCoaching.moksilgi.monthly.month" fallback="월" />
                 </th>
@@ -290,7 +295,7 @@ function Summary({
                     }
                     key={month}
                   >
-                    <th className="whitespace-nowrap px-3 py-2 text-left font-medium">
+                    <th className="whitespace-nowrap px-3 py-2 text-center font-medium">
                       <MonthLabel month={month} />
                       {isSelected ? (
                         <Badge className="ml-2" tone="success">
@@ -298,27 +303,25 @@ function Summary({
                         </Badge>
                       ) : null}
                     </th>
-                    <td className="px-3 py-2">{formatPercent(summaryValue(summary, "spiritual_rate"))}</td>
-                    <td className="px-3 py-2">{formatPercent(summaryValue(summary, "intellectual_rate"))}</td>
-                    <td className="px-3 py-2">{formatPercent(summaryValue(summary, "physical_rate"))}</td>
-                    <td className="px-3 py-2">{formatPercent(summaryValue(summary, "social_rate"))}</td>
-                    <td className="px-3 py-2">{formatPercent(summaryValue(summary, "other_rate"))}</td>
-                    <td className="px-3 py-2">{formatPercent(summaryValue(summary, "total_rate"))}</td>
-                    <td className="px-3 py-2">{formatPercent(summaryValue(summary, "average_rate"))}</td>
+                    <td className="px-3 py-2 text-center">{formatPercent(summaryValue(summary, "spiritual_rate"))}</td>
+                    <td className="px-3 py-2 text-center">{formatPercent(summaryValue(summary, "intellectual_rate"))}</td>
+                    <td className="px-3 py-2 text-center">{formatPercent(summaryValue(summary, "physical_rate"))}</td>
+                    <td className="px-3 py-2 text-center">{formatPercent(summaryValue(summary, "social_rate"))}</td>
+                    <td className="px-3 py-2 text-center">{formatPercent(summaryValue(summary, "total_rate"))}</td>
+                    <td className="px-3 py-2 text-center">{formatPercent(summaryValue(summary, "average_rate"))}</td>
                   </tr>
                 );
               })}
               <tr className="bg-navy-900 text-white">
-                <th className="whitespace-nowrap px-3 py-2 text-left font-semibold">
+                <th className="whitespace-nowrap px-3 py-2 text-center font-semibold">
                   <I18nText k="myCoaching.moksilgi.monthly.cumulative" fallback="누적" />
                 </th>
-                <td className="px-3 py-2">{formatPercent(cumulative.spiritual_rate)}</td>
-                <td className="px-3 py-2">{formatPercent(cumulative.intellectual_rate)}</td>
-                <td className="px-3 py-2">{formatPercent(cumulative.physical_rate)}</td>
-                <td className="px-3 py-2">{formatPercent(cumulative.social_rate)}</td>
-                <td className="px-3 py-2">{formatPercent(cumulative.other_rate)}</td>
-                <td className="px-3 py-2">{formatPercent(cumulative.total_rate)}</td>
-                <td className="px-3 py-2">{formatPercent(cumulative.average_rate)}</td>
+                <td className="px-3 py-2 text-center">{formatPercent(cumulative.spiritual_rate)}</td>
+                <td className="px-3 py-2 text-center">{formatPercent(cumulative.intellectual_rate)}</td>
+                <td className="px-3 py-2 text-center">{formatPercent(cumulative.physical_rate)}</td>
+                <td className="px-3 py-2 text-center">{formatPercent(cumulative.social_rate)}</td>
+                <td className="px-3 py-2 text-center">{formatPercent(cumulative.total_rate)}</td>
+                <td className="px-3 py-2 text-center">{formatPercent(cumulativeAverageRate)}</td>
               </tr>
             </tbody>
           </table>
@@ -348,7 +351,7 @@ export default async function MoksilgiMonthlyPage({
     verifiedProfileId
       ? supabase
           .from("moksilgi_plans")
-          .select("id, profile_id, title")
+          .select("id, profile_id, title, period_start, period_end, author_name")
           .eq("profile_id", verifiedProfileId)
           .eq("status", "active")
           .is("deleted_at", null)
@@ -423,8 +426,14 @@ export default async function MoksilgiMonthlyPage({
           areaRecords.map((record) => [record.detail_goal_id, record]),
         );
         const goalRates = areaGoals.map((goal) => {
-          const value = recordByGoalId.get(goal.id)?.achievement_rate;
-          return typeof value === "number" && Number.isFinite(value) ? value : 0;
+          // 연간 기준(B안): 이번 달 실적 ÷ 연간 목표.
+          const actual = recordByGoalId.get(goal.id)?.actual_value;
+          return typeof goal.annual_target === "number" &&
+            goal.annual_target > 0 &&
+            typeof actual === "number" &&
+            Number.isFinite(actual)
+            ? (actual / goal.annual_target) * 100
+            : 0;
         });
         return {
           area,
@@ -437,21 +446,31 @@ export default async function MoksilgiMonthlyPage({
     : [];
 
   const recordedAreas = areaStats.filter((stat) => stat.hasRecords).length;
-  const monthAverage =
-    areaStats.length > 0
-      ? average(areaStats.map((stat) => stat.areaAverage))
-      : summaryValue(monthSummary, "average_rate");
+  // 아래 "월별 요약" 표의 "현재 달성률" 열과 동일한 값(목표 평균 기준)을 사용해
+  // 같은 화면 안에서 상단 카드와 표의 수치가 어긋나지 않게 한다.
+  const monthAverage = summaryValue(monthSummary, "average_rate");
+
+  const plan = result.ok ? result.data.plan : null;
+  const authorName = plan?.author_name ?? "";
+  const periodLabel =
+    plan?.period_start && plan?.period_end ? `${plan.period_start}~${plan.period_end}` : "";
 
   return (
-    <main className="print-root min-h-screen bg-surface-app px-4 py-5 pb-32 text-ink-base">
+    <main className="print-root print-coachee print-monthly min-h-screen bg-surface-app px-4 py-5 pb-32 text-ink-base">
+      <CoacheePrintStyles />
+      <MoksilgiMonthlyPrintStyles />
       <div className="print-report-title print-only">
-        <h1>
+        <h1 className="text-center">
           <I18nText k="myCoaching.moksilgi.monthly.reportTitle" fallback="월별 목실기 기록 보고서" />
         </h1>
         <p>
-          <I18nText k="myCoaching.moksilgi.monthly.printPeriod" fallback="출력 기간" />: {year}
-          <I18nText k="myCoaching.moksilgi.monthly.yearSuffix" fallback="년" />{" "}
-          <MonthLabel month={month} />
+          <I18nText k="myCoaching.moksilgi.monthly.author" fallback="작성자" />: {authorName}
+        </p>
+        <p>
+          <I18nText k="myCoaching.moksilgi.monthly.period" fallback="기간" />: {periodLabel}
+        </p>
+        <p>
+          <I18nText k="myCoaching.moksilgi.monthly.printYear" fallback="출력연도" />: {year}
         </p>
         <p>
           <I18nText k="myCoaching.moksilgi.generatedAt" fallback="생성일" />:{" "}
@@ -467,6 +486,7 @@ export default async function MoksilgiMonthlyPage({
             </div>
             <PrintPageButton
               fileName={`moksilgi-monthly-record-${year}-${String(month).padStart(2, "0")}`}
+              pageMargin="12mm 14mm"
               label={
                 (
                   <I18nText k="myCoaching.moksilgi.monthly.print" fallback="월별 목실기 출력" />
@@ -477,8 +497,8 @@ export default async function MoksilgiMonthlyPage({
         }
       />
 
-      <section className="mx-auto w-full max-w-md space-y-4">
-        <div className="pt-2">
+      <section className="mx-auto w-full max-w-md space-y-4 print:max-w-none">
+        <div className="print-hidden pt-2">
           <p className="text-xs font-medium uppercase tracking-wide text-brand-600">
             <I18nText k="myCoaching.moksilgi.monthly.title" fallback="목실기 월별 체크리스트" />
           </p>
@@ -567,6 +587,7 @@ export default async function MoksilgiMonthlyPage({
           </Card>
         ) : (
           <>
+            <div className="print-goal-grid space-y-3">
             <Card className="border-line-base bg-surface-card">
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="relative h-20 w-20 shrink-0">
@@ -619,7 +640,6 @@ export default async function MoksilgiMonthlyPage({
               </CardContent>
             </Card>
 
-            <div className="space-y-3">
               {areaStats.map(({ area, areaGoals, areaAverage }) => (
                 <MoksilgiAreaCard
                   areaKey={area.area_key}
@@ -670,6 +690,15 @@ export default async function MoksilgiMonthlyPage({
                 </MoksilgiAreaCard>
               ))}
             </div>
+
+            {/* 인쇄 전용: 접힌 아코디언·입력 요소 때문에 종이에 나오지 않던 실행 기록 본문 */}
+            <MoksilgiMonthlyPrintRecords
+              areas={result.data.areas}
+              detailGoals={result.data.detailGoals}
+              month={month}
+              records={result.data.records}
+              year={year}
+            />
 
             <Summary selectedMonth={month} summaries={result.data.yearlySummaries} />
           </>

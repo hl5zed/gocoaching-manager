@@ -48,6 +48,37 @@ function hasText(value: string | null | undefined) {
   return Boolean(value?.trim());
 }
 
+const MEASUREMENT_LABELS: Record<string, string> = {
+  daily_check: "매일 실행 확인",
+  weekly_count: "매주 실행 확인",
+  monthly_number: "월간 수치 입력",
+  monthly_comment: "COMMENT",
+};
+
+function displayOrDash(value: string | number | null | undefined) {
+  if (value === null || value === undefined) return "-";
+  if (typeof value === "number") return String(value);
+  return value.trim().length > 0 ? value : "-";
+}
+
+function hasBasicInfoContent(plan: MoksilgiPlan | null) {
+  if (!plan) {
+    return false;
+  }
+
+  return (
+    hasText(plan.title) ||
+    hasText(plan.region_name) ||
+    hasText(plan.coach_name) ||
+    hasText(plan.regional_leader_name) ||
+    hasText(plan.role_label) ||
+    hasText(plan.generation_label) ||
+    hasText(plan.written_at) ||
+    hasText(plan.period_start) ||
+    hasText(plan.period_end)
+  );
+}
+
 function PrintSection({
   children,
   title,
@@ -195,6 +226,58 @@ export function MoksilgiPrintSummary({
         </section>
       ) : null}
 
+      {plan && hasBasicInfoContent(plan) ? (
+        <PrintSection title="기본 정보">
+          <dl className="grid grid-cols-3 gap-x-4 gap-y-2">
+            <div>
+              <dt className="text-[10px] uppercase tracking-wide text-ink-muted">제목</dt>
+              <dd className="text-[11.9px] text-ink-strong">{displayOrDash(plan.title)}</dd>
+            </div>
+            <div>
+              <dt className="text-[10px] uppercase tracking-wide text-ink-muted">
+                국가/소속/공동체
+              </dt>
+              <dd className="text-[11.9px] text-ink-strong">
+                {displayOrDash(plan.region_name)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[10px] uppercase tracking-wide text-ink-muted">
+                직책 · 세대
+              </dt>
+              <dd className="text-[11.9px] text-ink-strong">
+                {[plan.role_label, plan.generation_label]
+                  .filter((value) => hasText(value))
+                  .join(" · ") || "-"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[10px] uppercase tracking-wide text-ink-muted">코치</dt>
+              <dd className="text-[11.9px] text-ink-strong">
+                {displayOrDash(plan.coach_name)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[10px] uppercase tracking-wide text-ink-muted">지역팀장</dt>
+              <dd className="text-[11.9px] text-ink-strong">
+                {displayOrDash(plan.regional_leader_name)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[10px] uppercase tracking-wide text-ink-muted">
+                코칭기간 · 작성일
+              </dt>
+              <dd className="text-[11.9px] text-ink-strong">
+                {hasText(plan.period_start) && hasText(plan.period_end)
+                  ? `${plan.period_start} ~ ${plan.period_end}`
+                  : "-"}
+                {hasText(plan.written_at) ? ` · ${plan.written_at}` : ""}
+              </dd>
+            </div>
+          </dl>
+        </PrintSection>
+      ) : null}
+
       {missionContent && plan ? (
         <PrintSection
           title={
@@ -337,6 +420,14 @@ export function MoksilgiPrintSummary({
                             {goal.title}
                           </p>
                         ) : null}
+                        {/* 측정 방법이 종이에 남도록 목표 제목 아래 한 줄로 표기한다 */}
+                        <p className="mt-0.5 text-[10px] leading-4 text-ink-muted">
+                          연간목표 {displayOrDash(goal.annual_target)} · 월목표{" "}
+                          {displayOrDash(goal.monthly_target)} · 단위{" "}
+                          {displayOrDash(goal.unit)} · 측정{" "}
+                          {MEASUREMENT_LABELS[goal.measurement_type] ??
+                            goal.measurement_type}
+                        </p>
                         {strategies.length > 0 ? (
                           <ul className="mt-1 list-disc space-y-1 pl-4">
                             {strategies.map((strategy, index) => (
@@ -357,6 +448,13 @@ export function MoksilgiPrintSummary({
             ))}
           </div>
         </PrintSection>
+      ) : null}
+
+      {plan ? (
+        <div className="print-signature">
+          <div>코치이 확인 (서명): </div>
+          <div>코치 확인 (서명): </div>
+        </div>
       ) : null}
     </div>
   );

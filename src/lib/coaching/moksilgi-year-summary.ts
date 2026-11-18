@@ -1,4 +1,4 @@
-import type { MoksilgiAreaKey } from "@/types/database";
+import type { MoksilgiAreaKey, MoksilgiMeasurementType } from "@/types/database";
 
 /** 목실기 연간 성취표 — 1~12월 + 누적 row 공통 타입 */
 export type MoksilgiYearSummaryRow = {
@@ -275,5 +275,221 @@ export function computeMoksilgiYearSummaryMetrics(
     total_rate: cumulativeRow.total_rate,
     average_rate: cumulativeRow.average_rate,
     total_achievement_rate: cumulativeRow.average_rate,
+  };
+}
+
+/**
+ * 측정(카운트) 대상 세부목표인지 판별.
+ * 자유 기록(monthly_comment)만 제외하고 나머지 측정 유형은 계산 대상에 포함.
+ */
+export function isCountableMeasurementType(type: MoksilgiMeasurementType): boolean {
+  return type !== "monthly_comment";
+}
+
+/**
+ * 코칭 기간 개월 수 — 시작월·종료월을 모두 포함해서 계산.
+ * 예: 2026-01 ~ 2026-12 = 12, 2026-03 ~ 2026-12 = 10, 2026-05 ~ 2027-04 = 12.
+ * 기간이 없거나 잘못된 경우 0을 반환(호출부에서 fallback 처리).
+ */
+export function calculateCoachingDurationMonths(
+  periodStart: string | null | undefined,
+  periodEnd: string | null | undefined,
+): number {
+  if (!periodStart || !periodEnd) return 0;
+  const start = new Date(periodStart);
+  const end = new Date(periodEnd);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+
+  const months =
+    (end.getFullYear() - start.getFullYear()) * 12 +
+    (end.getMonth() - start.getMonth()) +
+    1;
+
+  return months > 0 ? months : 0;
+}
+
+/**
+ * 현재 달성률 = 종합 ÷ 코칭 기간 개월 수.
+ * 개월 수가 0 이하이거나 값이 유한하지 않으면 0을 반환(NaN/Infinity 방지).
+ */
+export function calculateCurrentAchievementRate(
+  overallRate: number,
+  durationMonths: number,
+): number {
+  if (!Number.isFinite(overallRate)) return 0;
+  if (!Number.isFinite(durationMonths) || durationMonths <= 0) return 0;
+
+  return overallRate / durationMonths;
+}
+
+export type MoksilgiGoalFlatRateSource = {
+  detail_goal_id: string;
+  month: number;
+  achievement_rate?: number | null;
+};
+
+export type MoksilgiGoalFlatOverall = {
+  /** month(1~12) → 그 달의 종합(측정 목표별 달성률 합 ÷ 측정 목표 수) */
+  overallByMonth: Map<number, number>;
+  /** 누적 종합 = 측정 목표별 (월별 달성률 합)의 평균 */
+  cumulativeOverall: number;
+  /** 계산에 사용된 측정 목표 수(분모) */
+  countableGoalCount: number;
+};
+
+/**
+ * "목표 평균" 방식 종합 계산.
+ * 각 측정 목표의 월별 달성률을 합산한 뒤, 측정 목표 수로 나눔.
+ * - 분모 = 측정(카운트) 대상 목표 수(영역 수가 아님)
+ * - 저장된 월별 달성률을 그대로 사용(100% 초과 허용, 상한 클램프 없음)
+ * - 음수 달성률만 0으로 보정
+ */
+/** 세부목표 목록에서 측정(카운트) 대상 목표 id 집합을 만든다. */
+export function collectCountableGoalIds(
+  goals: Array<{ id: string; measurement_type: MoksilgiMeasurementType }>,
+): Set<string> {
+  const ids = new Set<string>();
+  for (const goal of goals) {
+    if (isCountableMeasurementType(goal.measurement_type)) {
+      ids.add(goal.id);
+    }
+  }
+  return ids;
+}
+
+/**
+ * 영역 기준 성취표 row(월별 + 누적)에 "목표 평균" 종합·현재 달성률을 덧붙인다.
+ * 여러 화면(개인 요약/코치 상세/코치메이커 상세)에서 동일 계산을 재사용하기 위한 공용 헬퍼.
+ */
+export function decorateRowsWithGoalFlatRates<
+  T extends { month: number | "cumulative" },
+>(
+  monthRows: T[],
+  cumulativeRow: T,
+  goalFlat: MoksilgiGoalFlatOverall,
+  durationMonths: number,
+): {
+  rows: Array<T & { overallRate: number; currentRate: number }>;
+  cumulativeRow: T & { overallRate: number; currentRate: number };
+} {
+  const rows = monthRows.map((row) => {
+    const overallRate =
+      typeof row.month === "number" ? goalFlat.overallByMonth.get(row.month) ?? 0 : 0;
+    return {
+      ...row,
+      overallRate,
+      currentRate: calculateCurrentAchievementRate(overallRate, durationMonths),
+    };
+  });
+
+  return {
+    rows,
+    cumulativeRow: {
+      ...cumulativeRow,
+      overallRate: goalFlat.cumulativeOverall,
+      currentRate: calculateCurrentAchievementRate(
+        goalFlat.cumulativeOverall,
+        durationMonths,
+      ),
+    },
+  };
+}
+
+export function computeMoksilgiGoalFlatOverall(
+  countableGoalIds: Set<string>,
+  records: MoksilgiGoalFlatRateSource[],
+): MoksilgiGoalFlatOverall {
+  const goalCount = countableGoalIds.size;
+  const sumByMonth = new Map<number, number>();
+  let totalSum = 0;
+
+  for (const record of records) {
+    if (!countableGoalIds.has(record.detail_goal_id)) continue;
+    if (!Number.isInteger(record.month) || record.month < 1 || record.month > 12) {
+      continue;
+    }
+
+    const rate = Math.max(0, safeNumber(record.achievement_rate));
+    sumByMonth.set(record.month, (sumByMonth.get(record.month) ?? 0) + rate);
+    totalSum += rate;
+  }
+
+  const overallByMonth = new Map<number, number>();
+  if (goalCount > 0) {
+    for (const [month, sum] of sumByMonth) {
+      overallByMonth.set(month, sum / goalCount);
+    }
+  }
+
+  return {
+    overallByMonth,
+    cumulativeOverall: goalCount > 0 ? totalSum / goalCount : 0,
+    countableGoalCount: goalCount,
+  };
+}
+
+export type MoksilgiAnnualGoalSource = {
+  id: string;
+  annual_target: number | null;
+  measurement_type: MoksilgiMeasurementType;
+};
+
+export type MoksilgiAnnualRecordSource = {
+  detail_goal_id: string;
+  month: number;
+  actual_value?: number | null;
+};
+
+/**
+ * "연간 기준(B안)" 종합 계산.
+ * 각 목표의 달성률을 그 달 실적 ÷ **연간 목표(annual_target)** 로 계산한 뒤,
+ * 측정 목표 수로 나눠 종합을 만든다(문서 방식).
+ * - 계산 대상 = 카운트형(monthly_comment 제외) + annual_target > 0 인 목표
+ * - 월별 종합 = Σ(대상 목표의 그 달 실적/연목표) ÷ 대상 목표 수
+ * - 누적 종합 = Σ(대상 목표의 누적 실적/연목표) ÷ 대상 목표 수 (= 월별 종합의 합)
+ * - 100% 초과 허용(상한 클램프 없음), 음수 실적만 0으로 보정
+ */
+export function computeMoksilgiGoalFlatOverallAnnual(
+  goals: MoksilgiAnnualGoalSource[],
+  records: MoksilgiAnnualRecordSource[],
+): MoksilgiGoalFlatOverall {
+  const annualByGoal = new Map<string, number>();
+  for (const goal of goals) {
+    if (
+      isCountableMeasurementType(goal.measurement_type) &&
+      typeof goal.annual_target === "number" &&
+      goal.annual_target > 0
+    ) {
+      annualByGoal.set(goal.id, goal.annual_target);
+    }
+  }
+
+  const goalCount = annualByGoal.size;
+  const sumByMonth = new Map<number, number>();
+  let totalSum = 0;
+
+  for (const record of records) {
+    const annualTarget = annualByGoal.get(record.detail_goal_id);
+    if (annualTarget === undefined) continue;
+    if (!Number.isInteger(record.month) || record.month < 1 || record.month > 12) {
+      continue;
+    }
+
+    const rate = (Math.max(0, safeNumber(record.actual_value)) / annualTarget) * 100;
+    sumByMonth.set(record.month, (sumByMonth.get(record.month) ?? 0) + rate);
+    totalSum += rate;
+  }
+
+  const overallByMonth = new Map<number, number>();
+  if (goalCount > 0) {
+    for (const [month, sum] of sumByMonth) {
+      overallByMonth.set(month, sum / goalCount);
+    }
+  }
+
+  return {
+    overallByMonth,
+    cumulativeOverall: goalCount > 0 ? totalSum / goalCount : 0,
+    countableGoalCount: goalCount,
   };
 }

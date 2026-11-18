@@ -197,6 +197,13 @@ export function MoksilgiMonthlyRecordForm({
   const isMonthly =
     detailGoal.measurement_type === "monthly_number" ||
     detailGoal.measurement_type === "monthly_comment";
+  // 연간 기준(B안) 달성률 = 이번 달 실적 ÷ 연간 목표.
+  const annualRate =
+    typeof detailGoal.annual_target === "number" &&
+    detailGoal.annual_target > 0 &&
+    typeof record?.actual_value === "number"
+      ? (record.actual_value / detailGoal.annual_target) * 100
+      : 0;
 
   return (
     <form
@@ -229,9 +236,9 @@ export function MoksilgiMonthlyRecordForm({
             </p>
           ) : null}
         </div>
-        <Badge tone={rateTone(record?.achievement_rate)}>
+        <Badge tone={rateTone(annualRate)}>
           <I18nText k="myCoaching.moksilgi.monthly.currentAchievement" fallback="현재 달성률" />{" "}
-          {formatPercent(record?.achievement_rate)}
+          {formatPercent(annualRate)}
         </Badge>
       </div>
 
@@ -303,18 +310,6 @@ export function MoksilgiMonthlyRecordForm({
               type="number"
             />
           </label>
-          <label className="block">
-            <span className={LABEL_CLASS}>
-              <I18nText k="myCoaching.moksilgi.monthly.comment" fallback="코멘트" />
-            </span>
-            <textarea
-              className={INPUT_CLASS}
-              defaultValue={record?.comment ?? ""}
-              maxLength={2000}
-              name="comment"
-              rows={3}
-            />
-          </label>
         </div>
       ) : null}
 
@@ -325,18 +320,15 @@ export function MoksilgiMonthlyRecordForm({
           </StatChip>
           <StatChip>
             <I18nText k="myCoaching.moksilgi.monthly.achievementRate" fallback="달성률" />{" "}
-            {formatPercent(record?.achievement_rate)}
+            {formatPercent(annualRate)}
           </StatChip>
         </div>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-4 rounded-control border border-line-base bg-surface-subtle p-4 sm:grid-cols-2">
         <label className="block">
           <span className={LABEL_CLASS}>
-            <I18nText
-              k="myCoaching.moksilgi.monthly.targetValue"
-              fallback="월 목표량 / 현재 목표량 수정"
-            />
+            <I18nText k="myCoaching.moksilgi.monthly.targetValue" fallback="월 목표량" />
           </span>
           <input
             className={INPUT_CLASS}
@@ -346,21 +338,32 @@ export function MoksilgiMonthlyRecordForm({
             type="number"
           />
         </label>
-        {!isMonthly ? (
-          <label className="block">
-            <span className={LABEL_CLASS}>
-              <I18nText k="myCoaching.moksilgi.monthly.comment" fallback="코멘트" />
-            </span>
-            <textarea
-              className={INPUT_CLASS}
-              defaultValue={record?.comment ?? ""}
-              maxLength={2000}
-              name="comment"
-              rows={3}
-            />
-          </label>
-        ) : null}
+        <label className="block">
+          <span className={LABEL_CLASS}>
+            <I18nText k="myCoaching.moksilgi.monthly.annualTarget" fallback="년 목표량" />
+          </span>
+          <input
+            className={INPUT_CLASS}
+            defaultValue={detailGoal.annual_target ?? ""}
+            name="annual_target"
+            step="any"
+            type="number"
+          />
+        </label>
       </div>
+
+      <label className="block">
+        <span className={LABEL_CLASS}>
+          <I18nText k="myCoaching.moksilgi.monthly.comment" fallback="코멘트" />
+        </span>
+        <textarea
+          className={INPUT_CLASS}
+          defaultValue={record?.comment ?? ""}
+          maxLength={2000}
+          name="comment"
+          rows={3}
+        />
+      </label>
 
       <SaveButton />
     </form>

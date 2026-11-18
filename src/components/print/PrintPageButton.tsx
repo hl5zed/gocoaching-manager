@@ -11,6 +11,8 @@ type PrintPageButtonProps = {
   className?: string;
   fileName?: string;
   label?: string;
+  /** `@page` 여백을 직접 지정한다(예: "10mm 20mm"). 없으면 printOptions.margin을 따른다. */
+  pageMargin?: string;
   printOptions?: Partial<PrintOptions> | null;
   title?: string;
 };
@@ -40,11 +42,12 @@ export function PrintPageButton({
   className = "",
   fileName,
   label = "인쇄/PDF 저장",
+  pageMargin,
   printOptions,
   title,
 }: PrintPageButtonProps) {
   const resolvedPrintOptions = normalizePrintOptions(printOptions);
-  const printMargin = getPrintMarginSize(resolvedPrintOptions.margin);
+  const printMargin = pageMargin ?? getPrintMarginSize(resolvedPrintOptions.margin);
   const pageSize = `A4 ${resolvedPrintOptions.orientation}`;
 
   function handlePrint() {
@@ -103,7 +106,7 @@ export function PrintPageButton({
           body {
             background: #ffffff !important;
             color: #0f172a !important;
-            font-size: 10px !important;
+            font-size: 12.5px !important;
             margin: 0 !important;
             overflow: visible !important;
           }
@@ -174,7 +177,7 @@ export function PrintPageButton({
 
           .print-report-title h1 {
             color: #ffffff !important;
-            font-size: 15px !important;
+            font-size: 18.75px !important;
             font-weight: 700 !important;
             grid-column: 1 / -1 !important;
             margin: 0 0 4px !important;
@@ -182,7 +185,7 @@ export function PrintPageButton({
 
           .print-report-title p {
             color: #c8d6e0 !important;
-            font-size: 9px !important;
+            font-size: 11.25px !important;
             margin: 0 !important;
           }
 
@@ -196,11 +199,11 @@ export function PrintPageButton({
           }
 
           .print-root h3 {
-            font-size: 11px !important;
+            font-size: 13.75px !important;
           }
 
           .print-root h4 {
-            font-size: 10px !important;
+            font-size: 12.5px !important;
           }
 
           /* ── 섹션 카드 ── */
@@ -230,7 +233,7 @@ export function PrintPageButton({
           /* 섹션 헤더 제목 */
           .print-section > div:first-child h2,
           .print-section > div:first-child h3 {
-            font-size: 10px !important;
+            font-size: 12.5px !important;
             font-weight: 700 !important;
             margin: 0 !important;
           }
@@ -274,7 +277,7 @@ export function PrintPageButton({
 
           .print-root dt {
             color: #64748b !important;
-            font-size: 8px !important;
+            font-size: 10px !important;
             font-weight: 600 !important;
             letter-spacing: 0.02em !important;
             text-transform: uppercase !important;
@@ -282,7 +285,7 @@ export function PrintPageButton({
 
           .print-root dd {
             color: #0f172a !important;
-            font-size: 9.5px !important;
+            font-size: 11.9px !important;
             margin-top: 1px !important;
             white-space: pre-wrap !important;
             word-break: break-word !important;
@@ -314,14 +317,14 @@ export function PrintPageButton({
 
           /* ── 일반 텍스트 ── */
           .print-root p {
-            font-size: 9.5px !important;
+            font-size: 11.9px !important;
             line-height: 1.45 !important;
             margin-bottom: 0 !important;
           }
 
           /* ── 강조 지표 숫자 (요약 카드의 핵심 수치) ── */
           .print-root p.print-stat-value {
-            font-size: 15px !important;
+            font-size: 18.75px !important;
             line-height: 1.3 !important;
           }
 
@@ -331,7 +334,7 @@ export function PrintPageButton({
           }
 
           .print-root li {
-            font-size: 9.5px !important;
+            font-size: 11.9px !important;
             line-height: 1.4 !important;
           }
 
@@ -341,14 +344,14 @@ export function PrintPageButton({
             border: 1px solid #cbd5e1 !important;
             border-radius: 3px !important;
             display: inline-block !important;
-            font-size: 8px !important;
+            font-size: 10px !important;
             padding: 1px 4px !important;
           }
 
           /* ── 성취표 ── */
           .print-root table {
             border-collapse: collapse !important;
-            font-size: 8.5px !important;
+            font-size: 10.6px !important;
             min-width: 0 !important;
             page-break-inside: auto;
             width: 100% !important;

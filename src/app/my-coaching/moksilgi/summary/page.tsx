@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireCoacheePageProfile } from "@/lib/api/my-coaching/coachee-page-auth";
+import { CoacheePrintStyles } from "@/components/print/CoacheePrintStyles";
+import { MoksilgiSummaryPrintStyles } from "@/components/print/MoksilgiSummaryPrintStyles";
 import { PrintPageButton } from "@/components/print/PrintPageButton";
 import {
   getMyMoksilgiSummary,
@@ -72,28 +74,26 @@ const GOAL_LABELS = [
   "목표2: 지적",
   "목표3: 육체",
   "목표4: 사회",
-  "목표5: 기타",
 ] as const;
 
 type GoalRates = Pick<
   MoksilgiPersonalSummaryRow,
-  "spiritual_rate" | "intellectual_rate" | "physical_rate" | "social_rate" | "other_rate"
+  "spiritual_rate" | "intellectual_rate" | "physical_rate" | "social_rate"
 >;
 
-function getGoalValues(row: GoalRates): [number, number, number, number, number] {
+function getGoalValues(row: GoalRates): [number, number, number, number] {
   return [
     typeof row.spiritual_rate === "number" ? row.spiritual_rate : 0,
     typeof row.intellectual_rate === "number" ? row.intellectual_rate : 0,
     typeof row.physical_rate === "number" ? row.physical_rate : 0,
     typeof row.social_rate === "number" ? row.social_rate : 0,
-    typeof row.other_rate === "number" ? row.other_rate : 0,
   ];
 }
 
 function GoalBars({ row }: { row: GoalRates }) {
   const values = getGoalValues(row);
   return (
-    <div className="flex flex-col gap-2">
+    <div className="print-goal-bars flex flex-col gap-2">
       {GOAL_LABELS.map((label, i) => (
         <div className="flex items-center gap-2" key={label}>
           <span className="w-14 shrink-0 text-xs text-ink-muted">
@@ -164,7 +164,7 @@ function HeroCard({
 
   const delta =
     current && previous
-      ? Math.round((current.average_rate - previous.average_rate) * 10) / 10
+      ? Math.round((current.currentRate - previous.currentRate) * 10) / 10
       : null;
 
   const deltaSign = delta !== null && delta > 0 ? "+" : "";
@@ -177,14 +177,14 @@ function HeroCard({
         <StatCard label={`${year}년 총 달성률`} value={formatPercent(totalRate)} />
         {current ? (
           <>
-            <StatCard label={`${currentMonth}월 현재 달성률`} value={formatPercent(current.average_rate)} />
+            <StatCard label={`${currentMonth}월 현재 달성률`} value={formatPercent(current.currentRate)} />
             {delta !== null ? (
               <StatCard
                 emphasis={delta > 0 ? "up" : delta < 0 ? "down" : undefined}
                 label="전월 대비"
                 sub={
                   previous
-                    ? `${formatPercent(previous.average_rate)} → ${formatPercent(current.average_rate)}`
+                    ? `${formatPercent(previous.currentRate)} → ${formatPercent(current.currentRate)}`
                     : undefined
                 }
                 value={`${deltaArrow} ${deltaSign}${delta.toFixed(1)}%p`}
@@ -223,9 +223,8 @@ function SummaryRow({
         <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(row.intellectual_rate)}</td>
         <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(row.physical_rate)}</td>
         <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(row.social_rate)}</td>
-        <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(row.other_rate)}</td>
-        <td className="px-3 py-2 text-right font-semibold tabular-nums text-brand-600">{formatPercent(row.total_rate)}</td>
-        <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(row.average_rate)}</td>
+        <td className="px-3 py-2 text-right font-semibold tabular-nums text-brand-600">{formatPercent(row.overallRate)}</td>
+        <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(row.currentRate)}</td>
       </tr>
     );
   }
@@ -250,9 +249,8 @@ function SummaryRow({
       <td className="px-3 py-2 text-right tabular-nums text-ink-base">{formatPercent(row.intellectual_rate)}</td>
       <td className="px-3 py-2 text-right tabular-nums text-ink-base">{formatPercent(row.physical_rate)}</td>
       <td className="px-3 py-2 text-right tabular-nums text-ink-base">{formatPercent(row.social_rate)}</td>
-      <td className="px-3 py-2 text-right tabular-nums text-ink-base">{formatPercent(row.other_rate)}</td>
-      <td className="px-3 py-2 text-right font-medium tabular-nums text-ink-strong">{formatPercent(row.total_rate)}</td>
-      <td className="px-3 py-2 text-right tabular-nums text-ink-base">{formatPercent(row.average_rate)}</td>
+      <td className="px-3 py-2 text-right font-medium tabular-nums text-ink-strong">{formatPercent(row.overallRate)}</td>
+      <td className="px-3 py-2 text-right tabular-nums text-ink-base">{formatPercent(row.currentRate)}</td>
     </tr>
   );
 }
@@ -260,10 +258,12 @@ function SummaryRow({
 function AchievementTable({
   cumulativeRow,
   currentMonth,
+  durationMonths,
   rows,
 }: {
   cumulativeRow: MoksilgiPersonalSummaryRow;
   currentMonth: number | null;
+  durationMonths: number;
   rows: MoksilgiPersonalSummaryRow[];
 }) {
   return (
@@ -284,7 +284,6 @@ function AchievementTable({
               <th className="px-3 py-2 text-right font-medium">지적</th>
               <th className="px-3 py-2 text-right font-medium">육체</th>
               <th className="px-3 py-2 text-right font-medium">사회</th>
-              <th className="px-3 py-2 text-right font-medium">기타</th>
               <th className="px-3 py-2 text-right font-medium">종합</th>
               <th className="px-3 py-2 text-right font-medium">현재 달성률</th>
             </tr>
@@ -301,6 +300,12 @@ function AchievementTable({
           </tbody>
         </table>
       </div>
+      {/* "종합"과 "현재 달성률"이 서로 다른 값인 이유를 각주로 명시한다(계산은 변경하지 않음) */}
+      <p className="border-t border-line-soft px-4 py-2.5 text-xs leading-5 text-ink-faint">
+        * 종합: 측정 목표별 (실적 ÷ 연간 목표) 합 ÷ 측정 목표 수 · 현재 달성률: 종합 ÷
+        코칭기간 개월수(총 {durationMonths}개월) — 코칭 전체 기간 대비 지금까지의 진행
+        페이스입니다.
+      </p>
     </section>
   );
 }
@@ -395,7 +400,9 @@ export default async function MoksilgiSummaryPage({
   }
 
   return (
-    <main className="print-root min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
+    <main className="print-root print-coachee print-summary min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
+      <CoacheePrintStyles />
+      <MoksilgiSummaryPrintStyles />
       <div className="mx-auto w-full max-w-4xl">
         <div className="print-report-title print-only">
           <h1>내 목실기 연간 성취 보고서</h1>
@@ -404,7 +411,7 @@ export default async function MoksilgiSummaryPage({
         </div>
 
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
+          <div className="print-hidden">
             <p className="text-xs font-medium uppercase tracking-widest text-ink-faint">
               목실기 개인 성취표
             </p>
@@ -423,6 +430,7 @@ export default async function MoksilgiSummaryPage({
             <PrintPageButton
               fileName={`moksilgi-my-summary-${year}`}
               label="출력"
+              pageMargin="12mm 14mm"
             />
           </div>
         </div>
@@ -464,13 +472,14 @@ export default async function MoksilgiSummaryPage({
             <HeroCard
               currentMonth={currentMonthForYear}
               rows={result.data.rows}
-              totalRate={result.data.totalAchievementRate}
+              totalRate={result.data.cumulativeRow.overallRate}
               year={year}
             />
 
             <AchievementTable
               cumulativeRow={result.data.cumulativeRow}
               currentMonth={currentMonthForYear}
+              durationMonths={result.data.durationMonths}
               rows={result.data.rows}
             />
           </div>
