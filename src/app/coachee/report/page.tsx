@@ -795,7 +795,8 @@ export default async function CoacheeReportPage() {
           </section>
         ) : null}
 
-        <GoalSection goals={goals} />
+        {/* 예전 goals 테이블은 현재 입력 화면이 없어 대부분 비어 있으므로, 데이터가 있을 때만 표시한다 */}
+        {goals.length > 0 ? <GoalSection goals={goals} /> : null}
         <MoksilgiSection areas={areas} detailGoals={detailGoals} plan={plan} />
 
         {periodSummary && periodProgress ? (
