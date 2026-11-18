@@ -5,9 +5,20 @@ import { CoacheePrintStyles } from "@/components/print/CoacheePrintStyles";
 import { MoksilgiSummaryPrintStyles } from "@/components/print/MoksilgiSummaryPrintStyles";
 import { PrintPageButton } from "@/components/print/PrintPageButton";
 import {
+  getMyMoksilgiPeriodSummary,
   getMyMoksilgiSummary,
+  type MoksilgiPeriodAreaRates,
+  type MoksilgiPeriodSummaryRow,
   type MoksilgiPersonalSummaryRow,
 } from "@/lib/api/my-coaching/moksilgi-summary";
+import {
+  buildMoksilgiPeriodMonths,
+  calculateMoksilgiElapsedMonths,
+  calculateMoksilgiElapsedRate,
+  calculateMoksilgiProgressPaceRate,
+  getMoksilgiPeriodStatus,
+  type MoksilgiPeriodStatus,
+} from "@/lib/coaching/moksilgi-period";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import {
   getCurrentMonthInTimezone,
@@ -310,6 +321,180 @@ function AchievementTable({
   );
 }
 
+// ─────────────────────────────────────────────────────────────
+// 기간 기준 보기 (기획안 기본정보의 기간 시작일~종료일)
+// ─────────────────────────────────────────────────────────────
+
+const PERIOD_STATUS_LABEL: Record<MoksilgiPeriodStatus, string> = {
+  before: "기간 시작 전",
+  in_progress: "진행 중",
+  ended: "기간 종료",
+};
+
+function formatOptionalPercent(value: number | null) {
+  return value === null ? "–" : formatPercent(value);
+}
+
+function paceEmphasis(value: number | null): "up" | "down" | undefined {
+  if (value === null) return undefined;
+  return value >= 100 ? "up" : "down";
+}
+
+/** 기간 안 n번째 달까지의 진도 대비 달성률 (그 달까지 누적 ÷ 그 달까지 경과율) */
+function rowPaceRate(row: MoksilgiPeriodSummaryRow, totalMonths: number) {
+  return calculateMoksilgiProgressPaceRate(
+    row.cumulativeRate,
+    calculateMoksilgiElapsedRate(row.index, totalMonths),
+  );
+}
+
+function PeriodHeroCard({
+  currentRow,
+  elapsedMonths,
+  elapsedRate,
+  paceRate,
+  status,
+  totalMonths,
+  totalRate,
+}: {
+  currentRow: MoksilgiPeriodSummaryRow | null;
+  elapsedMonths: number;
+  elapsedRate: number;
+  paceRate: number | null;
+  status: MoksilgiPeriodStatus;
+  totalMonths: number;
+  totalRate: number;
+}) {
+  return (
+    <section className="rounded-card border border-line-base bg-surface-card p-5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="기간 누적 달성률" value={formatPercent(totalRate)} />
+        <StatCard
+          label="경과율"
+          sub={`${PERIOD_STATUS_LABEL[status]} · ${elapsedMonths}/${totalMonths}개월`}
+          value={formatPercent(elapsedRate)}
+        />
+        <StatCard
+          emphasis={paceEmphasis(paceRate)}
+          label="진도 대비 달성률"
+          sub={paceRate === null ? "기간 시작 후 계산됩니다" : "100% = 계획한 속도"}
+          value={formatOptionalPercent(paceRate)}
+        />
+        {currentRow ? (
+          <StatCard
+            label={`${currentRow.month}월 성취률`}
+            sub={currentRow.label}
+            value={formatPercent(currentRow.overallRate)}
+          />
+        ) : null}
+      </div>
+
+      {currentRow ? (
+        <div className="mt-4 border-t border-line-soft pt-4">
+          <p className="mb-2 text-xs font-medium text-ink-muted">이번 달 목표별 성취률</p>
+          <GoalBars row={currentRow} />
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function PeriodAchievementTable({
+  cumulativeAreaRates,
+  cumulativeOverall,
+  currentKey,
+  elapsedMonths,
+  paceRate,
+  rows,
+}: {
+  cumulativeAreaRates: MoksilgiPeriodAreaRates;
+  cumulativeOverall: number;
+  currentKey: string | null;
+  elapsedMonths: number;
+  paceRate: number | null;
+  rows: MoksilgiPeriodSummaryRow[];
+}) {
+  const totalMonths = rows.length;
+
+  return (
+    <section className="mt-5 rounded-card border border-line-base bg-surface-card">
+      <div className="flex items-center justify-between border-b border-line-soft px-4 py-3">
+        <p className="text-sm font-medium text-ink-strong">
+          월별 성취표{" "}
+          <span className="font-normal text-ink-faint">(기간 목표 대비 · 누적)</span>
+        </p>
+        <span className="text-xs text-ink-faint">단위: %</span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-[800px] w-full border-collapse text-sm">
+          <thead>
+            <tr className="bg-surface-sunken text-xs text-ink-muted">
+              <th className="px-3 py-2 text-left font-medium">월</th>
+              <th className="px-3 py-2 text-right font-medium">영적</th>
+              <th className="px-3 py-2 text-right font-medium">지적</th>
+              <th className="px-3 py-2 text-right font-medium">육체</th>
+              <th className="px-3 py-2 text-right font-medium">사회</th>
+              <th className="px-3 py-2 text-right font-medium">종합</th>
+              <th className="px-3 py-2 text-right font-medium">누적</th>
+              <th className="px-3 py-2 text-right font-medium">진도 대비</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const isCurrent = row.key === currentKey;
+              const isFuture = row.index > elapsedMonths;
+              const rowPace = isFuture ? null : rowPaceRate(row, totalMonths);
+              return (
+                <tr
+                  className={
+                    isCurrent
+                      ? "border-b border-line-soft border-l-2 border-l-brand-600 bg-brand-50/40"
+                      : isFuture
+                        ? "border-b border-line-soft text-ink-faint"
+                        : "border-b border-line-soft"
+                  }
+                  key={row.key}
+                >
+                  <th className="whitespace-nowrap px-3 py-2 text-left font-medium text-ink-strong">
+                    {row.label}
+                    {isCurrent ? (
+                      <span className="ml-1.5 rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-medium text-brand-700">
+                        현재
+                      </span>
+                    ) : null}
+                  </th>
+                  <td className="px-3 py-2 text-right tabular-nums">{formatPercent(row.spiritual_rate)}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{formatPercent(row.intellectual_rate)}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{formatPercent(row.physical_rate)}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{formatPercent(row.social_rate)}</td>
+                  <td className="px-3 py-2 text-right font-medium tabular-nums text-ink-strong">{formatPercent(row.overallRate)}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{formatPercent(row.cumulativeRate)}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{formatOptionalPercent(rowPace)}</td>
+                </tr>
+              );
+            })}
+            <tr className="border-t border-line-base font-medium">
+              <th className="whitespace-nowrap px-3 py-2 text-left font-medium text-ink-strong">누적</th>
+              <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(cumulativeAreaRates.spiritual_rate)}</td>
+              <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(cumulativeAreaRates.intellectual_rate)}</td>
+              <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(cumulativeAreaRates.physical_rate)}</td>
+              <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(cumulativeAreaRates.social_rate)}</td>
+              <td className="px-3 py-2 text-right font-semibold tabular-nums text-brand-600">{formatPercent(cumulativeOverall)}</td>
+              <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(cumulativeOverall)}</td>
+              <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatOptionalPercent(paceRate)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p className="border-t border-line-soft px-4 py-2.5 text-xs leading-5 text-ink-faint">
+        * 종합: 측정 목표별 (실적 ÷ 기간 목표) 합 ÷ 측정 목표 수 · 누적: 기간 시작월부터 그
+        달까지 종합의 합 · 진도 대비: 누적 ÷ 경과율(총 {totalMonths}개월 중 지난 개월 비율) —
+        100%면 계획한 속도입니다.
+      </p>
+    </section>
+  );
+}
+
 function ProfileMissing() {
   return (
     <section className="mt-8 rounded-card border border-line-base bg-surface-card p-6">
@@ -371,10 +556,143 @@ export default async function MoksilgiSummaryPage({
   const prelimTimezone = resolveTimezoneFallback(profile.timezone, null, null);
   const prelimYear = parseYear(params, prelimTimezone);
 
-  const [organizationResult, result] = await Promise.all([
+  // year 파라미터가 없으면 기획안 기간 기준 보기를 먼저 시도한다.
+  // 기간이 없거나 잘못된 경우에만 기존 연도 기준 보기로 대체한다.
+  const usePeriodView = firstParam(params.year) === undefined;
+
+  const [organizationResult, periodResult, earlyYearResult] = await Promise.all([
     organizationTimezonePromise,
-    getMyMoksilgiSummary(prelimYear, { profileId: profile.id }),
+    usePeriodView
+      ? getMyMoksilgiPeriodSummary({ profileId: profile.id })
+      : Promise.resolve(null),
+    usePeriodView
+      ? Promise.resolve(null)
+      : getMyMoksilgiSummary(prelimYear, { profileId: profile.id }),
   ]);
+
+  if (periodResult && !periodResult.ok && periodResult.error.code === "UNAUTHORIZED") {
+    redirect("/login?redirectTo=%2Fmy-coaching%2Fmoksilgi%2Fsummary");
+  }
+
+  if (periodResult?.ok && periodResult.data.plan && periodResult.data.periodMonths.length > 0) {
+    const periodTimezone = resolveTimezoneFallback(
+      profile.timezone,
+      (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ?? null,
+      null,
+    );
+    const today = {
+      year: getCurrentYearInTimezone(periodTimezone),
+      month: getCurrentMonthInTimezone(periodTimezone),
+    };
+    const { cumulativeAreaRates, cumulativeOverall, outOfPeriodRecordCount, periodMonths, plan, rows } =
+      periodResult.data;
+    const totalMonths = periodMonths.length;
+    const elapsedMonths = calculateMoksilgiElapsedMonths(periodMonths, today);
+    const elapsedRate = calculateMoksilgiElapsedRate(elapsedMonths, totalMonths);
+    const status = getMoksilgiPeriodStatus(periodMonths, today);
+    const currentRow =
+      status === "in_progress" ? rows.find((row) => row.index === elapsedMonths) ?? null : null;
+    // 진도 대비 = 지금까지 누적 ÷ 지금까지 경과율 (기간 종료 후에는 전체 누적 ÷ 100%)
+    const cumulativeToDate =
+      elapsedMonths > 0 ? rows[Math.min(elapsedMonths, totalMonths) - 1].cumulativeRate : 0;
+    const paceRate = calculateMoksilgiProgressPaceRate(cumulativeToDate, elapsedRate);
+    const periodText = `${plan.period_start} ~ ${plan.period_end}`;
+
+    return (
+      <main className="print-root print-coachee print-summary min-h-screen bg-surface-app px-6 py-10 text-ink-strong">
+        <CoacheePrintStyles />
+        <MoksilgiSummaryPrintStyles />
+        <div className="mx-auto w-full max-w-4xl">
+          <div className="print-report-title print-only">
+            <h1>내 목실기 기간 성취 보고서</h1>
+            <p>목표 기간: {periodText}</p>
+            <p>생성일: {new Date().toLocaleDateString("ko-KR")}</p>
+          </div>
+
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="print-hidden">
+              <p className="text-xs font-medium uppercase tracking-widest text-ink-faint">
+                목실기 개인 성취표
+              </p>
+              <h1 className="mt-2 text-2xl font-semibold text-ink-strong">
+                개인 목표와 실행전략 성취표
+              </h1>
+              <p className="mt-1 text-sm text-ink-muted">
+                목표 기간 {periodText} · 총 {totalMonths}개월
+              </p>
+            </div>
+            <div className="print-hidden flex items-center gap-3">
+              <Link
+                className="text-sm font-medium text-brand-600 underline"
+                href="/my-coaching/moksilgi"
+              >
+                ← 목실기 작성으로 돌아가기
+              </Link>
+              <PrintPageButton
+                fileName={`moksilgi-my-summary-period-${periodMonths[0].key}`}
+                label="출력"
+                pageMargin="12mm 14mm"
+              />
+            </div>
+          </div>
+
+          <div className="print-hidden mt-4 flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-brand-100 px-3 py-1.5 text-xs font-medium text-brand-700">
+              기간 기준 보기
+            </span>
+            <span className="text-xs text-ink-faint">달력 연도로 보려면</span>
+            <YearSelector year={today.year} />
+          </div>
+
+          <div className="print-hidden mt-4 rounded-control border border-line-base bg-surface-sunken px-3 py-2.5 text-sm text-ink-muted">
+            이 화면은 결과를 보는{" "}
+            <span className="font-medium text-ink-base">리포트</span>예요. 매일 실행 체크는{" "}
+            <span className="font-medium text-ink-base">체크(월별 체크리스트)</span>에서 하세요.
+          </div>
+
+          <div className="mt-6">
+            {!periodResult.data.hasSummaryData ? (
+              <div className="mb-4 rounded-control border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                아직 기간 안의 월별 체크리스트 기록이 없습니다.
+              </div>
+            ) : null}
+            {outOfPeriodRecordCount > 0 ? (
+              <div className="print-hidden mb-4 rounded-control border border-line-base bg-surface-sunken px-4 py-3 text-sm text-ink-muted">
+                목표 기간 밖의 기록 {outOfPeriodRecordCount}건은 계산에서 제외했습니다.
+              </div>
+            ) : null}
+
+            <PeriodHeroCard
+              currentRow={currentRow}
+              elapsedMonths={elapsedMonths}
+              elapsedRate={elapsedRate}
+              paceRate={paceRate}
+              status={status}
+              totalMonths={totalMonths}
+              totalRate={cumulativeOverall}
+            />
+
+            <PeriodAchievementTable
+              cumulativeAreaRates={cumulativeAreaRates}
+              cumulativeOverall={cumulativeOverall}
+              currentKey={currentRow?.key ?? null}
+              elapsedMonths={elapsedMonths}
+              paceRate={paceRate}
+              rows={rows}
+            />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const result =
+    earlyYearResult ?? (await getMyMoksilgiSummary(prelimYear, { profileId: profile.id }));
+  const hasValidPeriod =
+    result.ok && result.data.plan
+      ? buildMoksilgiPeriodMonths(result.data.plan.period_start, result.data.plan.period_end)
+          .length > 0
+      : false;
 
   const organizationTimezone =
     (organizationResult.data as OrganizationTimezoneRow | null)?.default_timezone ?? null;
@@ -435,9 +753,22 @@ export default async function MoksilgiSummaryPage({
           </div>
         </div>
 
-        <div className="print-hidden mt-4">
+        <div className="print-hidden mt-4 flex flex-wrap items-center gap-3">
           <YearSelector year={year} />
+          {hasValidPeriod ? (
+            <Link
+              className="text-sm font-medium text-brand-600 underline"
+              href="/my-coaching/moksilgi/summary"
+            >
+              기간 기준 보기
+            </Link>
+          ) : null}
         </div>
+        {result.ok && result.data.plan && !hasValidPeriod ? (
+          <div className="print-hidden mt-3 rounded-control border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
+            기획안 기본정보에 기간 시작일·종료일을 입력하면 기간 기준으로 계산됩니다.
+          </div>
+        ) : null}
 
         <div className="print-hidden mt-4 rounded-control border border-line-base bg-surface-sunken px-3 py-2.5 text-sm text-ink-muted">
           이 화면은 결과를 보는{" "}
