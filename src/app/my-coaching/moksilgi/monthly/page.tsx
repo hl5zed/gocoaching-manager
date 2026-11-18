@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { requireCoacheePageProfile } from "@/lib/api/my-coaching/coachee-page-auth";
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MoksilgiMonthlyRecordForm } from "@/components/coachee/MoksilgiMonthlyRecordForm";
 import { MoksilgiMonthlyPrintRecords } from "@/components/coachee/MoksilgiMonthlyPrintRecords";
 import { MoksilgiAreaCard } from "@/components/coachee/MoksilgiAreaCard";
@@ -481,9 +480,6 @@ export default async function MoksilgiMonthlyPage({
       <MoksilgiAppBar
         actions={
           <>
-            <div className="print:hidden">
-              <LanguageSwitcher />
-            </div>
             <PrintPageButton
               fileName={`moksilgi-monthly-record-${year}-${String(month).padStart(2, "0")}`}
               pageMargin="12mm 14mm"

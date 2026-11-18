@@ -20,7 +20,6 @@ import {
   CardTitle,
 } from "@/components/ui";
 import { PrintRecordsButton } from "./PrintRecordsButton";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { I18nText } from "@/lib/i18n/I18nProvider";
 import { RecordsTabClient } from "./RecordsTabClient";
 import type { TabRecord } from "./RecordsTabClient";
@@ -1024,9 +1023,6 @@ export default async function MyCoachingRecordsPage({
           <div className="print:hidden">
             <div className="rounded-card border border-line-base bg-surface-card p-3 shadow-sm">
               <div className="flex flex-col gap-2">
-                <div className="shrink-0">
-                  <LanguageSwitcher />
-                </div>
                 <PrintRecordsButton suggestedTitles={suggestedPrintTitles} />
               </div>
             </div>

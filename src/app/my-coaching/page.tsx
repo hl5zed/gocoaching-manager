@@ -1,6 +1,5 @@
 import { requireCoacheePageProfile } from "@/lib/api/my-coaching/coachee-page-auth";
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { TodayAreaCard } from "@/components/coachee/TodayAreaCard";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
@@ -435,7 +434,6 @@ export default async function MyCoachingPage() {
                   {todayLabel} · {effectiveTimezone}
                 </p>
               </div>
-              <LanguageSwitcher />
             </div>
           </CardHeader>
           <CardContent className="space-y-3 p-4">
