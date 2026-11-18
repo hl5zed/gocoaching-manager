@@ -14,6 +14,15 @@ import {
   type MoksilgiCoreValue,
 } from "@/lib/api/my-coaching/moksilgi";
 import { getLastApprovedVersion } from "@/lib/api/my-coaching/moksilgi-versions";
+import {
+  getMyMoksilgiPeriodSummary,
+  type MoksilgiPeriodSummaryRow,
+} from "@/lib/api/my-coaching/moksilgi-summary";
+import {
+  calculateMoksilgiPeriodProgress,
+  type MoksilgiPeriodProgress,
+  type MoksilgiPeriodStatus,
+} from "@/lib/coaching/moksilgi-period";
 import { buildMoksilgiMonthlyRatesFromRecords } from "@/lib/coaching/moksilgi-year-summary";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import {
@@ -113,6 +122,96 @@ function monthLabel(year: number, month: number) {
   }).format(new Date(year, month - 1, 1));
 }
 
+const PERIOD_STATUS_LABEL: Record<MoksilgiPeriodStatus, string> = {
+  before: "기간 시작 전",
+  in_progress: "진행 중",
+  ended: "기간 종료",
+};
+
+function formatRate(value: number | null) {
+  return value === null ? "–" : `${value.toFixed(1)}%`;
+}
+
+/** 기획안 기간 기준 진도 — 개인 성취표(/my-coaching/moksilgi/summary)와 같은 계산 */
+function PeriodProgressSummary({
+  cumulativeOverall,
+  periodText,
+  progress,
+  rows,
+}: {
+  cumulativeOverall: number;
+  periodText: string;
+  progress: MoksilgiPeriodProgress;
+  rows: MoksilgiPeriodSummaryRow[];
+}) {
+  const totalMonths = rows.length;
+  const actualWidth = Math.min(Math.max(cumulativeOverall, 0), 100);
+  const expectedLeft = Math.min(Math.max(progress.elapsedRate, 0), 100);
+  const paceTone =
+    progress.paceRate === null
+      ? "text-ink-strong"
+      : progress.paceRate >= 100
+        ? "text-emerald-600"
+        : "text-red-600";
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-ink-muted">
+        {periodText} · {PERIOD_STATUS_LABEL[progress.status]} ({progress.elapsedMonths}/
+        {totalMonths}개월)
+      </p>
+
+      <div>
+        <div className="mb-1 flex justify-between text-xs text-ink-muted">
+          <span>기간 누적 달성률</span>
+          <span className="font-medium tabular-nums text-ink-strong">
+            {formatRate(cumulativeOverall)}
+          </span>
+        </div>
+        <div
+          aria-label={`기간 누적 달성률 ${cumulativeOverall.toFixed(1)}%, 지금까지 계획 ${progress.elapsedRate.toFixed(1)}%`}
+          className="relative h-3 rounded-full bg-surface-sunken"
+          role="img"
+        >
+          <div
+            className="h-full rounded-full bg-brand-600"
+            style={{ width: `${actualWidth}%` }}
+          />
+          <div
+            aria-hidden
+            className="absolute -top-1 h-5 w-0.5 bg-ink-strong"
+            style={{ left: `calc(${expectedLeft}% - 1px)` }}
+          />
+        </div>
+        <p className="mt-1 text-[11px] text-ink-faint">
+          세로선: 지금까지 계획한 위치(경과율 {progress.elapsedRate.toFixed(1)}%)
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-control bg-surface-sunken px-3 py-2">
+          <p className="text-xs text-ink-muted">진도 대비 달성률</p>
+          <p className={`mt-0.5 text-lg font-semibold tabular-nums ${paceTone}`}>
+            {formatRate(progress.paceRate)}
+          </p>
+          <p className="text-[11px] text-ink-faint">100% = 계획한 속도</p>
+        </div>
+        <div className="rounded-control bg-surface-sunken px-3 py-2">
+          <p className="text-xs text-ink-muted">이번 달 성취률</p>
+          <p className="mt-0.5 text-lg font-semibold tabular-nums text-ink-strong">
+            {formatRate(progress.currentRow ? progress.currentRow.overallRate : null)}
+          </p>
+          <p className="text-[11px] text-ink-faint">기간 목표 대비</p>
+        </div>
+      </div>
+
+      <ButtonLink className="w-full" href="/my-coaching/moksilgi/summary" size="sm" variant="secondary">
+        월별 성취표 자세히 보기
+      </ButtonLink>
+    </div>
+  );
+}
+
 export default async function MyCoachingGrowthPage() {
   const auth = await requireCoacheePageProfile("/my-coaching/goals");
 
@@ -173,7 +272,8 @@ export default async function MyCoachingGrowthPage() {
   const year = getCurrentYearInTimezone(timezone);
   const month = getCurrentMonthInTimezone(timezone);
 
-  const [summaryResult, lastApprovedResult, monthlyRecordsResult] = await Promise.all([
+  const [summaryResult, lastApprovedResult, monthlyRecordsResult, periodSummaryResult] =
+    await Promise.all([
     plan
       ? serviceClient
           .from("moksilgi_monthly_summaries")
@@ -200,7 +300,20 @@ export default async function MyCoachingGrowthPage() {
           .eq("month", month)
           .is("deleted_at", null)
       : Promise.resolve({ data: [] as MonthlyRecordRateRow[], error: null }),
+    // 기획안 기간이 있으면 4영역 달성률을 기간 기준으로 표시한다(없으면 기존 이번 달 기준 유지)
+    plan ? getMyMoksilgiPeriodSummary({ profileId }) : Promise.resolve(null),
   ]);
+
+  const periodSummary =
+    plan &&
+    periodSummaryResult?.ok &&
+    periodSummaryResult.data.plan?.id === plan.id &&
+    periodSummaryResult.data.periodMonths.length > 0
+      ? periodSummaryResult.data
+      : null;
+  const periodProgress = periodSummary
+    ? calculateMoksilgiPeriodProgress(periodSummary.rows, { year, month })
+    : null;
 
   const summary: SummaryRow | null = (summaryResult.data as SummaryRow | null) ?? null;
   const monthlyRecords = monthlyRecordsResult.error
@@ -354,10 +467,23 @@ export default async function MyCoachingGrowthPage() {
               ) : null}
             </GrowthSection>
 
+            {periodSummary && periodProgress ? (
+              <GrowthSection title="목표 기간 진도">
+                <PeriodProgressSummary
+                  cumulativeOverall={periodSummary.cumulativeOverall}
+                  periodText={`${plan.period_start} ~ ${plan.period_end}`}
+                  progress={periodProgress}
+                  rows={periodSummary.rows}
+                />
+              </GrowthSection>
+            ) : null}
+
             <GrowthSection title="4영역 목표와 현재 달성률">
               <p className="mb-3 text-xs text-ink-muted">
-                방향(목표)과 이번 달 현재 달성률을 함께 확인합니다.
-                {summary?.updated_at
+                {periodSummary
+                  ? "방향(목표)과 기간 목표 대비 지금까지의 누적 달성률을 함께 확인합니다."
+                  : "방향(목표)과 이번 달 현재 달성률을 함께 확인합니다."}
+                {!periodSummary && summary?.updated_at
                   ? ` 집계 최신: ${new Date(summary.updated_at).toLocaleString("ko-KR")}`
                   : ""}
               </p>
@@ -367,9 +493,11 @@ export default async function MyCoachingGrowthPage() {
                     areaSubtitle={area.area_subtitle}
                     areaTitle={area.area_title}
                     completionRate={
-                      computedCurrentSummary
-                        ? rateValue(computedCurrentSummary[AREA_RATE_KEY[area.area_key]])
-                        : areaCompletionRate(area.area_key, summary)
+                      periodSummary
+                        ? rateValue(periodSummary.cumulativeAreaRates[AREA_RATE_KEY[area.area_key]])
+                        : computedCurrentSummary
+                          ? rateValue(computedCurrentSummary[AREA_RATE_KEY[area.area_key]])
+                          : areaCompletionRate(area.area_key, summary)
                     }
                     detailGoalTitles={goalsByArea.get(area.id) ?? []}
                     key={area.id}
