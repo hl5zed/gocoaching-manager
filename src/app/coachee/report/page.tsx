@@ -18,9 +18,21 @@ import {
   type MoksilgiPlan,
 } from "@/lib/api/my-coaching/moksilgi";
 import {
+  getMyMoksilgiPeriodSummary,
   getMyMoksilgiSummary,
+  type MoksilgiPeriodAreaRates,
+  type MoksilgiPeriodSummaryRow,
   type MoksilgiPersonalSummaryRow,
 } from "@/lib/api/my-coaching/moksilgi-summary";
+import {
+  calculateMoksilgiPeriodProgress,
+  type MoksilgiPeriodProgress,
+} from "@/lib/coaching/moksilgi-period";
+import {
+  DEFAULT_TIMEZONE,
+  getCurrentMonthInTimezone,
+  getCurrentYearInTimezone,
+} from "@/lib/timezone";
 import type { GoalPriority, GoalStatus, MoksilgiMeasurementType } from "@/types/database";
 import { PrintCoacheeReportButton } from "../PrintCoacheeReportButton";
 
@@ -464,6 +476,89 @@ function SummaryTable({
   );
 }
 
+function formatOptionalPercent(value: number | null | undefined) {
+  return typeof value === "number" ? formatPercent(value) : "–";
+}
+
+/** 기획안 기간 기준 월간 진행 — 개인 성취표(/my-coaching/moksilgi/summary)와 같은 계산 */
+function PeriodSummaryTable({
+  cumulativeAreaRates,
+  cumulativeOverall,
+  hasSummaryData,
+  progress,
+  rows,
+}: {
+  cumulativeAreaRates: MoksilgiPeriodAreaRates;
+  cumulativeOverall: number;
+  hasSummaryData: boolean;
+  progress: MoksilgiPeriodProgress;
+  rows: MoksilgiPeriodSummaryRow[];
+}) {
+  const totalMonths = rows.length;
+
+  return (
+    <section className="report-section mt-8">
+      <h2 className="report-section-title border-b border-line-base pb-2 text-xl font-semibold print:text-lg">
+        월간 진행 내용
+      </h2>
+      {!hasSummaryData ? (
+        <div className="mt-4">
+          <EmptyState>아직 기간 안의 월별 체크리스트 기록이 없습니다.</EmptyState>
+        </div>
+      ) : (
+        <div className="mt-4 overflow-x-auto print:overflow-visible">
+          <table className="report-table w-full min-w-[760px] border-collapse text-left text-sm">
+            <thead>
+              <tr className="border-b border-line-base bg-surface-sunken">
+                <th className="px-3 py-2">월</th>
+                <th className="px-3 py-2">영적 성장</th>
+                <th className="px-3 py-2">지적 성장</th>
+                <th className="px-3 py-2">육체적 성장</th>
+                <th className="px-3 py-2">사회적 성장</th>
+                <th className="px-3 py-2">누적</th>
+                <th className="px-3 py-2">진도 대비</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr className="border-b border-line-soft" key={row.key}>
+                  <th className="px-3 py-2 font-medium">{row.label}</th>
+                  <td className="px-3 py-2">{formatPercent(row.spiritual_rate)}</td>
+                  <td className="px-3 py-2">{formatPercent(row.intellectual_rate)}</td>
+                  <td className="px-3 py-2">{formatPercent(row.physical_rate)}</td>
+                  <td className="px-3 py-2">{formatPercent(row.social_rate)}</td>
+                  <td className="px-3 py-2">{formatPercent(row.cumulativeRate)}</td>
+                  <td className="px-3 py-2">
+                    {formatOptionalPercent(progress.paceByKey.get(row.key))}
+                  </td>
+                </tr>
+              ))}
+              <tr className="border-b border-line-base bg-surface-sunken font-semibold">
+                <th className="px-3 py-2">누적</th>
+                <td className="px-3 py-2">{formatPercent(cumulativeAreaRates.spiritual_rate)}</td>
+                <td className="px-3 py-2">{formatPercent(cumulativeAreaRates.intellectual_rate)}</td>
+                <td className="px-3 py-2">{formatPercent(cumulativeAreaRates.physical_rate)}</td>
+                <td className="px-3 py-2">{formatPercent(cumulativeAreaRates.social_rate)}</td>
+                <td className="px-3 py-2">{formatPercent(cumulativeOverall)}</td>
+                <td className="px-3 py-2">{formatOptionalPercent(progress.paceRate)}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="mt-3 text-sm text-ink-muted">
+            기간 누적 달성률: {formatPercent(cumulativeOverall)} · 경과율:{" "}
+            {formatPercent(progress.elapsedRate)} ({progress.elapsedMonths}/{totalMonths}개월) ·
+            진도 대비 달성률: {formatOptionalPercent(progress.paceRate)}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-ink-faint">
+            * 누적: 기간 시작월부터 그 달까지 측정 목표별 (실적 ÷ 기간 목표) 합 ÷ 측정 목표 수의
+            합계 · 진도 대비: 누적 ÷ 경과율 — 100%면 계획한 속도입니다.
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function FeedbackSection({ feedback }: { feedback: MyCoachingFeedbackItem[] }) {
   return (
     <section className="report-section mt-8">
@@ -530,7 +625,7 @@ export default async function CoacheeReportPage() {
 
   const profileId = meResult.ok ? meResult.data.profile?.id ?? null : null;
 
-  const [goalsResult, moksilgiResult, summaryResult, feedbackResult] =
+  const [goalsResult, moksilgiResult, summaryResult, feedbackResult, periodSummaryResult] =
     await Promise.all([
       getMyCoachingGoals(profileId ? { knownProfileId: profileId } : undefined),
       profileId ? getMyMoksilgi(profileId) : getMyMoksilgi(),
@@ -538,7 +633,19 @@ export default async function CoacheeReportPage() {
         ? getMyMoksilgiSummary(year, { profileId })
         : getMyMoksilgiSummary(year),
       getMyCoachingFeedback(profileId ? { knownProfileId: profileId } : undefined),
+      // 기획안 기간이 있으면 월간 진행 내용을 기간 기준으로 표시한다(없으면 연도 기준 유지)
+      getMyMoksilgiPeriodSummary(profileId ? { profileId } : undefined),
     ]);
+  const periodSummary =
+    periodSummaryResult.ok && periodSummaryResult.data.periodMonths.length > 0
+      ? periodSummaryResult.data
+      : null;
+  const periodProgress = periodSummary
+    ? calculateMoksilgiPeriodProgress(periodSummary.rows, {
+        year: getCurrentYearInTimezone(DEFAULT_TIMEZONE),
+        month: getCurrentMonthInTimezone(DEFAULT_TIMEZONE),
+      })
+    : null;
 
   const profile = meResult.ok ? meResult.data.profile : null;
   const authEmail = meResult.ok ? meResult.data.authEmail : session.user.email ?? null;
@@ -561,7 +668,7 @@ export default async function CoacheeReportPage() {
     detailGoals,
     goals,
     hasMoksilgiPlan: plan !== null,
-    hasSummaryData,
+    hasSummaryData: hasSummaryData || (periodSummary?.hasSummaryData ?? false),
   });
 
   return (
@@ -672,7 +779,13 @@ export default async function CoacheeReportPage() {
             <p>생성일: {formatDateTime(new Date().toISOString())}</p>
             <p>코치이: {coacheeName}</p>
             <p>이메일: {displayValue(profile?.email ?? authEmail)}</p>
-            <p>기준 연도: {year}년</p>
+            {periodSummary?.plan ? (
+              <p>
+                목표 기간: {periodSummary.plan.period_start} ~ {periodSummary.plan.period_end}
+              </p>
+            ) : (
+              <p>기준 연도: {year}년</p>
+            )}
           </div>
         </header>
 
@@ -685,7 +798,15 @@ export default async function CoacheeReportPage() {
         <GoalSection goals={goals} />
         <MoksilgiSection areas={areas} detailGoals={detailGoals} plan={plan} />
 
-        {cumulativeRow ? (
+        {periodSummary && periodProgress ? (
+          <PeriodSummaryTable
+            cumulativeAreaRates={periodSummary.cumulativeAreaRates}
+            cumulativeOverall={periodSummary.cumulativeOverall}
+            hasSummaryData={periodSummary.hasSummaryData}
+            progress={periodProgress}
+            rows={periodSummary.rows}
+          />
+        ) : cumulativeRow ? (
           <SummaryTable
             cumulativeRow={cumulativeRow}
             durationMonths={summaryDurationMonths}
