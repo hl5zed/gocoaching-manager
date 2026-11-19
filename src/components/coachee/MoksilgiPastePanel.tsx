@@ -443,7 +443,7 @@ export function MoksilgiPastePanel() {
             </p>
           ) : (
             <>
-              <div className="overflow-hidden rounded-md border border-line-base">
+              <div className="overflow-x-auto rounded-md border border-line-base">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="bg-surface-app">
