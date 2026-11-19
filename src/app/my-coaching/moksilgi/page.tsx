@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MoksilgiAreaCard } from "@/components/coachee/MoksilgiAreaCard";
 import { MoksilgiPastePanel } from "@/components/coachee/MoksilgiPastePanel";
 import { MoksilgiPrintSummary } from "@/components/coachee/MoksilgiPrintSummary";
@@ -722,9 +721,6 @@ export default async function MyMoksilgiPage({
       <MoksilgiAppBar
         actions={
           <>
-            <div className="print:hidden">
-              <LanguageSwitcher />
-            </div>
             <PrintPageButton
               fileName={`moksilgi-my-record-${printYear}`}
               pageMargin="12mm 14mm"
