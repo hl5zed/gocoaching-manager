@@ -317,21 +317,30 @@ export function MoksilgiPrintSummary({
           {hasText(plan.vision_statement) ? (
             <PrintBody>{plan.vision_statement}</PrintBody>
           ) : null}
-          {plan.vision_year !== null ||
-          hasText(plan.vision_metrics) ||
-          hasText(plan.vision_target) ||
-          hasText(plan.vision_description) ? (
-            <PrintMeta>
-              {[
-                plan.vision_year !== null ? `${plan.vision_year}년` : null,
-                hasText(plan.vision_metrics) ? plan.vision_metrics : null,
-                hasText(plan.vision_target) ? plan.vision_target : null,
-                hasText(plan.vision_description) ? plan.vision_description : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </PrintMeta>
-          ) : null}
+          {[
+            {
+              label: "비전 목표 연도",
+              value: plan.vision_year !== null ? `${plan.vision_year}년` : null,
+            },
+            {
+              label: "핵심 수치",
+              value: hasText(plan.vision_metrics) ? plan.vision_metrics : null,
+            },
+            {
+              label: "대상",
+              value: hasText(plan.vision_target) ? plan.vision_target : null,
+            },
+            {
+              label: "비전 설명",
+              value: hasText(plan.vision_description) ? plan.vision_description : null,
+            },
+          ]
+            .filter((item) => item.value !== null)
+            .map((item) => (
+              <PrintMeta key={item.label}>
+                {item.label}: {item.value}
+              </PrintMeta>
+            ))}
         </PrintSection>
       ) : null}
 
