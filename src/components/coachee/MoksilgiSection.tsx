@@ -44,7 +44,7 @@ export function MoksilgiSection({
               )}
             </div>
             {hasSummary ? (
-              <p className="mt-2 line-clamp-2 text-sm text-ink-muted">{summaryText}</p>
+              <p className="mt-2 line-clamp-3 whitespace-pre-line text-sm text-ink-muted">{summaryText}</p>
             ) : (
               <p className="mt-2 text-sm text-ink-muted">아직 작성되지 않았습니다.</p>
             )}
