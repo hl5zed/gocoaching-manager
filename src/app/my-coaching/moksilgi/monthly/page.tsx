@@ -238,8 +238,10 @@ function Summary({
     other_rate: sum(months.map((month) => summaryValue(summaryByMonth.get(month), "other_rate"))),
     total_rate: sum(months.map((month) => summaryValue(summaryByMonth.get(month), "total_rate"))),
   };
-  // 현재 달성률(옵션 A)은 이미 월별로 누적된 값이므로, 누적 행은 그 누적 종합과 동일하다.
-  const cumulativeAverageRate = cumulative.total_rate;
+  // 엑셀 방식: 누적 평균 = 월별 평균의 합(= 연간 총 달성률)
+  const cumulativeAverageRate = sum(
+    months.map((month) => summaryValue(summaryByMonth.get(month), "average_rate")),
+  );
 
   const headerCols: Array<{ key: MoksilgiAreaKey; labelKey: string; fallback: string }> = [
     { key: "spiritual", labelKey: "myCoaching.moksilgi.goal.spiritual.title", fallback: "목표 1: 영적 성장" },
@@ -273,10 +275,10 @@ function Summary({
                   </th>
                 ))}
                 <th className="px-3 py-2 font-medium">
-                  <I18nText k="myCoaching.moksilgi.monthly.total" fallback="종합" />
+                  1~4 <I18nText k="myCoaching.moksilgi.monthly.total" fallback="종합" />
                 </th>
                 <th className="px-3 py-2 font-medium">
-                  <I18nText k="myCoaching.moksilgi.monthly.average" fallback="현재 달성률" />
+                  <I18nText k="coach.moksilgi.average" fallback="평균" />
                 </th>
               </tr>
             </thead>
@@ -445,7 +447,7 @@ export default async function MoksilgiMonthlyPage({
     : [];
 
   const recordedAreas = areaStats.filter((stat) => stat.hasRecords).length;
-  // 아래 "월별 요약" 표의 "현재 달성률" 열과 동일한 값(목표 평균 기준)을 사용해
+  // 아래 "월별 요약" 표의 "평균" 열과 동일한 값(엑셀 방식)을 사용해
   // 같은 화면 안에서 상단 카드와 표의 수치가 어긋나지 않게 한다.
   const monthAverage = summaryValue(monthSummary, "average_rate");
 

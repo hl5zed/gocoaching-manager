@@ -1,9 +1,6 @@
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
-import {
-  buildMoksilgiMonthlyRatesFromRecords,
-  computeMoksilgiGoalFlatOverallAnnual,
-  isCountableMeasurementType,
-} from "@/lib/coaching/moksilgi-year-summary";
+import { buildMoksilgiExcelSummary } from "@/lib/coaching/moksilgi-excel-rates";
+import { buildMoksilgiPeriodMonths } from "@/lib/coaching/moksilgi-period";
 import { getMoksilgiContext, type ServiceClient } from "./context";
 import type {
   InsertDto,
@@ -456,70 +453,43 @@ export async function getMyMoksilgiMonthly(
     actual_value: number | null;
   }>;
 
-  // 연간 기준(B안): 각 목표의 그 달 달성률을 실적 ÷ 연간목표로 재계산.
-  const annualByGoal = new Map<string, number>();
-  for (const goal of detailGoals) {
-    if (
-      isCountableMeasurementType(goal.measurement_type) &&
-      typeof goal.annual_target === "number" &&
-      goal.annual_target > 0
-    ) {
-      annualByGoal.set(goal.id, goal.annual_target);
-    }
-  }
-  const annualRecords = yearlyRecords.map((record) => {
-    const annualTarget = annualByGoal.get(record.detail_goal_id);
-    const actual =
-      typeof record.actual_value === "number" && Number.isFinite(record.actual_value)
-        ? Math.max(0, record.actual_value)
-        : 0;
-    return {
-      detail_goal_id: record.detail_goal_id,
-      month: record.month,
-      achievement_rate: annualTarget ? (actual / annualTarget) * 100 : 0,
-    };
-  });
-  // 영역별 월 달성률(연간 기준)
-  const computedYearlySummaries = buildMoksilgiMonthlyRatesFromRecords({
+  // 엑셀 목실기 성취표 방식(연간 기준): 그 달 실적 ÷ 목표량 → 영역 평균
+  // → total_rate = "1~4 종합"(영역 합), average_rate = "평균"(종합 ÷ 목표가 있는 영역 수).
+  // 누적 합산은 화면의 "누적" 행에서 월별 값을 다시 더해 계산한다.
+  const excelSummary = buildMoksilgiExcelSummary({
+    periodMonths: buildMoksilgiPeriodMonths(`${year}-01-01`, `${year}-12-31`),
     areas: areas.map((area) => ({ id: area.id, area_key: area.area_key })),
-    detailGoals: detailGoals.map((detailGoal) => ({
-      id: detailGoal.id,
-      area_id: detailGoal.area_id,
-    })),
-    records: annualRecords,
-  });
-  // 종합/현재 달성률(목표 평균, 연간 기준)
-  const goalFlat = computeMoksilgiGoalFlatOverallAnnual(
-    detailGoals.map((goal) => ({
+    goals: detailGoals.map((goal) => ({
       id: goal.id,
-      annual_target: goal.annual_target,
+      area_id: goal.area_id,
       measurement_type: goal.measurement_type,
+      annual_target: goal.annual_target,
     })),
-    yearlyRecords,
-  );
-  // 현재 달성률: 그 달 자체의 종합(연간 목표 대비 그 달 실적).
-  // 누적 합산은 화면의 "누적" 행에서 월별 값을 다시 더해 별도로 계산하므로 여기서는 하지 않는다.
-  const yearlySummaries: MoksilgiMonthlySummary[] = computedYearlySummaries
-    .map((computedSummary) => {
-      const overall = goalFlat.overallByMonth.get(computedSummary.month) ?? 0;
-      return {
-        id: `computed-${computedSummary.month}`,
-        plan_id: ownedPlan.id,
-        profile_id: context.profileId,
-        year,
-        month: computedSummary.month,
-        spiritual_rate: computedSummary.spiritual_rate ?? 0,
-        intellectual_rate: computedSummary.intellectual_rate ?? 0,
-        physical_rate: computedSummary.physical_rate ?? 0,
-        social_rate: computedSummary.social_rate ?? 0,
-        other_rate: computedSummary.other_rate ?? 0,
-        total_rate: overall,
-        average_rate: overall,
-        created_at: "",
-        updated_at: "",
-      };
-    })
-    .sort((a, b) => a.month - b.month);
+    records: yearlyRecords.map((record) => ({
+      detail_goal_id: record.detail_goal_id,
+      year,
+      month: record.month,
+      actual_value: record.actual_value,
+    })),
+  });
+  const yearlySummaries: MoksilgiMonthlySummary[] = excelSummary.rows
+    .filter((row) => row.hasRecords)
+    .map((row) => ({
+      id: `computed-${row.month}`,
+      plan_id: ownedPlan.id,
+      profile_id: context.profileId,
+      year,
+      month: row.month,
+      spiritual_rate: row.areaRates.spiritual,
+      intellectual_rate: row.areaRates.intellectual,
+      physical_rate: row.areaRates.physical,
+      social_rate: row.areaRates.social,
+      other_rate: 0,
+      total_rate: row.totalRate,
+      average_rate: row.averageRate,
+      created_at: "",
+      updated_at: "",
+    }));
 
   return {
     ok: true,
