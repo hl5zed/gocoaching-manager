@@ -3,6 +3,8 @@ import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { createApiPerformanceLogger } from "@/lib/performance";
+import { buildMoksilgiExcelSummary } from "@/lib/coaching/moksilgi-excel-rates";
+import { buildMoksilgiPeriodMonths } from "@/lib/coaching/moksilgi-period";
 import {
   DEFAULT_TIMEZONE,
   getCurrentMonthInTimezone,
@@ -966,6 +968,137 @@ function buildRow(
   } satisfies CoachMakerMoksilgiProgressRow;
 }
 
+/** Supabase 한 번 조회 최대 행 수 — 기록이 많아도 잘리지 않도록 나눠 가져온다 */
+const EXCEL_RATE_PAGE_SIZE = 1000;
+/**
+ * 엑셀 월 평균은 "연간 목표 대비 그 달 기여도"(완벽한 한 달 ≈ 8.33%)이다.
+ * 목록의 월 성취율·경고 기준(50%/80%)·완료 기준(누적 100%)을 유지하기 위해
+ * 12를 곱해 "그 달 몫 대비"(100% = 계획한 한 달)로 환산한다.
+ * - 12개월 평균(cumulative_rate) = 엑셀 연간 총 달성률
+ * - 현재 월까지 평균 = 현재까지 누적 ÷ 경과 비율(진도 대비 달성률)
+ */
+const EXCEL_MONTH_SCALE = 12;
+
+type ExcelAreaRow = Pick<Tables<"moksilgi_goal_areas">, "id" | "plan_id" | "area_key">;
+type ExcelGoalRow = Pick<
+  Tables<"moksilgi_detail_goals">,
+  "id" | "plan_id" | "area_id" | "measurement_type" | "annual_target"
+>;
+type ExcelRecordRow = Pick<
+  Tables<"moksilgi_monthly_records">,
+  "plan_id" | "profile_id" | "detail_goal_id" | "month" | "actual_value"
+>;
+
+async function fetchAllPages<TRow>(
+  fetchPage: (from: number, to: number) => PromiseLike<{ data: unknown; error: unknown }>,
+): Promise<{ data: TRow[]; error: unknown }> {
+  const rows: TRow[] = [];
+
+  for (let from = 0; ; from += EXCEL_RATE_PAGE_SIZE) {
+    const { data, error } = await fetchPage(from, from + EXCEL_RATE_PAGE_SIZE - 1);
+    if (error) return { data: [], error };
+
+    const page = (data ?? []) as TRow[];
+    rows.push(...page);
+    if (page.length < EXCEL_RATE_PAGE_SIZE) break;
+  }
+
+  return { data: rows, error: null };
+}
+
+/**
+ * 저장된 월별 요약 대신 실제 월 실적으로 엑셀 방식 월 성취율을 계산한다.
+ * 반환 형태는 기존 SummaryRow와 같아서 아래 행/요약/개요 계산은 그대로 쓴다.
+ */
+async function loadExcelMonthlySummaries(
+  serviceClient: ServiceSupabaseClient,
+  plans: PlanRow[],
+  year: number,
+): Promise<{ data: SummaryRow[]; error: unknown }> {
+  if (plans.length === 0) return { data: [], error: null };
+
+  const planIds = plans.map((plan) => plan.id);
+  const [areasResult, goalsResult, recordsResult] = await Promise.all([
+    fetchAllPages<ExcelAreaRow>((from, to) =>
+      serviceClient
+        .from("moksilgi_goal_areas")
+        .select("id, plan_id, area_key")
+        .in("plan_id", planIds)
+        .is("deleted_at", null)
+        .order("id", { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllPages<ExcelGoalRow>((from, to) =>
+      serviceClient
+        .from("moksilgi_detail_goals")
+        .select("id, plan_id, area_id, measurement_type, annual_target")
+        .in("plan_id", planIds)
+        .is("deleted_at", null)
+        .order("id", { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllPages<ExcelRecordRow>((from, to) =>
+      serviceClient
+        .from("moksilgi_monthly_records")
+        .select("plan_id, profile_id, detail_goal_id, month, actual_value")
+        .in("plan_id", planIds)
+        .eq("year", year)
+        .is("deleted_at", null)
+        .order("id", { ascending: true })
+        .range(from, to),
+    ),
+  ]);
+
+  const error = areasResult.error ?? goalsResult.error ?? recordsResult.error;
+  if (error) return { data: [], error };
+
+  const groupByPlan = <TRow extends { plan_id: string }>(rows: TRow[]) => {
+    const grouped = new Map<string, TRow[]>();
+    for (const row of rows) {
+      const current = grouped.get(row.plan_id) ?? [];
+      current.push(row);
+      grouped.set(row.plan_id, current);
+    }
+    return grouped;
+  };
+  const areasByPlan = groupByPlan(areasResult.data);
+  const goalsByPlan = groupByPlan(goalsResult.data);
+  const recordsByPlan = groupByPlan(recordsResult.data);
+  const periodMonths = buildMoksilgiPeriodMonths(`${year}-01-01`, `${year}-12-31`);
+  const summaries: SummaryRow[] = [];
+
+  for (const plan of plans) {
+    // 기획안 소유자 본인의 기록만 계산한다(상세 화면과 같은 기준).
+    const records = (recordsByPlan.get(plan.id) ?? []).filter(
+      (record) => record.profile_id === plan.profile_id,
+    );
+    if (records.length === 0) continue;
+
+    const excel = buildMoksilgiExcelSummary({
+      periodMonths,
+      areas: areasByPlan.get(plan.id) ?? [],
+      goals: goalsByPlan.get(plan.id) ?? [],
+      records: records.map((record) => ({
+        detail_goal_id: record.detail_goal_id,
+        year,
+        month: record.month,
+        actual_value: record.actual_value,
+      })),
+    });
+
+    for (const row of excel.rows) {
+      if (!row.hasRecords) continue;
+      summaries.push({
+        plan_id: plan.id,
+        month: row.month,
+        average_rate: row.averageRate * EXCEL_MONTH_SCALE,
+      });
+    }
+  }
+
+  return { data: summaries, error: null };
+}
+
 function buildSafeMonthRates(summaries: SummaryRow[]) {
   const monthRates: number[] = Array.from({ length: 12 }, () => 0);
 
@@ -1374,7 +1507,6 @@ export async function getCoachMakerMoksilgiProgress(
     overviewPlanRows = planRows;
   }
 
-  const summaryPlanIds = overviewPlanRows.map((plan) => plan.id);
   const profileIds = [
     ...new Set([
       ...overviewPlanRows.map((plan) => plan.profile_id),
@@ -1394,14 +1526,8 @@ export async function getCoachMakerMoksilgiProgress(
           .in("id", profileIds)
           .is("deleted_at", null)
       : Promise.resolve({ data: [], error: null }),
-    summaryPlanIds.length > 0
-      ? serviceClient
-          .from("moksilgi_monthly_summaries")
-          .select("plan_id, month, average_rate")
-          .in("plan_id", summaryPlanIds)
-          .eq("year", selectedYear)
-          .is("deleted_at", null)
-      : Promise.resolve({ data: [], error: null }),
+    // 엑셀 목실기 성취표 방식: 저장된 요약 대신 월 실적에서 직접 계산한다.
+    loadExcelMonthlySummaries(serviceClient, overviewPlanRows, selectedYear),
   ]);
   perf.mark(
     "data.profiles_summaries_query",

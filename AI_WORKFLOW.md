@@ -209,8 +209,7 @@ Validation:
 Do not regress:
 - existing coach-maker access flow
 - existing moksilgi data structure
-- existing moksilgi monthly summaries
-- existing moksilgi achievement calculation
+- existing moksilgi achievement calculation (2026-11-19부터 엑셀 성취표 방식, 아래 참고)
 - existing /coach-maker/moksilgi-progress route
 - existing /coach-maker/moksilgi-progress/[planId] detail link
 - existing empty/error state handling
@@ -257,6 +256,36 @@ Do not regress:
 - existing service-role safety pattern
 - existing RLS policies
 - no edit/delete/input actions in the progress dashboard
+
+## LOCK - Moksilgi Excel Achievement Calculation (2026-11-19)
+
+기준: 「목실기와 체크리스트(2026)」 엑셀의 "1.김경도_목실기및체크" 탭 공식.
+공통 계산: `src/lib/coaching/moksilgi-excel-rates.ts`
+
+Calculation:
+- 세부 목표 달성률 = 실적 ÷ 목표량(annual_target), 누적 = 월별 합(100% 초과 허용)
+- 영역 달성률 = 측정 세부 목표 달성률의 평균("기타" 영역, monthly_comment, 목표량 없는 목표 제외)
+- 1~4 종합 = 영역 달성률의 합
+- 평균 = 종합 ÷ 측정 세부 목표가 있는 영역 수
+- 누적/총 달성률 = 월별 평균의 합
+
+Applied screens:
+- /my-coaching/moksilgi/summary (기간 기준 보기)
+- /coach/moksilgi/[planId]
+- /coach-maker/moksilgi-progress/[planId]
+- /coachee/report (기간 기준 표)
+- /my-coaching/moksilgi/monthly (월별 요약)
+- /coach-maker/moksilgi-progress 목록: 저장된 moksilgi_monthly_summaries 대신 월 실적에서 계산.
+  월 성취율 = 엑셀 월 평균 × 12("그 달 몫" 기준, 100% = 계획한 한 달)이므로
+  12개월 평균 = 엑셀 총 달성률, 현재 월까지 평균 = 진도 대비 달성률이 된다.
+
+Not changed:
+- moksilgi_monthly_summaries 저장 로직(월별 기록 저장 시 업서트)
+- 연도 기준 보기(?year=) 및 기간이 없는 기획안의 대체 화면
+
+Do not regress:
+- 화면 간 같은 코치이의 총 달성률이 같은 값이어야 한다
+- DB 저장 값/enum 변경 없음
 
 ## LOCK - Coach Maker Dashboard Moksilgi Summary
 
