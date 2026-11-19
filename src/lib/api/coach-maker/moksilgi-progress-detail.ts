@@ -1,19 +1,19 @@
 import { getSession } from "@/lib/auth/getSession";
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
+import { calculateCoachingDurationMonths } from "@/lib/coaching/moksilgi-year-summary";
 import {
-  calculateCoachingDurationMonths,
-  computeMoksilgiGoalFlatOverallAnnual,
-  decorateRowsWithGoalFlatRates,
-} from "@/lib/coaching/moksilgi-year-summary";
+  buildMoksilgiExcelSummary,
+  toMoksilgiExcelYearSummaryRows,
+  toMoksilgiPeriodSummary,
+} from "@/lib/coaching/moksilgi-excel-rates";
 import {
   buildMoksilgiPeriodMonths,
-  buildMoksilgiPeriodSummary,
   type MoksilgiPeriodMonth,
   type MoksilgiPeriodSummary,
 } from "@/lib/coaching/moksilgi-period";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
-import type { MoksilgiAreaKey, Tables, UserRole } from "@/types/database";
+import type { Tables, UserRole } from "@/types/database";
 import type { ActiveRoleSlim } from "@/types/profile";
 
 const ALLOWED_ROLES = new Set<UserRole>([
@@ -28,13 +28,6 @@ const BROAD_ACCESS_ROLES = new Set<UserRole>([
   "country_admin",
   "super_admin",
 ]);
-const AREA_KEYS: MoksilgiAreaKey[] = [
-  "spiritual",
-  "intellectual",
-  "physical",
-  "social",
-  "other",
-];
 
 type ServiceSupabaseClient = NonNullable<
   ReturnType<typeof createSupabaseServiceClient>["client"]
@@ -118,9 +111,9 @@ export type CoachMakerMoksilgiProgressSummaryRow = {
   other_rate: number;
   total_rate: number;
   average_rate: number;
-  /** 종합(목표 평균): 측정 목표별 달성률 합 ÷ 측정 목표 수 */
+  /** 엑셀 "평균": 영역 달성률 합(total_rate) ÷ 목표가 있는 영역 수 */
   overallRate: number;
-  /** 현재 달성률: 종합 ÷ 코칭 기간 개월 수 */
+  /** 현재 달성률: 평균 ÷ 코칭 기간 개월 수 */
   currentRate: number;
 };
 
@@ -155,12 +148,6 @@ const DEFAULT_DURATION_MONTHS = 12;
 type MonthlyRecordRateRow = Pick<
   Tables<"moksilgi_monthly_records">,
   "detail_goal_id" | "month" | "actual_value"
->;
-
-/** 영역 기준 성취표 row(목표 평균 종합/현재 달성률 덧붙이기 전) */
-type BaseProgressRow = Omit<
-  CoachMakerMoksilgiProgressSummaryRow,
-  "overallRate" | "currentRate"
 >;
 
 type SafeError = {
@@ -204,76 +191,6 @@ function getServiceClientResult():
 
 function validateYear(year: number) {
   return Number.isInteger(year) && year >= 2000 && year <= 2100;
-}
-
-function safeNumber(value: number | null | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
-
-function average(values: number[]) {
-  if (values.length === 0) return 0;
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
-function summaryValue(
-  summary: SummaryRow | undefined,
-  key:
-    | "spiritual_rate"
-    | "intellectual_rate"
-    | "physical_rate"
-    | "social_rate"
-    | "other_rate"
-    | "total_rate"
-    | "average_rate",
-) {
-  return safeNumber(summary?.[key]);
-}
-
-function buildSummaryRows(summaries: SummaryRow[]) {
-  const summaryByMonth = new Map(summaries.map((summary) => [summary.month, summary]));
-
-  return Array.from({ length: 12 }, (_, index) => {
-    const month = index + 1;
-    const summary = summaryByMonth.get(month);
-
-    return {
-      month,
-      monthLabel: `${month}월`,
-      spiritual_rate: summaryValue(summary, "spiritual_rate"),
-      intellectual_rate: summaryValue(summary, "intellectual_rate"),
-      physical_rate: summaryValue(summary, "physical_rate"),
-      social_rate: summaryValue(summary, "social_rate"),
-      other_rate: summaryValue(summary, "other_rate"),
-      total_rate: summaryValue(summary, "total_rate"),
-      average_rate: summaryValue(summary, "average_rate"),
-    } satisfies BaseProgressRow;
-  });
-}
-
-function buildCumulativeRow(
-  rows: BaseProgressRow[],
-  activeAreaKeys: MoksilgiAreaKey[],
-) {
-  const areaRates: Record<MoksilgiAreaKey, number> = {
-    spiritual: average(rows.map((row) => row.spiritual_rate)),
-    intellectual: average(rows.map((row) => row.intellectual_rate)),
-    physical: average(rows.map((row) => row.physical_rate)),
-    social: average(rows.map((row) => row.social_rate)),
-    other: average(rows.map((row) => row.other_rate)),
-  };
-  const activeRates = activeAreaKeys.map((key) => areaRates[key]);
-
-  return {
-    month: "cumulative",
-    monthLabel: "누적",
-    spiritual_rate: areaRates.spiritual,
-    intellectual_rate: areaRates.intellectual,
-    physical_rate: areaRates.physical,
-    social_rate: areaRates.social,
-    other_rate: areaRates.other,
-    total_rate: AREA_KEYS.reduce((sum, key) => sum + areaRates[key], 0),
-    average_rate: activeRates.length > 0 ? average(activeRates) : 0,
-  } satisfies BaseProgressRow;
 }
 
 async function getAccessibleProfileIds(
@@ -488,27 +405,19 @@ export async function getCoachMakerMoksilgiProgressDetail(
   const detailGoals = (detailGoalsResult.data ?? []) as CoachMakerMoksilgiProgressDetailGoal[];
   const summaries = (summariesResult.data ?? []) as SummaryRow[];
   const records = (recordsResult.data ?? []) as MonthlyRecordRateRow[];
-  const activeAreaKeys = [
-    ...new Set(
-      areas
-        .filter((area) => detailGoals.some((goal) => goal.area_id === area.id))
-        .map((area) => area.area_key),
-    ),
-  ];
-  const baseRows: BaseProgressRow[] = buildSummaryRows(summaries);
-  const baseCumulativeRow: BaseProgressRow = buildCumulativeRow(
-    baseRows,
-    activeAreaKeys.length > 0 ? activeAreaKeys : AREA_KEYS,
-  );
-
-  const goalFlat = computeMoksilgiGoalFlatOverallAnnual(detailGoals, records);
   const durationMonths =
     calculateCoachingDurationMonths(planRow.period_start, planRow.period_end) ||
     DEFAULT_DURATION_MONTHS;
-  const { rows: summaryRows, cumulativeRow } = decorateRowsWithGoalFlatRates(
-    baseRows,
-    baseCumulativeRow,
-    goalFlat,
+
+  // 엑셀 목실기 성취표 방식: 선택 연도 1~12월 실적 ÷ 목표량 → 영역 평균 → 종합(합) / 평균
+  const yearExcelSummary = buildMoksilgiExcelSummary({
+    periodMonths: buildMoksilgiPeriodMonths(`${selectedYear}-01-01`, `${selectedYear}-12-31`),
+    areas,
+    goals: detailGoals,
+    records: records.map((record) => ({ ...record, year: selectedYear })),
+  });
+  const { rows: summaryRows, cumulativeRow } = toMoksilgiExcelYearSummaryRows(
+    yearExcelSummary,
     durationMonths,
   );
 
@@ -529,12 +438,14 @@ export async function getCoachMakerMoksilgiProgressDetail(
         periodMonths.length > 0
           ? {
               periodMonths,
-              ...buildMoksilgiPeriodSummary({
-                periodMonths,
-                areas,
-                goals: detailGoals,
-                records: (periodRecordsResult.data ?? []) as PeriodRecordRow[],
-              }),
+              ...toMoksilgiPeriodSummary(
+                buildMoksilgiExcelSummary({
+                  periodMonths,
+                  areas,
+                  goals: detailGoals,
+                  records: (periodRecordsResult.data ?? []) as PeriodRecordRow[],
+                }),
+              ),
             }
           : null,
     },

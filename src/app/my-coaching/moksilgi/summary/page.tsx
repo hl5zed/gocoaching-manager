@@ -7,6 +7,7 @@ import { PrintPageButton } from "@/components/print/PrintPageButton";
 import {
   getMyMoksilgiPeriodSummary,
   getMyMoksilgiSummary,
+  type MoksilgiExcelPeriodSummaryRow,
   type MoksilgiPeriodAreaRates,
   type MoksilgiPeriodSummaryRow,
   type MoksilgiPersonalSummaryRow,
@@ -402,6 +403,7 @@ function PeriodHeroCard({
 function PeriodAchievementTable({
   cumulativeAreaRates,
   cumulativeOverall,
+  cumulativeTotalRate,
   currentKey,
   elapsedMonths,
   paceRate,
@@ -409,10 +411,11 @@ function PeriodAchievementTable({
 }: {
   cumulativeAreaRates: MoksilgiPeriodAreaRates;
   cumulativeOverall: number;
+  cumulativeTotalRate: number;
   currentKey: string | null;
   elapsedMonths: number;
   paceRate: number | null;
-  rows: MoksilgiPeriodSummaryRow[];
+  rows: MoksilgiExcelPeriodSummaryRow[];
 }) {
   const totalMonths = rows.length;
 
@@ -426,7 +429,7 @@ function PeriodAchievementTable({
         <span className="text-xs text-ink-faint">단위: %</span>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-[800px] w-full border-collapse text-sm">
+        <table className="min-w-[880px] w-full border-collapse text-sm">
           <thead>
             <tr className="bg-surface-sunken text-xs text-ink-muted">
               <th className="px-3 py-2 text-left font-medium">월</th>
@@ -434,7 +437,8 @@ function PeriodAchievementTable({
               <th className="px-3 py-2 text-right font-medium">지적</th>
               <th className="px-3 py-2 text-right font-medium">육체</th>
               <th className="px-3 py-2 text-right font-medium">사회</th>
-              <th className="px-3 py-2 text-right font-medium">종합</th>
+              <th className="px-3 py-2 text-right font-medium">1~4 종합</th>
+              <th className="px-3 py-2 text-right font-medium">평균</th>
               <th className="px-3 py-2 text-right font-medium">누적</th>
               <th className="px-3 py-2 text-right font-medium">진도 대비</th>
             </tr>
@@ -467,6 +471,7 @@ function PeriodAchievementTable({
                   <td className="px-3 py-2 text-right tabular-nums">{formatPercent(row.intellectual_rate)}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{formatPercent(row.physical_rate)}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{formatPercent(row.social_rate)}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{formatPercent(row.totalRate)}</td>
                   <td className="px-3 py-2 text-right font-medium tabular-nums text-ink-strong">{formatPercent(row.overallRate)}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{formatPercent(row.cumulativeRate)}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{formatOptionalPercent(rowPace)}</td>
@@ -479,6 +484,7 @@ function PeriodAchievementTable({
               <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(cumulativeAreaRates.intellectual_rate)}</td>
               <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(cumulativeAreaRates.physical_rate)}</td>
               <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(cumulativeAreaRates.social_rate)}</td>
+              <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(cumulativeTotalRate)}</td>
               <td className="px-3 py-2 text-right font-semibold tabular-nums text-brand-600">{formatPercent(cumulativeOverall)}</td>
               <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatPercent(cumulativeOverall)}</td>
               <td className="px-3 py-2 text-right tabular-nums text-ink-strong">{formatOptionalPercent(paceRate)}</td>
@@ -487,9 +493,9 @@ function PeriodAchievementTable({
         </table>
       </div>
       <p className="border-t border-line-soft px-4 py-2.5 text-xs leading-5 text-ink-faint">
-        * 종합: 측정 목표별 (실적 ÷ 기간 목표) 합 ÷ 측정 목표 수 · 누적: 기간 시작월부터 그
-        달까지 종합의 합 · 진도 대비: 누적 ÷ 경과율(총 {totalMonths}개월 중 지난 개월 비율) —
-        100%면 계획한 속도입니다.
+        * 영역별: 세부 목표별 (실적 ÷ 기간 목표)의 평균 · 1~4 종합: 영역 달성률의 합 · 평균:
+        종합 ÷ 목표가 있는 영역 수 · 누적: 기간 시작월부터 그 달까지 평균의 합 · 진도 대비:
+        누적 ÷ 경과율(총 {totalMonths}개월 중 지난 개월 비율) — 100%면 계획한 속도입니다.
       </p>
     </section>
   );
@@ -584,8 +590,15 @@ export default async function MoksilgiSummaryPage({
       year: getCurrentYearInTimezone(periodTimezone),
       month: getCurrentMonthInTimezone(periodTimezone),
     };
-    const { cumulativeAreaRates, cumulativeOverall, outOfPeriodRecordCount, periodMonths, plan, rows } =
-      periodResult.data;
+    const {
+      cumulativeAreaRates,
+      cumulativeOverall,
+      cumulativeTotalRate,
+      outOfPeriodRecordCount,
+      periodMonths,
+      plan,
+      rows,
+    } = periodResult.data;
     const totalMonths = periodMonths.length;
     const elapsedMonths = calculateMoksilgiElapsedMonths(periodMonths, today);
     const elapsedRate = calculateMoksilgiElapsedRate(elapsedMonths, totalMonths);
@@ -675,6 +688,7 @@ export default async function MoksilgiSummaryPage({
             <PeriodAchievementTable
               cumulativeAreaRates={cumulativeAreaRates}
               cumulativeOverall={cumulativeOverall}
+              cumulativeTotalRate={cumulativeTotalRate}
               currentKey={currentRow?.key ?? null}
               elapsedMonths={elapsedMonths}
               paceRate={paceRate}

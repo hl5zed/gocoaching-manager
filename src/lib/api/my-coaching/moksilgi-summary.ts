@@ -10,9 +10,9 @@ import {
   resolveActiveAreaKeys,
   type MoksilgiYearSummaryRow,
 } from "@/lib/coaching/moksilgi-year-summary";
+import { buildMoksilgiExcelSummary } from "@/lib/coaching/moksilgi-excel-rates";
 import {
   buildMoksilgiPeriodMonths,
-  buildMoksilgiPeriodSummary,
   EMPTY_MOKSILGI_PERIOD_AREA_RATES,
   type MoksilgiPeriodAreaRates,
   type MoksilgiPeriodMonth,
@@ -350,6 +350,16 @@ type PeriodRecordRow = Pick<
 
 export type { MoksilgiPeriodAreaRates, MoksilgiPeriodSummaryRow };
 
+/**
+ * 엑셀 방식 성취표 행.
+ * - overallRate: 엑셀 "평균"(영역 달성률 합 ÷ 영역 수)
+ * - totalRate: 엑셀 "1~4 종합"(영역 달성률 합)
+ * - cumulativeRate: 기간 시작월부터 그 달까지 평균의 합
+ */
+export type MoksilgiExcelPeriodSummaryRow = MoksilgiPeriodSummaryRow & {
+  totalRate: number;
+};
+
 export type MoksilgiPeriodSummaryResult =
   | {
       ok: true;
@@ -357,8 +367,11 @@ export type MoksilgiPeriodSummaryResult =
         plan: PlanRow | null;
         /** 기간이 없거나 잘못된 경우 빈 배열 — 호출부는 연도 기준 보기로 대체한다 */
         periodMonths: MoksilgiPeriodMonth[];
-        rows: MoksilgiPeriodSummaryRow[];
+        rows: MoksilgiExcelPeriodSummaryRow[];
         cumulativeAreaRates: MoksilgiPeriodAreaRates;
+        /** 누적 행 "1~4 종합" */
+        cumulativeTotalRate: number;
+        /** 누적 행 "평균" = 총 달성률 */
         cumulativeOverall: number;
         hasSummaryData: boolean;
         /** 기간 밖 연·월에 저장된 기록 수(계산에서 제외) */
@@ -402,6 +415,7 @@ export async function getMyMoksilgiPeriodSummary(options?: {
         periodMonths: [],
         rows: [],
         cumulativeAreaRates: EMPTY_MOKSILGI_PERIOD_AREA_RATES,
+        cumulativeTotalRate: 0,
         cumulativeOverall: 0,
         hasSummaryData: false,
         outOfPeriodRecordCount: 0,
@@ -440,7 +454,8 @@ export async function getMyMoksilgiPeriodSummary(options?: {
 
   const areas = (areasResult.data ?? []) as DetailGoalAreaRow[];
   const records = (recordsResult.data ?? []) as PeriodRecordRow[];
-  const periodSummary = buildMoksilgiPeriodSummary({
+  // 엑셀 목실기 성취표 방식: 영역별 평균 → 종합(합) / 평균(÷ 영역 수)
+  const excelSummary = buildMoksilgiExcelSummary({
     periodMonths,
     areas: areas.map((area) => ({ id: area.id, area_key: area.area_key })),
     goals: areas.flatMap((area) =>
@@ -454,16 +469,39 @@ export async function getMyMoksilgiPeriodSummary(options?: {
     records,
   });
 
+  const rows: MoksilgiExcelPeriodSummaryRow[] = excelSummary.rows.map((row) => ({
+    year: row.year,
+    month: row.month,
+    index: row.index,
+    key: row.key,
+    label: row.label,
+    spiritual_rate: row.areaRates.spiritual,
+    intellectual_rate: row.areaRates.intellectual,
+    physical_rate: row.areaRates.physical,
+    social_rate: row.areaRates.social,
+    totalRate: row.totalRate,
+    overallRate: row.averageRate,
+    cumulativeRate: row.cumulativeAverageRate,
+    hasRecords: row.hasRecords,
+  }));
+  const cumulativeAreas = excelSummary.cumulative.areaRates;
+
   return {
     ok: true,
     data: {
       plan: ownedPlan,
       periodMonths,
-      rows: periodSummary.rows,
-      cumulativeAreaRates: periodSummary.cumulativeAreaRates,
-      cumulativeOverall: periodSummary.cumulativeOverall,
-      hasSummaryData: periodSummary.recordCount > 0,
-      outOfPeriodRecordCount: periodSummary.outOfPeriodRecordCount,
+      rows,
+      cumulativeAreaRates: {
+        spiritual_rate: cumulativeAreas.spiritual,
+        intellectual_rate: cumulativeAreas.intellectual,
+        physical_rate: cumulativeAreas.physical,
+        social_rate: cumulativeAreas.social,
+      },
+      cumulativeTotalRate: excelSummary.cumulative.totalRate,
+      cumulativeOverall: excelSummary.totalAchievementRate,
+      hasSummaryData: excelSummary.recordCount > 0,
+      outOfPeriodRecordCount: excelSummary.outOfPeriodRecordCount,
     },
   };
 }

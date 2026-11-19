@@ -423,7 +423,7 @@ function SummaryTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-[860px] w-full border-collapse text-sm">
+      <table className="min-w-[940px] w-full border-collapse text-sm">
         <thead>
           <tr className="border-b border-line-soft bg-surface-sunken text-left text-ink-muted">
             <th className="px-3 py-2 font-semibold">목표 / 성취</th>
@@ -431,8 +431,9 @@ function SummaryTable({
             <th className="px-3 py-2 font-semibold">목표2: 지적 성장</th>
             <th className="px-3 py-2 font-semibold">목표3: 육체적 성장</th>
             <th className="px-3 py-2 font-semibold">목표4: 사회적 성장</th>
-            <th className="px-3 py-2 font-semibold">종합</th>
-            <th className="px-3 py-2 font-semibold">{periodProgress ? "진도 대비" : "평균"}</th>
+            <th className="px-3 py-2 font-semibold">1~4 종합</th>
+            <th className="px-3 py-2 font-semibold">평균</th>
+            <th className="px-3 py-2 font-semibold">{periodProgress ? "진도 대비" : "현재 달성률"}</th>
           </tr>
         </thead>
         <tbody>
@@ -459,6 +460,7 @@ function SummaryTable({
                 <td className="px-3 py-2">{formatPercent(row.intellectual_rate)}</td>
                 <td className="px-3 py-2">{formatPercent(row.physical_rate)}</td>
                 <td className="px-3 py-2">{formatPercent(row.social_rate)}</td>
+                <td className="px-3 py-2">{formatPercent(row.total_rate)}</td>
                 <td className="px-3 py-2">{formatPercent(row.overallRate)}</td>
                 <td className="px-3 py-2">
                   {!periodProgress

@@ -2,17 +2,16 @@ import { getSession } from "@/lib/auth/getSession";
 import { ensureCoachLevelAccess } from "@/lib/auth/coach-api-access";
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import {
-  buildMoksilgiCumulativeRow,
-  buildMoksilgiMonthRows,
   calculateCoachingDurationMonths,
-  computeMoksilgiGoalFlatOverallAnnual,
-  decorateRowsWithGoalFlatRates,
-  resolveActiveAreaKeys,
   type MoksilgiYearSummaryRow,
 } from "@/lib/coaching/moksilgi-year-summary";
 import {
+  buildMoksilgiExcelSummary,
+  toMoksilgiExcelYearSummaryRows,
+  toMoksilgiPeriodSummary,
+} from "@/lib/coaching/moksilgi-excel-rates";
+import {
   buildMoksilgiPeriodMonths,
-  buildMoksilgiPeriodSummary,
   type MoksilgiPeriodMonth,
   type MoksilgiPeriodSummary,
 } from "@/lib/coaching/moksilgi-period";
@@ -107,9 +106,9 @@ type SummaryRow = Pick<
 >;
 
 export type CoachMoksilgiSummaryRow = MoksilgiYearSummaryRow & {
-  /** 종합(목표 평균): 측정 목표별 달성률 합 ÷ 측정 목표 수 */
+  /** 엑셀 "평균": 영역 달성률 합(total_rate) ÷ 목표가 있는 영역 수 */
   overallRate: number;
-  /** 현재 달성률: 종합 ÷ 코칭 기간 개월 수 */
+  /** 현재 달성률: 평균 ÷ 코칭 기간 개월 수 */
   currentRate: number;
 };
 
@@ -329,18 +328,19 @@ export async function getCoachMoksilgiDetail(
   const detailGoals = (detailGoalsResult.data ?? []) as CoachMoksilgiDetailGoal[];
   const summaries = (summariesResult.data ?? []) as SummaryRow[];
   const records = (recordsResult.data ?? []) as MonthlyRecordRateRow[];
-  const activeAreaKeys = resolveActiveAreaKeys(areas, detailGoals);
-  const baseRows = buildMoksilgiMonthRows(summaries);
-  const baseCumulativeRow = buildMoksilgiCumulativeRow(baseRows, activeAreaKeys);
-
-  const goalFlat = computeMoksilgiGoalFlatOverallAnnual(detailGoals, records);
   const durationMonths =
     calculateCoachingDurationMonths(planRow.period_start, planRow.period_end) ||
     DEFAULT_DURATION_MONTHS;
-  const { rows: summaryRows, cumulativeRow } = decorateRowsWithGoalFlatRates(
-    baseRows,
-    baseCumulativeRow,
-    goalFlat,
+
+  // 엑셀 목실기 성취표 방식: 선택 연도 1~12월 실적 ÷ 목표량 → 영역 평균 → 종합(합) / 평균
+  const yearExcelSummary = buildMoksilgiExcelSummary({
+    periodMonths: buildMoksilgiPeriodMonths(`${selectedYear}-01-01`, `${selectedYear}-12-31`),
+    areas,
+    goals: detailGoals,
+    records: records.map((record) => ({ ...record, year: selectedYear })),
+  });
+  const { rows: summaryRows, cumulativeRow } = toMoksilgiExcelYearSummaryRows(
+    yearExcelSummary,
     durationMonths,
   );
 
@@ -360,12 +360,14 @@ export async function getCoachMoksilgiDetail(
         periodMonths.length > 0
           ? {
               periodMonths,
-              ...buildMoksilgiPeriodSummary({
-                periodMonths,
-                areas,
-                goals: detailGoals,
-                records: (periodRecordsResult.data ?? []) as PeriodRecordRow[],
-              }),
+              ...toMoksilgiPeriodSummary(
+                buildMoksilgiExcelSummary({
+                  periodMonths,
+                  areas,
+                  goals: detailGoals,
+                  records: (periodRecordsResult.data ?? []) as PeriodRecordRow[],
+                }),
+              ),
             }
           : null,
     },
