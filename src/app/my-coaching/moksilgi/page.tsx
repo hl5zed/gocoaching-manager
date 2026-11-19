@@ -624,9 +624,14 @@ function DetailGoalForm({
           />
         ))}
       </div>
-      <Button className="w-fit" type="submit" variant="primary">
-        <I18nText k="myCoaching.moksilgi.saveDetailGoal" fallback="세부 목표 저장" />
-      </Button>
+      <div className="space-y-2 border-t border-line-soft pt-3">
+        <p className="text-xs text-ink-muted">
+          세부 목표는 하단의 &quot;기본 정보 저장&quot;이 아닌, 이 &quot;세부 목표 저장&quot; 버튼으로 저장됩니다.
+        </p>
+        <Button className="w-full sm:w-fit" type="submit" variant="primary">
+          <I18nText k="myCoaching.moksilgi.saveDetailGoal" fallback="세부 목표 저장" />
+        </Button>
+      </div>
     </form>
   );
 }
@@ -702,7 +707,7 @@ export default async function MyMoksilgiPage({
     : 0;
 
   return (
-    <main className="print-root print-coachee min-h-screen bg-surface-app px-4 py-5 pb-32 text-ink-base print:px-2 print:py-2 print:pb-0 print:bg-white">
+    <main className="print-root print-coachee min-h-screen bg-surface-app px-4 py-5 pb-96 text-ink-base print:px-2 print:py-2 print:pb-0 print:bg-white">
       <CoacheePrintStyles />
       <MoksilgiAppBar
         actions={
