@@ -20,8 +20,8 @@ import {
 import {
   getMyMoksilgiPeriodSummary,
   getMyMoksilgiSummary,
+  type MoksilgiExcelPeriodSummaryRow,
   type MoksilgiPeriodAreaRates,
-  type MoksilgiPeriodSummaryRow,
   type MoksilgiPersonalSummaryRow,
 } from "@/lib/api/my-coaching/moksilgi-summary";
 import {
@@ -484,15 +484,17 @@ function formatOptionalPercent(value: number | null | undefined) {
 function PeriodSummaryTable({
   cumulativeAreaRates,
   cumulativeOverall,
+  cumulativeTotalRate,
   hasSummaryData,
   progress,
   rows,
 }: {
   cumulativeAreaRates: MoksilgiPeriodAreaRates;
   cumulativeOverall: number;
+  cumulativeTotalRate: number;
   hasSummaryData: boolean;
   progress: MoksilgiPeriodProgress;
-  rows: MoksilgiPeriodSummaryRow[];
+  rows: MoksilgiExcelPeriodSummaryRow[];
 }) {
   const totalMonths = rows.length;
 
@@ -507,7 +509,7 @@ function PeriodSummaryTable({
         </div>
       ) : (
         <div className="mt-4 overflow-x-auto print:overflow-visible">
-          <table className="report-table w-full min-w-[760px] border-collapse text-left text-sm">
+          <table className="report-table w-full min-w-[900px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-line-base bg-surface-sunken">
                 <th className="px-3 py-2">월</th>
@@ -515,6 +517,8 @@ function PeriodSummaryTable({
                 <th className="px-3 py-2">지적 성장</th>
                 <th className="px-3 py-2">육체적 성장</th>
                 <th className="px-3 py-2">사회적 성장</th>
+                <th className="px-3 py-2">1~4 종합</th>
+                <th className="px-3 py-2">평균</th>
                 <th className="px-3 py-2">누적</th>
                 <th className="px-3 py-2">진도 대비</th>
               </tr>
@@ -527,6 +531,8 @@ function PeriodSummaryTable({
                   <td className="px-3 py-2">{formatPercent(row.intellectual_rate)}</td>
                   <td className="px-3 py-2">{formatPercent(row.physical_rate)}</td>
                   <td className="px-3 py-2">{formatPercent(row.social_rate)}</td>
+                  <td className="px-3 py-2">{formatPercent(row.totalRate)}</td>
+                  <td className="px-3 py-2">{formatPercent(row.overallRate)}</td>
                   <td className="px-3 py-2">{formatPercent(row.cumulativeRate)}</td>
                   <td className="px-3 py-2">
                     {formatOptionalPercent(progress.paceByKey.get(row.key))}
@@ -539,6 +545,8 @@ function PeriodSummaryTable({
                 <td className="px-3 py-2">{formatPercent(cumulativeAreaRates.intellectual_rate)}</td>
                 <td className="px-3 py-2">{formatPercent(cumulativeAreaRates.physical_rate)}</td>
                 <td className="px-3 py-2">{formatPercent(cumulativeAreaRates.social_rate)}</td>
+                <td className="px-3 py-2">{formatPercent(cumulativeTotalRate)}</td>
+                <td className="px-3 py-2">{formatPercent(cumulativeOverall)}</td>
                 <td className="px-3 py-2">{formatPercent(cumulativeOverall)}</td>
                 <td className="px-3 py-2">{formatOptionalPercent(progress.paceRate)}</td>
               </tr>
@@ -550,8 +558,9 @@ function PeriodSummaryTable({
             진도 대비 달성률: {formatOptionalPercent(progress.paceRate)}
           </p>
           <p className="mt-1 text-xs leading-5 text-ink-faint">
-            * 누적: 기간 시작월부터 그 달까지 측정 목표별 (실적 ÷ 기간 목표) 합 ÷ 측정 목표 수의
-            합계 · 진도 대비: 누적 ÷ 경과율 — 100%면 계획한 속도입니다.
+            * 영역별: 세부 목표별 (실적 ÷ 기간 목표)의 평균 · 1~4 종합: 영역 달성률의 합 · 평균:
+            종합 ÷ 목표가 있는 영역 수 · 누적: 기간 시작월부터 그 달까지 평균의 합 · 진도 대비:
+            누적 ÷ 경과율 — 100%면 계획한 속도입니다.
           </p>
         </div>
       )}
@@ -803,6 +812,7 @@ export default async function CoacheeReportPage() {
           <PeriodSummaryTable
             cumulativeAreaRates={periodSummary.cumulativeAreaRates}
             cumulativeOverall={periodSummary.cumulativeOverall}
+            cumulativeTotalRate={periodSummary.cumulativeTotalRate}
             hasSummaryData={periodSummary.hasSummaryData}
             progress={periodProgress}
             rows={periodSummary.rows}
