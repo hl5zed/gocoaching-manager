@@ -266,7 +266,7 @@ function missionSummary(plan: MoksilgiPlan | null) {
 function visionSummary(plan: MoksilgiPlan | null) {
   if (!plan) return "";
   const parts = [
-    plan.vision_year ? `${plan.vision_year}년` : null,
+    plan.vision_year ? `${plan.vision_year}년까지` : null,
     plan.vision_statement?.trim() || null,
   ].filter(Boolean);
   return parts.join(" · ");
@@ -377,6 +377,9 @@ function TextInput({
   placeholder,
   type = "text",
   step,
+  pattern,
+  inputMode,
+  title,
 }: {
   label: ReactNode;
   name: string;
@@ -386,6 +389,9 @@ function TextInput({
   placeholder?: string;
   type?: string;
   step?: string;
+  pattern?: string;
+  inputMode?: "numeric" | "decimal" | "text";
+  title?: string;
 }) {
   return (
     <label className="block">
@@ -398,6 +404,9 @@ function TextInput({
         placeholder={placeholder}
         step={step}
         type={type}
+        pattern={pattern}
+        inputMode={inputMode}
+        title={title}
       />
       {helpText ? (
         <span className="mt-1 block text-xs leading-5 text-ink-muted">{helpText}</span>
@@ -526,7 +535,7 @@ function PlanForm({
         title={<I18nText k="myCoaching.moksilgi.visionTitle" fallback="Ⅱ. 비전 (Vision)" />}
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextInput label={<I18nText k="myCoaching.moksilgi.form.visionTargetYear" fallback="비전 목표 연도" />} name="vision_year" type="number" value={plan?.vision_year} />
+          <TextInput label={<I18nText k="myCoaching.moksilgi.form.visionTargetYear" fallback="비전 목표 연도" />} helpText="숫자 4자리만 입력하세요 (예: 2030). 화면에는 '2030년까지'로 표시됩니다." inputMode="numeric" maxLength={4} name="vision_year" pattern="[0-9]{4}" placeholder="2030" title="연도는 숫자 4자리로 입력하세요 (예: 2030)" value={plan?.vision_year} />
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.keyMetric" fallback="핵심 수치" />} maxLength={1000} name="vision_metrics" value={plan?.vision_metrics} />
           <TextInput label={<I18nText k="myCoaching.moksilgi.form.target" fallback="대상" />} maxLength={1000} name="vision_target" value={plan?.vision_target} />
         </div>
