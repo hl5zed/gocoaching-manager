@@ -61,6 +61,8 @@ export function SignupForm({ translations }: SignupFormProps) {
   const [generationText, setGenerationText] = useState("");
   const [ministryPosition, setMinistryPosition] = useState("");
   const [selfIntroduction, setSelfIntroduction] = useState("");
+  // 봇 차단용 숨김 칸(honeypot). 사람에게는 보이지 않으므로 값이 있으면 봇으로 간주한다.
+  const [website, setWebsite] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,6 +107,13 @@ export function SignupForm({ translations }: SignupFormProps) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
+
+    if (website.trim().length > 0) {
+      // 봇에게는 성공처럼 보이게 하고 실제 저장은 하지 않는다.
+      setIsSubmitted(true);
+      return;
+    }
+
     setIsSubmitting(true);
 
     const supabase = createSupabaseBrowserClient();
@@ -165,6 +174,7 @@ export function SignupForm({ translations }: SignupFormProps) {
             autoComplete="name"
             className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
             id="name"
+            maxLength={100}
             onChange={(event) => setName(event.target.value)}
             required
             type="text"
@@ -180,6 +190,7 @@ export function SignupForm({ translations }: SignupFormProps) {
             autoComplete="email"
             className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
             id="email"
+            maxLength={254}
             onChange={(event) => setEmail(event.target.value)}
             required
             type="email"
@@ -217,6 +228,7 @@ export function SignupForm({ translations }: SignupFormProps) {
           <input
             className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
             id="affiliation_text"
+            maxLength={200}
             onChange={(event) => setAffiliationText(event.target.value)}
             placeholder="예: OO선교회, OO교회"
             type="text"
@@ -234,6 +246,7 @@ export function SignupForm({ translations }: SignupFormProps) {
           <input
             className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
             id="region_text"
+            maxLength={100}
             onChange={(event) => setRegionText(event.target.value)}
             placeholder="예: 치앙라이, 태국"
             type="text"
@@ -251,6 +264,7 @@ export function SignupForm({ translations }: SignupFormProps) {
           <input
             className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
             id="generation_text"
+            maxLength={50}
             onChange={(event) => setGenerationText(event.target.value)}
             placeholder="예: 3기"
             type="text"
@@ -290,10 +304,24 @@ export function SignupForm({ translations }: SignupFormProps) {
           <input
             className="mt-2 w-full rounded-md border border-line-base bg-surface-card px-3 py-2 text-ink-strong outline-none focus:border-brand-600"
             id="self_introduction"
+            maxLength={500}
             onChange={(event) => setSelfIntroduction(event.target.value)}
             placeholder="나를 한 문장으로 소개해 보세요"
             type="text"
             value={selfIntroduction}
+          />
+        </div>
+
+        <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+          <label htmlFor="website">웹사이트 (비워 두세요)</label>
+          <input
+            autoComplete="off"
+            id="website"
+            name="website"
+            onChange={(event) => setWebsite(event.target.value)}
+            tabIndex={-1}
+            type="text"
+            value={website}
           />
         </div>
 
