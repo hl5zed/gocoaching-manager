@@ -19,6 +19,11 @@ export type CreateVersionInput = {
 
 const VERSION_SELECT =
   "id, plan_id, version_number, version_type, snapshot_json, change_reason, created_by, is_approved, approved_at, approved_by, created_at";
+// 이력 목록은 snapshot_json을 화면에서 쓰지 않으므로 제외해 응답 크기를 줄인다.
+const VERSION_LIST_SELECT =
+  "id, plan_id, version_number, version_type, change_reason, created_by, is_approved, approved_at, approved_by, created_at";
+
+export type MoksilgiPlanVersionListRow = Omit<MoksilgiPlanVersionRow, "snapshot_json">;
 
 type PostgrestErrorLike = {
   message: string;
@@ -29,9 +34,9 @@ type PostgrestErrorLike = {
 
 type PlanVersionsInsertTable = {
   insert: (values: InsertDto<"moksilgi_plan_versions">) => {
-    select: (columns: typeof VERSION_SELECT) => {
+    select: (columns: "id") => {
       single: () => Promise<{
-        data: MoksilgiPlanVersionRow | null;
+        data: { id: string } | null;
         error: PostgrestErrorLike;
       }>;
     };
@@ -43,7 +48,7 @@ type PlanVersionsInsertTable = {
 // ------------------------------------------------------------------
 
 export async function getMoksilgiVersions(planId: string): Promise<
-  | { ok: true; data: MoksilgiPlanVersionRow[] }
+  | { ok: true; data: MoksilgiPlanVersionListRow[] }
   | { ok: false; error: string }
 > {
   const { client, error: clientError } = createSupabaseServiceClient();
@@ -54,7 +59,7 @@ export async function getMoksilgiVersions(planId: string): Promise<
 
   const { data, error } = await client
     .from("moksilgi_plan_versions")
-    .select(VERSION_SELECT)
+    .select(VERSION_LIST_SELECT)
     .eq("plan_id", planId)
     .order("version_number", { ascending: false })
     .limit(20);
@@ -108,7 +113,7 @@ export async function getLastApprovedVersion(planId: string): Promise<
 // ------------------------------------------------------------------
 
 export async function createMoksilgiVersion(input: CreateVersionInput): Promise<
-  | { ok: true; data: MoksilgiPlanVersionRow }
+  | { ok: true; data: { id: string } }
   | { ok: false; error: string }
 > {
   const { client, error: clientError } = createSupabaseServiceClient();
@@ -132,7 +137,7 @@ export async function createMoksilgiVersion(input: CreateVersionInput): Promise<
     "moksilgi_plan_versions",
   ) as unknown as PlanVersionsInsertTable)
     .insert(insertPayload)
-    .select(VERSION_SELECT)
+    .select("id")
     .single();
 
   if (error) {

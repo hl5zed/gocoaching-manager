@@ -37,42 +37,47 @@ export async function getMyMoksilgiCoachReviews(
   const supabase = await createSupabaseServerClient();
   const verifiedProfileId = await getVerifiedProfileId();
 
-  const profileQuery = supabase
-    .from("profiles")
-    .select("id")
-    .is("deleted_at", null)
-    .neq("status", "anonymized");
+  // proxy가 같은 요청에서 deleted_at/anonymized 조건으로 검증한 profile id는 재조회하지 않는다.
+  let profileId = verifiedProfileId;
+  if (!profileId) {
+    const { data: profileRaw, error: profileError } = await supabase
+      .from("profiles")
+      .select("id")
+      .is("deleted_at", null)
+      .neq("status", "anonymized")
+      .eq("auth_user_id", session.user.id)
+      .maybeSingle();
 
-  const { data: profileRaw, error: profileError } = verifiedProfileId
-    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
-    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
+    if (profileError || !profileRaw) {
+      return { ok: false, error: "프로필을 찾을 수 없습니다." };
+    }
 
-  if (profileError || !profileRaw) {
-    return { ok: false, error: "프로필을 찾을 수 없습니다." };
+    profileId = (profileRaw as unknown as ProfileRow).id;
   }
 
-  const profileId = (profileRaw as unknown as ProfileRow).id;
+  // 내 목실기인지 확인과 리뷰 조회를 동시에 실행하고, 소유 확인에 실패하면 리뷰 결과는 버린다.
+  const [planCheck, reviewsResult] = await Promise.all([
+    supabase
+      .from("moksilgi_plans")
+      .select("id")
+      .eq("id", planId)
+      .eq("profile_id", profileId)
+      .eq("status", "active")
+      .is("deleted_at", null)
+      .maybeSingle(),
+    supabase
+      .from("moksilgi_plan_reviews")
+      .select("id, review_status, feedback_content, created_at")
+      .eq("plan_id", planId)
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ]);
 
-  // 내 목실기인지 확인
-  const { data: planRaw, error: planError } = await supabase
-    .from("moksilgi_plans")
-    .select("id")
-    .eq("id", planId)
-    .eq("profile_id", profileId)
-    .eq("status", "active")
-    .is("deleted_at", null)
-    .maybeSingle();
-
-  if (planError || !planRaw) {
+  if (planCheck.error || !planCheck.data) {
     return { ok: false, error: "목실기를 찾을 수 없습니다." };
   }
 
-  const { data: reviewsRaw, error: reviewsError } = await supabase
-    .from("moksilgi_plan_reviews")
-    .select("id, review_status, feedback_content, created_at")
-    .eq("plan_id", planId)
-    .order("created_at", { ascending: false })
-    .limit(20);
+  const { data: reviewsRaw, error: reviewsError } = reviewsResult;
 
   if (reviewsError) {
     console.error("[COACHEE_REVIEWS_FETCH_FAILED]", reviewsError);

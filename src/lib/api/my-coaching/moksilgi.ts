@@ -207,11 +207,19 @@ type PlanTable = {
     eq: (column: "id" | "profile_id", value: string) => {
       eq: (column: "id" | "profile_id", value: string) => {
         is: (column: "deleted_at", value: null) => {
-          select: (columns: "id") => {
-            maybeSingle: () => Promise<{
-              data: IdRow | null;
-              error: PostgrestErrorLike | null;
-            }>;
+          select: {
+            (columns: "id"): {
+              maybeSingle: () => Promise<{
+                data: IdRow | null;
+                error: PostgrestErrorLike | null;
+              }>;
+            };
+            (columns: typeof PLAN_SELECT): {
+              maybeSingle: () => Promise<{
+                data: MoksilgiPlan | null;
+                error: PostgrestErrorLike | null;
+              }>;
+            };
           };
         };
       };
@@ -386,15 +394,18 @@ async function getCurrentProfileContext(): Promise<CurrentProfileContext> {
   const supabase = await createSupabaseServerClient();
   const verifiedProfileId = await getVerifiedProfileId();
 
-  const profileQuery = supabase
+  // proxy가 같은 요청에서 deleted_at/anonymized 조건으로 검증한 profile id는 재조회하지 않는다.
+  if (verifiedProfileId) {
+    return { ok: true, profileId: verifiedProfileId, serviceClient: supabase };
+  }
+
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("id")
     .is("deleted_at", null)
-    .neq("status", "anonymized");
-
-  const { data: profile, error: profileError } = verifiedProfileId
-    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
-    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
+    .neq("status", "anonymized")
+    .eq("auth_user_id", session.user.id)
+    .maybeSingle();
 
   if (profileError) {
     return {
@@ -485,19 +496,29 @@ async function ensureDefaultAreas(
 
 async function createCurrentPlanVersionSnapshot({
   changeReason,
+  knownPlan,
   planId,
   profileId,
   serviceClient,
   versionNumber,
 }: {
   changeReason: string;
+  /** 방금 update로 받은 최신 plan 행. 있으면 plan 재조회를 생략한다. */
+  knownPlan?: MoksilgiPlan;
   planId: string;
   profileId: string;
   serviceClient: ServiceSupabaseClient;
   versionNumber: number;
 }) {
+  // getOwnedPlan과 같은 조건: active 상태가 아니면 스냅샷을 만들지 않는다.
+  if (knownPlan && knownPlan.status !== "active") {
+    return;
+  }
+
   const [planResult, areasResult, detailGoalsResult] = await Promise.all([
-    getOwnedPlan(serviceClient, profileId),
+    knownPlan
+      ? Promise.resolve({ data: knownPlan, error: null })
+      : getOwnedPlan(serviceClient, profileId),
     areaTable(serviceClient)
       .select(AREA_SELECT)
       .eq("plan_id", planId)
@@ -837,16 +858,17 @@ export async function saveMyMoksilgiPlan(
       .eq("id", planId)
       .eq("profile_id", context.profileId)
       .is("deleted_at", null)
-      .select("id")
+      .select(PLAN_SELECT)
       .maybeSingle();
 
     if (error || !updatedPlan) {
       return { ok: false, error: { code: "SAVE_FAILED", message: "목실기를 저장할 수 없습니다." } };
     }
 
-    await ensureDefaultAreas(context.serviceClient, updatedPlan.id);
+    // 기존 plan은 조회 시점(getMyMoksilgi)에 기본 영역이 이미 보장되므로 ensureDefaultAreas를 생략한다.
     await createCurrentPlanVersionSnapshot({
       changeReason: "목실기 기본 정보 수정",
+      knownPlan: updatedPlan,
       planId: updatedPlan.id,
       profileId: context.profileId,
       serviceClient: context.serviceClient,
