@@ -2,6 +2,7 @@ import { getSession } from "@/lib/auth/getSession";
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { fetchAllByIdChunks, fetchAllPages } from "@/lib/supabase/fetch-in-chunks";
 import { createApiPerformanceLogger } from "@/lib/performance";
 import { buildMoksilgiExcelSummary } from "@/lib/coaching/moksilgi-excel-rates";
 import { buildMoksilgiPeriodMonths } from "@/lib/coaching/moksilgi-period";
@@ -968,8 +969,6 @@ function buildRow(
   } satisfies CoachMakerMoksilgiProgressRow;
 }
 
-/** Supabase 한 번 조회 최대 행 수 — 기록이 많아도 잘리지 않도록 나눠 가져온다 */
-const EXCEL_RATE_PAGE_SIZE = 1000;
 /**
  * 엑셀 월 평균은 "연간 목표 대비 그 달 기여도"(완벽한 한 달 ≈ 8.33%)이다.
  * 목록의 월 성취율·경고 기준(50%/80%)·완료 기준(누적 100%)을 유지하기 위해
@@ -989,80 +988,6 @@ type ExcelRecordRow = Pick<
   "plan_id" | "profile_id" | "detail_goal_id" | "month" | "actual_value"
 >;
 
-async function fetchAllPages<TRow>(
-  fetchPage: (from: number, to: number) => PromiseLike<{ data: unknown; error: unknown }>,
-): Promise<{ data: TRow[]; error: unknown }> {
-  const rows: TRow[] = [];
-
-  for (let from = 0; ; from += EXCEL_RATE_PAGE_SIZE) {
-    const { data, error } = await fetchPage(from, from + EXCEL_RATE_PAGE_SIZE - 1);
-    if (error) return { data: [], error };
-
-    const page = (data ?? []) as TRow[];
-    rows.push(...page);
-    if (page.length < EXCEL_RATE_PAGE_SIZE) break;
-  }
-
-  return { data: rows, error: null };
-}
-
-const ID_CHUNK_SIZE = 150;
-const ID_CHUNK_CONCURRENCY = 3;
-
-function chunkIds(ids: string[], size: number = ID_CHUNK_SIZE): string[][] {
-  const chunks: string[][] = [];
-  for (let index = 0; index < ids.length; index += size) {
-    chunks.push(ids.slice(index, index + size));
-  }
-  return chunks;
-}
-
-async function mapWithConcurrency<TInput, TOutput>(
-  items: TInput[],
-  limit: number,
-  worker: (item: TInput) => Promise<TOutput>,
-): Promise<TOutput[]> {
-  const results: TOutput[] = new Array<TOutput>(items.length);
-  let nextIndex = 0;
-
-  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (nextIndex < items.length) {
-      const currentIndex = nextIndex;
-      nextIndex += 1;
-      results[currentIndex] = await worker(items[currentIndex]);
-    }
-  });
-
-  await Promise.all(runners);
-  return results;
-}
-
-/**
- * id 목록을 묶음으로 나눠 묶음별로 fetchAllPages를 실행한다(동시 ID_CHUNK_CONCURRENCY개).
- * 묶음 순서대로 이어 붙이므로, 묶음 키(plan_id 등)별 행 순서는 기존 단일 쿼리와 같다.
- */
-async function fetchAllPagesByIdChunks<TRow>(
-  ids: string[],
-  fetchPage: (
-    chunk: string[],
-    from: number,
-    to: number,
-  ) => PromiseLike<{ data: unknown; error: unknown }>,
-): Promise<{ data: TRow[]; error: unknown }> {
-  if (ids.length === 0) return { data: [], error: null };
-
-  const chunkResults = await mapWithConcurrency(
-    chunkIds(ids),
-    ID_CHUNK_CONCURRENCY,
-    (chunk) => fetchAllPages<TRow>((from, to) => fetchPage(chunk, from, to)),
-  );
-
-  const failed = chunkResults.find((result) => result.error);
-  if (failed) return { data: [], error: failed.error };
-
-  return { data: chunkResults.flatMap((result) => result.data), error: null };
-}
-
 /**
  * 저장된 월별 요약 대신 실제 월 실적으로 엑셀 방식 월 성취율을 계산한다.
  * 반환 형태는 기존 SummaryRow와 같아서 아래 행/요약/개요 계산은 그대로 쓴다.
@@ -1076,7 +1001,7 @@ async function loadExcelMonthlySummaries(
 
   const planIds = plans.map((plan) => plan.id);
   const [areasResult, goalsResult, recordsResult] = await Promise.all([
-    fetchAllPagesByIdChunks<ExcelAreaRow>(planIds, (chunk, from, to) =>
+    fetchAllByIdChunks<ExcelAreaRow>(planIds, (chunk, from, to) =>
       serviceClient
         .from("moksilgi_goal_areas")
         .select("id, plan_id, area_key")
@@ -1085,7 +1010,7 @@ async function loadExcelMonthlySummaries(
         .order("id", { ascending: true })
         .range(from, to),
     ),
-    fetchAllPagesByIdChunks<ExcelGoalRow>(planIds, (chunk, from, to) =>
+    fetchAllByIdChunks<ExcelGoalRow>(planIds, (chunk, from, to) =>
       serviceClient
         .from("moksilgi_detail_goals")
         .select("id, plan_id, area_id, measurement_type, annual_target")
@@ -1094,7 +1019,7 @@ async function loadExcelMonthlySummaries(
         .order("id", { ascending: true })
         .range(from, to),
     ),
-    fetchAllPagesByIdChunks<ExcelRecordRow>(planIds, (chunk, from, to) =>
+    fetchAllByIdChunks<ExcelRecordRow>(planIds, (chunk, from, to) =>
       serviceClient
         .from("moksilgi_monthly_records")
         .select("plan_id, profile_id, detail_goal_id, month, actual_value")
@@ -1364,12 +1289,17 @@ export async function getCoachMakerMoksilgiProgress(
   let activeRelationships: RelationshipRow[] = [];
 
   if (!hasBroadAccess) {
-    const { data: relationships, error: relationshipsError } = await serviceClient
-      .from("coaching_relationships")
-      .select("id, coach_profile_id, coachee_profile_id, status")
-      .eq("coach_profile_id", profileId)
-      .eq("status", "active")
-      .is("deleted_at", null);
+    const { data: relationships, error: relationshipsError } =
+      await fetchAllPages<RelationshipRow>((from, to) =>
+        serviceClient
+          .from("coaching_relationships")
+          .select("id, coach_profile_id, coachee_profile_id, status")
+          .eq("coach_profile_id", profileId)
+          .eq("status", "active")
+          .is("deleted_at", null)
+          .order("id", { ascending: true })
+          .range(from, to),
+      );
 
     if (relationshipsError) {
       return {
@@ -1419,11 +1349,8 @@ export async function getCoachMakerMoksilgiProgress(
     const scopeRoles = (roles ?? []) as ScopedRoleRow[];
     const hasFullRelationshipAccess = roleValues.includes("super_admin");
 
-    let relationshipQuery = serviceClient
-      .from("coaching_relationships")
-      .select("id, coach_profile_id, coachee_profile_id, status")
-      .eq("status", "active")
-      .is("deleted_at", null);
+    // 스코프 사전 필터(.or 문자열)는 한 번만 계산하고, 페이지마다 같은 필터로 조회한다.
+    let relationshipOrFilter: string | null = null;
 
     if (!hasFullRelationshipAccess) {
       const scopedProfileIds = await resolveScopedProfileIds(serviceClient, scopeRoles);
@@ -1449,15 +1376,25 @@ export async function getCoachMakerMoksilgiProgress(
           orParts.push(`coachee_profile_id.in.${list}`);
         }
 
-        relationshipQuery = relationshipQuery.or(
+        relationshipOrFilter =
           orParts.length > 0
             ? orParts.join(",")
-            : "id.eq.00000000-0000-0000-0000-000000000000",
-        );
+            : "id.eq.00000000-0000-0000-0000-000000000000";
       }
     }
 
-    const { data: relationships, error: relationshipsError } = await relationshipQuery;
+    const { data: relationships, error: relationshipsError } =
+      await fetchAllPages<RelationshipRow>((from, to) => {
+        const baseQuery = serviceClient
+          .from("coaching_relationships")
+          .select("id, coach_profile_id, coachee_profile_id, status")
+          .eq("status", "active")
+          .is("deleted_at", null);
+        const filteredQuery =
+          relationshipOrFilter !== null ? baseQuery.or(relationshipOrFilter) : baseQuery;
+
+        return filteredQuery.order("id", { ascending: true }).range(from, to);
+      });
 
     if (relationshipsError) {
       return {
@@ -1522,7 +1459,8 @@ export async function getCoachMakerMoksilgiProgress(
           plansFilterOptions,
         ),
         plansSelectQuery().range(pageFrom, pageTo),
-        plansSelectQuery(),
+        // 개요·인쇄용 전체 목록: 1000행에서 잘리지 않도록 끝까지 페이징한다(정렬 마지막 키 id로 경계 안정).
+        fetchAllPages<PlanRow>((from, to) => plansSelectQuery().range(from, to)),
       ]);
 
     const { data: plans, error: plansError } = plansPageResult;
@@ -1544,17 +1482,20 @@ export async function getCoachMakerMoksilgiProgress(
     perf.mark("data.plans_query", planRows.length);
     perf.mark("data.overview_plans_query", overviewPlanRows.length);
   } else {
-    const { data: plans, error: plansError } = await applyMoksilgiPlansFiltersToQuery(
-      serviceClient
-        .from("moksilgi_plans")
-        .select(
-          "id, profile_id, author_name, role_label, generation_label, region_name, team_name, updated_at",
-        )
-        .is("deleted_at", null)
-        .order("updated_at", { ascending: false })
-        .order("created_at", { ascending: false })
-        .order("id", { ascending: false }),
-      plansFilterOptions,
+    // 1000행에서 잘리지 않도록 끝까지 페이징한다(정렬 마지막 키 id로 경계 안정).
+    const { data: plans, error: plansError } = await fetchAllPages<PlanRow>((from, to) =>
+      applyMoksilgiPlansFiltersToQuery(
+        serviceClient
+          .from("moksilgi_plans")
+          .select(
+            "id, profile_id, author_name, role_label, generation_label, region_name, team_name, updated_at",
+          )
+          .is("deleted_at", null)
+          .order("updated_at", { ascending: false })
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false }),
+        plansFilterOptions,
+      ).range(from, to),
     );
     perf.mark("data.plans_query", plans?.length ?? 0);
 
@@ -1582,7 +1523,7 @@ export async function getCoachMakerMoksilgiProgress(
     ]),
   ];
   const [profilesResult, summariesResult] = await Promise.all([
-    fetchAllPagesByIdChunks<ProfileRow>(profileIds, (chunk, from, to) =>
+    fetchAllByIdChunks<ProfileRow>(profileIds, (chunk, from, to) =>
       serviceClient
         .from("profiles")
         .select(
