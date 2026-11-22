@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/auth/getSession";
 import { getVerifiedProfileId } from "@/lib/auth/verified-identity";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { fetchAllByIdChunks, fetchAllPages } from "@/lib/supabase/fetch-in-chunks";
 import {
   DEFAULT_TIMEZONE,
   getCurrentMonthInTimezone,
@@ -321,7 +322,9 @@ function hasCoachMakerFullAccess(roles: CoachMakerRoleRow[]) {
   return roles.some((role) => role.role === "super_admin");
 }
 
-const MAX_SCOPE_PREFILTER_PROFILE_IDS = 200;
+// .or() 안에 coach/coachee 두 번 들어가므로 URL 길이를 고려해 100으로 제한한다.
+// 초과 시 사전 필터 없이 전체 조회로 폴백하며, 최종 결과는 메모리 필터가 보장한다.
+const MAX_SCOPE_PREFILTER_PROFILE_IDS = 100;
 
 /**
  * 역할 스코프(country/region/org/church/group/cohort)에 속한 프로필 id를 DB에서 미리 해석한다.
@@ -546,13 +549,8 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
     hasCoachMakerFullAccess(coachMakerRoles) ||
     coachMakerRoles.some((role) => role.scope_type === "global");
 
-  let relationshipQuery = serviceClient
-    .from("coaching_relationships")
-    .select(
-      "id, coach_profile_id, coachee_profile_id, relationship_type, status, scope_type, scope_id, started_at, created_at",
-    )
-    .eq("status", "active")
-    .is("deleted_at", null);
+  // 스코프 사전 필터(.or 문자열)는 한 번만 계산하고, 페이지마다 같은 필터로 조회한다.
+  let relationshipOrFilter: string | null = null;
 
   if (!fullAccess) {
     const scopedProfileIds = await resolveScopedProfileIds(serviceClient, coachMakerRoles);
@@ -578,15 +576,27 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
         orParts.push(`coachee_profile_id.in.${list}`);
       }
 
-      relationshipQuery = relationshipQuery.or(
+      relationshipOrFilter =
         orParts.length > 0
           ? orParts.join(",")
-          : "id.eq.00000000-0000-0000-0000-000000000000",
-      );
+          : "id.eq.00000000-0000-0000-0000-000000000000";
     }
   }
 
-  const { data: relationships, error: relationshipsError } = await relationshipQuery;
+  const { data: relationships, error: relationshipsError } =
+    await fetchAllPages<RelationshipRow>((from, to) => {
+      const baseQuery = serviceClient
+        .from("coaching_relationships")
+        .select(
+          "id, coach_profile_id, coachee_profile_id, relationship_type, status, scope_type, scope_id, started_at, created_at",
+        )
+        .eq("status", "active")
+        .is("deleted_at", null);
+      const filteredQuery =
+        relationshipOrFilter !== null ? baseQuery.or(relationshipOrFilter) : baseQuery;
+
+      return filteredQuery.order("id", { ascending: true }).range(from, to);
+    });
 
   if (relationshipsError) {
     logServerError(
@@ -620,13 +630,18 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
     ),
   ];
 
-  const { data: profileRows, error: profilesError } = await serviceClient
-    .from("profiles")
-    .select(
-      "id, display_name, full_name, email, country_id, region_id, organization_id, church_id, group_id, cohort_id",
-    )
-    .in("id", profileIds)
-    .is("deleted_at", null);
+  const { data: profileRows, error: profilesError } =
+    await fetchAllByIdChunks<ScopedProfileRow>(profileIds, (chunk, from, to) =>
+      serviceClient
+        .from("profiles")
+        .select(
+          "id, display_name, full_name, email, country_id, region_id, organization_id, church_id, group_id, cohort_id",
+        )
+        .in("id", chunk)
+        .is("deleted_at", null)
+        .order("id", { ascending: true })
+        .range(from, to),
+    );
 
   if (profilesError) {
     logServerError(
@@ -679,31 +694,43 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
 
   const [weeklyLogsResult, dailyRecordsResult, monthlyReflectionsResult] =
     await Promise.all([
-      serviceClient
-        .from("weekly_logs")
-        .select("id, relationship_id, coachee_profile_id, status, submitted_at")
-        .in("relationship_id", relationshipIds)
-        .lte("week_start", weekRange.end)
-        .gte("week_end", weekRange.start)
-        .is("deleted_at", null),
-      serviceClient
-        .from("daily_records")
-        .select("id, profile_id, relationship_id, shared_with_coach, visibility")
-        .in("profile_id", coacheeIds)
-        .eq("shared_with_coach", true)
-        .eq("visibility", "coach")
-        .gte("record_date", weekRange.start)
-        .lte("record_date", weekRange.end)
-        .is("deleted_at", null),
-      serviceClient
-        .from("monthly_reflections")
-        .select("id, profile_id, relationship_id, shared_with_coach, visibility")
-        .in("profile_id", coacheeIds)
-        .eq("shared_with_coach", true)
-        .eq("visibility", "coach")
-        .eq("year", reflectionYear)
-        .eq("month", reflectionMonth)
-        .is("deleted_at", null),
+      fetchAllByIdChunks<WeeklyLogStatsRow>(relationshipIds, (chunk, from, to) =>
+        serviceClient
+          .from("weekly_logs")
+          .select("id, relationship_id, coachee_profile_id, status, submitted_at")
+          .in("relationship_id", chunk)
+          .lte("week_start", weekRange.end)
+          .gte("week_end", weekRange.start)
+          .is("deleted_at", null)
+          .order("id", { ascending: true })
+          .range(from, to),
+      ),
+      fetchAllByIdChunks<SharedDailyStatsRow>(coacheeIds, (chunk, from, to) =>
+        serviceClient
+          .from("daily_records")
+          .select("id, profile_id, relationship_id, shared_with_coach, visibility")
+          .in("profile_id", chunk)
+          .eq("shared_with_coach", true)
+          .eq("visibility", "coach")
+          .gte("record_date", weekRange.start)
+          .lte("record_date", weekRange.end)
+          .is("deleted_at", null)
+          .order("id", { ascending: true })
+          .range(from, to),
+      ),
+      fetchAllByIdChunks<SharedMonthlyStatsRow>(coacheeIds, (chunk, from, to) =>
+        serviceClient
+          .from("monthly_reflections")
+          .select("id, profile_id, relationship_id, shared_with_coach, visibility")
+          .in("profile_id", chunk)
+          .eq("shared_with_coach", true)
+          .eq("visibility", "coach")
+          .eq("year", reflectionYear)
+          .eq("month", reflectionMonth)
+          .is("deleted_at", null)
+          .order("id", { ascending: true })
+          .range(from, to),
+      ),
     ]);
 
   if (weeklyLogsResult.error) {
@@ -755,13 +782,16 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
     (monthlyReflectionsResult.data ?? []) as SharedMonthlyStatsRow[];
   const submittedThisWeekLogs = weeklyLogs.filter(isSubmittedWeeklyLog);
   const submittedWeeklyLogIds = submittedThisWeekLogs.map((log) => log.id);
-  const { data: feedbackRows, error: feedbackError } = submittedWeeklyLogIds.length
-    ? await serviceClient
+  const { data: feedbackRows, error: feedbackError } =
+    await fetchAllByIdChunks<FeedbackStatsRow>(submittedWeeklyLogIds, (chunk, from, to) =>
+      serviceClient
         .from("coach_feedback")
         .select("weekly_log_id, relationship_id")
-        .in("weekly_log_id", submittedWeeklyLogIds)
+        .in("weekly_log_id", chunk)
         .is("deleted_at", null)
-    : { data: [], error: null };
+        .order("id", { ascending: true })
+        .range(from, to),
+    );
 
   if (feedbackError) {
     logServerError(
@@ -1016,12 +1046,18 @@ export async function getCoachMakerMoksilgiDashboardSummary(
   let accessibleProfileIds: string[] | null = null;
 
   if (!hasFullAccess) {
-    const { data: relationships, error: relationshipsError } = await serviceClient
-      .from("coaching_relationships")
-      .select("coachee_profile_id")
-      .eq("coach_profile_id", currentProfile.id)
-      .eq("status", "active")
-      .is("deleted_at", null);
+    const { data: relationships, error: relationshipsError } = await fetchAllPages<{
+      coachee_profile_id: string | null;
+    }>((from, to) =>
+      serviceClient
+        .from("coaching_relationships")
+        .select("coachee_profile_id")
+        .eq("coach_profile_id", currentProfile.id)
+        .eq("status", "active")
+        .is("deleted_at", null)
+        .order("id", { ascending: true })
+        .range(from, to),
+    );
 
     if (relationshipsError) {
       logServerError(
@@ -1059,19 +1095,24 @@ export async function getCoachMakerMoksilgiDashboardSummary(
     }
   }
 
-  let plansQuery = serviceClient
-    .from("moksilgi_plans")
-    .select("id, profile_id, author_name, region_name, team_name")
-    .is("deleted_at", null)
-    .order("updated_at", { ascending: false })
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false });
+  // 전체 정렬 순서를 지켜야 하므로 묶음으로 나누지 않고 페이징만 한다(마지막 정렬 키 id로 경계 안정).
+  const { data: plans, error: plansError } = await fetchAllPages<MoksilgiDashboardPlanRow>(
+    (from, to) => {
+      const baseQuery = serviceClient
+        .from("moksilgi_plans")
+        .select("id, profile_id, author_name, region_name, team_name")
+        .is("deleted_at", null);
+      const scopedQuery = accessibleProfileIds
+        ? baseQuery.in("profile_id", accessibleProfileIds)
+        : baseQuery;
 
-  if (accessibleProfileIds) {
-    plansQuery = plansQuery.in("profile_id", accessibleProfileIds);
-  }
-
-  const { data: plans, error: plansError } = await plansQuery;
+      return scopedQuery
+        .order("updated_at", { ascending: false })
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .range(from, to);
+    },
+  );
 
   if (plansError) {
     logServerError(
@@ -1092,21 +1133,26 @@ export async function getCoachMakerMoksilgiDashboardSummary(
   const profileIds = uniqueNonNull(planRows.map((plan) => plan.profile_id));
 
   const [profilesResult, summariesResult] = await Promise.all([
-    profileIds.length > 0
-      ? serviceClient
-          .from("profiles")
-          .select("id, display_name, full_name, email, region_id")
-          .in("id", profileIds)
-          .is("deleted_at", null)
-      : Promise.resolve({ data: [], error: null }),
-    planIds.length > 0
-      ? serviceClient
-          .from("moksilgi_monthly_summaries")
-          .select("plan_id, month, average_rate")
-          .in("plan_id", planIds)
-          .eq("year", selectedYear)
-          .is("deleted_at", null)
-      : Promise.resolve({ data: [], error: null }),
+    // 빈 id 목록은 헬퍼가 요청 없이 빈 배열로 처리한다.
+    fetchAllByIdChunks<MoksilgiDashboardProfileRow>(profileIds, (chunk, from, to) =>
+      serviceClient
+        .from("profiles")
+        .select("id, display_name, full_name, email, region_id")
+        .in("id", chunk)
+        .is("deleted_at", null)
+        .order("id", { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllByIdChunks<MoksilgiDashboardSummaryRow>(planIds, (chunk, from, to) =>
+      serviceClient
+        .from("moksilgi_monthly_summaries")
+        .select("plan_id, month, average_rate")
+        .in("plan_id", chunk)
+        .eq("year", selectedYear)
+        .is("deleted_at", null)
+        .order("id", { ascending: true })
+        .range(from, to),
+    ),
   ]);
 
   if (profilesResult.error || summariesResult.error) {
