@@ -1278,10 +1278,24 @@ export async function getCoachMakerMoksilgiProgress(
     .select("id, timezone")
     .is("deleted_at", null)
     .eq("status", "active");
+  const buildRolesQuery = (rolesProfileId: string) =>
+    supabase
+      .from("user_roles")
+      .select("role, scope_type, scope_id")
+      .eq("profile_id", rolesProfileId)
+      .in("role", Array.from(ALLOWED_ROLES))
+      .eq("status", "active")
+      .eq("is_active", true)
+      .is("deleted_at", null);
 
-  const { data: profile, error: profileError } = verifiedProfileId
-    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
-    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
+  // 미들웨어가 검증한 profile id가 있으면 profile과 roles를 동시에 조회한다.
+  const [profileResult, earlyRolesResult] = await Promise.all([
+    verifiedProfileId
+      ? profileQuery.eq("id", verifiedProfileId).maybeSingle()
+      : profileQuery.eq("auth_user_id", session.user.id).maybeSingle(),
+    verifiedProfileId ? buildRolesQuery(verifiedProfileId) : Promise.resolve(null),
+  ]);
+  const { data: profile, error: profileError } = profileResult;
 
   perf.mark("auth.profile_lookup", profile ? 1 : 0);
 
@@ -1308,14 +1322,8 @@ export async function getCoachMakerMoksilgiProgress(
   const profileRecord = profile as CurrentProfileRow;
   const profileId = profileRecord.id;
   const effectiveTimezone = getEffectiveTimezone(profileRecord.timezone);
-  const { data: roles, error: rolesError } = await supabase
-    .from("user_roles")
-    .select("role, scope_type, scope_id")
-    .eq("profile_id", profileId)
-    .in("role", Array.from(ALLOWED_ROLES))
-    .eq("status", "active")
-    .eq("is_active", true)
-    .is("deleted_at", null);
+  const { data: roles, error: rolesError } =
+    earlyRolesResult ?? (await buildRolesQuery(profileId));
 
   perf.mark("auth.roles_lookup", roles?.length ?? 0);
 

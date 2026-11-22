@@ -464,10 +464,25 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
     .select("id, display_name, full_name, email, timezone")
     .is("deleted_at", null)
     .eq("status", "active");
+  const buildRolesQuery = (profileId: string) =>
+    serviceClient
+      .from("user_roles")
+      .select("role, scope_type, scope_id, status")
+      .eq("profile_id", profileId)
+      .in("role", COACH_MAKER_ACCESS_ROLES)
+      .eq("status", "active")
+      .eq("is_active", true)
+      .is("deleted_at", null)
+      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
 
-  const { data: profile, error: profileError } = verifiedProfileId
-    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
-    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
+  // 미들웨어가 검증한 profile id가 있으면 profile과 roles를 동시에 조회한다.
+  const [profileResult, earlyRolesResult] = await Promise.all([
+    verifiedProfileId
+      ? profileQuery.eq("id", verifiedProfileId).maybeSingle()
+      : profileQuery.eq("auth_user_id", session.user.id).maybeSingle(),
+    verifiedProfileId ? buildRolesQuery(verifiedProfileId) : Promise.resolve(null),
+  ]);
+  const { data: profile, error: profileError } = profileResult;
 
   if (profileError) {
     logServerError(
@@ -498,15 +513,8 @@ export async function getCoachMakerCoachStats(): Promise<GetCoachMakerCoachStats
   const weekRange = getCurrentWeekRange(effectiveTimezone);
   const reflectionYear = getCurrentYearInTimezone(effectiveTimezone);
   const reflectionMonth = getCurrentMonthInTimezone(effectiveTimezone);
-  const { data: roles, error: rolesError } = await serviceClient
-    .from("user_roles")
-    .select("role, scope_type, scope_id, status")
-    .eq("profile_id", currentProfile.id)
-    .in("role", COACH_MAKER_ACCESS_ROLES)
-    .eq("status", "active")
-    .eq("is_active", true)
-    .is("deleted_at", null)
-    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+  const { data: roles, error: rolesError } =
+    earlyRolesResult ?? (await buildRolesQuery(currentProfile.id));
 
   if (rolesError) {
     logServerError(
@@ -929,10 +937,25 @@ export async function getCoachMakerMoksilgiDashboardSummary(
     .select("id, display_name, full_name, email, timezone")
     .is("deleted_at", null)
     .eq("status", "active");
+  const buildRolesQuery = (profileId: string) =>
+    serviceClient
+      .from("user_roles")
+      .select("role, scope_type, scope_id, status")
+      .eq("profile_id", profileId)
+      .in("role", COACH_MAKER_ACCESS_ROLES)
+      .eq("status", "active")
+      .eq("is_active", true)
+      .is("deleted_at", null)
+      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
 
-  const { data: profile, error: profileError } = verifiedProfileId
-    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
-    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
+  // 미들웨어가 검증한 profile id가 있으면 profile과 roles를 동시에 조회한다.
+  const [profileResult, earlyRolesResult] = await Promise.all([
+    verifiedProfileId
+      ? profileQuery.eq("id", verifiedProfileId).maybeSingle()
+      : profileQuery.eq("auth_user_id", session.user.id).maybeSingle(),
+    verifiedProfileId ? buildRolesQuery(verifiedProfileId) : Promise.resolve(null),
+  ]);
+  const { data: profile, error: profileError } = profileResult;
 
   if (profileError) {
     logServerError(
@@ -960,15 +983,8 @@ export async function getCoachMakerMoksilgiDashboardSummary(
 
   const currentProfile = profile as CurrentProfileRow;
   const effectiveTimezone = getEffectiveTimezone(currentProfile.timezone);
-  const { data: roles, error: rolesError } = await serviceClient
-    .from("user_roles")
-    .select("role, scope_type, scope_id, status")
-    .eq("profile_id", currentProfile.id)
-    .in("role", COACH_MAKER_ACCESS_ROLES)
-    .eq("status", "active")
-    .eq("is_active", true)
-    .is("deleted_at", null)
-    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+  const { data: roles, error: rolesError } =
+    earlyRolesResult ?? (await buildRolesQuery(currentProfile.id));
 
   if (rolesError) {
     logServerError(
