@@ -607,6 +607,46 @@ export async function createAdminCoachingRelationship(input: {
     };
   }
 
+  // DB 고유 인덱스는 scope_type/scope_id별로 나뉘어 있어, 범위만 다른 같은 코치-코치이
+  // 활성 관계가 중복 생성될 수 있다. 범위·유형과 무관하게 같은 쌍의 활성 관계를 먼저 확인한다.
+  const { data: existingRelationship, error: existingRelationshipError } =
+    await serviceClient
+      .from("coaching_relationships")
+      .select("id")
+      .eq("coach_profile_id", coachProfileId)
+      .eq("coachee_profile_id", coacheeProfileId)
+      .in("status", ["active", "paused"])
+      .is("deleted_at", null)
+      .limit(1)
+      .maybeSingle();
+
+  if (existingRelationshipError) {
+    logServerError(
+      "RELATIONSHIP_DUPLICATE_LOOKUP_FAILED",
+      existingRelationshipError.message ??
+        "Coaching relationship duplicate lookup failed.",
+    );
+    return {
+      ok: false,
+      error: {
+        status: 500,
+        code: "RELATIONSHIP_DUPLICATE_LOOKUP_FAILED",
+        message: "지금 기존 코칭 관계를 확인할 수 없습니다.",
+      },
+    };
+  }
+
+  if (existingRelationship) {
+    return {
+      ok: false,
+      error: {
+        status: 409,
+        code: "DUPLICATE_ACTIVE_RELATIONSHIP",
+        message: "이 코치와 코치이 사이에 이미 진행 중인 코칭 관계가 있습니다.",
+      },
+    };
+  }
+
   const now = new Date().toISOString();
   const relationshipInsert: CoachingRelationshipInsert = {
     coach_profile_id: coachProfileId,
