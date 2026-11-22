@@ -97,6 +97,8 @@ type RelationshipRow = {
   coach_profile_id: string;
   coachee_profile_id: string;
   status: string;
+  scope_type: ScopeType | null;
+  scope_id: string | null;
 };
 type ProfileRow = Pick<
   Tables<"profiles">,
@@ -109,6 +111,7 @@ type ProfileRow = Pick<
   | "organization_id"
   | "church_id"
   | "group_id"
+  | "cohort_id"
   | "ministry_position"
   | "generation_number"
   | "primary_role"
@@ -394,6 +397,47 @@ function uniqueSortedNonNull(values: Array<string | null | undefined>) {
 
 function mapById<TRow extends { id: string }>(rows: TRow[]) {
   return new Map(rows.map((row) => [row.id, row]));
+}
+
+function getProfileScopeValue(profile: ProfileRow | undefined, scopeType: ScopeType) {
+  switch (scopeType) {
+    case "country":
+      return profile?.country_id ?? null;
+    case "region":
+      return profile?.region_id ?? null;
+    case "organization":
+      return profile?.organization_id ?? null;
+    case "church":
+      return profile?.church_id ?? null;
+    case "group":
+      return profile?.group_id ?? null;
+    case "cohort":
+      return profile?.cohort_id ?? null;
+    default:
+      return null;
+  }
+}
+
+/**
+ * broad(전체 접근 아님) 경로의 DB 사전 필터와 같은 의미로 관계를 최종 판정한다.
+ * 사전 필터가 꺼지는 경우(스코프 200명 초과, 조회 오류)에도 범위 밖 관계가 섞이지 않게 한다.
+ * scopeRoles는 scope_id가 있고 global/coach가 아닌 역할만 담겨 있어야 한다.
+ */
+function relationshipInPrefilterScope(
+  relationship: RelationshipRow,
+  profilesById: Map<string, ProfileRow>,
+  scopeRoles: ScopedRoleRow[],
+) {
+  const coach = profilesById.get(relationship.coach_profile_id);
+  const coachee = profilesById.get(relationship.coachee_profile_id);
+
+  return scopeRoles.some(
+    (role) =>
+      (relationship.scope_type === role.scope_type &&
+        relationship.scope_id === role.scope_id) ||
+      getProfileScopeValue(coach, role.scope_type) === role.scope_id ||
+      getProfileScopeValue(coachee, role.scope_type) === role.scope_id,
+  );
 }
 
 async function getCachedLookupRows<TRow extends { id: string }>(
@@ -1287,13 +1331,15 @@ export async function getCoachMakerMoksilgiProgress(
   const hasBroadAccess = roleValues.some((role) => BROAD_ACCESS_ROLES.has(role));
   let accessibleProfileIds: string[] | null = null;
   let activeRelationships: RelationshipRow[] = [];
+  // broad 경로에서 전체 접근이 아닐 때만 설정. 관계 표를 메모리에서 최종 판정할 때 쓴다.
+  let relationshipScopeRoles: ScopedRoleRow[] | null = null;
 
   if (!hasBroadAccess) {
     const { data: relationships, error: relationshipsError } =
       await fetchAllPages<RelationshipRow>((from, to) =>
         serviceClient
           .from("coaching_relationships")
-          .select("id, coach_profile_id, coachee_profile_id, status")
+          .select("id, coach_profile_id, coachee_profile_id, status, scope_type, scope_id")
           .eq("coach_profile_id", profileId)
           .eq("status", "active")
           .is("deleted_at", null)
@@ -1347,12 +1393,19 @@ export async function getCoachMakerMoksilgiProgress(
     }
   } else {
     const scopeRoles = (roles ?? []) as ScopedRoleRow[];
-    const hasFullRelationshipAccess = roleValues.includes("super_admin");
+    // super_admin 또는 global 스코프 역할이면 전체 관계 (coach-stats.ts와 같은 기준, 2026-11-23 정책 결정)
+    const hasFullRelationshipAccess =
+      roleValues.includes("super_admin") ||
+      scopeRoles.some((role) => role.scope_type === "global");
 
     // 스코프 사전 필터(.or 문자열)는 한 번만 계산하고, 페이지마다 같은 필터로 조회한다.
     let relationshipOrFilter: string | null = null;
 
     if (!hasFullRelationshipAccess) {
+      // 사전 필터가 꺼지는 경우(스코프 200명 초과·조회 오류)에도 프로필 로드 후 메모리에서 최종 판정한다.
+      relationshipScopeRoles = scopeRoles.filter(
+        (role) => role.scope_id && role.scope_type !== "global" && role.scope_type !== "coach",
+      );
       const scopedProfileIds = await resolveScopedProfileIds(serviceClient, scopeRoles);
 
       if (scopedProfileIds !== null) {
@@ -1387,7 +1440,7 @@ export async function getCoachMakerMoksilgiProgress(
       await fetchAllPages<RelationshipRow>((from, to) => {
         const baseQuery = serviceClient
           .from("coaching_relationships")
-          .select("id, coach_profile_id, coachee_profile_id, status")
+          .select("id, coach_profile_id, coachee_profile_id, status, scope_type, scope_id")
           .eq("status", "active")
           .is("deleted_at", null);
         const filteredQuery =
@@ -1527,7 +1580,7 @@ export async function getCoachMakerMoksilgiProgress(
       serviceClient
         .from("profiles")
         .select(
-          "id, display_name, full_name, email, country_id, region_id, organization_id, church_id, group_id, ministry_position, generation_number, primary_role",
+          "id, display_name, full_name, email, country_id, region_id, organization_id, church_id, group_id, cohort_id, ministry_position, generation_number, primary_role",
         )
         .in("id", chunk)
         .is("deleted_at", null)
@@ -1647,6 +1700,17 @@ export async function getCoachMakerMoksilgiProgress(
   }
 
   const profileById = mapById(profileRows);
+
+  if (relationshipScopeRoles) {
+    const scopeRolesForFilter = relationshipScopeRoles;
+    const beforeCount = activeRelationships.length;
+    activeRelationships = activeRelationships.filter((relationship) =>
+      relationshipInPrefilterScope(relationship, profileById, scopeRolesForFilter),
+    );
+    // 제거된 관계 수. 정상(사전 필터 적용)이면 항상 0, 0이 아니면 폴백이 발생한 것.
+    perf.mark("data.relationships_scope_filter", beforeCount - activeRelationships.length);
+  }
+
   const lookups = {
     churches: mapById((churchesResult.data ?? []) as ChurchRow[]),
     countries: mapById((countriesResult.data ?? []) as CountryRow[]),
