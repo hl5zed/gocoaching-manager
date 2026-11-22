@@ -256,10 +256,23 @@ export async function getCoachMakerMoksilgiProgressDetail(
     .select("id")
     .is("deleted_at", null)
     .eq("status", "active");
+  const buildRolesQuery = (rolesProfileId: string) =>
+    supabase
+      .from("user_roles")
+      .select("id, role, scope_type, scope_id, granted_at, expires_at")
+      .eq("profile_id", rolesProfileId)
+      .eq("status", "active")
+      .eq("is_active", true)
+      .is("deleted_at", null);
 
-  const { data: profile, error: profileError } = verifiedProfileId
-    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
-    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
+  // 미들웨어가 검증한 profile id가 있으면 profile과 roles를 동시에 조회한다.
+  const [profileResult, earlyRolesResult] = await Promise.all([
+    verifiedProfileId
+      ? profileQuery.eq("id", verifiedProfileId).maybeSingle()
+      : profileQuery.eq("auth_user_id", session.user.id).maybeSingle(),
+    verifiedProfileId ? buildRolesQuery(verifiedProfileId) : Promise.resolve(null),
+  ]);
+  const { data: profile, error: profileError } = profileResult;
 
   if (profileError) {
     return { data: null, error: { code: "PROFILE_QUERY_FAILED", message: "프로필을 조회하는 중 오류가 발생했습니다." } };
@@ -270,13 +283,8 @@ export async function getCoachMakerMoksilgiProgressDetail(
   }
 
   const profileId = (profile as ProfileIdRow).id;
-  const { data: roles, error: rolesError } = await supabase
-    .from("user_roles")
-    .select("id, role, scope_type, scope_id, granted_at, expires_at")
-    .eq("profile_id", profileId)
-    .eq("status", "active")
-    .eq("is_active", true)
-    .is("deleted_at", null);
+  const { data: roles, error: rolesError } =
+    earlyRolesResult ?? (await buildRolesQuery(profileId));
 
   if (rolesError) {
     return { data: null, error: { code: "ROLES_QUERY_FAILED", message: "역할 정보를 조회하는 중 오류가 발생했습니다." } };

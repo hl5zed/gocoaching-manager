@@ -479,10 +479,23 @@ export async function requireActionNotesAccess(
     .select("id, organization_id, church_id")
     .eq("status", "active")
     .is("deleted_at", null);
+  const buildRolesQuery = (rolesProfileId: string) =>
+    supabase
+      .from("user_roles")
+      .select("role, scope_type, scope_id")
+      .eq("profile_id", rolesProfileId)
+      .eq("status", "active")
+      .eq("is_active", true)
+      .is("deleted_at", null);
 
-  const { data: profile, error: profileError } = verifiedProfileId
-    ? await profileQuery.eq("id", verifiedProfileId).maybeSingle()
-    : await profileQuery.eq("auth_user_id", session.user.id).maybeSingle();
+  // 미들웨어가 검증한 profile id가 있으면 profile과 roles를 동시에 조회한다.
+  const [profileResult, earlyRolesResult] = await Promise.all([
+    verifiedProfileId
+      ? profileQuery.eq("id", verifiedProfileId).maybeSingle()
+      : profileQuery.eq("auth_user_id", session.user.id).maybeSingle(),
+    verifiedProfileId ? buildRolesQuery(verifiedProfileId) : Promise.resolve(null),
+  ]);
+  const { data: profile, error: profileError } = profileResult;
 
   if (profileError || !profile) {
     return {
@@ -493,13 +506,8 @@ export async function requireActionNotesAccess(
   }
 
   const profileRecord = profile as ProfileScopeRow;
-  const { data: roles, error: rolesError } = await supabase
-    .from("user_roles")
-    .select("role, scope_type, scope_id")
-    .eq("profile_id", profileRecord.id)
-    .eq("status", "active")
-    .eq("is_active", true)
-    .is("deleted_at", null);
+  const { data: roles, error: rolesError } =
+    earlyRolesResult ?? (await buildRolesQuery(profileRecord.id));
 
   if (rolesError) {
     return {
