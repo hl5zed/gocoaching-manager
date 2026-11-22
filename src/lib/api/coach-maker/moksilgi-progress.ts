@@ -1006,6 +1006,63 @@ async function fetchAllPages<TRow>(
   return { data: rows, error: null };
 }
 
+const ID_CHUNK_SIZE = 150;
+const ID_CHUNK_CONCURRENCY = 3;
+
+function chunkIds(ids: string[], size: number = ID_CHUNK_SIZE): string[][] {
+  const chunks: string[][] = [];
+  for (let index = 0; index < ids.length; index += size) {
+    chunks.push(ids.slice(index, index + size));
+  }
+  return chunks;
+}
+
+async function mapWithConcurrency<TInput, TOutput>(
+  items: TInput[],
+  limit: number,
+  worker: (item: TInput) => Promise<TOutput>,
+): Promise<TOutput[]> {
+  const results: TOutput[] = new Array<TOutput>(items.length);
+  let nextIndex = 0;
+
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await worker(items[currentIndex]);
+    }
+  });
+
+  await Promise.all(runners);
+  return results;
+}
+
+/**
+ * id 목록을 묶음으로 나눠 묶음별로 fetchAllPages를 실행한다(동시 ID_CHUNK_CONCURRENCY개).
+ * 묶음 순서대로 이어 붙이므로, 묶음 키(plan_id 등)별 행 순서는 기존 단일 쿼리와 같다.
+ */
+async function fetchAllPagesByIdChunks<TRow>(
+  ids: string[],
+  fetchPage: (
+    chunk: string[],
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: unknown; error: unknown }>,
+): Promise<{ data: TRow[]; error: unknown }> {
+  if (ids.length === 0) return { data: [], error: null };
+
+  const chunkResults = await mapWithConcurrency(
+    chunkIds(ids),
+    ID_CHUNK_CONCURRENCY,
+    (chunk) => fetchAllPages<TRow>((from, to) => fetchPage(chunk, from, to)),
+  );
+
+  const failed = chunkResults.find((result) => result.error);
+  if (failed) return { data: [], error: failed.error };
+
+  return { data: chunkResults.flatMap((result) => result.data), error: null };
+}
+
 /**
  * 저장된 월별 요약 대신 실제 월 실적으로 엑셀 방식 월 성취율을 계산한다.
  * 반환 형태는 기존 SummaryRow와 같아서 아래 행/요약/개요 계산은 그대로 쓴다.
@@ -1019,29 +1076,29 @@ async function loadExcelMonthlySummaries(
 
   const planIds = plans.map((plan) => plan.id);
   const [areasResult, goalsResult, recordsResult] = await Promise.all([
-    fetchAllPages<ExcelAreaRow>((from, to) =>
+    fetchAllPagesByIdChunks<ExcelAreaRow>(planIds, (chunk, from, to) =>
       serviceClient
         .from("moksilgi_goal_areas")
         .select("id, plan_id, area_key")
-        .in("plan_id", planIds)
+        .in("plan_id", chunk)
         .is("deleted_at", null)
         .order("id", { ascending: true })
         .range(from, to),
     ),
-    fetchAllPages<ExcelGoalRow>((from, to) =>
+    fetchAllPagesByIdChunks<ExcelGoalRow>(planIds, (chunk, from, to) =>
       serviceClient
         .from("moksilgi_detail_goals")
         .select("id, plan_id, area_id, measurement_type, annual_target")
-        .in("plan_id", planIds)
+        .in("plan_id", chunk)
         .is("deleted_at", null)
         .order("id", { ascending: true })
         .range(from, to),
     ),
-    fetchAllPages<ExcelRecordRow>((from, to) =>
+    fetchAllPagesByIdChunks<ExcelRecordRow>(planIds, (chunk, from, to) =>
       serviceClient
         .from("moksilgi_monthly_records")
         .select("plan_id, profile_id, detail_goal_id, month, actual_value")
-        .in("plan_id", planIds)
+        .in("plan_id", chunk)
         .eq("year", year)
         .is("deleted_at", null)
         .order("id", { ascending: true })
@@ -1517,15 +1574,17 @@ export async function getCoachMakerMoksilgiProgress(
     ]),
   ];
   const [profilesResult, summariesResult] = await Promise.all([
-    profileIds.length > 0
-      ? serviceClient
-          .from("profiles")
-          .select(
-            "id, display_name, full_name, email, country_id, region_id, organization_id, church_id, group_id, ministry_position, generation_number, primary_role",
-          )
-          .in("id", profileIds)
-          .is("deleted_at", null)
-      : Promise.resolve({ data: [], error: null }),
+    fetchAllPagesByIdChunks<ProfileRow>(profileIds, (chunk, from, to) =>
+      serviceClient
+        .from("profiles")
+        .select(
+          "id, display_name, full_name, email, country_id, region_id, organization_id, church_id, group_id, ministry_position, generation_number, primary_role",
+        )
+        .in("id", chunk)
+        .is("deleted_at", null)
+        .order("id", { ascending: true })
+        .range(from, to),
+    ),
     // 엑셀 목실기 성취표 방식: 저장된 요약 대신 월 실적에서 직접 계산한다.
     loadExcelMonthlySummaries(serviceClient, overviewPlanRows, selectedYear),
   ]);
