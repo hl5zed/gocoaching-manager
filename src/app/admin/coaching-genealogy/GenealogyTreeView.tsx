@@ -24,17 +24,32 @@ type PyramidLayoutNode = {
   generation: GenerationKey;
   height: number;
   node: GenealogyNode;
+  unknown: boolean;
   width: number;
   x: number;
   y: number;
 };
 
+type NodeColors = {
+  fill: string;
+  stroke: string;
+  sub: string;
+  text: string;
+  title: string;
+};
+
+// 세대 값이 없는 회원은 G4 층에 배치하되 회색으로 구분하고 별도로 집계한다.
+const UNKNOWN_COLORS: NodeColors = {
+  fill: "#F1F5F9",
+  stroke: "#64748B",
+  sub: "#64748B",
+  text: "#475569",
+  title: "#1E293B",
+};
+
 const GENERATIONS: GenerationKey[] = [1, 2, 3, 4];
 
-const GEN_COLORS: Record<
-  GenerationKey,
-  { fill: string; stroke: string; title: string; sub: string; text: string }
-> = {
+const GEN_COLORS: Record<GenerationKey, NodeColors> = {
   1: {
     fill: "#EEEDFE",
     stroke: "#534AB7",
@@ -118,8 +133,16 @@ function generationLabel(generationNumber: number | null) {
     : "G?";
 }
 
-function generationName(generation: GenerationKey) {
-  return generation === 1 ? "G1 루트코치" : `G${generation}`;
+function hasKnownGeneration(generationNumber: number | null) {
+  return typeof generationNumber === "number" && Number.isFinite(generationNumber);
+}
+
+function generationName(generation: GenerationKey, hasG5Plus = false) {
+  if (generation === 1) {
+    return "G1 루트코치";
+  }
+
+  return generation === 4 && hasG5Plus ? "G4 이상" : `G${generation}`;
 }
 
 function statusLabel(status: string | null | undefined) {
@@ -169,6 +192,8 @@ function computePyramidLayout(nodes: GenealogyNode[]) {
     4: 0,
   };
   const layoutMap = new Map<string, PyramidLayoutNode>();
+  let unknownCount = 0;
+  let hasG5Plus = false;
 
   for (const generation of GENERATIONS) {
     grouped.set(generation, []);
@@ -177,7 +202,13 @@ function computePyramidLayout(nodes: GenealogyNode[]) {
   for (const node of nodes) {
     const generation = layoutGeneration(node.generationNumber);
     grouped.get(generation)?.push(node);
-    counts[generation] += 1;
+
+    if (hasKnownGeneration(node.generationNumber)) {
+      counts[generation] += 1;
+      hasG5Plus = hasG5Plus || (node.generationNumber ?? 0) >= 5;
+    } else {
+      unknownCount += 1;
+    }
   }
 
   for (const generation of GENERATIONS) {
@@ -198,6 +229,7 @@ function computePyramidLayout(nodes: GenealogyNode[]) {
         generation,
         height: size.height,
         node,
+        unknown: !hasKnownGeneration(node.generationNumber),
         width: size.width,
         x: centerX - size.width / 2,
         y: GEN_Y[generation],
@@ -205,7 +237,7 @@ function computePyramidLayout(nodes: GenealogyNode[]) {
     });
   }
 
-  return { counts, layoutMap };
+  return { counts, hasG5Plus, layoutMap, unknownCount };
 }
 
 function buildHighlightedPath(selectedNodeId: string | null, edges: GenealogyEdge[]) {
@@ -275,10 +307,11 @@ function PyramidNode({
   onSelectNode: (nodeId: string) => void;
   selected: boolean;
 }) {
-  const { generation, height, node, width, x, y } = layout;
-  const colors = GEN_COLORS[generation];
+  const { generation, height, node, unknown, width, x, y } = layout;
+  const colors = unknown ? UNKNOWN_COLORS : GEN_COLORS[generation];
   const opacity = highlighted || selected ? 1 : dimmed ? 0.28 : 0.92;
-  const canShowThirdLine = height >= 34;
+  // G3(높이 34)는 두 번째 줄과 세 번째 줄이 겹치므로 G1·G2에서만 표시한다.
+  const canShowThirdLine = height >= 38;
   const titleSize = generation === 4 ? 6.7 : 7.8;
   const subSize = generation === 4 ? 5.8 : 6.4;
 
@@ -345,8 +378,20 @@ function PyramidNode({
   );
 }
 
-function GenerationStackedBar({ counts }: { counts: Record<GenerationKey, number> }) {
-  const total = GENERATIONS.reduce((sum, generation) => sum + counts[generation], 0);
+function GenerationStackedBar({
+  counts,
+  hasG5Plus,
+  unknownCount,
+}: {
+  counts: Record<GenerationKey, number>;
+  hasG5Plus: boolean;
+  unknownCount: number;
+}) {
+  const total =
+    GENERATIONS.reduce((sum, generation) => sum + counts[generation], 0) +
+    unknownCount;
+  const unknownWidth = total > 0 ? (340 * unknownCount) / total : 0;
+  const legendSpacing = unknownCount > 0 ? 72 : 92;
   let currentX = 80;
 
   return (
@@ -368,12 +413,22 @@ function GenerationStackedBar({ counts }: { counts: Record<GenerationKey, number
         currentX += width;
         return segment;
       })}
+      {unknownWidth > 0 ? (
+        <rect
+          fill={UNKNOWN_COLORS.stroke}
+          height={32}
+          opacity={0.6}
+          width={unknownWidth}
+          x={80 + 340 - unknownWidth}
+          y={274}
+        />
+      ) : null}
       <text fill="#475569" fontSize={7.5} fontWeight={600} textAnchor="middle" x={250} y={295}>
         세대별 인원 비율
       </text>
       <g transform="translate(86 322)">
         {GENERATIONS.map((generation, index) => (
-          <g key={generation} transform={`translate(${index * 92} 0)`}>
+          <g key={generation} transform={`translate(${index * legendSpacing} 0)`}>
             <rect
               fill={GEN_COLORS[generation].stroke}
               height={7}
@@ -383,10 +438,26 @@ function GenerationStackedBar({ counts }: { counts: Record<GenerationKey, number
               y={-6}
             />
             <text fill="#475569" fontSize={7} x={18} y={0}>
-              {generationName(generation)} {counts[generation]}명
+              {generationName(generation, hasG5Plus)} {counts[generation]}명
             </text>
           </g>
         ))}
+        {unknownCount > 0 ? (
+          <g transform={`translate(${GENERATIONS.length * legendSpacing} 0)`}>
+            <rect
+              fill={UNKNOWN_COLORS.stroke}
+              height={7}
+              opacity={0.6}
+              rx={2}
+              width={14}
+              x={0}
+              y={-6}
+            />
+            <text fill="#475569" fontSize={7} x={18} y={0}>
+              미지정 {unknownCount}명
+            </text>
+          </g>
+        ) : null}
       </g>
     </g>
   );
@@ -402,7 +473,10 @@ export function GenealogyTreeView({
   onSelectNode,
   selectedNodeId,
 }: GenealogyTreeViewProps) {
-  const { counts, layoutMap } = useMemo(() => computePyramidLayout(nodes), [nodes]);
+  const { counts, hasG5Plus, layoutMap, unknownCount } = useMemo(
+    () => computePyramidLayout(nodes),
+    [nodes],
+  );
   const { highlightedEdgeIds, highlightedNodeIds } = useMemo(
     () => buildHighlightedPath(selectedNodeId, edges),
     [edges, selectedNodeId],
@@ -498,6 +572,17 @@ export function GenealogyTreeView({
                 <path d="M0,0 L6,3 L0,6 Z" fill={GEN_COLORS[generation].stroke} />
               </marker>
             ))}
+            <marker
+              id="pyramid-arr-unknown"
+              markerHeight="6"
+              markerWidth="6"
+              orient="auto"
+              refX="5"
+              refY="3"
+              viewBox="0 0 6 6"
+            >
+              <path d="M0,0 L6,3 L0,6 Z" fill={UNKNOWN_COLORS.stroke} />
+            </marker>
           </defs>
 
           <rect fill="#ffffff" height="420" width="500" x="0" y="0" />
@@ -528,7 +613,7 @@ export function GenealogyTreeView({
                 x={68}
                 y={GEN_LABEL_Y[generation]}
               >
-                {generationName(generation)}
+                {generationName(generation, hasG5Plus)}
               </text>
               <text
                 fill={GEN_COLORS[generation].sub}
@@ -542,6 +627,18 @@ export function GenealogyTreeView({
               </text>
             </g>
           ))}
+          {unknownCount > 0 ? (
+            <text
+              fill={UNKNOWN_COLORS.sub}
+              fontSize={7}
+              fontWeight={600}
+              textAnchor="start"
+              x={432}
+              y={GEN_LABEL_Y[4] + 11}
+            >
+              미지정 {unknownCount}명
+            </text>
+          ) : null}
 
           <g>
             {edges.map((edge) => {
@@ -565,15 +662,18 @@ export function GenealogyTreeView({
               });
               const dimmed = hasActiveFilter && (!sourceMatches || !targetMatches);
               const active = edge.status === "active";
-              const generation = source.generation;
+              const markerId = source.unknown ? "unknown" : source.generation;
+              const strokeColor = source.unknown
+                ? UNKNOWN_COLORS.stroke
+                : GEN_COLORS[source.generation].stroke;
               const opacity = isHighlighted ? 1 : dimmed ? 0.12 : active ? 0.54 : 0.25;
 
               return (
                 <line
                   key={edge.id}
-                  markerEnd={`url(#pyramid-arr-${generation})`}
+                  markerEnd={`url(#pyramid-arr-${markerId})`}
                   opacity={opacity}
-                  stroke={GEN_COLORS[generation].stroke}
+                  stroke={strokeColor}
                   strokeDasharray={active ? undefined : "4 3"}
                   strokeWidth={isHighlighted ? 1.9 : 1.1}
                   x1={source.x + source.width / 2}
@@ -611,7 +711,11 @@ export function GenealogyTreeView({
             })}
           </g>
 
-          <GenerationStackedBar counts={counts} />
+          <GenerationStackedBar
+            counts={counts}
+            hasG5Plus={hasG5Plus}
+            unknownCount={unknownCount}
+          />
 
           <text fill="#64748b" fontSize={8} textAnchor="middle" x={250} y={366}>
             노드를 선택하면 오른쪽 상세 패널에서 소속, 역할, 담당 관계를 확인할 수 있습니다.
