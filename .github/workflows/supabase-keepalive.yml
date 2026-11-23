@@ -1,0 +1,32 @@
+name: Supabase Keep Alive
+
+# Supabase 무료 플랜 비활성 자동 중지 방지용.
+# 하루 3회 keepalive_ping 테이블을 조회한다 (supabase/migrations/0051_add_keepalive_ping.sql).
+# UTC 02:17 / 10:17 / 18:17 = 태국(UTC+7) 09:17 / 17:17 / 01:17
+#
+# 필요한 Repository secrets:
+#   SUPABASE_URL       - 프로젝트 URL (https://xxxx.supabase.co)
+#   SUPABASE_ANON_KEY  - anon(공개) key. service_role key는 절대 사용하지 말 것.
+
+on:
+  schedule:
+    - cron: "17 2,10,18 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Query Supabase database
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          curl --fail --silent --show-error \
+            --retry 2 --max-time 15 \
+            "$SUPABASE_URL/rest/v1/keepalive_ping?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY"
