@@ -46,7 +46,7 @@ function buildContentSecurityPolicy(options: { reportOnly: boolean }) {
     options.reportOnly
       ? "style-src 'self'"
       : "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://*.basemaps.cartocdn.com",
+    "img-src 'self' data: blob: https://tile.openstreetmap.org",
     "font-src 'self'",
     `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST}`,
     "frame-ancestors 'none'",
