@@ -1,7 +1,15 @@
 "use client";
 
+import { useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
-import { MapContainer, Marker, Popup, TileLayer, Tooltip } from "react-leaflet";
+import {
+  MapContainer,
+  Marker,
+  Popup,
+  TileLayer,
+  Tooltip,
+  useMap,
+} from "react-leaflet";
 import type { MapMarker } from "@/lib/api/admin/coaching-genealogy";
 
 type VisibleMarker = MapMarker & {
@@ -159,13 +167,113 @@ function markerHasGeneration(marker: MapMarker, generationNumber: number | null)
   return counts[normalized] > 0;
 }
 
+type PixelOffset = {
+  dx: number;
+  dy: number;
+};
+
+const MARKER_TYPE_ORDER: Record<MapMarker["markerType"], number> = {
+  country: 0,
+  region: 1,
+  church: 2,
+};
+
+function getMarkerKey(marker: MapMarker) {
+  return `${marker.markerType}-${marker.id ?? marker.name}`;
+}
+
+// 같은 좌표에 겹친 마커를 화면상에서 원형으로 펼친다. 실제 좌표는 그대로 두고
+// 아이콘 위치만 픽셀 단위로 이동하므로 확대/축소와 무관하게 간격이 유지된다.
+function computeSpreadOffsets(markers: VisibleMarker[]) {
+  const groups = new Map<string, VisibleMarker[]>();
+
+  for (const marker of markers) {
+    const groupKey = `${marker.latitude.toFixed(4)},${marker.longitude.toFixed(4)}`;
+    const group = groups.get(groupKey);
+
+    if (group) {
+      group.push(marker);
+    } else {
+      groups.set(groupKey, [marker]);
+    }
+  }
+
+  const offsets = new Map<string, PixelOffset>();
+
+  for (const group of groups.values()) {
+    if (group.length < 2) {
+      continue;
+    }
+
+    const sorted = [...group].sort(
+      (a, b) =>
+        MARKER_TYPE_ORDER[a.markerType] - MARKER_TYPE_ORDER[b.markerType] ||
+        b.profileCount - a.profileCount,
+    );
+    const maxRadius = Math.max(
+      ...sorted.map((marker) => getMarkerRadius(marker.profileCount)),
+    );
+    const slotSize = Math.max(maxRadius * 2 + 12, 96);
+    const spreadRadius = Math.max(
+      slotSize / 2 + 6,
+      (sorted.length * slotSize) / (2 * Math.PI),
+    );
+
+    sorted.forEach((marker, index) => {
+      const angle = (index / sorted.length) * 2 * Math.PI - Math.PI / 2;
+
+      offsets.set(getMarkerKey(marker), {
+        dx: Math.round(spreadRadius * Math.cos(angle)),
+        dy: Math.round(spreadRadius * Math.sin(angle)),
+      });
+    });
+  }
+
+  return offsets;
+}
+
+// 표시 마커가 바뀔 때(필터 변경 등) 모든 마커가 보이도록 지도 범위를 다시 맞춘다.
+function FitToMarkers({ markers }: { markers: VisibleMarker[] }) {
+  const map = useMap();
+  // boundsKey가 같으면 마커 선택 등으로 배열이 새로 만들어져도 다시 맞추지 않는다.
+  const markersRef = useRef(markers);
+  markersRef.current = markers;
+  const boundsKey = markers
+    .map((marker) => `${getMarkerKey(marker)}@${marker.latitude},${marker.longitude}`)
+    .sort()
+    .join("|");
+
+  useEffect(() => {
+    const currentMarkers = markersRef.current;
+
+    if (currentMarkers.length === 0) {
+      return;
+    }
+
+    const bounds = L.latLngBounds(
+      currentMarkers.map((marker) => [marker.latitude, marker.longitude] as [number, number]),
+    );
+
+    if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
+      map.setView(bounds.getCenter(), 6);
+      return;
+    }
+
+    map.fitBounds(bounds, { maxZoom: 7, padding: [80, 80] });
+  }, [boundsKey, map]);
+
+  return null;
+}
+
 function createMarkerIcon({
   activeGenerationNumber,
   marker,
+  offset,
   selected,
 }: {
   activeGenerationNumber: number | null;
   marker: MapMarker;
+  offset: PixelOffset;
   selected: boolean;
 }) {
   const counts = getGenerationCounts(marker);
@@ -226,8 +334,10 @@ function createMarkerIcon({
         white-space:nowrap;
       ">${label}</div>
     </div>`,
-    iconAnchor: [containerWidth / 2, svgSize / 2],
+    iconAnchor: [containerWidth / 2 - offset.dx, svgSize / 2 - offset.dy],
     iconSize: [containerWidth, svgSize + 24],
+    popupAnchor: [offset.dx, offset.dy - svgSize / 2],
+    tooltipAnchor: [offset.dx, offset.dy - svgSize / 2],
   });
 }
 
@@ -241,6 +351,8 @@ export function LeafletGenealogyMap({
   selectedMarkerId,
   selectedMarkerType,
 }: LeafletGenealogyMapProps) {
+  const spreadOffsets = useMemo(() => computeSpreadOffsets(markers), [markers]);
+
   return (
     <div className="genealogy-map-panel relative h-[620px] overflow-hidden rounded-2xl border border-line-base bg-gradient-to-br from-blue-100 via-blue-200 to-emerald-100">
       <style>{`
@@ -269,7 +381,13 @@ export function LeafletGenealogyMap({
           maxZoom={19}
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {markers.map((marker) => (
+        <FitToMarkers markers={markers} />
+        {markers.map((marker) => {
+          const selected =
+            marker.id === selectedMarkerId &&
+            marker.markerType === selectedMarkerType;
+
+          return (
           <Marker
             eventHandlers={{
               click: () => onSelectMarker(marker),
@@ -277,12 +395,12 @@ export function LeafletGenealogyMap({
             icon={createMarkerIcon({
               activeGenerationNumber,
               marker,
-              selected:
-                marker.id === selectedMarkerId &&
-                marker.markerType === selectedMarkerType,
+              offset: spreadOffsets.get(getMarkerKey(marker)) ?? { dx: 0, dy: 0 },
+              selected,
             })}
-            key={`${marker.markerType}-${marker.id ?? marker.name}`}
+            key={getMarkerKey(marker)}
             position={[marker.latitude, marker.longitude]}
+            zIndexOffset={selected ? 1000 : 0}
           >
             <Tooltip direction="top" offset={[0, -8]} opacity={0.95}>
               {marker.name}
@@ -298,7 +416,8 @@ export function LeafletGenealogyMap({
               </div>
             </Popup>
           </Marker>
-        ))}
+          );
+        })}
       </MapContainer>
       <div className="genealogy-map-legend pointer-events-none absolute bottom-4 left-4 z-[500] rounded-xl border border-white/70 bg-surface-card/85 px-3 py-2 text-xs text-ink-base shadow-sm backdrop-blur">
         <p className="mb-1 font-semibold text-ink-strong">파이 = 세대 비율</p>
